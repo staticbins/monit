@@ -1078,6 +1078,13 @@ void Util_printService(Service_T s) {
                 printf(" %-20s = %s\n", "EUID", StringBuffer_toString(Util_printRule(buf, s->euid->action, "if failed %d", s->euid->uid)));
         }
 
+#ifdef LSM_LABEL_CHECK
+        if (s->lsmlabelcheck && s->lsmlabelcheck->action) {
+                StringBuffer_clear(buf);
+                printf(" %-20s = %s\n", "LSM label", StringBuffer_toString(Util_printRule(buf, s->lsmlabelcheck->action, "if failed %s", s->lsmlabelcheck->lsmlabel.data)));
+         }
+#endif
+
         if (s->gid && s->gid->action) {
                 StringBuffer_clear(buf);
                 printf(" %-20s = %s\n", "GID", StringBuffer_toString(Util_printRule(buf, s->gid->action, "if failed %d", s->gid->gid)));
@@ -1761,6 +1768,9 @@ void Util_resetInfo(Service_T s) {
                         s->inf.process->ppid = -1;
                         s->inf.process->uid = -1;
                         s->inf.process->euid = -1;
+#ifdef LSM_LABEL_CHECK
+                        NULL_LSMLABEL(s->inf.process->lsmlabel);
+#endif
                         s->inf.process->gid = -1;
                         s->inf.process->zombie = false;
                         s->inf.process->threads = -1;

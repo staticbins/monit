@@ -77,6 +77,9 @@ static void _gc_mmonit(Mmonit_T *);
 static void _gc_url(URL_T *);
 static void _gc_request(Request_T *);
 static void _gcssloptions(SslOptions_T o);
+#ifdef LSM_LABEL_CHECK
+static void _gclsmlabel(LsmLabel_T *);
+#endif
 
 
 /**
@@ -270,6 +273,10 @@ static void _gc_service(Service_T *s) {
                 _gc_eventaction(&(*s)->action_ACTION);
         if ((*s)->eventlist)
                 gc_event(&(*s)->eventlist);
+#ifdef LSM_LABEL_CHECK
+        if ((*s)->lsmlabelcheck)
+                _gclsmlabel(&(*s)->lsmlabelcheck);
+#endif
         switch ((*s)->type) {
                 case Service_Directory:
                         FREE((*s)->inf.directory);
@@ -665,3 +672,12 @@ static void _gc_mmonit(Mmonit_T *recv) {
         FREE(*recv);
 }
 
+
+#ifdef LSM_LABEL_CHECK
+static void _gclsmlabel(LsmLabel_T *s) {
+        ASSERT(s);
+        if ((*s)->action)
+                _gc_eventaction(&(*s)->action);
+        FREE(*s);
+}
+#endif

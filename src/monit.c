@@ -851,6 +851,12 @@ static void version() {
         printf("out");
 #endif
         printf(" compression, with");
+#ifdef __linux__
+#ifndef LSM_LABEL_CHECK
+        printf("out");
+#endif
+        printf(" lsm, with");
+#endif /* __linux__ */
 #ifndef HAVE_LIBPAM
         printf("out");
 #endif

@@ -933,6 +933,36 @@ typedef struct Gid_T {
 } *Gid_T;
 
 
+
+#ifdef LSM_LABEL_CHECK
+/**
+ *   Defines raw format of LSM label
+ *   Use a length of 79 characters
+ **/
+typedef struct lsmlabel_t { char data[80]; } lsmlabel_t;
+/* define helper function for lsmlabel_t */
+#define WRITE_LSMLABEL(__dst_ctx, __src_str) do { \
+            strncpy((__dst_ctx).data, (__src_str), sizeof((__dst_ctx).data) - 1); \
+            (__dst_ctx).data[sizeof((__dst_ctx).data) - 1] = 0; \
+        } while (0)
+
+#define NULL_LSMLABEL(__ctx) do { \
+            (__ctx).data[0] = 0; \
+            (__ctx).data[1] = 42; \
+        } while (0)
+
+#define IS_NULL_LSMLABEL(__ctx) ((__ctx).data[0] == 0 && (__ctx).data[1] == 42)
+
+#define IS_EQUAL_LSMLABEL(__a_ctx, __b_ctx) (strcmp((__a_ctx).data, (__b_ctx).data) == 0)
+
+/** Defined LSM label object */
+typedef struct LsmLabel_T {
+        lsmlabel_t lsmlabel;                                /**< Owner's LSM label */
+        EventAction_T action;  /**< Description of the action upon event occurence */
+} *LsmLabel_T;
+#endif
+
+
 /** Defines pid object */
 typedef struct Pid_T {
         EventAction_T action;  /**< Description of the action upon event occurence */
@@ -1086,6 +1116,9 @@ typedef struct ProcessInfo_T {
         time_t uptime;                                     /**< Process uptime */
         struct IOStatistics_T read;                       /**< Read statistics */
         struct IOStatistics_T write;                     /**< Write statistics */
+#ifdef LSM_LABEL_CHECK
+        lsmlabel_t lsmlabel;
+#endif
 } *ProcessInfo_T;
 
 
@@ -1153,6 +1186,9 @@ typedef struct Service_T {
         Uid_T       uid;                                            /**< Uid check */
         Uid_T       euid;                                 /**< Effective Uid check */
         Gid_T       gid;                                            /**< Gid check */
+#ifdef LSM_LABEL_CHECK
+        LsmLabel_T lsmlabelcheck;                             /**< LSM label check */
+#endif
         LinkStatus_T linkstatuslist;                 /**< Network link status list */
         LinkSpeed_T linkspeedlist;                    /**< Network link speed list */
         LinkSaturation_T linksaturationlist;     /**< Network link saturation list */

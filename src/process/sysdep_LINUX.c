@@ -204,6 +204,9 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         int                 stat_ppid = 0;
         int                 stat_uid = 0;
         int                 stat_euid = 0;
+#ifdef LSM_LABEL_CHECK
+        lsmlabel_t          stat_lsmlabel;
+#endif
         int                 stat_gid = 0;
         char               *tmp = NULL;
         char                procname[STRLEN];
@@ -289,6 +292,15 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         continue;
                 }
 
+#ifdef LSM_LABEL_CHECK
+                /********** /proc/PID/attr/current **********/
+                if (! file_readProc(buf, sizeof(buf), "attr/current", stat_pid, NULL)) {
+                        WRITE_LSMLABEL(stat_lsmlabel, "none - no LSM?");
+                } else {
+                        WRITE_LSMLABEL(stat_lsmlabel, buf);
+                }
+#endif
+
                 /********** /proc/PID/io **********/
                 if (_statistics.hasIOStatistics) {
                         if (file_readProc(buf, sizeof(buf), "io", stat_pid, NULL)) {
@@ -328,6 +340,9 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].ppid = stat_ppid;
                 pt[i].cred.uid = stat_uid;
                 pt[i].cred.euid = stat_euid;
+#ifdef LSM_LABEL_CHECK
+                pt[i].lsmlabel = stat_lsmlabel;
+#endif
                 pt[i].cred.gid = stat_gid;
                 pt[i].threads.self = stat_item_threads;
                 pt[i].uptime = starttime > 0 ? (systeminfo.time / 10. - (starttime + (time_t)(stat_item_starttime / hz))) : 0;

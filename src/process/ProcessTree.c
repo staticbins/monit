@@ -293,6 +293,9 @@ boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid) {
                 s->inf.process->uid               = ptree[leaf].cred.uid;
                 s->inf.process->euid              = ptree[leaf].cred.euid;
                 s->inf.process->gid               = ptree[leaf].cred.gid;
+#ifdef LSM_LABEL_CHECK
+                s->inf.process->lsmlabel          = ptree[leaf].lsmlabel;
+#endif
                 s->inf.process->uptime            = ptree[leaf].uptime;
                 s->inf.process->threads           = ptree[leaf].threads.self;
                 s->inf.process->children          = ptree[leaf].children.total;

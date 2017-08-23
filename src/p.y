@@ -303,6 +303,7 @@ static command_t copycommand(command_t);
 static int verifyMaxForward(int);
 static void _setPEM(char **store, char *path, const char *description, boolean_t isFile);
 static void _setSSLOptions(SslOptions_T options);
+static void lsmlabel_config(const char *, Action_Type, Action_Type);
 
 %}
 
@@ -351,6 +352,7 @@ static void _setSSLOptions(SslOptions_T options);
 %token <string> TARGET TIMESPEC HTTPHEADER
 %token <number> MAXFORWARD
 %token FIPS
+%token LSMLABEL
 
 %left GREATER GREATEROREQUAL LESS LESSOREQUAL EQUAL NOTEQUAL
 
@@ -405,6 +407,7 @@ optproc         : start
                 | ppid
                 | uid
                 | euid
+                | lsmlabel
                 | gid
                 | uptime
                 | connection
@@ -2710,6 +2713,12 @@ euid            : IF FAILED EUID STRING rate1 THEN action1 recovery {
                   }
                 ;
 
+lsmlabel        : IF FAILED LSMLABEL STRING rate1 THEN action1 recovery {
+                        lsmlabel_config($4, $<number>7, $<number>8);
+                        FREE($4);
+                  }
+                ;
+
 gid             : IF FAILED GID STRING rate1 THEN action1 recovery {
                         gidset.gid = get_gid($4, 0);
                         addeventaction(&(gidset).action, $<number>7, $<number>8);
@@ -4940,3 +4949,15 @@ static void _setSSLOptions(SslOptions_T options) {
         reset_sslset();
 }
 
+static void lsmlabel_config(const char *label_str, Action_Type failed, Action_Type succeeded) {
+#ifdef LSM_LABEL_CHECK
+        LsmLabel_T newlabel;
+        NEW(newlabel);
+        addeventaction(&(newlabel->action), failed, succeeded);
+        WRITE_LSMLABEL(newlabel->lsmlabel, label_str);
+
+        current->lsmlabelcheck = newlabel;
+#else
+        yyerror("LSM label check cannot be activated -- support not built-in");
+#endif
+}

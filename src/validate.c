@@ -671,6 +671,29 @@ static State_Type _checkEuid(Service_T s, int euid) {
 }
 
 
+#ifdef LSM_LABEL_CHECK
+/**
+ * Test LSM label of process
+ */
+static State_Type _checkLsmLabel(Service_T s, const lsmlabel_t *l) {
+        ASSERT(s);
+        if (s->lsmlabelcheck) {
+                if (!IS_NULL_LSMLABEL(*l)) {
+                        if (!IS_EQUAL_LSMLABEL(*l, s->lsmlabelcheck->lsmlabel)) {
+                                Event_post(s, Event_Resource, State_Failed, s->lsmlabelcheck->action, "LSM label test failed for %s -- current label is '%s'", s->name, l->data);
+                                return State_Failed;
+                        } else {
+                                Event_post(s, Event_Resource, State_Succeeded, s->lsmlabelcheck->action, "LSM label test succeeded [current label = '%s']", l->data);
+                                return State_Succeeded;
+                        }
+                }
+                return State_Init;
+        }
+        return State_Succeeded;
+}
+#endif
+
+
 /**
  * Test GID of file or process
  */
@@ -1335,6 +1358,10 @@ State_Type check_process(Service_T s) {
                                 rv = State_Failed;
                         if (_checkEuid(s, s->inf.process->euid) == State_Failed)
                                 rv = State_Failed;
+#ifdef LSM_LABEL_CHECK
+                        if (_checkLsmLabel(s, &(s->inf.process->lsmlabel)) == State_Failed)
+                                rv = State_Failed;
+#endif
                         if (_checkGid(s, s->inf.process->gid) == State_Failed)
                                 rv = State_Failed;
                         if (_checkUptime(s, s->inf.process->uptime) == State_Failed)
