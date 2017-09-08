@@ -176,7 +176,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         if (file_readProc(buf, sizeof(buf), "status", pt[i].pid, NULL)) {
                                 pstatus_t *pstatus = (pstatus_t *)&buf;
                                 pt[i].cpu.time = timestruc_to_tseconds(pstatus->pr_utime) + timestruc_to_tseconds(pstatus->pr_stime);
-                                pt[i].threads = pstatus->pr_nlwp;
+                                pt[i].threads.self = pstatus->pr_nlwp;
                         }
                         if (file_readProc(buf, sizeof(buf), "usage", pt[i].pid, NULL)) {
                                 struct prusage *usage = (struct prusage *)&buf;

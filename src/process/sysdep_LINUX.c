@@ -329,7 +329,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].cred.uid = stat_uid;
                 pt[i].cred.euid = stat_euid;
                 pt[i].cred.gid = stat_gid;
-                pt[i].threads = stat_item_threads;
+                pt[i].threads.self = stat_item_threads;
                 pt[i].uptime = starttime > 0 ? (systeminfo.time / 10. - (starttime + (time_t)(stat_item_starttime / hz))) : 0;
                 pt[i].cpu.time = (double)(stat_item_utime + stat_item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
                 pt[i].memory.usage = (uint64_t)stat_item_rss * (uint64_t)page_size;

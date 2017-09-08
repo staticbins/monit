@@ -165,7 +165,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].cred.uid         = pinfo[i].ki_ruid;
                 pt[i].cred.euid        = pinfo[i].ki_uid;
                 pt[i].cred.gid         = pinfo[i].ki_rgid;
-                pt[i].threads          = pinfo[i].ki_numthreads;
+                pt[i].threads.self     = pinfo[i].ki_numthreads;
                 pt[i].uptime           = systeminfo.time / 10. - pinfo[i].ki_start.tv_sec;
                 pt[i].cpu.time         = (double)pinfo[i].ki_runtime / 100000.;
                 pt[i].memory.usage     = (uint64_t)pinfo[i].ki_rssize * (uint64_t)pagesize;

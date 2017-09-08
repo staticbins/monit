@@ -33,7 +33,6 @@ typedef struct ProcessTree_T {
         boolean_t zombie;
         pid_t pid;
         pid_t ppid;
-        int threads;
         int parent;
         struct {
                 int uid;
@@ -41,10 +40,16 @@ typedef struct ProcessTree_T {
                 int gid;
         } cred;
         struct {
-                float usage;
-                float usage_total;
+                struct {
+                        float self;
+                        float children;
+                } usage;
                 double time;
         } cpu;
+        struct {
+                int self;
+                int children;
+        } threads;
         struct {
                 int count;
                 int total;

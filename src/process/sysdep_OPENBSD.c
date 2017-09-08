@@ -215,7 +215,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                 }
                         }
                 } else {
-                        pt[index].threads++;
+                        pt[index].threads.self++;
                 }
         }
         if (pflags & ProcessEngine_CollectCommandLine)
