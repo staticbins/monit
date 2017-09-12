@@ -3808,8 +3808,7 @@ service if it is not running:
 This resource checks example will send an alert if CPU usage of the
 Apache's HTTP daemon and its child processes goes beyond 60% for two
 cycles. Apache is restarted if the CPU usage is over 80% for five
-cycles or the memory usage is over 100Mb for five cycles or if the
-machines load average is more than 10 for 8 cycles:
+cycles or the memory usage is over 100Mb for five cycles:
 
  check process apache with pidfile /var/run/httpd.pid
        start program = "/etc/init.d/httpd start"
@@ -3818,7 +3817,6 @@ machines load average is more than 10 for 8 cycles:
        if total cpu > 60% for 2 cycles then alert
        if total cpu > 80% for 5 cycles then restart
        if mem > 100 MB for 5 cycles then stop
-       if loadavg(5min) greater than 10.0 for 8 cycles then stop
 
 This examples demonstrate the timestamp statement with exec and
 how you may restart apache if its configuration file was
