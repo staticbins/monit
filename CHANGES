@@ -15,6 +15,9 @@ Fixed: Issue #640: SSL option CACERTIFICATEPATH doesn't work.
 
 Fixed: Issue #657: Fix the "total cpu usage" test for processes with children.
 
+Fixed: Issue #666: FreeBSD: Support statistics for filesystems, which are
+mounted via labeled device.
+
 Fixed: Enable color output for rxvt terminal.
 
 

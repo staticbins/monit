@@ -58,6 +58,10 @@
 #include <fcntl.h>
 #endif
 
+#ifdef HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h>
+#endif
+
 #ifdef HAVE_CTYPE_H
 #include <ctype.h>
 #endif
@@ -111,14 +115,49 @@ static uint64_t _bintimeToMilli(struct bintime *time) {
 }
 
 
-// Parse the device path like /dev/da0p2 into name:instance -> da:0
+// Parse the device path like /dev/da0p2 or /dev/gpt/myfilesystemlabel into name:instance -> da:0
 static boolean_t _parseDevice(const char *path, Device_T device) {
-        const char *base = File_basename(path);
-        for (int i = 0; base[i]; i++) {
-                if (isdigit(*(base + i))) {
-                        strncpy(device->key, base, i < sizeof(device->key) ? i : sizeof(device->key) - 1);
-                        device->instance = Str_parseInt(base + i);
-                        return true;
+        if (strlen(path) > 5 && Str_startsWith(path, "/dev/")) {
+                // Get the disk map
+                size_t len = 0;
+                if (sysctlbyname("kern.geom.conftxt", NULL, &len, NULL, 0)) {
+                        LogError("system statistics error -- cannot get kern.geom.conftxt size");
+                        return false;
+                }
+                char buf[len + 1];
+                if (sysctlbyname("kern.geom.conftxt", buf, &len, NULL, 0)) {
+                        LogError("system statistics error -- cannot get kern.geom.conftxt");
+                        return false;
+                }
+                buf[len] = 0;
+                // Scan the table for matching label/partition
+                char disk[PATH_MAX] = {};
+                const char *pathname = path + 5; // cut "/dev/" from the path
+                for (const char *cursor = buf; cursor; cursor = strchr(cursor, '\n')) {
+                        while (*cursor == '\n') {
+                                cursor++;
+                        }
+                        if (cursor) {
+                                int index;
+                                char type[64] = {};
+                                char name[PATH_MAX] = {};
+                                if (sscanf(cursor, "%d %63s %1023s ", &index, type, name) == 3) {
+                                        if (IS(type, "DISK")) {
+                                                snprintf(disk, sizeof(disk), "%s", name);
+                                        } else if (IS(type, "PART") || IS(type, "LABEL")) {
+                                                if (IS(pathname, name)) {
+                                                        // Matching label/partition found, parse the disk
+                                                        for (int i = 0; disk[i]; i++) {
+                                                                if (isdigit(*(disk + i))) {
+                                                                        strncpy(device->key, disk, i < sizeof(device->key) ? i : sizeof(device->key) - 1);
+                                                                        device->instance = Str_parseInt(disk + i);
+                                                                        return true;
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
                 }
         }
         LogError("filesystem statistics error -- cannot parse device '%s'\n", path);
