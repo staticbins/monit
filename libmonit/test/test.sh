@@ -1,6 +1,7 @@
 #!/bin/sh
 
-export PATH=$PATH:.
+PATH="$PATH:."
+export PATH
 
 StrTest && \
 TimeTest && \
