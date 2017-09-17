@@ -448,27 +448,50 @@ fi
 # IPv6 Support
 # ------------------------------------------------------------------------
 
-AC_MSG_CHECKING(for IPv6 support)
-AC_CACHE_VAL(ac_cv_ipv6,
-        AC_TRY_RUN([
-        #include <sys/types.h>
-        #include <sys/socket.h>
-        #include <netinet/in.h>
-        /* Make sure the definitions for AF_INET6 and struct sockaddr_in6
-         * are defined, and that we can actually create an IPv6 TCP socket.*/
-        main()
-        {
-                int fd;
-                struct sockaddr_in6 foo;
-                fd = socket(AF_INET6, SOCK_STREAM, 0);
-                exit(fd >= 0 ? 0 : 1);
-        }],
-        ac_cv_ipv6=yes,
-        ac_cv_ipv6=no,
-        ac_cv_ipv6=no))
-AC_MSG_RESULT($ac_cv_ipv6)
-if test $ac_cv_ipv6 = yes ; then
-        AC_DEFINE([HAVE_IPV6], 1, [Define to 1 if the system supports IPv6])
+AC_ARG_WITH(ipv6,
+    AS_HELP_STRING([--without-ipv6], [Disable the IPv6 support (default: enabled)]),
+    [
+        if test "x$withval" = "xno"
+        then
+            use_ipv6=0
+        elif test "x$withval" = "xyes"
+        then
+            use_ipv6=1
+        fi
+    ],
+    [
+        use_ipv6=1
+    ]
+)
+
+if test $use_ipv6 = 1
+then
+        AC_MSG_CHECKING(for IPv6 support)
+        AC_CACHE_VAL(ac_cv_ipv6,
+                AC_TRY_RUN([
+                #include <sys/types.h>
+                #include <sys/socket.h>
+                #include <netinet/in.h>
+                /* Make sure the definitions for AF_INET6 and struct sockaddr_in6
+                 * are defined, and that we can actually create an IPv6 TCP socket.*/
+                main()
+                {
+                        int fd;
+                        struct sockaddr_in6 foo;
+                        fd = socket(AF_INET6, SOCK_STREAM, 0);
+                        exit(fd >= 0 ? 0 : 1);
+                }],
+                ac_cv_ipv6=yes,
+                ac_cv_ipv6=no,
+                ac_cv_ipv6=no))
+        AC_MSG_RESULT($ac_cv_ipv6)
+
+        if test $ac_cv_ipv6 = yes
+        then
+                AC_DEFINE([HAVE_IPV6], 1, [Define to 1 if the system supports IPv6])
+        else
+                use_ipv6=0
+        fi
 fi
 
 
@@ -1099,6 +1122,11 @@ if test "$use_largefiles" = "1"; then
 echo "|   Large files support:                          ENABLED    |"
 else
 echo "|   Large files support:                          DISABLED   |"
+fi
+if test "$use_ipv6" = "1"; then
+echo "|   IPv6 support:                                 ENABLED    |"
+else
+echo "|   IPv6 support:                                 DISABLED   |"
 fi
 if test "x1" = "x$OPTIMIZED"; then
 echo "|   Optimized:                                    ENABLED    |"
