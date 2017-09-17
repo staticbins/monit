@@ -958,6 +958,16 @@ if test "$use_sslstatic" = "1" -o "$use_ssl" = "1"; then
                 AC_DEFINE([HAVE_TLSV1_2], 1, [Define to 1 if you have openssl with TLSv1.2])
         fi
 
+        AC_MSG_CHECKING([for TLSv1.3])
+        AC_LINK_IFELSE(
+                [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [TLSv1_3_method()])],
+                [tlsv13=yes],
+                [tlsv13=no])
+        AC_MSG_RESULT($tlsv13)
+        if test "$tlsv13" = "yes" ; then
+                AC_DEFINE([HAVE_TLSV1_3], 1, [Define to 1 if you have openssl with TLSv1.3])
+        fi
+
         AC_MSG_CHECKING([for EC_KEY support])
         AC_LINK_IFELSE(
                 [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [EC_KEY_new_by_curve_name(0)])],

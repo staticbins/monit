@@ -602,7 +602,7 @@ Common SSL/TLS options can be set using the following statement and
 will apply to all SSL connections made through Monit:
 
   SET <SSL | TLS> [OPTIONS] {
-      VERSION: <AUTO | SSLV2 | SSLV3 | TLSV1 | TLSV11 | TLSV12>
+      VERSION: <AUTO | SSLV2 | SSLV3 | TLSV1 | TLSV11 | TLSV12 | TLSV13>
       VERIFY: <ENABLE | DISABLE>
       SELFSIGNED: <ALLOW | REJECT>
       CIPHERS: <string>

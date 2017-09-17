@@ -4,6 +4,9 @@
 
 Version 5.24.0
 
+New: Issue #652: Add support for overriding the TLS version to TLSv1.3
+if supported by the SSL library.
+
 Fixed: Issue #624: Make the fail2ban protocol test backward
 compatible with older protocol versions.
 

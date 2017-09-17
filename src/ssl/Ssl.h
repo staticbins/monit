@@ -42,7 +42,8 @@ typedef enum {
         SSL_V3,
         SSL_TLSV1,
         SSL_TLSV11,
-        SSL_TLSV12
+        SSL_TLSV12,
+        SSL_TLSV13
 } __attribute__((__packed__)) Ssl_Version;
 
 

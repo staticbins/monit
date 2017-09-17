@@ -360,6 +360,7 @@ sslv3             { return SSLV3; }
 tlsv1             { return TLSV1; }
 tlsv11            { return TLSV11; }
 tlsv12            { return TLSV12; }
+tlsv13            { return TLSV13; }
 cipher(s)?        { return CIPHER; }
 auto              { return AUTO; }
 sslauto           { return SSLAUTO; }

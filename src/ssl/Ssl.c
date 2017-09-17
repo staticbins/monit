@@ -209,6 +209,9 @@ static boolean_t _setVersion(SSL_CTX *ctx, SslOptions_T options) {
 #if defined HAVE_TLSV1_2
         version |= SSL_OP_NO_TLSv1_2;
 #endif
+#if defined HAVE_TLSV1_3
+        version |= SSL_OP_NO_TLSv1_3;
+#endif
         switch (_optionsVersion(options->version)) {
                 case SSL_V2:
 #if defined OPENSSL_NO_SSL2 || ! defined HAVE_SSLV2
@@ -258,6 +261,14 @@ static boolean_t _setVersion(SSL_CTX *ctx, SslOptions_T options) {
                         version &= ~SSL_OP_NO_TLSv1_2;
 #endif
                         break;
+                case SSL_TLSV13:
+#if defined OPENSSL_NO_TLS1_3_METHOD || ! defined HAVE_TLSV1_3
+                        LogError("SSL: TLSv1.3 not supported\n");
+                        return false;
+#else
+                        version &= ~SSL_OP_NO_TLSv1_3;
+#endif
+                        break;
                 case SSL_Auto:
                 default:
                         // Enable TLS protocols by default
@@ -267,6 +278,9 @@ static boolean_t _setVersion(SSL_CTX *ctx, SslOptions_T options) {
 #endif
 #if defined HAVE_TLSV1_2
                         version &= ~SSL_OP_NO_TLSv1_2;
+#endif
+#if defined HAVE_TLSV1_3
+                        version &= ~SSL_OP_NO_TLSv1_3;
 #endif
                         break;
         }
