@@ -18,6 +18,10 @@ Fixed: Issue #634: Display check program output.
 
 Fixed: Issue #640: SSL option CACERTIFICATEPATH doesn't work.
 
+Fixed: Issue #649: Monit initialization fails if open() returns an unexpected file
+descriptor. The problem was observed when Monit was executed in STAF test environment.
+Thanks to Alan Somers for patch.
+
 Fixed: Issue #657: Fix the "total cpu usage" test for processes with children.
 
 Fixed: Issue #666: FreeBSD: Support statistics for filesystems, which are

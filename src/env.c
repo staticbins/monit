@@ -84,16 +84,20 @@
 void init_env() {
         Util_closeFds();
         // Ensure that std descriptors (0, 1 and 2) are open
+        int devnull = open("/dev/null", O_RDWR);
+        if (devnull == -1) {
+                THROW(AssertException, "Cannot open /dev/null -- %s", STRERROR);
+        }
         for (int i = 0; i < 3; i++) {
                 struct stat st;
                 if (fstat(i, &st) == -1) {
-                        int rv = open("/dev/null", O_RDWR);
-                        if (rv == -1)
-                                THROW(AssertException, "Cannot open /dev/null -- %s", STRERROR);
-                        else if (rv != i)
-                                THROW(AssertException, "Standard filedescriptor open failed -- expected fd %d, got %d", i, rv);
+                        if (dup2(devnull, i) < 0) {
+                                close(devnull);
+                                THROW(AssertException, "dup2 failed -- %s", STRERROR);
+                        }
                 }
         }
+        close(devnull);
         // Get password struct with user info
         char buf[4096];
         struct passwd pw, *result = NULL;
