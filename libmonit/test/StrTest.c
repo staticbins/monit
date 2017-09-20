@@ -465,10 +465,6 @@ int main(void) {
                 assert(Str_isEqual(str, "1.027 y"));
                 Str_time2str(-2000, str);
                 assert(Str_isEqual(str, "-2 s"));
-                Str_time2str(1.145e+13, str);
-                assert(Str_isEqual(str, "365 y"));
-                Str_time2str(__DBL_MAX__, str);
-                assert(Str_isEqual(str, "-1 ms"));
         }
         printf("=> Test26: OK\n\n");
 
