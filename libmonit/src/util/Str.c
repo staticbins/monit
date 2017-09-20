@@ -54,6 +54,16 @@
  */
 
 
+/* ----------------------------------------------------------- Definitions */
+
+
+static double epsilon = 1e-6;
+
+static boolean_t _isInt(double x) {
+        return fabs(x - round(x)) < epsilon;
+}
+
+
 /* -------------------------------------------------------- Public Methods */
 
 
@@ -434,16 +444,18 @@ int Str_compareConstantTime(const void *x, const void *y) {
 }
 
 
-char *Str_bytesToSize(double bytes, char s[10]) {
+char *Str_bytes2str(double bytes, char s[10]) {
         assert(s);
-        assert(bytes < 1e+24);
         static const char *kNotation[] = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", NULL};
         *s = 0;
+        char *sign = (bytes < 0) ? "-" : "";
+        bytes = fabs(bytes);
+        assert(bytes < 1e+24);
         for (int i = 0; kNotation[i]; i++) {
-                if (bytes > 1024) {
+                if (bytes >= 1024) {
                         bytes /= 1024;
                 } else {
-                        snprintf(s, 10, (round(bytes) == bytes) ? "%.0lf %s" : "%.1lf %s", bytes, kNotation[i]);
+                        snprintf(s, 10, _isInt(bytes) ? "%s%.0lf %s" : "%s%.1lf %s", sign, bytes, kNotation[i]);
                         break;
                 }
         }
@@ -451,21 +463,33 @@ char *Str_bytesToSize(double bytes, char s[10]) {
 }
 
 
-char *Str_milliToTime(double milli, char s[23]) {
+char *Str_time2str(double milli, char s[10]) {
         assert(s);
         struct conversion {
                 double base;
                 char *suffix;
-        } conversion[]= {
-                {1000., "ms"}, // millisecond
-                {60.,   "s"},  // second
-                {60.,   "m"},  // minute
-                {60.,   "h"}   // hour
+        } conversion[] = {
+                {1000, "ms"}, // millisecond
+                {60,   "s"},  // second
+                {60,   "m"},  // minute
+                {24,   "h"},  // hour
+                {365,  "d"},  // day
+                {365,  "y"}   // year
         };
-        int index = 0;
-        while (fabs(milli) >= conversion[index].base && index < sizeof(conversion) / sizeof(conversion[0]) - 1)
-                milli /= conversion[index++].base;
-        snprintf(s, 23, (round(milli) == milli) ? "%.0lf %s" : "%.3lf %s", milli, conversion[index].suffix);
+        *s = 0;
+        char *sign = (milli < 0) ? "-" : "";
+        milli = fabs(milli);
+        assert(milli < 1.15e+13);
+        for (int i = 0; i < (sizeof(conversion) / sizeof(conversion[0])); i++) {
+                if (milli >= conversion[i].base) {
+                        milli /= conversion[i].base;
+                } else {
+                        snprintf(s, 23, _isInt(milli) ? "%s%.0lf %s" : "%s%.3lf %s", sign, milli, conversion[i].suffix);
+                        break;
+                }
+        }
         return s;
 }
+
+
 

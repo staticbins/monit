@@ -389,23 +389,25 @@ int main(void) {
         }
         printf("=> Test22: OK\n\n");
 
-        printf("=> Test23: Str_bytesToSize\n");
+        printf("=> Test23: Str_bytes2str\n");
         {
                 char str[10];
-                Str_bytesToSize(0, str);
+                Str_bytes2str(0, str);
                 assert(Str_isEqual(str, "0 B"));
-                Str_bytesToSize(2048, str);
+                Str_bytes2str(2048, str);
                 assert(Str_isEqual(str, "2 KB"));
-                Str_bytesToSize(2097152, str);
+                Str_bytes2str(2097152, str);
                 assert(Str_isEqual(str, "2 MB"));
-                Str_bytesToSize(2621440, str);
+                Str_bytes2str(2621440, str);
                 assert(Str_isEqual(str, "2.5 MB"));
-                Str_bytesToSize(9083741824, str);
+                Str_bytes2str(9083741824, str);
                 assert(Str_isEqual(str, "8.5 GB"));
-                Str_bytesToSize(9083741824987653, str);
+                Str_bytes2str(9083741824987653, str);
                 assert(Str_isEqual(str, "8.1 PB"));
-                Str_bytesToSize(LLONG_MAX, str);
+                Str_bytes2str(LLONG_MAX, str);
                 assert(Str_isEqual(str, "8 EB"));
+                Str_bytes2str(-9083741824, str);
+                assert(Str_isEqual(str, "-8.5 GB"));
         }
         printf("=> Test23: OK\n\n");
 
@@ -438,25 +440,35 @@ int main(void) {
         }
         printf("=> Test25: OK\n\n");
 
-        printf("=> Test26: Str_milliToTime\n");
+        printf("=> Test26: Str_time2str\n");
         {
                 char str[13];
-                Str_milliToTime(0, str);
+                Str_time2str(0, str);
                 assert(Str_isEqual(str, "0 ms"));
-                Str_milliToTime(0.5, str);
+                Str_time2str(0.5, str);
                 assert(Str_isEqual(str, "0.500 ms"));
-                Str_milliToTime(1, str);
+                Str_time2str(1, str);
                 assert(Str_isEqual(str, "1 ms"));
-                Str_milliToTime(2000, str);
+                Str_time2str(2000, str);
                 assert(Str_isEqual(str, "2 s"));
-                Str_milliToTime(2123, str);
+                Str_time2str(2123, str);
                 assert(Str_isEqual(str, "2.123 s"));
-                Str_milliToTime(60000, str);
+                Str_time2str(60000, str);
                 assert(Str_isEqual(str, "1 m"));
-                Str_milliToTime(90000, str);
+                Str_time2str(90000, str);
                 assert(Str_isEqual(str, "1.500 m"));
-                Str_milliToTime(3600000, str);
+                Str_time2str(3600000, str);
                 assert(Str_isEqual(str, "1 h"));
+                Str_time2str(1258454321, str);
+                assert(Str_isEqual(str, "14.565 d"));
+                Str_time2str(3.24e10, str);
+                assert(Str_isEqual(str, "1.027 y"));
+                Str_time2str(-2000, str);
+                assert(Str_isEqual(str, "-2 s"));
+                Str_time2str(1.145e+13, str);
+                assert(Str_isEqual(str, "365 y"));
+                Str_time2str(__DBL_MAX__, str);
+                assert(Str_isEqual(str, "-1 ms"));
         }
         printf("=> Test26: OK\n\n");
 

@@ -449,16 +449,16 @@ int Str_compareConstantTime(const void *x, const void *y);
  * @param s A result buffer, must be large enough to hold 10 chars
  * @return A pointer to s
  */
-char *Str_bytesToSize(double bytes, char s[10]);
+char *Str_bytes2str(double bytes, char s[10]);
 
 
 /**
- * Convert the value in milliseconds to human friendlier unit (ms/s/m/h).
+ * Convert the time in milliseconds to human friendlier unit (ms/s/m/h/d/y).
  * @param milli The time value in milliseconds to present
- * @param s A result buffer, must be large enough to hold 23 chars
+ * @param s A result buffer, must be large enough to hold 10 chars
  * @return A pointer to s
  */
-char *Str_milliToTime(double milli, char s[23]);
+char *Str_time2str(double milli, char s[10]);
 
 
 #endif
