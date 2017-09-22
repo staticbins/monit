@@ -1051,11 +1051,39 @@ httpdport       : PORT NUMBER {
                   }
                 ;
 
-httpdsocket     : UNIXSOCKET PATH {
+httpdsocket     : UNIXSOCKET PATH httpdsocketoptionlist {
                         Run.httpd.flags |= Httpd_Unix;
                         Run.httpd.socket.unix.path = $2;
                   }
                 ;
+
+httpdsocketoptionlist : /* EMPTY */
+                      | httpdsocketoptionlist httpdsocketoption
+                      ;
+
+httpdsocketoption : UID STRING {
+                        Run.httpd.flags |= Httpd_UnixUid;
+                        Run.httpd.socket.unix.uid = get_uid($2, 0);
+                        FREE($2);
+                    }
+                  | GID STRING {
+                        Run.httpd.flags |= Httpd_UnixGid;
+                        Run.httpd.socket.unix.gid = get_gid($2, 0);
+                        FREE($2);
+                    }
+                  | UID NUMBER {
+                        Run.httpd.flags |= Httpd_UnixUid;
+                        Run.httpd.socket.unix.uid = get_uid(NULL, $2);
+                    }
+                  | GID NUMBER {
+                        Run.httpd.flags |= Httpd_UnixGid;
+                        Run.httpd.socket.unix.gid = get_gid(NULL, $2);
+                    }
+                  | PERMISSION NUMBER {
+                        Run.httpd.flags |= Httpd_UnixPermission;
+                        Run.httpd.socket.unix.permission = check_perm($2);
+                    }
+                  ;
 
 sigenable       : SIGNATURE ENABLE
                 | ENABLE SIGNATURE

@@ -233,7 +233,10 @@ typedef enum {
         Httpd_Disabled                    = 0x0,
         Httpd_Net                         = 0x1,  // IP
         Httpd_Unix                        = 0x2,  // Unix socket
-        Httpd_Signature                   = 0x4   // Server Signature enabled
+        Httpd_UnixUid                     = 0x4,  // Unix socket: override UID
+        Httpd_UnixGid                     = 0x8,  // Unix socket: override GID
+        Httpd_UnixPermission              = 0x10, // Unix socket: override permissions
+        Httpd_Signature                   = 0x20  // Server Signature enabled
 } __attribute__((__packed__)) Httpd_Flags;
 
 
@@ -1254,6 +1257,9 @@ struct Run_T {
                                 struct SslOptions_T ssl;
                         } net;
                         struct {
+                                int uid;
+                                int gid;
+                                int permission;
                                 char *path;
                         } unix;
                 } socket;

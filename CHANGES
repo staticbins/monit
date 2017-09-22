@@ -4,10 +4,13 @@
 
 Version 5.24.0
 
-New: Allow to disable IPv6 at compile time via configure --without-ipv6 option.
+New: Issue #175: Added support to specify the ownership and mode of the Monit
+HTTPD socket.
 
 New: Issue #652: Add support for overriding the TLS version to TLSv1.3
 if supported by the SSL library.
+
+New: Allow to disable IPv6 at compile time via configure --without-ipv6 option.
 
 Fixed: Issue #624: Make the fail2ban protocol test backward
 compatible with older protocol versions.

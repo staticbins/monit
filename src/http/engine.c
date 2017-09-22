@@ -449,12 +449,34 @@ static void _createTcpServer(Socket_Family family, char error[STRLEN]) {
 static void _createUnixServer(char error[STRLEN]) {
         myServerSockets[myServerSocketsCount].fd = create_server_socket_unix(Run.httpd.socket.unix.path, 1024, error);
         if (myServerSockets[myServerSocketsCount].fd != -1) {
+                if (Run.httpd.flags & Httpd_UnixPermission) {
+                        if (chmod(Run.httpd.socket.unix.path, Run.httpd.socket.unix.permission) != 0) {
+                                snprintf(error, STRLEN, "Could not change unix socket permission -- %s", STRERROR);
+                                goto error;
+                        }
+                }
+                if (Run.httpd.flags & Httpd_UnixUid) {
+                        if (chown(Run.httpd.socket.unix.path, Run.httpd.socket.unix.uid, -1) != 0) {
+                                snprintf(error, STRLEN, "Could not change unix socket uid -- %s", STRERROR);
+                                goto error;
+                        }
+                }
+                if (Run.httpd.flags & Httpd_UnixGid) {
+                        if (chown(Run.httpd.socket.unix.path, -1, Run.httpd.socket.unix.gid) != 0) {
+                                snprintf(error, STRLEN, "Could not change unix socket gid -- %s", STRERROR);
+                                goto error;
+                        }
+                }
                 data[myServerSocketsCount].family = Socket_Unix;
                 data[myServerSocketsCount].addr = (struct sockaddr *)&(data[myServerSocketsCount]._addr.addr_un);
                 data[myServerSocketsCount].addrlen = sizeof(struct sockaddr_un);
                 myServerSockets[myServerSocketsCount].events = POLLIN;
                 myServerSocketsCount++;
         }
+        return;
+error:
+        Net_close(myServerSockets[myServerSocketsCount].fd);
+        unlink(Run.httpd.socket.unix.path);
 }
 
 

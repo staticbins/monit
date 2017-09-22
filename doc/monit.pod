@@ -716,6 +716,9 @@ use Unix Socket so Monit is not accessible from the outside.
 Syntax for Unix Socket:
 
   SET HTTPD UNIXSOCKET <path>
+      [UID <uid | username>]
+      [GID <gid | groupname>]
+      [PERMISSION <octal number>]
       ALLOW <user:password>+
 
 Example:
@@ -726,6 +729,12 @@ Example:
 
 B<UNIXSOCKET> set the path to the Unix Socket Monit should bind to
 and listen on.
+
+B<UID> Socket owner (optional, defaults to the user who executes Monit)
+
+B<GID> Socket group (optional, defaults to primary group of the user who executes Monit)
+
+B<PERMISSION> Socket permissions - absolute octal mode (optional, process UMASK is applied by default)
 
 =head2 TCP PORT
 
