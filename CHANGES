@@ -5,7 +5,7 @@
 Version 5.24.0
 
 New: Issue #175: Added support to specify the ownership and mode of the Monit
-HTTPD socket.
+HTTPD unixsocket.
 
 New: Issue #652: Add support for overriding the TLS version to TLSv1.3
 if supported by the SSL library.
