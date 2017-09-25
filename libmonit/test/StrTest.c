@@ -461,8 +461,8 @@ int main(void) {
                 assert(Str_isEqual(str, "1 h"));
                 Str_time2str(1258454321, str);
                 assert(Str_isEqual(str, "14.565 d"));
-                Str_time2str(3.24e10, str);
-                assert(Str_isEqual(str, "1.027 y"));
+                Str_time2str(3e+12, str);
+                assert(Str_isEqual(str, "95.129 y"));
                 Str_time2str(-2000, str);
                 assert(Str_isEqual(str, "-2 s"));
         }

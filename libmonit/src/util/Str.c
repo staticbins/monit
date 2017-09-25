@@ -474,12 +474,12 @@ char *Str_time2str(double milli, char s[10]) {
                 {60,   "m"},  // minute
                 {24,   "h"},  // hour
                 {365,  "d"},  // day
-                {365,  "y"}   // year
+                {999,  "y"}   // year
         };
         *s = 0;
         char *sign = (milli < 0) ? "-" : "";
         milli = fabs(milli);
-        assert(milli < 1.15e+13);
+        assert(milli < 3.14e+12); // -99.569 y
         for (int i = 0; i < (sizeof(conversion) / sizeof(conversion[0])); i++) {
                 if (milli >= conversion[i].base) {
                         milli /= conversion[i].base;
