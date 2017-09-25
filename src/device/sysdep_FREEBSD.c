@@ -142,10 +142,10 @@ static boolean_t _parseDevice(const char *path, Device_T device) {
                                 char type[64] = {};
                                 char name[PATH_MAX] = {};
                                 if (sscanf(cursor, "%d %63s %1023s ", &index, type, name) == 3) {
-                                        if (IS(type, "DISK")) {
+                                        if (Str_isEqual(type, "DISK")) {
                                                 snprintf(disk, sizeof(disk), "%s", name);
-                                        } else if (IS(type, "PART") || IS(type, "LABEL")) {
-                                                if (IS(pathname, name)) {
+                                        } else if (Str_isEqual(type, "PART") || Str_isEqual(type, "LABEL") || Str_isEqual(type, "ELI")) {
+                                                if (Str_isEqual(pathname, name)) {
                                                         // Matching label/partition found, parse the disk
                                                         for (int i = 0; disk[i]; i++) {
                                                                 if (isdigit(*(disk + i))) {
