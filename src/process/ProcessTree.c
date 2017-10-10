@@ -227,7 +227,7 @@ int ProcessTree_init(ProcessEngine_Flags pflags) {
         ProcessTree_T *pt = ptree;
         double time_delta = systeminfo.time - systeminfo.time_prev;
         for (int i = 0; i < (volatile int)ptreesize; i ++) {
-                pt[i].cpu.usage.self = 0.;
+                pt[i].cpu.usage.self = -1;
                 if (oldptree) {
                         int oldentry = _findProcess(pt[i].pid, oldptree, oldptreesize);
                         if (oldentry != -1) {
@@ -297,10 +297,16 @@ boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid) {
                 s->inf.process->threads           = ptree[leaf].threads.self;
                 s->inf.process->children          = ptree[leaf].children.total;
                 s->inf.process->zombie            = ptree[leaf].zombie;
-                s->inf.process->cpu_percent       = _cpuUsage(ptree[leaf].cpu.usage.self, ptree[leaf].threads.self);
-                s->inf.process->total_cpu_percent = s->inf.process->cpu_percent + _cpuUsage(ptree[leaf].cpu.usage.children, ptree[leaf].threads.children);
-                if (s->inf.process->total_cpu_percent > 100.) {
-                        s->inf.process->total_cpu_percent = 100.;
+                if (ptree[leaf].cpu.usage.self >= 0) {
+                        // compute only if initialized (delta between current and previous snapshot is available)
+                        s->inf.process->cpu_percent = _cpuUsage(ptree[leaf].cpu.usage.self, ptree[leaf].threads.self);
+                        s->inf.process->total_cpu_percent = s->inf.process->cpu_percent + _cpuUsage(ptree[leaf].cpu.usage.children, ptree[leaf].threads.children);
+                        if (s->inf.process->total_cpu_percent > 100.) {
+                                s->inf.process->total_cpu_percent = 100.;
+                        }
+                } else {
+                        s->inf.process->cpu_percent = -1;
+                        s->inf.process->total_cpu_percent = -1;
                 }
                 s->inf.process->mem               = ptree[leaf].memory.usage;
                 s->inf.process->total_mem         = ptree[leaf].memory.usage_total;
