@@ -292,7 +292,7 @@ static void _updatePermission(Service_T S, int mode) {
 }
 
 
-static void _updateSize(Service_T S, uint64_t size) {
+static void _updateSize(Service_T S, int64_t size) {
         for (Size_T s = S->sizelist; s; s = s->next) {
                 if (s->test_changes) {
                         s->size = size;
@@ -560,7 +560,7 @@ void State_save() {
                                 case Service_File:
                                         state.priv.file.inode = service->inf.file->inode;
                                         state.priv.file.readpos = service->inf.file->readpos;
-                                        state.priv.file.size = (uint64_t)service->inf.file->size;
+                                        state.priv.file.size = (int64_t)service->inf.file->size;
                                         state.priv.file.atime = (uint64_t)service->inf.file->timestamp.access;
                                         state.priv.file.ctime = (uint64_t)service->inf.file->timestamp.change;
                                         state.priv.file.mtime = (uint64_t)service->inf.file->timestamp.modify;
