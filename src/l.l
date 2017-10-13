@@ -333,6 +333,7 @@ nostart           { return NOSTART; }
 laststate         { return LASTSTATE; }
 uid               { return UID; }
 euid              { return EUID; }
+lsm_label         { return LSMLABEL; }
 gid               { return GID; }
 request           { return REQUEST; }
 secret            { return SECRET; }

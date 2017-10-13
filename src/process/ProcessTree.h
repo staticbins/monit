@@ -71,6 +71,9 @@ typedef struct ProcessTree_T {
         } write;
         time_t uptime;
         char *cmdline;
+#ifdef LSM_LABEL_CHECK
+        lsmlabel_t lsmlabel;
+#endif
 } ProcessTree_T;
 
 

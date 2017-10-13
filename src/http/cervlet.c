@@ -170,6 +170,9 @@ static void print_service_rules_pid(HttpResponse, Service_T);
 static void print_service_rules_ppid(HttpResponse, Service_T);
 static void print_service_rules_program(HttpResponse, Service_T);
 static void print_service_rules_resource(HttpResponse, Service_T);
+#ifdef LSM_LABEL_CHECK
+static void print_service_rules_lsmlabel(HttpResponse, Service_T);
+#endif
 static void print_status(HttpRequest, HttpResponse, int);
 static void print_summary(HttpRequest, HttpResponse);
 static void _printReport(HttpRequest req, HttpResponse res);
@@ -416,6 +419,9 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 _formatStatus("parent pid", Event_PPid, type, res, s, s->inf.process->ppid >= 0, "%d", s->inf.process->ppid);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.process->uid >= 0, "%d", s->inf.process->uid);
                                 _formatStatus("effective uid", Event_Uid, type, res, s, s->inf.process->euid >= 0, "%d", s->inf.process->euid);
+#ifdef LSM_LABEL_CHECK
+                                _formatStatus("LSM label", Event_Resource, type, res, s, s->inf.process->lsmlabel.data[0] != 0, "%s", s->inf.process->lsmlabel.data);
+#endif
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.process->gid >= 0, "%d", s->inf.process->gid);
                                 _formatStatus("uptime", Event_Uptime, type, res, s, s->inf.process->uptime >= 0, "%s", _getUptime(s->inf.process->uptime, (char[256]){}));
                                 if (Run.flags & Run_ProcessEngineEnabled) {
@@ -1131,6 +1137,9 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
         print_service_rules_perm(res, s);
         print_service_rules_uid(res, s);
         print_service_rules_euid(res, s);
+#ifdef LSM_LABEL_CHECK
+        print_service_rules_lsmlabel(res, s);
+#endif
         print_service_rules_gid(res, s);
         print_service_rules_timestamp(res, s);
         print_service_rules_fsflags(res, s);
@@ -1935,6 +1944,17 @@ static void print_service_rules_euid(HttpResponse res, Service_T s) {
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
 }
+
+
+#ifdef LSM_LABEL_CHECK
+static void print_service_rules_lsmlabel(HttpResponse res, Service_T s) {
+        if (s->lsmlabelcheck) {
+                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>LSM label</td><td>");
+                Util_printRule(res->outputbuffer, s->lsmlabelcheck->action, "If failed %s", s->lsmlabelcheck->lsmlabel.data);
+                StringBuffer_append(res->outputbuffer, "</td></tr>");
+         }
+}
+#endif
 
 
 static void print_service_rules_gid(HttpResponse res, Service_T s) {

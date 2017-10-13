@@ -734,6 +734,39 @@ if test "$use_pam" = "1"; then
         AC_CHECK_LIB([pam], [pam_start], [], [AC_MSG_ERROR([PAM enabled but headers or library not found, install the PAM development support or run configure --without-pam])])
 fi
 
+# ------------------------------------------------------------------------
+# LSM Label Code
+# ------------------------------------------------------------------------
+
+if test "xLINUX" = "x$ARCH"; then
+        AC_MSG_CHECKING([for LSM label support])
+        AC_ARG_WITH(lsmlabel,
+            [  --without-lsmlabel           disable checks for LSM labels (default: enabled on linux)],
+            [
+                dnl Check the withvalue
+                if test "x$withval" = "xno" ; then
+                    use_lsmlabel=0
+                    AC_MSG_RESULT([disabled])
+                fi
+                if test "x$withval" = "xyes" ; then
+                    use_lsmlabel=1
+                    AC_MSG_RESULT([enabled])
+                fi
+            ],
+            [
+                if test "$use_lsmlabel" = "0"; then
+                    AC_MSG_RESULT([disabled])
+                else
+                    use_lsmlabel=1
+                    AC_MSG_RESULT([enabled])
+                fi
+            ]
+        )
+
+        if test "$use_lsmlabel" = "1"; then
+	    AC_DEFINE([LSM_LABEL_CHECK], 1, [Define to 1 if you want to enable LSM label checks.])
+        fi
+fi
 
 # ------------------------------------------------------------------------
 # SSL Code
@@ -1112,6 +1145,13 @@ if test "$use_pam" = "1"; then
 echo "|   PAM support:                                  ENABLED    |"
 else
 echo "|   PAM support:                                  DISABLED   |"
+fi
+if test "xLINUX" = "x$ARCH"; then
+    if test "$use_lsmlabel" = "1"; then
+        echo "|   LSM label support:                            ENABLED    |"
+    else
+        echo "|   LSM label support:                            DISABLED   |"
+    fi
 fi
 if test "$use_sslstatic" = "1" -o "$use_ssl" = "1"; then
 echo "|   SSL support:                                  ENABLED    |"
