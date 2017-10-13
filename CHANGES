@@ -4,6 +4,8 @@
 
 Version 5.25.0
 
+New: Issue #507: Linux: Implement support for monitoring Linux Security Modules (LSM) labels for processes. Thanks to Christian Goettsche.
+
 Fixed: Issue #672: FreeBSD: Support I/O statistics for raid and encrypted partitions.
 
 Fixed: Issue #676: Process CPU usage is reported always as 0.0% in the first cycle after process start
