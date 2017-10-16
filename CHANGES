@@ -6,8 +6,8 @@ Version 5.25.0
 
 New: Issue #507: Linux: Implement support for monitoring Linux Security Modules (LSM) labels for processes. Thanks to Christian Goettsche.
 Example for SELinux:
-   check process myapp matching "myapp"
-        if failed security attribute "system_u:system_r:myapp_t:s0" then alert
+   check process ntpd matching "ntpd"
+        if failed security attribute "system_u:system_r:ntpd_t:s0" then alert
 Example for AppArmor:
    check process ntpd matching "ntpd"
         if failed security attribute "/usr/sbin/ntpd (enforce)" then alert
