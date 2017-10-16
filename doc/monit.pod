@@ -2696,6 +2696,25 @@ Example of restarting the process every three days:
     if uptime > 3 days then restart
 
 
+=head2 SECURITY ATTRIBUTE TEST
+
+The security attribute statement may only be used in a process context.
+
+Syntax:
+
+ IF FAILED SECURITY ATTRIBUTE <string> THEN <action>
+
+I<string> expected security attribute value
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example for SELinux:
+
+ check process myapp with pidfile /var/run/myapp.pid
+    if failed security attribute "system_u:system_r:myapp_t:s0" then restart
+
+
 =head2 PROGRAM STATUS TEST
 
 You can check the exit status of a program or a script. This test
