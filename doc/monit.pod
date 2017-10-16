@@ -2711,8 +2711,8 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example for SELinux:
 
- check process myapp with pidfile /var/run/myapp.pid
-    if failed security attribute "system_u:system_r:myapp_t:s0" then restart
+ check process ntpd matching "ntpd"
+    if failed security attribute "system_u:system_r:ntpd_t:s0" then alert
 
 Example for AppArmor:
 
