@@ -680,7 +680,7 @@ static State_Type _checkSecurityAttribute(Service_T s, char *attribute) {
                         Event_post(s, Event_Invalid, State_Succeeded, a->action, "Security attribute test succeeded [current attribute = '%s']", attr);
                 } else {
                         rv = State_Failed;
-                        Event_post(s, Event_Invalid, State_Failed, a->action, "Security attribute test failed for %s -- current attributes are '%s'", s->name, attr);
+                        Event_post(s, Event_Invalid, State_Failed, a->action, "Security attribute test failed for %s -- current attribute is '%s'", s->name, attr);
                 }
         }
         return rv;

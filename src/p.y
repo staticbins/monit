@@ -2716,6 +2716,9 @@ euid            : IF FAILED EUID STRING rate1 THEN action1 recovery {
 secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recovery {
                         addsecurityattribute($5, $<number>8, $<number>9);
                   }
+                | IF FAILED SECURITY ATTRIBUTE PATH rate1 THEN action1 recovery {
+                        addsecurityattribute($5, $<number>8, $<number>9);
+                  }
                 ;
 
 gid             : IF FAILED GID STRING rate1 THEN action1 recovery {

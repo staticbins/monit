@@ -2714,6 +2714,11 @@ Example for SELinux:
  check process myapp with pidfile /var/run/myapp.pid
     if failed security attribute "system_u:system_r:myapp_t:s0" then restart
 
+Example for AppArmor:
+
+ check process ntpd matching "ntpd"
+    if failed security attribute "/usr/sbin/ntpd (enforce)" then alert
+
 
 =head2 PROGRAM STATUS TEST
 

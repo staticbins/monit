@@ -8,6 +8,9 @@ New: Issue #507: Linux: Implement support for monitoring Linux Security Modules 
 Example for SELinux:
    check process myapp matching "myapp"
         if failed security attribute "system_u:system_r:myapp_t:s0" then alert
+Example for AppArmor:
+   check process ntpd matching "ntpd"
+        if failed security attribute "/usr/sbin/ntpd (enforce)" then alert
 
 Fixed: Issue #672: FreeBSD: Support I/O statistics for raid and encrypted partitions.
 

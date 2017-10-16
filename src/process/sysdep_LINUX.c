@@ -325,7 +325,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
 
                 /********** /proc/PID/attr/current **********/
                 if (file_readProc(buf, sizeof(buf), "attr/current", stat_pid, NULL)) {
-                        pt[i].secattr = Str_dup(buf);
+                        pt[i].secattr = Str_trim(Str_dup(buf));
                 }
 
                 /* Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting) */
