@@ -139,7 +139,7 @@ const char *Event_get_action_description(Event_T E);
 /**
  * Reprocess the partialy handled event queue
  */
-void Event_queue_process();
+void Event_queue_process(void);
 
 
 #endif

@@ -1078,12 +1078,10 @@ void Util_printService(Service_T s) {
                 printf(" %-20s = %s\n", "EUID", StringBuffer_toString(Util_printRule(buf, s->euid->action, "if failed %d", s->euid->uid)));
         }
 
-#ifdef LSM_LABEL_CHECK
-        if (s->lsmlabelcheck && s->lsmlabelcheck->action) {
+        for (SecurityAttribute_T o = s->secattrlist; o; o = o->next) {
                 StringBuffer_clear(buf);
-                printf(" %-20s = %s\n", "LSM label", StringBuffer_toString(Util_printRule(buf, s->lsmlabelcheck->action, "if failed %s", s->lsmlabelcheck->lsmlabel.data)));
+                printf(" %-20s = %s\n", "Security attribute", StringBuffer_toString(Util_printRule(buf, o->action, "if failed %s", o->attribute)));
          }
-#endif
 
         if (s->gid && s->gid->action) {
                 StringBuffer_clear(buf);
@@ -1768,9 +1766,6 @@ void Util_resetInfo(Service_T s) {
                         s->inf.process->ppid = -1;
                         s->inf.process->uid = -1;
                         s->inf.process->euid = -1;
-#ifdef LSM_LABEL_CHECK
-                        NULL_LSMLABEL(s->inf.process->lsmlabel);
-#endif
                         s->inf.process->gid = -1;
                         s->inf.process->zombie = false;
                         s->inf.process->threads = -1;
@@ -1782,6 +1777,7 @@ void Util_resetInfo(Service_T s) {
                         s->inf.process->cpu_percent = -1.;
                         s->inf.process->total_cpu_percent = -1.;
                         s->inf.process->uptime = -1;
+                        FREE(s->inf.process->secattr);
                         _resetIOStatistics(&(s->inf.process->read));
                         _resetIOStatistics(&(s->inf.process->write));
                         break;

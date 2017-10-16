@@ -38,7 +38,7 @@ typedef struct T {
  * Create a new Address object
  * @return Address object
  */
-T Address_new();
+T Address_new(void);
 
 
 /**

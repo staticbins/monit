@@ -933,34 +933,13 @@ typedef struct Gid_T {
 } *Gid_T;
 
 
-
-#ifdef LSM_LABEL_CHECK
-/**
- *   Defines raw format of LSM label
- *   Use a length of 79 characters
- **/
-typedef struct lsmlabel_t { char data[80]; } lsmlabel_t;
-/* define helper function for lsmlabel_t */
-#define WRITE_LSMLABEL(__dst_ctx, __src_str) do { \
-            strncpy((__dst_ctx).data, (__src_str), sizeof((__dst_ctx).data) - 1); \
-            (__dst_ctx).data[sizeof((__dst_ctx).data) - 1] = 0; \
-        } while (0)
-
-#define NULL_LSMLABEL(__ctx) do { \
-            (__ctx).data[0] = 0; \
-            (__ctx).data[1] = 42; \
-        } while (0)
-
-#define IS_NULL_LSMLABEL(__ctx) ((__ctx).data[0] == 0 && (__ctx).data[1] == 42)
-
-#define IS_EQUAL_LSMLABEL(__a_ctx, __b_ctx) (strcmp((__a_ctx).data, (__b_ctx).data) == 0)
-
-/** Defined LSM label object */
-typedef struct LsmLabel_T {
-        lsmlabel_t lsmlabel;                                /**< Owner's LSM label */
+typedef struct SecurityAttribute_T {
+        char *attribute;                                   /**< Security attribute */
         EventAction_T action;  /**< Description of the action upon event occurence */
-} *LsmLabel_T;
-#endif
+
+        /** For internal use */
+        struct SecurityAttribute_T *next;
+} *SecurityAttribute_T;
 
 
 /** Defines pid object */
@@ -1116,9 +1095,7 @@ typedef struct ProcessInfo_T {
         time_t uptime;                                     /**< Process uptime */
         struct IOStatistics_T read;                       /**< Read statistics */
         struct IOStatistics_T write;                     /**< Write statistics */
-#ifdef LSM_LABEL_CHECK
-        lsmlabel_t lsmlabel;
-#endif
+        char *secattr;                                /**< Security attributes */
 } *ProcessInfo_T;
 
 
@@ -1186,9 +1163,7 @@ typedef struct Service_T {
         Uid_T       uid;                                            /**< Uid check */
         Uid_T       euid;                                 /**< Effective Uid check */
         Gid_T       gid;                                            /**< Gid check */
-#ifdef LSM_LABEL_CHECK
-        LsmLabel_T lsmlabelcheck;                             /**< LSM label check */
-#endif
+        SecurityAttribute_T secattrlist;             /**< Security attributes list */
         LinkStatus_T linkstatuslist;                 /**< Network link status list */
         LinkSpeed_T linkspeedlist;                    /**< Network link speed list */
         LinkSaturation_T linksaturationlist;     /**< Network link saturation list */
@@ -1366,7 +1341,7 @@ boolean_t parse(char *);
 boolean_t control_service(const char *, Action_Type);
 boolean_t control_service_string(List_T, const char *);
 void  spawn(Service_T, command_t, Event_T);
-boolean_t log_init();
+boolean_t log_init(void);
 void  LogEmergency(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogAlert(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogCritical(const char *, ...) __attribute__((format (printf, 1, 2)));
@@ -1384,25 +1359,25 @@ void  vLogNotice(const char *, va_list ap);
 void  vLogInfo(const char *, va_list ap);
 void  vLogDebug(const char *, va_list ap);
 void  vLogAbortHandler(const char *s, va_list ap);
-void  log_close();
+void  log_close(void);
 #ifndef HAVE_VSYSLOG
 #ifdef HAVE_SYSLOG
 void vsyslog (int, const char *, va_list);
 #endif /* HAVE_SYSLOG */
 #endif /* HAVE_VSYSLOG */
-int   validate();
-void  daemonize();
-void  gc();
+int   validate(void);
+void  daemonize(void);
+void  gc(void);
 void  gc_mail_list(Mail_T *);
 void  gccmd(command_t *);
 void  gc_event(Event_T *e);
 boolean_t kill_daemon(int);
-int   exist_daemon();
+int   exist_daemon(void);
 boolean_t sendmail(Mail_T);
-void  init_env();
+void  init_env(void);
 void  monit_http(Httpd_Action);
-boolean_t can_http();
-void set_signal_block();
+boolean_t can_http(void);
+void set_signal_block(void);
 State_Type check_process(Service_T);
 State_Type check_filesystem(Service_T);
 State_Type check_file(Service_T);
@@ -1414,6 +1389,6 @@ State_Type check_program(Service_T);
 State_Type check_net(Service_T);
 int  check_URL(Service_T s);
 void status_xml(StringBuffer_T, Event_T, int, const char *);
-boolean_t  do_wakeupcall();
+boolean_t  do_wakeupcall(void);
 
 #endif

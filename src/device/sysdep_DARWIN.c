@@ -217,7 +217,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                         for (int i = 0; i < countfs; i++) {
                                 struct statfs *mntItem = mnt + i;
                                 if (compare(path, mntItem)) {
-                                        if (IS(mntItem->f_fstypename, "hfs")) {
+                                        if (IS(mntItem->f_fstypename, "hfs") || IS(mntItem->f_fstypename, "apfs")) {
                                                 inf->filesystem->object.getDiskActivity = _getBlockDiskActivity;
                                         } else {
                                                 inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;

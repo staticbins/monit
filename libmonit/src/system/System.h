@@ -74,7 +74,7 @@ void System_error(const char *e, ...) __attribute__((format (printf, 1, 2)));
  * a fixed size of <code>2^16</code> if the value is larger. 
  * @return A guarded number of available file descriptors for a process
  */
-int System_getDescriptorsGuarded();
+int System_getDescriptorsGuarded(void);
 
 
 #endif

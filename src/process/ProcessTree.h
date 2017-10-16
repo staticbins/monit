@@ -71,9 +71,7 @@ typedef struct ProcessTree_T {
         } write;
         time_t uptime;
         char *cmdline;
-#ifdef LSM_LABEL_CHECK
-        lsmlabel_t lsmlabel;
-#endif
+        char *secattr;
 } ProcessTree_T;
 
 
@@ -88,7 +86,7 @@ int ProcessTree_init(ProcessEngine_Flags pflags);
 /**
  * Delete the process tree
  */
-void ProcessTree_delete();
+void ProcessTree_delete(void);
 
 
 /**
@@ -134,7 +132,7 @@ boolean_t init_system_info(void);
  * Update system statistic
  * @return true if successful, otherwise false
  */
-boolean_t update_system_info();
+boolean_t update_system_info(void);
 
 
 #endif

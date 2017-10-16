@@ -204,9 +204,6 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         int                 stat_ppid = 0;
         int                 stat_uid = 0;
         int                 stat_euid = 0;
-#ifdef LSM_LABEL_CHECK
-        lsmlabel_t          stat_lsmlabel;
-#endif
         int                 stat_gid = 0;
         char               *tmp = NULL;
         char                procname[STRLEN];
@@ -292,15 +289,6 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         continue;
                 }
 
-#ifdef LSM_LABEL_CHECK
-                /********** /proc/PID/attr/current **********/
-                if (! file_readProc(buf, sizeof(buf), "attr/current", stat_pid, NULL)) {
-                        WRITE_LSMLABEL(stat_lsmlabel, "none - no LSM?");
-                } else {
-                        WRITE_LSMLABEL(stat_lsmlabel, buf);
-                }
-#endif
-
                 /********** /proc/PID/io **********/
                 if (_statistics.hasIOStatistics) {
                         if (file_readProc(buf, sizeof(buf), "io", stat_pid, NULL)) {
@@ -333,6 +321,11 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                 if (buf[j] == 0)
                                         buf[j] = ' ';
                         pt[i].cmdline = Str_dup(*buf ? buf : procname);
+                }
+
+                /********** /proc/PID/attr/current **********/
+                if (file_readProc(buf, sizeof(buf), "attr/current", stat_pid, NULL)) {
+                        pt[i].secattr = Str_dup(buf);
                 }
 
                 /* Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting) */

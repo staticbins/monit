@@ -30,19 +30,19 @@
 /**
  * Start the HTTPD server
  */
-void Engine_start();
+void Engine_start(void);
 
 
 /**
  * Stop the HTTPD server.
  */
-void Engine_stop();
+void Engine_stop(void);
 
 
 /**
  * Cleanup the HTTPD server resources (remove unix socket).
  */
-void Engine_cleanup();
+void Engine_cleanup(void);
 
 
 /**
@@ -57,13 +57,13 @@ boolean_t Engine_addAllow(char *pattern);
  * Are any hosts present in the host allow list?
  * @return true if the host allow list is non-empty, otherwise false
  */
-boolean_t Engine_hasAllow();
+boolean_t Engine_hasAllow(void);
 
 
 /**
  * Free the host allow list
  */
-void Engine_destroyAllow();
+void Engine_destroyAllow(void);
 
 
 #endif

@@ -102,14 +102,14 @@
 /* -------------------------------------------------------------- Prototypes */
 
 
-static void  do_init();                       /* Initialize this application */
-static void  do_reinit();           /* Re-initialize the runtime application */
+static void  do_init(void);                   /* Initialize this application */
+static void  do_reinit(void);       /* Re-initialize the runtime application */
 static void  do_action(char **);         /* Dispatch to the submitted action */
-static void  do_exit();                                    /* Finalize monit */
-static void  do_default();                              /* Do default action */
+static void  do_exit(void);                                /* Finalize monit */
+static void  do_default(void);                          /* Do default action */
 static void  handle_options(int, char **);         /* Handle program options */
-static void  help();                 /* Print program help message to stdout */
-static void  version();                         /* Print version information */
+static void  help(void);             /* Print program help message to stdout */
+static void  version(void);                     /* Print version information */
 static void *heartbeat(void *args);              /* M/Monit heartbeat thread */
 static RETSIGTYPE do_reload(int);       /* Signalhandler for a daemon reload */
 static RETSIGTYPE do_destroy(int);   /* Signalhandler for monit finalization */
@@ -851,12 +851,6 @@ static void version() {
         printf("out");
 #endif
         printf(" compression, with");
-#ifdef __linux__
-#ifndef LSM_LABEL_CHECK
-        printf("out");
-#endif
-        printf(" lsm, with");
-#endif /* __linux__ */
 #ifndef HAVE_LIBPAM
         printf("out");
 #endif

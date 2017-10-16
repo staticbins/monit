@@ -99,6 +99,7 @@ static void _delete(ProcessTree_T **pt, int *size) {
                 for (int i = 0; i < *size; i++) {
                         FREE(_pt[i].cmdline);
                         FREE(_pt[i].children.list);
+                        FREE(_pt[i].secattr);
                 }
                 FREE(_pt);
                 *pt = NULL;
@@ -207,6 +208,7 @@ int ProcessTree_init(ProcessEngine_Flags pflags) {
                 for (int i = 0; i < oldptreesize; i++) {
                         FREE(oldptree[i].cmdline);
                         FREE(oldptree[i].children.list);
+                        FREE(oldptree[i].secattr);
                 }
         }
 
@@ -293,9 +295,7 @@ boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid) {
                 s->inf.process->uid               = ptree[leaf].cred.uid;
                 s->inf.process->euid              = ptree[leaf].cred.euid;
                 s->inf.process->gid               = ptree[leaf].cred.gid;
-#ifdef LSM_LABEL_CHECK
-                s->inf.process->lsmlabel          = ptree[leaf].lsmlabel;
-#endif
+                s->inf.process->secattr           = ptree[leaf].secattr;
                 s->inf.process->uptime            = ptree[leaf].uptime;
                 s->inf.process->threads           = ptree[leaf].threads.self;
                 s->inf.process->children          = ptree[leaf].children.total;

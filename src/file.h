@@ -37,13 +37,13 @@
 /**
  * Initialize the programs file variables
  */
-void file_init();
+void file_init(void);
 
 
 /**
  * Finalize and remove temporary files
  */
-void file_finalize();
+void file_finalize(void);
 
 
 /**
@@ -53,7 +53,7 @@ void file_finalize();
  * not found.
  * @return The location of monits control file (monitrc)
  */
-char *file_findControlFile();
+char *file_findControlFile(void);
 
 
 /**

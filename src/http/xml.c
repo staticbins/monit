@@ -384,18 +384,12 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<ppid>%d</ppid>"
                                         "<uid>%d</uid>"
                                         "<euid>%d</euid>"
-#ifdef LSM_LABEL_CHECK
-                                        "<lsm_label>%s</lsm_label>"
-#endif
                                         "<gid>%d</gid>"
                                         "<uptime>%lld</uptime>",
                                         S->inf.process->pid,
                                         S->inf.process->ppid,
                                         S->inf.process->uid,
                                         S->inf.process->euid,
-#ifdef LSM_LABEL_CHECK
-                                        S->inf.process->lsmlabel.data,
-#endif
                                         S->inf.process->gid,
                                         (long long)S->inf.process->uptime);
                                 if (Run.flags & Run_ProcessEngineEnabled) {

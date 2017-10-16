@@ -671,27 +671,20 @@ static State_Type _checkEuid(Service_T s, int euid) {
 }
 
 
-#ifdef LSM_LABEL_CHECK
-/**
- * Test LSM label of process
- */
-static State_Type _checkLsmLabel(Service_T s, const lsmlabel_t *l) {
+static State_Type _checkSecurityAttribute(Service_T s, char *attribute) {
         ASSERT(s);
-        if (s->lsmlabelcheck) {
-                if (!IS_NULL_LSMLABEL(*l)) {
-                        if (!IS_EQUAL_LSMLABEL(*l, s->lsmlabelcheck->lsmlabel)) {
-                                Event_post(s, Event_Resource, State_Failed, s->lsmlabelcheck->action, "LSM label test failed for %s -- current label is '%s'", s->name, l->data);
-                                return State_Failed;
-                        } else {
-                                Event_post(s, Event_Resource, State_Succeeded, s->lsmlabelcheck->action, "LSM label test succeeded [current label = '%s']", l->data);
-                                return State_Succeeded;
-                        }
+        State_Type rv = State_Succeeded;
+        const char *attr = NVLSTR(attribute);
+        for (SecurityAttribute_T a = s->secattrlist; a; a = a->next) {
+                if (IS(attr, a->attribute)) {
+                        Event_post(s, Event_Invalid, State_Succeeded, a->action, "Security attribute test succeeded [current attribute = '%s']", attr);
+                } else {
+                        rv = State_Failed;
+                        Event_post(s, Event_Invalid, State_Failed, a->action, "Security attribute test failed for %s -- current attributes are '%s'", s->name, attr);
                 }
-                return State_Init;
         }
-        return State_Succeeded;
+        return rv;
 }
-#endif
 
 
 /**
@@ -1358,13 +1351,11 @@ State_Type check_process(Service_T s) {
                                 rv = State_Failed;
                         if (_checkEuid(s, s->inf.process->euid) == State_Failed)
                                 rv = State_Failed;
-#ifdef LSM_LABEL_CHECK
-                        if (_checkLsmLabel(s, &(s->inf.process->lsmlabel)) == State_Failed)
-                                rv = State_Failed;
-#endif
                         if (_checkGid(s, s->inf.process->gid) == State_Failed)
                                 rv = State_Failed;
                         if (_checkUptime(s, s->inf.process->uptime) == State_Failed)
+                                rv = State_Failed;
+                        if (_checkSecurityAttribute(s, s->inf.process->secattr) == State_Failed)
                                 rv = State_Failed;
                         for (Resource_T pr = s->resourcelist; pr; pr = pr->next)
                                 if (_checkProcessResources(s, pr) == State_Failed)

@@ -214,8 +214,8 @@ static Digest_Type digesttype = Digest_Cleartext;
 
 /* -------------------------------------------------------------- Prototypes */
 
-static void  preparse();
-static void  postparse();
+static void  preparse(void);
+static void  postparse(void);
 static boolean_t _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing);
 static void  addmail(char *, Mail_T, Mail_T *);
 static Service_T createservice(Service_Type, char *, char *, State_Type (*)(Service_T));
@@ -266,44 +266,44 @@ static void  prepare_urlrequest(URL_T U);
 static void  seturlrequest(int, char *);
 static void  setlogfile(char *);
 static void  setpidfile(char *);
-static void  reset_sslset();
-static void  reset_mailset();
-static void  reset_mailserverset();
-static void  reset_mmonitset();
-static void  reset_portset();
-static void  reset_resourceset();
-static void  reset_timestampset();
-static void  reset_actionrateset();
-static void  reset_sizeset();
-static void  reset_uptimeset();
-static void  reset_pidset();
-static void  reset_ppidset();
-static void  reset_fsflagset();
-static void  reset_nonexistset();
-static void  reset_existset();
-static void  reset_linkstatusset();
-static void  reset_linkspeedset();
-static void  reset_linksaturationset();
-static void  reset_bandwidthset();
-static void  reset_checksumset();
-static void  reset_permset();
-static void  reset_uidset();
-static void  reset_gidset();
-static void  reset_statusset();
-static void  reset_filesystemset();
-static void  reset_icmpset();
+static void  reset_sslset(void);
+static void  reset_mailset(void);
+static void  reset_mailserverset(void);
+static void  reset_mmonitset(void);
+static void  reset_portset(void);
+static void  reset_resourceset(void);
+static void  reset_timestampset(void);
+static void  reset_actionrateset(void);
+static void  reset_sizeset(void);
+static void  reset_uptimeset(void);
+static void  reset_pidset(void);
+static void  reset_ppidset(void);
+static void  reset_fsflagset(void);
+static void  reset_nonexistset(void);
+static void  reset_existset(void);
+static void  reset_linkstatusset(void);
+static void  reset_linkspeedset(void);
+static void  reset_linksaturationset(void);
+static void  reset_bandwidthset(void);
+static void  reset_checksumset(void);
+static void  reset_permset(void);
+static void  reset_uidset(void);
+static void  reset_gidset(void);
+static void  reset_statusset(void);
+static void  reset_filesystemset(void);
+static void  reset_icmpset(void);
 static void  reset_rateset(struct rate_t *);
 static void  check_name(char *);
 static int   check_perm(int);
 static void  check_exec(char *);
 static int   cleanup_hash_string(char *);
-static void  check_depend();
+static void  check_depend(void);
 static void  setsyslog(char *);
 static command_t copycommand(command_t);
 static int verifyMaxForward(int);
 static void _setPEM(char **store, char *path, const char *description, boolean_t isFile);
 static void _setSSLOptions(SslOptions_T options);
-static void lsmlabel_config(const char *, Action_Type, Action_Type);
+static void addsecurityattribute(char *, Action_Type, Action_Type);
 
 %}
 
@@ -352,7 +352,7 @@ static void lsmlabel_config(const char *, Action_Type, Action_Type);
 %token <string> TARGET TIMESPEC HTTPHEADER
 %token <number> MAXFORWARD
 %token FIPS
-%token LSMLABEL
+%token SECURITY ATTRIBUTE
 
 %left GREATER GREATEROREQUAL LESS LESSOREQUAL EQUAL NOTEQUAL
 
@@ -407,7 +407,7 @@ optproc         : start
                 | ppid
                 | uid
                 | euid
-                | lsmlabel
+                | secattr
                 | gid
                 | uptime
                 | connection
@@ -2713,9 +2713,8 @@ euid            : IF FAILED EUID STRING rate1 THEN action1 recovery {
                   }
                 ;
 
-lsmlabel        : IF FAILED LSMLABEL STRING rate1 THEN action1 recovery {
-                        lsmlabel_config($4, $<number>7, $<number>8);
-                        FREE($4);
+secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recovery {
+                        addsecurityattribute($5, $<number>8, $<number>9);
                   }
                 ;
 
@@ -4949,15 +4948,12 @@ static void _setSSLOptions(SslOptions_T options) {
         reset_sslset();
 }
 
-static void lsmlabel_config(const char *label_str, Action_Type failed, Action_Type succeeded) {
-#ifdef LSM_LABEL_CHECK
-        LsmLabel_T newlabel;
-        NEW(newlabel);
-        addeventaction(&(newlabel->action), failed, succeeded);
-        WRITE_LSMLABEL(newlabel->lsmlabel, label_str);
-
-        current->lsmlabelcheck = newlabel;
-#else
-        yyerror("LSM label check cannot be activated -- support not built-in");
-#endif
+static void addsecurityattribute(char *value, Action_Type failed, Action_Type succeeded) {
+        SecurityAttribute_T attr;
+        NEW(attr);
+        addeventaction(&(attr->action), failed, succeeded);
+        attr->attribute = value;
+        attr->next = current->secattrlist;
+        current->secattrlist = attr;
 }
+

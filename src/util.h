@@ -144,13 +144,13 @@ boolean_t Util_existService(const char *name);
  * managed by monit
  * @return The number of services monitored
  */
-int Util_getNumberOfServices();
+int Util_getNumberOfServices(void);
 
 
 /**
  * Print the Runtime object
  */
-void Util_printRunList();
+void Util_printRunList(void);
 
 
 /**
@@ -163,7 +163,7 @@ void Util_printService(Service_T s);
 /**
  * Print all the services in the servicelist
  */
-void Util_printServiceList();
+void Util_printServiceList(void);
 
 
 /**
@@ -229,13 +229,13 @@ char *Util_getBasicAuthHeader(char *username, char *password);
  * Redirect the standard file descriptors to /dev/null and route any
  * error messages to the log file.
  */
-void Util_redirectStdFds();
+void Util_redirectStdFds(void);
 
 
 /*
  * Close all filedescriptors except standard.
  */
-void Util_closeFds();
+void Util_closeFds(void);
 
 
 /*

@@ -44,7 +44,7 @@ typedef struct T *T;
  * Test if Link by IP address is supported.
  * @return true if supported, false if not
  */
-int Link_isGetByAddressSupported();
+int Link_isGetByAddressSupported(void);
 
 
 /**
