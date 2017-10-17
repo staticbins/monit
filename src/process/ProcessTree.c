@@ -454,11 +454,11 @@ boolean_t init_system_info(void) {
                                 if (propertyList) {
                                         CFStringRef value = CFDictionaryGetValue(propertyList, CFSTR("ProductName"));
                                         if (value) {
-                                                snprintf(systeminfo.uname.sysname, sizeof(systeminfo.uname.sysname), "%s", CFStringGetCStringPtr(value, CFStringGetSystemEncoding()));
+                                                CFStringGetCString(value, systeminfo.uname.sysname, sizeof(systeminfo.uname.sysname), CFStringGetSystemEncoding());
                                         }
                                         value = CFDictionaryGetValue(propertyList, CFSTR("ProductVersion"));
                                         if (value) {
-                                                snprintf(systeminfo.uname.release, sizeof(systeminfo.uname.release), "%s", CFStringGetCStringPtr(value, CFStringGetSystemEncoding()));
+                                                CFStringGetCString(value, systeminfo.uname.release, sizeof(systeminfo.uname.release), CFStringGetSystemEncoding());
                                         }
                                         CFRelease(propertyList);
                                 }
