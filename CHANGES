@@ -18,6 +18,8 @@ Fixed: Issue #676: Process CPU usage is reported always as 0.0% in the first cyc
 
 Fixed: MacOS: Support disk I/O monitoring for APFS
 
+Fixed: MacOS: Fix platform name and version for MacOS High Sierra.
+
 
 Version 5.24.0
 
