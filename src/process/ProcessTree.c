@@ -143,8 +143,13 @@ static void _fillProcessTree(ProcessTree_T *pt, int index) {
                 if (pt[index].parent != -1 && pt[index].parent != index) {
                         ProcessTree_T *parent_pt = &pt[pt[index].parent];
                         parent_pt->children.total += pt[index].children.total;
-                        parent_pt->threads.children += pt[index].threads.children > 1 ? pt[index].threads.children : 1;
-                        parent_pt->cpu.usage.children += pt[index].cpu.usage.children;
+                        parent_pt->threads.children += (pt[index].threads.self > 1 ? pt[index].threads.self : 1) + (pt[index].threads.children > 0 ? pt[index].threads.children : 0);
+                        if (pt[index].cpu.usage.self >= 0) {
+                                parent_pt->cpu.usage.children += pt[index].cpu.usage.self;
+                        }
+                        if (pt[index].cpu.usage.children >= 0) {
+                                parent_pt->cpu.usage.children += pt[index].cpu.usage.children;
+                        }
                         parent_pt->memory.usage_total  += pt[index].memory.usage_total;
                 }
         }
@@ -233,7 +238,7 @@ int ProcessTree_init(ProcessEngine_Flags pflags) {
                 if (oldptree) {
                         int oldentry = _findProcess(pt[i].pid, oldptree, oldptreesize);
                         if (oldentry != -1) {
-                                if (systeminfo.cpu.count > 0 && time_delta > 0 && oldptree[oldentry].cpu.time > 0 && pt[i].cpu.time > oldptree[oldentry].cpu.time) {
+                                if (systeminfo.cpu.count > 0 && time_delta > 0 && oldptree[oldentry].cpu.time >= 0 && pt[i].cpu.time >= oldptree[oldentry].cpu.time) {
                                         pt[i].cpu.usage.self = 100. * (pt[i].cpu.time - oldptree[oldentry].cpu.time) / time_delta;
                                 }
                         }

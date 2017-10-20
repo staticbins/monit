@@ -12,6 +12,8 @@ Example for AppArmor:
    check process ntpd matching "ntpd"
         if failed security attribute "/usr/sbin/ntpd (enforce)" then alert
 
+Fixed: Issue #657: Fix the "total cpu usage" test for processes with children.
+
 Fixed: Issue #672: FreeBSD: Support I/O statistics for raid and encrypted partitions.
 
 Fixed: Issue #676: Process CPU usage is reported always as 0.0% in the first cycle after process start
@@ -43,8 +45,6 @@ Fixed: Issue #640: SSL option CACERTIFICATEPATH doesn't work.
 Fixed: Issue #649: Monit initialization fails if open() returns an unexpected file
 descriptor. The problem was observed when Monit was executed in STAF test environment.
 Thanks to Alan Somers for patch.
-
-Fixed: Issue #657: Fix the "total cpu usage" test for processes with children.
 
 Fixed: Issue #666: FreeBSD: Support statistics for filesystems, which are
 mounted via labeled device.
