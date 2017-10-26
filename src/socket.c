@@ -586,11 +586,19 @@ static void _testIp(Port_T p) {
                                 {
                                         S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, localaddr, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, &(p->target.net.ssl.options), p->timeout);
                                         S->Port = p;
-                                        p->protocol->check(S);
+                                        TRY
+                                        {
+                                                p->protocol->check(S);
+                                        }
+                                        FINALLY
+                                        {
 #ifdef HAVE_OPENSSL
-                                        // Set the minimum valid days past the protocol check as if the connection uses STARTTLS to switch plain->SSL, we have no SSL certificate informations until the STARTTTLS is performed
-                                        p->target.net.ssl.certificate.validDays = Ssl_getCertificateValidDays(S->ssl);
+                                                // Set the minimum valid days past the protocol check as if the connection uses STARTTLS to switch plain->SSL, we have no SSL certificate informations until the STARTTTLS is performed.
+                                                // Try to collect the certificate validDays even on protocol exception - the protocol test may fail on higher level (e.g. when HTTP returns 400), but we can still get certificate info
+                                                p->target.net.ssl.certificate.validDays = Ssl_getCertificateValidDays(S->ssl);
 #endif
+                                        }
+                                        END_TRY;
                                         is_available = Connection_Ok;
 
                                 }
