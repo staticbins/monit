@@ -4870,8 +4870,11 @@ static void check_exec(char *exec) {
 
 /* Return a valid max forward value for SIP header */
 static int verifyMaxForward(int mf) {
-        if (mf >= 0 && mf <= 255)
+        if (mf == 0) {
+                return INT_MAX; // Differentiate unitialized (0) and explicit zero
+        } else if (mf > 0 && mf <= 255) {
                 return mf;
+        }
         yywarning2("SIP max forward is outside the range [0..255]. Setting max forward to 70");
         return 70;
 }

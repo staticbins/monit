@@ -21,6 +21,8 @@ Fixed: Issue #676: Process CPU usage is reported always as 0.0% in the first cyc
 Fixed: Issue #680: Port test: If the protocol check failed, the SSL certificate expiration test returned
 false positive error.
 
+Fixed: Issue #685: SIP protocol test: maxforward 0 doesn't work
+
 Fixed: MacOS: Support disk I/O monitoring for APFS
 
 Fixed: MacOS: Fix platform name and version for MacOS High Sierra.

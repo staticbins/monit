@@ -116,7 +116,7 @@ void check_sip(Socket_T socket) {
                          port,                         // our port
                          random(),                     // branch
                          rport,                        // rport option
-                         P->parameters.sip.maxforward ? P->parameters.sip.maxforward : 70, // maximum forwards
+                         P->parameters.sip.maxforward ? (P->parameters.sip.maxforward == INT_MAX ? 0 : P->parameters.sip.maxforward) : 70, // maximum forwards
                          proto,                        // protocol
                          target,                       // to
                          proto,                        // protocol
