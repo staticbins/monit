@@ -768,7 +768,7 @@ static void handle_options(int argc, char **argv) {
                         do_init();
                         assert(Run.id);
                         printf("Reset Monit Id? [y/n]> ");
-                        if ( getchar() == 'y') {
+                        if (getchar() == 'y') {
                                 File_delete(Run.files.id);
                                 Util_monitId(Run.files.id);
                                 kill_daemon(SIGHUP); // make any running Monit Daemon reload the new ID-File

@@ -634,7 +634,7 @@ void Event_queue_process() {
                                 if (Run.flags & Run_HandlerInit)
                                         Run.handler_queue[Handler_Alert]++;
                                 if ((Run.handler_flag & Handler_Alert) != Handler_Alert) {
-                                        if ( handle_alert(e) != Handler_Alert ) {
+                                        if (handle_alert(e) != Handler_Alert) {
                                                 e->flag &= ~Handler_Alert;
                                                 Run.handler_queue[Handler_Alert]--;
                                                 handlers_passed++;
@@ -650,7 +650,7 @@ void Event_queue_process() {
                                 if (Run.flags & Run_HandlerInit)
                                         Run.handler_queue[Handler_Mmonit]++;
                                 if ((Run.handler_flag & Handler_Mmonit) != Handler_Mmonit) {
-                                        if ( MMonit_send(e) != Handler_Mmonit ) {
+                                        if (MMonit_send(e) != Handler_Mmonit) {
                                                 e->flag &= ~Handler_Mmonit;
                                                 Run.handler_queue[Handler_Mmonit]--;
                                                 handlers_passed++;

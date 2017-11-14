@@ -4336,7 +4336,7 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
 
         handle = fopen(filename, "r");
 
-        if ( handle == NULL ) {
+        if (handle == NULL) {
                 if (username != NULL)
                         yyerror2("Cannot read htpasswd (%s)", filename);
                 else
@@ -4353,7 +4353,7 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
                 Str_rtrim(buf);
                 Str_curtail(buf, "#");
 
-                if ( NULL == (colonindex = strchr(buf, ':')))
+                if (NULL == (colonindex = strchr(buf, ':')))
                 continue;
 
                 ht_passwd = Str_dup(colonindex+1);
@@ -4363,8 +4363,8 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
                  *  want to remove ":.*$" and Crypt and MD5 hashed dont have a colon
                  */
 
-                if ( (NULL != (colonindex = strchr(ht_passwd, ':'))) && ( dtype != Digest_Cleartext) )
-                *colonindex = '\0';
+                if ((NULL != (colonindex = strchr(ht_passwd, ':'))) && (dtype != Digest_Cleartext))
+                        *colonindex = '\0';
 
                 ht_username = Str_dup(buf);
 
@@ -4381,7 +4381,7 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
         }
 
         if (credentials_added == 0) {
-                if ( username == NULL )
+                if (username == NULL)
                         yywarning2("htpasswd file (%s) has no usable credentials", filename);
                 else
                         yywarning2("htpasswd file (%s) has no usable credentials for user %s", filename, username);

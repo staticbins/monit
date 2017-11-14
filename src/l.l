@@ -1083,8 +1083,8 @@ static int pop_buffer_state(void) {
                 FREE(currentfile);
                 currentfile = buffer_stack[buffer_stack_ptr].currentfile;
 
-                yy_delete_buffer( YY_CURRENT_BUFFER );
-                yy_switch_to_buffer( buffer_stack[buffer_stack_ptr].buffer );
+                yy_delete_buffer(YY_CURRENT_BUFFER);
+                yy_switch_to_buffer(buffer_stack[buffer_stack_ptr].buffer);
 
         }
 
