@@ -1095,7 +1095,7 @@ typedef struct ProcessInfo_T {
         time_t uptime;                                     /**< Process uptime */
         struct IOStatistics_T read;                       /**< Read statistics */
         struct IOStatistics_T write;                     /**< Write statistics */
-        char *secattr;                                /**< Security attributes */
+        char secattr[STRLEN];                         /**< Security attributes */
 } *ProcessInfo_T;
 
 

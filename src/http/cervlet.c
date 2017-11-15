@@ -427,7 +427,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("memory", Event_Resource, type, res, s, s->inf.process->mem_percent >= 0, "%.1f%% [%s]", s->inf.process->mem_percent, Str_bytes2str(s->inf.process->mem, (char[10]){}));
                                         _formatStatus("memory total", Event_Resource, type, res, s, s->inf.process->total_mem_percent >= 0, "%.1f%% [%s]", s->inf.process->total_mem_percent, Str_bytes2str(s->inf.process->total_mem, (char[10]){}));
 #ifdef LINUX
-                                        _formatStatus("security attribute", Event_Invalid, type, res, s, s->inf.process->secattr != NULL, "%s", s->inf.process->secattr);
+                                        _formatStatus("security attribute", Event_Invalid, type, res, s, *(s->inf.process->secattr), "%s", s->inf.process->secattr);
 #endif
                                 }
                                 _printIOStatistics(type, res, s, &(s->inf.process->read), "disk read", "read");

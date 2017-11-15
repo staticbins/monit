@@ -1777,7 +1777,7 @@ void Util_resetInfo(Service_T s) {
                         s->inf.process->cpu_percent = -1.;
                         s->inf.process->total_cpu_percent = -1.;
                         s->inf.process->uptime = -1;
-                        s->inf.process->secattr = NULL;
+                        *(s->inf.process->secattr) = 0;
                         _resetIOStatistics(&(s->inf.process->read));
                         _resetIOStatistics(&(s->inf.process->write));
                         break;
