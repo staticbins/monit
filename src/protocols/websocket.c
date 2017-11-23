@@ -55,7 +55,7 @@ static void read_response(Socket_T socket, int opcode) {
                 char buf[STRLEN];
                 // Read frame header
                 if ((n = Socket_read(socket, buf, 2)) != 2)
-                        THROW(IOException, "WEBSOCKET: response header read error -- %s", STRERROR);
+                        THROW(IOException, "WEBSOCKET: response 0x%x: header read error -- %s", opcode, STRERROR);
                 /*
                  * As we don't know the specific protocol used by this websocket server, the pipeline
                  * may contain some frames sent by server before the response we're waiting for (such
@@ -67,12 +67,12 @@ static void read_response(Socket_T socket, int opcode) {
                         unsigned payload_size = *(buf + 1) & 0x7F;
                         if (payload_size <= sizeof(buf)) {
                                 if ((n = Socket_read(socket, buf, payload_size)) != payload_size)
-                                        THROW(IOException, "WEBSOCKET: response data read error");
+                                        THROW(IOException, "WEBSOCKET: response 0x%x: data read error", opcode);
                         } else {
                                 /* STRLEN buffer should be sufficient for any frame spuriously sent by
                                  * the server. Guard against too large frames. If in real life such
                                  * situation will be valid (payload > STRLEN), then fix */
-                                THROW(ProtocolException, "WEBSOCKET: response data read error -- unexpected payload size: %d", payload_size);
+                                THROW(ProtocolException, "WEBSOCKET: response 0x%x: unexpected payload size: %d", opcode, payload_size);
                         }
                 } else {
                         break; // Found frame with matching opcode
