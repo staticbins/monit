@@ -3124,7 +3124,7 @@ multiple addresses are available and connection to one address failed,
 Monit will try the next address and so on until a connection succeed or
 until there are no more addresses left to try.
 
-I<TYPE <TCP | UDP>]>. Optionally specify the socket type Monit
+I<TYPE [TCP | UDP]>. Optionally specify the socket type Monit
 should use when trying to connect to the port. The different socket
 types are: TCP or UDP, where TCP is a regular stream based socket, UDP,
 a datagram socket. The default socket type is TCP.
