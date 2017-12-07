@@ -2813,7 +2813,12 @@ Multiple status tests can be used, for example:
        if status = 3 for 5 cycles then exec "/usr/local/bin/emergency.sh"
 
 
-=head2 NETWORK LINK STATUS TEST
+=head2 NETWORK INTERFACE TESTS
+
+Monit can check network interfaces for link state, overall saturation, upload and download rates.
+
+
+=head3 Link status
 
 You can check the network link state. This test may only be used
 within a check network service entry in the Monit control file.
@@ -2842,7 +2847,7 @@ commands for your system)
        if failed link then restart
 
 
-=head2 NETWORK LINK CAPACITY TEST
+=head3 Link capacity
 
 You can check the network link mode capacity for changes. This test
 may only be used within a check network service entry in the Monit
@@ -2868,7 +2873,7 @@ Example:
        if changed link capacity then alert
 
 
-=head2 NETWORK SATURATION TEST
+=head3 Link saturation
 
 You can check the network link saturation. Monit then computes the link
 utilisation based on the current transfer rate vs. link capacity.
@@ -2897,7 +2902,7 @@ Example:
        if saturation > 90% then alert
 
 
-=head2 NETWORK BANDWIDTH TEST
+=head3 Link upload and download [bytes]
 
 You can check a network link upload and download bandwidth usage, current
 transfer speed and total data transferred in the last 24 hours. This test may
@@ -2943,7 +2948,7 @@ Examples:
        if total downloaded > 10 GB in last day then alert
 
 
-=head2 NETWORK PACKETS TEST
+=head3 Link upload and download [packets]
 
 You can check the network link upload and download packets count, current
 transfer rate and total data transferred in last 24 hours. This test may
