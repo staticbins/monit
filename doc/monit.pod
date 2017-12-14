@@ -1706,7 +1706,7 @@ control file.
 
 =head1 SERVICE TESTS
 
-=head3 LIMITS
+=head2 LIMITS
 
 You can configure and set various limits to tweak buffer sizes and
 timeouts used by Monit. In most situations the default values are
@@ -1748,7 +1748,7 @@ Options legend:
  ----------------------------------------------------------------------------------
 
 
-=head3 GENERAL SYNTAX
+=head2 GENERAL SYNTAX
 
 Monit offers several if-tests you can use in a 'check' statement to test
 various aspects of a service.
@@ -1773,7 +1773,7 @@ The action is executed each time the value changes. Monit will remember
 the new value and will trigger event if the value change again.
 
 
-=head3 ACTION
+=head2 ACTION
 
 In each test you must select the action to be executed from this
 list:
@@ -1834,7 +1834,7 @@ from the console.
 =back
 
 
-=head3 FAULT TOLERANCE
+=head2 FAULT TOLERANCE
 
 By default an action is executed if it matches and the corresponding
 service is set in an error state. However, you can require a test to
@@ -2815,8 +2815,21 @@ Multiple status tests can be used, for example:
 
 =head2 NETWORK INTERFACE TESTS
 
-Monit can check network interfaces for link state, overall saturation, upload and download rates.
+Monit can check network interfaces for:
 
+=over 3
+
+=item L<Status|/"Link status">
+
+=item L<Capacity|/"Link capacity">
+
+=item L<Saturation|/"Link saturation">
+
+=item L<Upload and download [bytes]|/"Link upload and download [bytes]">
+
+=item L<Upload and download [packets]|/"Link upload and download [packets]">
+
+=back
 
 =head3 Link status
 
