@@ -190,6 +190,11 @@ boolean_t do_wakeupcall() {
 }
 
 
+boolean_t interrupt() {
+        return Run.flags & Run_Stopped || Run.flags & Run_DoReload;
+}
+
+
 /* ----------------------------------------------------------------- Private */
 
 
@@ -575,7 +580,7 @@ static void do_default() {
                         State_save();
 
                         /* In the case that there is no pending action then sleep */
-                        if (! (Run.flags & Run_ActionPending) && ! (Run.flags & Run_Stopped))
+                        if (! (Run.flags & Run_ActionPending) && ! interrupt())
                                 sleep(Run.polltime);
 
                         if (Run.flags & Run_DoWakeup) {
@@ -871,7 +876,7 @@ static void *heartbeat(void *args) {
         LogInfo("M/Monit heartbeat started\n");
         LOCK(heartbeatMutex)
         {
-                while (! (Run.flags & Run_Stopped) && ! (Run.flags & Run_DoReload)) {
+                while (! interrupt()) {
                         MMonit_send(NULL);
                         struct timespec wait = {.tv_sec = Time_now() + Run.polltime, .tv_nsec = 0};
                         Sem_timeWait(heartbeatCond, heartbeatMutex, wait);

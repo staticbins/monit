@@ -1287,9 +1287,7 @@ int validate() {
 
         int errors = 0;
         /* Check the services */
-        for (Service_T s = servicelist; s; s = s->next) {
-                if (Run.flags & Run_Stopped)
-                        break;
+        for (Service_T s = servicelist; s && ! interrupt(); s = s->next) {
                 // FIXME: The Service_Program must collect the exit value from last run, even if the program start should be skipped in this cycle => let check program always run the test (to be refactored with new scheduler)
                 if (! _doScheduledAction(s) && s->monitor && (s->type == Service_Program || ! _checkSkip(s))) {
                         _checkTimeout(s); // Can disable monitoring => need to check s->monitor again
