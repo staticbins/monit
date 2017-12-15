@@ -1390,5 +1390,6 @@ State_Type check_net(Service_T);
 int  check_URL(Service_T s);
 void status_xml(StringBuffer_T, Event_T, int, const char *);
 boolean_t  do_wakeupcall(void);
+boolean_t interrupt(void);
 
 #endif
