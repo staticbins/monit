@@ -1249,19 +1249,13 @@ void Util_printService(Service_T s) {
                                );
                 } else if (o->resource == Resource_Space) {
                         if (o->limit_absolute > -1) {
-                               if (s->inf.filesystem->f_bsize > 0)
-                                       printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s", operatornames[o->operator], Str_bytes2str(o->limit_absolute * s->inf.filesystem->f_bsize, buffer))));
-                                else
-                                       printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %lld blocks", operatornames[o->operator], o->limit_absolute)));
+                                printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s", operatornames[o->operator], Str_bytes2str(o->limit_absolute, buffer))));
                         } else {
                                printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent)));
                         }
                 } else if (o->resource == Resource_SpaceFree) {
                         if (o->limit_absolute > -1) {
-                               if (s->inf.filesystem->f_bsize > 0)
-                                       printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s", operatornames[o->operator], Str_bytes2str(o->limit_absolute * s->inf.filesystem->f_bsize, buffer))));
-                                else
-                                       printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %lld blocks", operatornames[o->operator], o->limit_absolute)));
+                                printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s", operatornames[o->operator], Str_bytes2str(o->limit_absolute, buffer))));
                         } else {
                                printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent)));
                         }
@@ -1712,12 +1706,12 @@ void Util_resetInfo(Service_T s) {
                         s->inf.filesystem->f_blocks = 0LL;
                         s->inf.filesystem->f_blocksfree = 0LL;
                         s->inf.filesystem->f_blocksfreetotal = 0LL;
+                        s->inf.filesystem->f_blocksused = 0LL;
                         s->inf.filesystem->f_files = 0LL;
                         s->inf.filesystem->f_filesfree = 0LL;
                         s->inf.filesystem->inode_percent = 0.;
                         s->inf.filesystem->inode_total = 0LL;
                         s->inf.filesystem->space_percent = 0.;
-                        s->inf.filesystem->space_total = 0LL;
                         s->inf.filesystem->flagsChanged = false;
                         *(s->inf.filesystem->flags) = 0;
                         s->inf.filesystem->mode = -1;

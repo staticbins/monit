@@ -293,7 +293,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         (int)S->inf.filesystem->uid,
                                         (int)S->inf.filesystem->gid,
                                         S->inf.filesystem->space_percent,
-                                        S->inf.filesystem->f_bsize > 0 ? (double)S->inf.filesystem->space_total / 1048576. * (double)S->inf.filesystem->f_bsize : 0.,
+                                        S->inf.filesystem->f_bsize > 0 ? (double)S->inf.filesystem->f_blocksused / 1048576. * (double)S->inf.filesystem->f_bsize : 0.,
                                         S->inf.filesystem->f_bsize > 0 ? (double)S->inf.filesystem->f_blocks / 1048576. * (double)S->inf.filesystem->f_bsize : 0.);
                                 if (S->inf.filesystem->f_files > 0) {
                                         StringBuffer_append(B,

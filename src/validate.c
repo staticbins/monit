@@ -238,7 +238,7 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
         ASSERT(s);
         ASSERT(r);
         State_Type rv = State_Succeeded;
-        char report[STRLEN] = {}, buf1[STRLEN], buf2[STRLEN];
+        char report[STRLEN] = {}, buf1[10], buf2[10];
         switch (r->resource_id) {
                 case Resource_CpuPercent:
                         if (s->inf.process->cpu_percent < 0.) {
@@ -409,7 +409,7 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
         ASSERT(s);
         ASSERT(r);
         State_Type rv = State_Succeeded;
-        char report[STRLEN] = {}, buf1[STRLEN], buf2[STRLEN];
+        char report[STRLEN] = {}, buf1[10], buf2[10];
         switch (r->resource_id) {
                 case Resource_CpuPercent:
                         {
@@ -1044,16 +1044,13 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                         return State_Failed;
                                 }
                         } else {
-                                if (Util_evalQExpression(td->operator, s->inf.filesystem->space_total, td->limit_absolute)) {
-                                        if (s->inf.filesystem->f_bsize > 0) {
-                                                char buf1[STRLEN];
-                                                char buf2[STRLEN];
-                                                Str_bytes2str(s->inf.filesystem->space_total * s->inf.filesystem->f_bsize, buf1);
-                                                Str_bytes2str(td->limit_absolute * s->inf.filesystem->f_bsize, buf2);
-                                                Event_post(s, Event_Resource, State_Failed, td->action, "space usage %s matches resource limit [space usage %s %s]", buf1, operatorshortnames[td->operator], buf2);
-                                        } else {
-                                                Event_post(s, Event_Resource, State_Failed, td->action, "space usage %lld blocks matches resource limit [space usage %s %lld blocks]", s->inf.filesystem->space_total, operatorshortnames[td->operator], td->limit_absolute);
-                                        }
+                                int64_t bytesUsed = s->inf.filesystem->f_blocksused * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
+                                if (Util_evalQExpression(td->operator, bytesUsed, td->limit_absolute)) {
+                                        char buf1[10];
+                                        char buf2[10];
+                                        Str_bytes2str(bytesUsed, buf1);
+                                        Str_bytes2str(td->limit_absolute, buf2);
+                                        Event_post(s, Event_Resource, State_Failed, td->action, "space usage %s matches resource limit [space usage %s %s]", buf1, operatorshortnames[td->operator], buf2);
                                         return State_Failed;
                                 }
                         }
@@ -1067,16 +1064,13 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                         return State_Failed;
                                 }
                         } else {
-                                if (Util_evalQExpression(td->operator, s->inf.filesystem->f_blocksfreetotal, td->limit_absolute)) {
-                                        if (s->inf.filesystem->f_bsize > 0) {
-                                                char buf1[STRLEN];
-                                                char buf2[STRLEN];
-                                                Str_bytes2str(s->inf.filesystem->f_blocksfreetotal * s->inf.filesystem->f_bsize, buf1);
-                                                Str_bytes2str(td->limit_absolute * s->inf.filesystem->f_bsize, buf2);
-                                                Event_post(s, Event_Resource, State_Failed, td->action, "space free %s matches resource limit [space free %s %s]", buf1, operatorshortnames[td->operator], buf2);
-                                        } else {
-                                                Event_post(s, Event_Resource, State_Failed, td->action, "space free %lld blocks matches resource limit [space free %s %lld blocks]", s->inf.filesystem->f_blocksfreetotal, operatorshortnames[td->operator], td->limit_absolute);
-                                        }
+				int64_t bytesFreeTotal = s->inf.filesystem->f_blocksfreetotal * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
+                                if (Util_evalQExpression(td->operator, bytesFreeTotal, td->limit_absolute)) {
+                                        char buf1[10];
+                                        char buf2[10];
+                                        Str_bytes2str(bytesFreeTotal, buf1);
+                                        Str_bytes2str(td->limit_absolute, buf2);
+                                        Event_post(s, Event_Resource, State_Failed, td->action, "space free %s matches resource limit [space free %s %s]", buf1, operatorshortnames[td->operator], buf2);
                                         return State_Failed;
                                 }
                         }
@@ -1828,7 +1822,7 @@ State_Type check_net(Service_T s) {
                 }
         }
         // Upload
-        char buf1[STRLEN], buf2[STRLEN];
+        char buf1[10], buf2[10];
         for (Bandwidth_T upload = s->uploadbyteslist; upload; upload = upload->next) {
                 long long obytes;
                 switch (upload->range) {

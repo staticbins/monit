@@ -108,9 +108,9 @@ boolean_t filesystem_usage(Service_T s) {
                 s->inf.filesystem->uid = sb.st_uid;
                 s->inf.filesystem->gid = sb.st_gid;
                 s->inf.filesystem->inode_total = s->inf.filesystem->f_files - s->inf.filesystem->f_filesfree;
-                s->inf.filesystem->space_total = s->inf.filesystem->f_blocks - s->inf.filesystem->f_blocksfreetotal;
+                s->inf.filesystem->f_blocksused = s->inf.filesystem->f_blocks - s->inf.filesystem->f_blocksfreetotal;
                 s->inf.filesystem->inode_percent = s->inf.filesystem->f_files > 0 ? 100. * (double)s->inf.filesystem->inode_total / (double)s->inf.filesystem->f_files : 0.;
-                s->inf.filesystem->space_percent = s->inf.filesystem->f_blocks > 0 ? 100. * (double)s->inf.filesystem->space_total / (double)s->inf.filesystem->f_blocks : 0.;
+                s->inf.filesystem->space_percent = s->inf.filesystem->f_blocks > 0 ? 100. * (double)s->inf.filesystem->f_blocksused / (double)s->inf.filesystem->f_blocks : 0.;
         } else {
                 Statistics_reset(&(s->inf.filesystem->read.bytes));
                 Statistics_reset(&(s->inf.filesystem->read.operations));

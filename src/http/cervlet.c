@@ -1435,7 +1435,7 @@ static void do_home_filesystem(HttpResponse res) {
                                             "<td class='right column%s'>%.1f%% [%s]</td>",
                                             (s->error & Event_Resource) ? " red-text" : "",
                                             s->inf.filesystem->space_percent,
-                                            s->inf.filesystem->f_bsize > 0 ? Str_bytes2str(s->inf.filesystem->space_total * s->inf.filesystem->f_bsize, buf) : "0 MB");
+                                            s->inf.filesystem->f_bsize > 0 ? Str_bytes2str(s->inf.filesystem->f_blocksused * s->inf.filesystem->f_bsize, buf) : "0 MB");
                         if (s->inf.filesystem->f_files > 0) {
                                 StringBuffer_append(res->outputbuffer,
                                                     "<td class='right column%s'>%.1f%% [%lld objects]</td>",
@@ -2000,10 +2000,7 @@ static void print_service_rules_filesystem(HttpResponse res, Service_T s) {
                 } else if (dl->resource == Resource_Space) {
                         StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Space usage limit</td><td>");
                         if (dl->limit_absolute > -1) {
-                                if (s->inf.filesystem->f_bsize > 0)
-                                        Util_printRule(res->outputbuffer, dl->action, "If %s %s", operatornames[dl->operator], Str_bytes2str(dl->limit_absolute * s->inf.filesystem->f_bsize, (char[10]){}));
-                                else
-                                        Util_printRule(res->outputbuffer, dl->action, "If %s %lld blocks", operatornames[dl->operator], dl->limit_absolute);
+                                Util_printRule(res->outputbuffer, dl->action, "If %s %s", operatornames[dl->operator], Str_bytes2str(dl->limit_absolute, (char[10]){}));
                         } else {
                                 Util_printRule(res->outputbuffer, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
                         }
@@ -2011,10 +2008,7 @@ static void print_service_rules_filesystem(HttpResponse res, Service_T s) {
                 } else if (dl->resource == Resource_SpaceFree) {
                         StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Space free limit</td><td>");
                         if (dl->limit_absolute > -1) {
-                                if (s->inf.filesystem->f_bsize > 0)
-                                        Util_printRule(res->outputbuffer, dl->action, "If %s %s", operatornames[dl->operator], Str_bytes2str(dl->limit_absolute * s->inf.filesystem->f_bsize, (char[10]){}));
-                                else
-                                        Util_printRule(res->outputbuffer, dl->action, "If %s %lld blocks", operatornames[dl->operator], dl->limit_absolute);
+                                Util_printRule(res->outputbuffer, dl->action, "If %s %s", operatornames[dl->operator], Str_bytes2str(dl->limit_absolute, (char[10]){}));
                         } else {
                                 Util_printRule(res->outputbuffer, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
                         }

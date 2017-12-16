@@ -4,6 +4,9 @@
 
 Version 5.25.2
 
+Fixed: Issue #693: If the space usage test is set with an absolute value and the monitored
+filesystem is not mounted on boot, monit returned error during configuration parsing and stopped.
+
 Fixed: Issue #699: Monit reload is slow when triggered in the middle of the poll cycle.
 
 

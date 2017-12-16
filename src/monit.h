@@ -1022,10 +1022,10 @@ typedef struct FileSystemInfo_T {
         long long  f_blocks;              /**< Total data blocks in filesystem */
         long long  f_blocksfree;   /**< Free blocks available to non-superuser */
         long long  f_blocksfreetotal;           /**< Free blocks in filesystem */
+        long long  f_blocksused;                  /**< Used space total blocks */
         long long  f_files;                /**< Total file nodes in filesystem */
         long long  f_filesfree;             /**< Free file nodes in filesystem */
         long long  inode_total;                  /**< Used inode total objects */
-        long long  space_total;                   /**< Used space total blocks */
         float inode_percent;                        /**< Used inode percentage */
         float space_percent;                        /**< Used space percentage */
         int f_bsize;                                  /**< Transfer block size */
