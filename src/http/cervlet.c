@@ -1441,7 +1441,7 @@ static void do_home_filesystem(HttpResponse res) {
                                                     "<td class='right column%s'>%.1f%% [%lld objects]</td>",
                                                     (s->error & Event_Resource) ? " red-text" : "",
                                                     s->inf.filesystem->inode_percent,
-                                                    s->inf.filesystem->inode_total);
+                                                    s->inf.filesystem->f_filesused);
                         } else {
                                 StringBuffer_append(res->outputbuffer,
                                                     "<td class='right column'>not supported by filesystem</td>");

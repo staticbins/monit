@@ -1010,8 +1010,8 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                         return State_Failed;
                                 }
                         } else {
-                                if (Util_evalQExpression(td->operator, s->inf.filesystem->inode_total, td->limit_absolute)) {
-                                        Event_post(s, Event_Resource, State_Failed, td->action, "inode usage %lld matches resource limit [inode usage %s %lld]", s->inf.filesystem->inode_total, operatorshortnames[td->operator], td->limit_absolute);
+                                if (Util_evalQExpression(td->operator, s->inf.filesystem->f_filesused, td->limit_absolute)) {
+                                        Event_post(s, Event_Resource, State_Failed, td->action, "inode usage %lld matches resource limit [inode usage %s %lld]", s->inf.filesystem->f_filesused, operatorshortnames[td->operator], td->limit_absolute);
                                         return State_Failed;
                                 }
                         }

@@ -303,7 +303,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 "<total>%lld</total>"
                                                 "</inode>",
                                                 S->inf.filesystem->inode_percent,
-                                                S->inf.filesystem->inode_total,
+                                                S->inf.filesystem->f_filesused,
                                                 S->inf.filesystem->f_files);
                                 }
                                 _ioStatistics(B, "read", &(S->inf.filesystem->read));

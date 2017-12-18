@@ -1709,8 +1709,8 @@ void Util_resetInfo(Service_T s) {
                         s->inf.filesystem->f_blocksused = 0LL;
                         s->inf.filesystem->f_files = 0LL;
                         s->inf.filesystem->f_filesfree = 0LL;
+                        s->inf.filesystem->f_filesused = 0LL;
                         s->inf.filesystem->inode_percent = 0.;
-                        s->inf.filesystem->inode_total = 0LL;
                         s->inf.filesystem->space_percent = 0.;
                         s->inf.filesystem->flagsChanged = false;
                         *(s->inf.filesystem->flags) = 0;
