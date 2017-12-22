@@ -54,6 +54,10 @@
 #include <strings.h>
 #endif
 
+#ifdef HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -772,8 +776,8 @@ static void handle_options(int argc, char **argv) {
                 {
                         do_init();
                         assert(Run.id);
-                        printf("Reset Monit Id? [y/n]> ");
-                        if (getchar() == 'y') {
+                        printf("Reset Monit Id? [y/N]> ");
+                        if (tolower(getchar()) == 'y') {
                                 File_delete(Run.files.id);
                                 Util_monitId(Run.files.id);
                                 kill_daemon(SIGHUP); // make any running Monit Daemon reload the new ID-File
