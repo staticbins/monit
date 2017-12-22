@@ -111,7 +111,7 @@ typedef struct Proc_T {
         unsigned long long  item_starttime;
         uint64_t            read_bytes;
         uint64_t            write_bytes;
-        char                name[STRLEN];
+        char                name[4096];
         char                secattr[STRLEN];
 } *Proc_T;
 
