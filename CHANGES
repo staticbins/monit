@@ -9,6 +9,9 @@ filesystem is not mounted on boot, monit returned error during configuration par
 
 Fixed: Issue #699: Monit reload is slow when triggered in the middle of the poll cycle.
 
+Fixed: Linux: If a process is terminates while Monit collects the process information, the calculation
+of resource usage might be incorrect. Thanks to Joshua Griffiths for patch.
+
 
 Version 5.25.1
 
