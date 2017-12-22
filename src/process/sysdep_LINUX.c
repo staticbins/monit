@@ -348,40 +348,37 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 LogError("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
                 return 0;
         }
-        volatile int treesize = globbuf.gl_pathc;
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
+        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), globbuf.gl_pathc);
 
+        int count = 0;
         struct Proc_T proc = {};
         time_t starttime = _getStartTime();
-        for (int i = 0, y = 0; y < treesize; y++) {
-                proc.pid = atoi(globbuf.gl_pathv[y] + 6); // skip "/proc/"
+        for (int i = 0; i < globbuf.gl_pathc; i++) {
+                proc.pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
                 if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags) && _parseProcPidAttrCurrent(&proc)) {
                         // Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting)
-                        pt[i].pid = proc.pid;
-                        pt[i].ppid = proc.ppid;
-                        pt[i].cred.uid = proc.uid;
-                        pt[i].cred.euid = proc.euid;
-                        pt[i].cred.gid = proc.gid;
-                        pt[i].threads.self = proc.item_threads;
-                        pt[i].uptime = starttime > 0 ? (systeminfo.time / 10. - (starttime + (time_t)(proc.item_starttime / hz))) : 0;
-                        pt[i].cpu.time = (double)(proc.item_utime + proc.item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
-                        pt[i].memory.usage = (uint64_t)proc.item_rss * (uint64_t)page_size;
-                        pt[i].read.bytes = proc.read_bytes;
-                        pt[i].write.bytes = proc.write_bytes;
-                        pt[i].zombie = proc.item_state == 'Z' ? true : false;
-                        pt[i].cmdline = Str_dup(proc.name);
-                        pt[i].secattr = Str_dup(proc.secattr);
-                        i++;
-                } else {
-                        // failed to get proc info -> decrement treesize
-                        treesize--;
+                        pt[count].pid = proc.pid;
+                        pt[count].ppid = proc.ppid;
+                        pt[count].cred.uid = proc.uid;
+                        pt[count].cred.euid = proc.euid;
+                        pt[count].cred.gid = proc.gid;
+                        pt[count].threads.self = proc.item_threads;
+                        pt[count].uptime = starttime > 0 ? (systeminfo.time / 10. - (starttime + (time_t)(proc.item_starttime / hz))) : 0;
+                        pt[count].cpu.time = (double)(proc.item_utime + proc.item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
+                        pt[count].memory.usage = (uint64_t)proc.item_rss * (uint64_t)page_size;
+                        pt[count].read.bytes = proc.read_bytes;
+                        pt[count].write.bytes = proc.write_bytes;
+                        pt[count].zombie = proc.item_state == 'Z' ? true : false;
+                        pt[count].cmdline = Str_dup(proc.name);
+                        pt[count].secattr = Str_dup(proc.secattr);
+                        count++;
                 }
         }
 
         *reference = pt;
         globfree(&globbuf);
 
-        return treesize;
+        return count;
 }
 
 
