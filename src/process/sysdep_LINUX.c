@@ -234,22 +234,22 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
 
         /* Insert data from /proc directory */
         time_t starttime = get_starttime();
-        for (int i = 0; i < treesize; i++) {
-                stat_pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
+        for (int i = 0, y = 0; i < (volatile int)treesize; y++) {
+                stat_pid = atoi(globbuf.gl_pathv[y] + 6); // skip "/proc/"
 
                 /********** /proc/PID/stat **********/
                 if (! file_readProc(buf, sizeof(buf), "stat", stat_pid, NULL)) {
                         DEBUG("system statistic error -- cannot read /proc/%d/stat\n", stat_pid);
-                        continue;
+                        goto failed;
                 }
                 if (! (tmp = strrchr(buf, ')'))) {
                         DEBUG("system statistic error -- file /proc/%d/stat parse error\n", stat_pid);
-                        continue;
+                        goto failed;
                 }
                 *tmp = 0;
                 if (sscanf(buf, "%*d (%255s", procname) != 1) {
                         DEBUG("system statistic error -- file /proc/%d/stat process name parse error\n", stat_pid);
-                        continue;
+                        goto failed;
                 }
                 tmp += 2;
                 if (sscanf(tmp,
@@ -264,29 +264,29 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                            &stat_item_starttime,
                            &stat_item_rss) != 9) {
                         DEBUG("system statistic error -- file /proc/%d/stat parse error\n", stat_pid);
-                        continue;
+                        goto failed;
                 }
 
                 /********** /proc/PID/status **********/
                 if (! file_readProc(buf, sizeof(buf), "status", stat_pid, NULL)) {
                         DEBUG("system statistic error -- cannot read /proc/%d/status\n", stat_pid);
-                        continue;
+                        goto failed;
                 }
                 if (! (tmp = strstr(buf, "Uid:"))) {
                         DEBUG("system statistic error -- cannot find process uid\n");
-                        continue;
+                        goto failed;
                 }
                 if (sscanf(tmp + 4, "\t%d\t%d", &stat_uid, &stat_euid) != 2) {
                         DEBUG("system statistic error -- cannot read process uid\n");
-                        continue;
+                        goto failed;
                 }
                 if (! (tmp = strstr(buf, "Gid:"))) {
                         DEBUG("system statistic error -- cannot find process gid\n");
-                        continue;
+                        goto failed;
                 }
                 if (sscanf(tmp + 4, "\t%d", &stat_gid) != 1) {
                         DEBUG("system statistic error -- cannot read process gid\n");
-                        continue;
+                        goto failed;
                 }
 
                 /********** /proc/PID/io **********/
@@ -294,19 +294,19 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         if (file_readProc(buf, sizeof(buf), "io", stat_pid, NULL)) {
                                 if (! (tmp = strstr(buf, "read_bytes:"))) {
                                         DEBUG("system statistic error -- cannot find process read_bytes\n");
-                                        continue;
+                                        goto failed;
                                 }
                                 if (sscanf(tmp + 11, "\t%"PRIu64, &stat_read_bytes) != 1) {
                                         DEBUG("system statistic error -- cannot get process read bytes\n");
-                                        continue;
+                                        goto failed;
                                 }
                                 if (! (tmp = strstr(buf, "write_bytes:"))) {
                                         DEBUG("system statistic error -- cannot find process write_bytes\n");
-                                        continue;
+                                        goto failed;
                                 }
                                 if (sscanf(tmp + 12, "\t%"PRIu64, &stat_write_bytes) != 1) {
                                         DEBUG("system statistic error -- cannot get process write bytes\n");
-                                        continue;
+                                        goto failed;
                                 }
                         }
                 }
@@ -315,7 +315,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 if (pflags & ProcessEngine_CollectCommandLine) {
                         if (! file_readProc(buf, sizeof(buf), "cmdline", stat_pid, &bytes)) {
                                 DEBUG("system statistic error -- cannot read /proc/%d/cmdline\n", stat_pid);
-                                continue;
+                                goto failed;
                         }
                         for (int j = 0; j < (bytes - 1); j++) // The cmdline file contains argv elements/strings terminated separated by '\0' => join the string
                                 if (buf[j] == 0)
@@ -344,6 +344,14 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].read.bytes = stat_read_bytes;
                 pt[i].write.bytes = stat_write_bytes;
                 pt[i].zombie = stat_item_state == 'Z' ? true : false;
+
+                /* success */
+                i++;
+                continue;
+
+failed:
+                /* failed to get proc info; decrement treesize */
+                treesize--;
         }
 
         *reference = pt;
