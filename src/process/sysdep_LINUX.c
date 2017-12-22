@@ -95,6 +95,27 @@ static struct {
 } _statistics = {};
 
 
+typedef struct Proc_T {
+        int                 pid;
+        int                 ppid;
+        int                 uid;
+        int                 euid;
+        int                 gid;
+        char                item_state;
+        long                item_cutime;
+        long                item_cstime;
+        long                item_rss;
+        int                 item_threads;
+        unsigned long       item_utime;
+        unsigned long       item_stime;
+        unsigned long long  item_starttime;
+        uint64_t            read_bytes;
+        uint64_t            write_bytes;
+        char                name[STRLEN];
+        char                secattr[STRLEN];
+} *Proc_T;
+
+
 /* --------------------------------------- Static constructor and destructor */
 
 
@@ -122,7 +143,7 @@ static double hz = 0.;
  * Get system start time
  * @return seconds since unix epoch
  */
-static time_t get_starttime() {
+static time_t _getStartTime() {
         struct sysinfo info;
         if (sysinfo(&info) < 0) {
                 LogError("system statistic error -- cannot get system uptime: %s\n", STRERROR);
@@ -131,6 +152,126 @@ static time_t get_starttime() {
         return Time_now() - info.uptime;
 }
 
+
+// parse /proc/PID/stat 
+static boolean_t _parseProcPidStat(Proc_T proc) {
+        char buf[4096];
+        char *tmp = NULL;
+        if (! file_readProc(buf, sizeof(buf), "stat", proc->pid, NULL)) {
+                DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->pid);
+                return false;
+        }
+        if (! (tmp = strrchr(buf, ')'))) {
+                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
+                return false;
+        }
+        *tmp = 0;
+        if (sscanf(buf, "%*d (%255s", proc->name) != 1) {
+                DEBUG("system statistic error -- file /proc/%d/stat process name parse error\n", proc->pid);
+                return false;
+        }
+        tmp += 2;
+        if (sscanf(tmp,
+                   "%c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %ld %ld %*d %*d %d %*u %llu %*u %ld %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d\n",
+                   &(proc->item_state),
+                   &(proc->ppid),
+                   &(proc->item_utime),
+                   &(proc->item_stime),
+                   &(proc->item_cutime),
+                   &(proc->item_cstime),
+                   &(proc->item_threads),
+                   &(proc->item_starttime),
+                   &(proc->item_rss)) != 9) {
+                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
+                return false;
+        }
+        return true;
+}
+
+
+// parse /proc/PID/status
+static boolean_t _parseProcPidStatus(Proc_T proc) {
+        char buf[4096];
+        char *tmp = NULL;
+        if (! file_readProc(buf, sizeof(buf), "status", proc->pid, NULL)) {
+                DEBUG("system statistic error -- cannot read /proc/%d/status\n", proc->pid);
+                return false;
+        }
+        if (! (tmp = strstr(buf, "Uid:"))) {
+                DEBUG("system statistic error -- cannot find process uid\n");
+                return false;
+        }
+        if (sscanf(tmp + 4, "\t%d\t%d", &(proc->uid), &(proc->euid)) != 2) {
+                DEBUG("system statistic error -- cannot read process uid\n");
+                return false;
+        }
+        if (! (tmp = strstr(buf, "Gid:"))) {
+                DEBUG("system statistic error -- cannot find process gid\n");
+                return false;
+        }
+        if (sscanf(tmp + 4, "\t%d", &(proc->gid)) != 1) {
+                DEBUG("system statistic error -- cannot read process gid\n");
+                return false;
+        }
+        return true;
+}
+
+
+// parse /proc/PID/io
+static boolean_t _parseProcPidIO(Proc_T proc) {
+        char buf[4096];
+        char *tmp = NULL;
+        if (_statistics.hasIOStatistics) {
+                if (file_readProc(buf, sizeof(buf), "io", proc->pid, NULL)) {
+                        if (! (tmp = strstr(buf, "read_bytes:"))) {
+                                DEBUG("system statistic error -- cannot find process read_bytes\n");
+                                return false;
+                        }
+                        if (sscanf(tmp + 11, "\t%"PRIu64, &(proc->read_bytes)) != 1) {
+                                DEBUG("system statistic error -- cannot get process read bytes\n");
+                                return false;
+                        }
+                        if (! (tmp = strstr(buf, "write_bytes:"))) {
+                                DEBUG("system statistic error -- cannot find process write_bytes\n");
+                                return false;
+                        }
+                        if (sscanf(tmp + 12, "\t%"PRIu64, &(proc->write_bytes)) != 1) {
+                                DEBUG("system statistic error -- cannot get process write bytes\n");
+                                return false;
+                        }
+                }
+        }
+        return true;
+}
+
+
+// parse /proc/PID/cmdline
+static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
+        if (pflags & ProcessEngine_CollectCommandLine) {
+                int bytes = 0;
+                char buf[4096];
+                if (! file_readProc(buf, sizeof(buf), "cmdline", proc->pid, &bytes)) {
+                        DEBUG("system statistic error -- cannot read /proc/%d/cmdline\n", proc->pid);
+                        return false;
+                }
+                for (int j = 0; j < (bytes - 1); j++) // The cmdline file contains argv elements/strings terminated separated by '\0' => join the string
+                        if (buf[j] == 0)
+                                buf[j] = ' ';
+                if (*buf)
+                        snprintf(proc->name, sizeof(proc->name), "%s", buf);
+        }
+        return true;
+}
+
+
+// parse /proc/PID/attr/current
+static boolean_t _parseProcPidAttrCurrent(Proc_T proc) {
+        if (file_readProc(proc->secattr, sizeof(proc->secattr), "attr/current", proc->pid, NULL)) {
+                Str_trim(proc->secattr);
+                return true;
+        }
+        return false;
+}
 
 /* ------------------------------------------------------------------ Public */
 
@@ -198,160 +339,43 @@ boolean_t init_process_info_sysdep(void) {
  * @return treesize > 0 if succeeded otherwise 0
  */
 int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
-        int                 rv, bytes = 0;
-        int                 treesize = 0;
-        int                 stat_pid = 0;
-        int                 stat_ppid = 0;
-        int                 stat_uid = 0;
-        int                 stat_euid = 0;
-        int                 stat_gid = 0;
-        char               *tmp = NULL;
-        char                procname[STRLEN];
-        char                buf[4096];
-        char                stat_item_state;
-        long                stat_item_cutime = 0;
-        long                stat_item_cstime = 0;
-        long                stat_item_rss = 0;
-        int                 stat_item_threads = 0;
-        glob_t              globbuf;
-        unsigned long       stat_item_utime = 0;
-        unsigned long       stat_item_stime = 0;
-        unsigned long long  stat_item_starttime = 0ULL;
-        uint64_t            stat_read_bytes = 0ULL;
-        uint64_t            stat_write_bytes = 0ULL;
-
         ASSERT(reference);
 
-        /* Find all processes in the /proc directory */
-        if ((rv = glob("/proc/[0-9]*", 0, NULL, &globbuf))) {
+        // Find all processes in the /proc directory
+        glob_t globbuf;
+        int rv = glob("/proc/[0-9]*", 0, NULL, &globbuf);
+        if (rv) {
                 LogError("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
                 return 0;
         }
-
-        treesize = globbuf.gl_pathc;
-
+        volatile int treesize = globbuf.gl_pathc;
         ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
-        /* Insert data from /proc directory */
-        time_t starttime = get_starttime();
-        for (int i = 0, y = 0; i < (volatile int)treesize; y++) {
-                stat_pid = atoi(globbuf.gl_pathv[y] + 6); // skip "/proc/"
-
-                /********** /proc/PID/stat **********/
-                if (! file_readProc(buf, sizeof(buf), "stat", stat_pid, NULL)) {
-                        DEBUG("system statistic error -- cannot read /proc/%d/stat\n", stat_pid);
-                        goto failed;
+        struct Proc_T proc = {};
+        time_t starttime = _getStartTime();
+        for (int i = 0, y = 0; y < treesize; y++) {
+                proc.pid = atoi(globbuf.gl_pathv[y] + 6); // skip "/proc/"
+                if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags) && _parseProcPidAttrCurrent(&proc)) {
+                        // Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting)
+                        pt[i].pid = proc.pid;
+                        pt[i].ppid = proc.ppid;
+                        pt[i].cred.uid = proc.uid;
+                        pt[i].cred.euid = proc.euid;
+                        pt[i].cred.gid = proc.gid;
+                        pt[i].threads.self = proc.item_threads;
+                        pt[i].uptime = starttime > 0 ? (systeminfo.time / 10. - (starttime + (time_t)(proc.item_starttime / hz))) : 0;
+                        pt[i].cpu.time = (double)(proc.item_utime + proc.item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
+                        pt[i].memory.usage = (uint64_t)proc.item_rss * (uint64_t)page_size;
+                        pt[i].read.bytes = proc.read_bytes;
+                        pt[i].write.bytes = proc.write_bytes;
+                        pt[i].zombie = proc.item_state == 'Z' ? true : false;
+                        pt[i].cmdline = Str_dup(proc.name);
+                        pt[i].secattr = Str_dup(proc.secattr);
+                        i++;
+                } else {
+                        // failed to get proc info -> decrement treesize
+                        treesize--;
                 }
-                if (! (tmp = strrchr(buf, ')'))) {
-                        DEBUG("system statistic error -- file /proc/%d/stat parse error\n", stat_pid);
-                        goto failed;
-                }
-                *tmp = 0;
-                if (sscanf(buf, "%*d (%255s", procname) != 1) {
-                        DEBUG("system statistic error -- file /proc/%d/stat process name parse error\n", stat_pid);
-                        goto failed;
-                }
-                tmp += 2;
-                if (sscanf(tmp,
-                           "%c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %ld %ld %*d %*d %d %*u %llu %*u %ld %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d\n",
-                           &stat_item_state,
-                           &stat_ppid,
-                           &stat_item_utime,
-                           &stat_item_stime,
-                           &stat_item_cutime,
-                           &stat_item_cstime,
-                           &stat_item_threads,
-                           &stat_item_starttime,
-                           &stat_item_rss) != 9) {
-                        DEBUG("system statistic error -- file /proc/%d/stat parse error\n", stat_pid);
-                        goto failed;
-                }
-
-                /********** /proc/PID/status **********/
-                if (! file_readProc(buf, sizeof(buf), "status", stat_pid, NULL)) {
-                        DEBUG("system statistic error -- cannot read /proc/%d/status\n", stat_pid);
-                        goto failed;
-                }
-                if (! (tmp = strstr(buf, "Uid:"))) {
-                        DEBUG("system statistic error -- cannot find process uid\n");
-                        goto failed;
-                }
-                if (sscanf(tmp + 4, "\t%d\t%d", &stat_uid, &stat_euid) != 2) {
-                        DEBUG("system statistic error -- cannot read process uid\n");
-                        goto failed;
-                }
-                if (! (tmp = strstr(buf, "Gid:"))) {
-                        DEBUG("system statistic error -- cannot find process gid\n");
-                        goto failed;
-                }
-                if (sscanf(tmp + 4, "\t%d", &stat_gid) != 1) {
-                        DEBUG("system statistic error -- cannot read process gid\n");
-                        goto failed;
-                }
-
-                /********** /proc/PID/io **********/
-                if (_statistics.hasIOStatistics) {
-                        if (file_readProc(buf, sizeof(buf), "io", stat_pid, NULL)) {
-                                if (! (tmp = strstr(buf, "read_bytes:"))) {
-                                        DEBUG("system statistic error -- cannot find process read_bytes\n");
-                                        goto failed;
-                                }
-                                if (sscanf(tmp + 11, "\t%"PRIu64, &stat_read_bytes) != 1) {
-                                        DEBUG("system statistic error -- cannot get process read bytes\n");
-                                        goto failed;
-                                }
-                                if (! (tmp = strstr(buf, "write_bytes:"))) {
-                                        DEBUG("system statistic error -- cannot find process write_bytes\n");
-                                        goto failed;
-                                }
-                                if (sscanf(tmp + 12, "\t%"PRIu64, &stat_write_bytes) != 1) {
-                                        DEBUG("system statistic error -- cannot get process write bytes\n");
-                                        goto failed;
-                                }
-                        }
-                }
-
-                /********** /proc/PID/cmdline **********/
-                if (pflags & ProcessEngine_CollectCommandLine) {
-                        if (! file_readProc(buf, sizeof(buf), "cmdline", stat_pid, &bytes)) {
-                                DEBUG("system statistic error -- cannot read /proc/%d/cmdline\n", stat_pid);
-                                goto failed;
-                        }
-                        for (int j = 0; j < (bytes - 1); j++) // The cmdline file contains argv elements/strings terminated separated by '\0' => join the string
-                                if (buf[j] == 0)
-                                        buf[j] = ' ';
-                        pt[i].cmdline = Str_dup(*buf ? buf : procname);
-                }
-
-                /********** /proc/PID/attr/current **********/
-                if (file_readProc(buf, sizeof(buf), "attr/current", stat_pid, NULL)) {
-                        pt[i].secattr = Str_trim(Str_dup(buf));
-                }
-
-                /* Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting) */
-                pt[i].pid = stat_pid;
-                pt[i].ppid = stat_ppid;
-                pt[i].cred.uid = stat_uid;
-                pt[i].cred.euid = stat_euid;
-#ifdef LSM_LABEL_CHECK
-                pt[i].lsmlabel = stat_lsmlabel;
-#endif
-                pt[i].cred.gid = stat_gid;
-                pt[i].threads.self = stat_item_threads;
-                pt[i].uptime = starttime > 0 ? (systeminfo.time / 10. - (starttime + (time_t)(stat_item_starttime / hz))) : 0;
-                pt[i].cpu.time = (double)(stat_item_utime + stat_item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
-                pt[i].memory.usage = (uint64_t)stat_item_rss * (uint64_t)page_size;
-                pt[i].read.bytes = stat_read_bytes;
-                pt[i].write.bytes = stat_write_bytes;
-                pt[i].zombie = stat_item_state == 'Z' ? true : false;
-
-                /* success */
-                i++;
-                continue;
-
-failed:
-                /* failed to get proc info; decrement treesize */
-                treesize--;
         }
 
         *reference = pt;
