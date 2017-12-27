@@ -448,7 +448,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                         if (i->is_available == Connection_Failed)
                                 _formatStatus("ping response time", Event_Icmp, type, res, s, true, "connection failed");
                         else
-                                _formatStatus("ping response time", Event_Null, type, res, s, i->is_available != Connection_Init && i->response >= 0., "%s", Str_time2str(i->response, (char[23]){}));
+                                _formatStatus("ping response time", Event_Null, type, res, s, i->is_available != Connection_Init && i->response >= 0., "%s", Str_time2str(i->response, (char[11]){}));
                 }
                 for (Port_T p = s->portlist; p; p = p->next) {
                         if (p->is_available == Connection_Failed) {
@@ -457,14 +457,14 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 char buf[STRLEN] = {};
                                 if (p->target.net.ssl.options.flags)
                                         snprintf(buf, sizeof(buf), "using TLS (certificate valid for %d days) ", p->target.net.ssl.certificate.validDays);
-                                _formatStatus("port response time", p->target.net.ssl.certificate.validDays < p->target.net.ssl.certificate.minimumDays ? Event_Timestamp : Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %sprotocol %s", Str_time2str(p->response, (char[23]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), buf, p->protocol->name);
+                                _formatStatus("port response time", p->target.net.ssl.certificate.validDays < p->target.net.ssl.certificate.minimumDays ? Event_Timestamp : Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %sprotocol %s", Str_time2str(p->response, (char[11]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), buf, p->protocol->name);
                         }
                 }
                 for (Port_T p = s->socketlist; p; p = p->next) {
                         if (p->is_available == Connection_Failed) {
                                 _formatStatus("unix socket response time", Event_Connection, type, res, s, true, "FAILED to %s type %s protocol %s", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
                         } else {
-                                _formatStatus("unix socket response time", Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s type %s protocol %s", Str_time2str(p->response, (char[23]){}), p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
+                                _formatStatus("unix socket response time", Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s type %s protocol %s", Str_time2str(p->response, (char[11]){}), p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
                         }
                 }
         }
@@ -755,7 +755,7 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                 StringBuffer_append(res->outputbuffer, "<tr><td>M/Monit server(s)</td><td>");
                 for (Mmonit_T c = Run.mmonits; c; c = c->next)
                 {
-                        StringBuffer_append(res->outputbuffer, "%s with timeout %s", c->url->url, Str_time2str(c->timeout, (char[23]){}));
+                        StringBuffer_append(res->outputbuffer, "%s with timeout %s", c->url->url, Str_time2str(c->timeout, (char[11]){}));
 #ifdef HAVE_OPENSSL
                         if (c->ssl.flags) {
                                 StringBuffer_append(res->outputbuffer, " using TLS");
@@ -816,11 +816,11 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
         StringBuffer_append(res->outputbuffer, "<tr><td>Limit for file content buffer</td><td>%s</td></tr>", Str_bytes2str(Run.limits.fileContentBuffer, buf));
         StringBuffer_append(res->outputbuffer, "<tr><td>Limit for HTTP content buffer</td><td>%s</td></tr>", Str_bytes2str(Run.limits.httpContentBuffer, buf));
         StringBuffer_append(res->outputbuffer, "<tr><td>Limit for program output</td><td>%s</td></tr>", Str_bytes2str(Run.limits.programOutput, buf));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for network timeout</td><td>%s</td></tr>", Str_time2str(Run.limits.networkTimeout, (char[23]){}));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for check program timeout</td><td>%s</td></tr>", Str_time2str(Run.limits.programTimeout, (char[23]){}));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service stop timeout</td><td>%s</td></tr>", Str_time2str(Run.limits.stopTimeout, (char[23]){}));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service start timeout</td><td>%s</td></tr>", Str_time2str(Run.limits.startTimeout, (char[23]){}));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service restart timeout</td><td>%s</td></tr>", Str_time2str(Run.limits.restartTimeout, (char[23]){}));
+        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for network timeout</td><td>%s</td></tr>", Str_time2str(Run.limits.networkTimeout, (char[11]){}));
+        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for check program timeout</td><td>%s</td></tr>", Str_time2str(Run.limits.programTimeout, (char[11]){}));
+        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service stop timeout</td><td>%s</td></tr>", Str_time2str(Run.limits.stopTimeout, (char[11]){}));
+        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service start timeout</td><td>%s</td></tr>", Str_time2str(Run.limits.startTimeout, (char[11]){}));
+        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service restart timeout</td><td>%s</td></tr>", Str_time2str(Run.limits.restartTimeout, (char[11]){}));
         StringBuffer_append(res->outputbuffer,
                             "<tr><td>On reboot</td><td>%s</td></tr>", onrebootnames[Run.onreboot]);
         StringBuffer_append(res->outputbuffer,
@@ -1093,7 +1093,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
                         StringBuffer_append(res->outputbuffer, " as uid %d", s->start->uid);
                 if (s->start->has_gid)
                         StringBuffer_append(res->outputbuffer, " as gid %d", s->start->gid);
-                StringBuffer_append(res->outputbuffer, " timeout %s", Str_time2str(s->start->timeout, (char[23]){}));
+                StringBuffer_append(res->outputbuffer, " timeout %s", Str_time2str(s->start->timeout, (char[11]){}));
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
         if (s->stop) {
@@ -1102,7 +1102,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
                         StringBuffer_append(res->outputbuffer, " as uid %d", s->stop->uid);
                 if (s->stop->has_gid)
                         StringBuffer_append(res->outputbuffer, " as gid %d", s->stop->gid);
-                StringBuffer_append(res->outputbuffer, " timeout %s", Str_time2str(s->stop->timeout, (char[23]){}));
+                StringBuffer_append(res->outputbuffer, " timeout %s", Str_time2str(s->stop->timeout, (char[11]){}));
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
         if (s->restart) {
@@ -1111,7 +1111,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
                         StringBuffer_append(res->outputbuffer, " as uid %d", s->restart->uid);
                 if (s->restart->has_gid)
                         StringBuffer_append(res->outputbuffer, " as gid %d", s->restart->gid);
-                StringBuffer_append(res->outputbuffer, " timeout %s", Str_time2str(s->restart->timeout, (char[23]){}));
+                StringBuffer_append(res->outputbuffer, " timeout %s", Str_time2str(s->restart->timeout, (char[11]){}));
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
         if (s->every.type != Every_Cycle) {
@@ -1859,7 +1859,7 @@ static void print_service_rules_port(HttpResponse res, Service_T s) {
                 if (p->outgoing.ip)
                         StringBuffer_append(buf, " via address %s", p->outgoing.ip);
                 StringBuffer_append(buf, " type %s/%s protocol %s with timeout %s",
-                        Util_portTypeDescription(p), Util_portIpDescription(p), p->protocol->name, Str_time2str(p->timeout, (char[23]){}));
+                        Util_portTypeDescription(p), Util_portIpDescription(p), p->protocol->name, Str_time2str(p->timeout, (char[11]){}));
                 if (p->retry > 1)
                         StringBuffer_append(buf, " and retry %d times", p->retry);
 #ifdef HAVE_OPENSSL
@@ -1885,9 +1885,9 @@ static void print_service_rules_socket(HttpResponse res, Service_T s) {
         for (Port_T p = s->socketlist; p; p = p->next) {
                 StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Unix Socket</td><td>");
                 if (p->retry > 1)
-                        Util_printRule(res->outputbuffer, p->action, "If failed %s type %s protocol %s with timeout %s and retry %d time(s)", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Str_time2str(p->timeout, (char[23]){}), p->retry);
+                        Util_printRule(res->outputbuffer, p->action, "If failed %s type %s protocol %s with timeout %s and retry %d time(s)", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Str_time2str(p->timeout, (char[11]){}), p->retry);
                 else
-                        Util_printRule(res->outputbuffer, p->action, "If failed %s type %s protocol %s with timeout %s", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Str_time2str(p->timeout, (char[23]){}));
+                        Util_printRule(res->outputbuffer, p->action, "If failed %s type %s protocol %s with timeout %s", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Str_time2str(p->timeout, (char[11]){}));
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
 }
@@ -1906,7 +1906,7 @@ static void print_service_rules_icmp(HttpResponse res, Service_T s) {
                                 StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Ping</td><td>");
                                 break;
                 }
-                Util_printRule(res->outputbuffer, i->action, "If failed [count %d size %d with timeout %s%s%s]", i->count, i->size, Str_time2str(i->timeout, (char[23]){}), i->outgoing.ip ? " via address " : "", i->outgoing.ip ? i->outgoing.ip : "");
+                Util_printRule(res->outputbuffer, i->action, "If failed [count %d size %d with timeout %s%s%s]", i->count, i->size, Str_time2str(i->timeout, (char[11]){}), i->outgoing.ip ? " via address " : "", i->outgoing.ip ? i->outgoing.ip : "");
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
 }
@@ -1966,7 +1966,7 @@ static void print_service_rules_timestamp(HttpResponse res, Service_T s) {
                 if (t->test_changes)
                         Util_printRule(res->outputbuffer, t->action, "If changed");
                 else
-                        Util_printRule(res->outputbuffer, t->action, "If %s %s", operatornames[t->operator], Str_time2str(t->time * 1000., (char[23]){}));
+                        Util_printRule(res->outputbuffer, t->action, "If %s %s", operatornames[t->operator], Str_time2str(t->time * 1000., (char[11]){}));
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
 }
@@ -2031,7 +2031,7 @@ static void print_service_rules_filesystem(HttpResponse res, Service_T s) {
                         StringBuffer_append(res->outputbuffer, "</td></tr>");
                 } else if (dl->resource == Resource_ServiceTime) {
                         StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Service time limit</td><td>");
-                        Util_printRule(res->outputbuffer, dl->action, "If service time %s %s/operation", operatornames[dl->operator], Str_time2str(dl->limit_absolute, (char[23]){}));
+                        Util_printRule(res->outputbuffer, dl->action, "If service time %s %s/operation", operatornames[dl->operator], Str_time2str(dl->limit_absolute, (char[11]){}));
                         StringBuffer_append(res->outputbuffer, "</td></tr>");
                 }
         }
@@ -2189,7 +2189,7 @@ static void print_service_rules_ppid(HttpResponse res, Service_T s) {
 
 static void print_service_rules_program(HttpResponse res, Service_T s) {
         if (s->type == Service_Program) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Program timeout</td><td>Terminate the program if not finished within %s</td></tr>", Str_time2str(s->program->timeout, (char[23]){}));
+                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Program timeout</td><td>Terminate the program if not finished within %s</td></tr>", Str_time2str(s->program->timeout, (char[11]){}));
                 for (Status_T status = s->statuslist; status; status = status->next) {
                         StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Test Exit value</td><td>");
                         if (status->operator == Operator_Changed)

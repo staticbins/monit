@@ -845,7 +845,7 @@ void Util_printRunList() {
                 Mmonit_T c;
                 printf(" %-18s = ", "M/Monit(s)");
                 for (c = Run.mmonits; c; c = c->next) {
-                        printf("%s with timeout %s", c->url->url, Str_time2str(c->timeout, (char[23]){}));
+                        printf("%s with timeout %s", c->url->url, Str_time2str(c->timeout, (char[11]){}));
 #ifdef HAVE_OPENSSL
                         if (c->ssl.flags) {
                                 printf(" using TLS");
@@ -882,7 +882,7 @@ void Util_printRunList() {
                         if (mta->next)
                                 printf(", ");
                 }
-                printf(" with timeout %s", Str_time2str(Run.mailserver_timeout, (char[23]){}));
+                printf(" with timeout %s", Str_time2str(Run.mailserver_timeout, (char[11]){}));
                 if (Run.mail_hostname)
                         printf(" using '%s' as my hostname", Run.mail_hostname);
                 printf("\n");
@@ -983,7 +983,7 @@ void Util_printService(Service_T s) {
                         printf(" as uid %d", s->start->uid);
                 if (s->start->has_gid)
                         printf(" as gid %d", s->start->gid);
-                printf(" timeout %s", Str_time2str(s->start->timeout, (char[23]){}));
+                printf(" timeout %s", Str_time2str(s->start->timeout, (char[11]){}));
                 printf("\n");
         }
         if (s->stop) {
@@ -992,7 +992,7 @@ void Util_printService(Service_T s) {
                         printf(" as uid %d", s->stop->uid);
                 if (s->stop->has_gid)
                         printf(" as gid %d", s->stop->gid);
-                printf(" timeout %s", Str_time2str(s->stop->timeout, (char[23]){}));
+                printf(" timeout %s", Str_time2str(s->stop->timeout, (char[11]){}));
                 printf("\n");
         }
         if (s->restart) {
@@ -1001,7 +1001,7 @@ void Util_printService(Service_T s) {
                         printf(" as uid %d", s->restart->uid);
                 if (s->restart->has_gid)
                         printf(" as gid %d", s->restart->gid);
-                printf(" timeout %s", Str_time2str(s->restart->timeout, (char[23]){}));
+                printf(" timeout %s", Str_time2str(s->restart->timeout, (char[11]){}));
                 printf("\n");
         }
 
@@ -1036,7 +1036,7 @@ void Util_printService(Service_T s) {
 
         if (s->type == Service_Program) {
                 printf(" %-20s = ", "Program timeout");
-                printf("terminate the program if not finished within %s\n", Str_time2str(s->program->timeout, (char[23]){}));
+                printf("terminate the program if not finished within %s\n", Str_time2str(s->program->timeout, (char[11]){}));
                 for (Status_T o = s->statuslist; o; o = o->next) {
                         StringBuffer_clear(buf);
                         if (o->operator == Operator_Changed)
@@ -1091,7 +1091,7 @@ void Util_printService(Service_T s) {
         for (Icmp_T o = s->icmplist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 const char *output = StringBuffer_toString(Util_printRule(buf, o->action,
-                                        "if failed [count %d size %d with timeout %s%s%s]", o->count, o->size, Str_time2str(o->timeout, (char[23]){}), o->outgoing.ip ? " via address " : "", o->outgoing.ip ? o->outgoing.ip : ""));
+                                        "if failed [count %d size %d with timeout %s%s%s]", o->count, o->size, Str_time2str(o->timeout, (char[11]){}), o->outgoing.ip ? " via address " : "", o->outgoing.ip ? o->outgoing.ip : ""));
                 switch (o->family) {
                         case Socket_Ip4:
                                 printf(" %-20s = %s\n", "Ping4", output);
@@ -1112,7 +1112,7 @@ void Util_printService(Service_T s) {
                 if (o->outgoing.ip)
                         StringBuffer_append(buf2, " via address %s", o->outgoing.ip);
                 StringBuffer_append(buf2, " type %s/%s protocol %s with timeout %s",
-                        Util_portTypeDescription(o), Util_portIpDescription(o), o->protocol->name, Str_time2str(o->timeout, (char[23]){}));
+                        Util_portTypeDescription(o), Util_portIpDescription(o), o->protocol->name, Str_time2str(o->timeout, (char[11]){}));
                 if (o->retry > 1)
                         StringBuffer_append(buf2, " and retry %d times", o->retry);
 #ifdef HAVE_OPENSSL
@@ -1135,9 +1135,9 @@ void Util_printService(Service_T s) {
         for (Port_T o = s->socketlist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->retry > 1)
-                        printf(" %-20s = %s\n", "Unix Socket", StringBuffer_toString(Util_printRule(buf, o->action, "if failed %s type %s protocol %s with timeout %s and retry %d times", o->target.unix.pathname, Util_portTypeDescription(o), o->protocol->name, Str_time2str(o->timeout, (char[23]){}), o->retry)));
+                        printf(" %-20s = %s\n", "Unix Socket", StringBuffer_toString(Util_printRule(buf, o->action, "if failed %s type %s protocol %s with timeout %s and retry %d times", o->target.unix.pathname, Util_portTypeDescription(o), o->protocol->name, Str_time2str(o->timeout, (char[11]){}), o->retry)));
                 else
-                        printf(" %-20s = %s\n", "Unix Socket", StringBuffer_toString(Util_printRule(buf, o->action, "if failed %s type %s protocol %s with timeout %s", o->target.unix.pathname, Util_portTypeDescription(o), o->protocol->name, Str_time2str(o->timeout, (char[23]){}), o->retry)));
+                        printf(" %-20s = %s\n", "Unix Socket", StringBuffer_toString(Util_printRule(buf, o->action, "if failed %s type %s protocol %s with timeout %s", o->target.unix.pathname, Util_portTypeDescription(o), o->protocol->name, Str_time2str(o->timeout, (char[11]){}), o->retry)));
         }
 
         for (Timestamp_T o = s->timestamplist; o; o = o->next) {
@@ -1147,7 +1147,7 @@ void Util_printService(Service_T s) {
                        ?
                        StringBuffer_toString(Util_printRule(buf, o->action, "if changed"))
                        :
-                       StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s", operatornames[o->operator], Str_time2str(o->time * 1000., (char[23]){})))
+                       StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s", operatornames[o->operator], Str_time2str(o->time * 1000., (char[11]){})))
                        );
         }
 
@@ -1268,7 +1268,7 @@ void Util_printService(Service_T s) {
                 } else if (o->resource == Resource_WriteOperations) {
                         printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(buf, o->action, "if write %s %llu operations/s", operatornames[o->operator], o->limit_absolute)));
                 } else if (o->resource == Resource_ServiceTime) {
-                        printf(" %-20s = %s\n", "Service time limit", StringBuffer_toString(Util_printRule(buf, o->action, "if service time %s %s/operation", operatornames[o->operator], Str_time2str(o->limit_absolute, (char[23]){}))));
+                        printf(" %-20s = %s\n", "Service time limit", StringBuffer_toString(Util_printRule(buf, o->action, "if service time %s %s/operation", operatornames[o->operator], Str_time2str(o->limit_absolute, (char[11]){}))));
                 }
         }
 
