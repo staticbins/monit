@@ -463,7 +463,7 @@ char *Str_bytes2str(double bytes, char s[10]) {
 }
 
 
-char *Str_time2str(double milli, char s[10]) {
+char *Str_time2str(double milli, char s[11]) {
         assert(s);
         struct conversion {
                 double base;
@@ -484,7 +484,7 @@ char *Str_time2str(double milli, char s[10]) {
                 if (milli >= conversion[i].base) {
                         milli /= conversion[i].base;
                 } else {
-                        snprintf(s, 10, _isInt(milli) ? "%s%.0lf %s" : "%s%.3lf %s", sign, milli, conversion[i].suffix);
+                        snprintf(s, 11, _isInt(milli) ? "%s%.0lf %s" : "%s%.3lf %s", sign, milli, conversion[i].suffix);
                         break;
                 }
         }

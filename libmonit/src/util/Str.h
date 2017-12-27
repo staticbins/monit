@@ -455,10 +455,10 @@ char *Str_bytes2str(double bytes, char s[10]);
 /**
  * Convert the time in milliseconds to human friendlier unit (ms/s/m/h/d/y).
  * @param milli The time value in milliseconds to present
- * @param s A result buffer, must be large enough to hold 10 chars
+ * @param s A result buffer, must be large enough to hold 11 chars
  * @return A pointer to s
  */
-char *Str_time2str(double milli, char s[10]);
+char *Str_time2str(double milli, char s[11]);
 
 
 #endif

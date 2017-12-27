@@ -449,6 +449,8 @@ int main(void) {
                 assert(Str_isEqual(str, "0.500 ms"));
                 Str_time2str(1, str);
                 assert(Str_isEqual(str, "1 ms"));
+                Str_time2str(999.999, str);
+                assert(Str_isEqual(str, "999.999 ms"));
                 Str_time2str(2000, str);
                 assert(Str_isEqual(str, "2 s"));
                 Str_time2str(2123, str);

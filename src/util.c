@@ -814,11 +814,11 @@ void Util_printRunList() {
         printf(" %-18s =   sendExpectBuffer:  %s\n", " ", Str_bytes2str(Run.limits.sendExpectBuffer, buf));
         printf(" %-18s =   fileContentBuffer: %s\n", " ", Str_bytes2str(Run.limits.fileContentBuffer, buf));
         printf(" %-18s =   httpContentBuffer: %s\n", " ", Str_bytes2str(Run.limits.httpContentBuffer, buf));
-        printf(" %-18s =   networkTimeout:    %s\n", " ", Str_time2str(Run.limits.networkTimeout, (char[10]){}));
-        printf(" %-18s =   programTimeout:    %s\n", " ", Str_time2str(Run.limits.programTimeout, (char[10]){}));
-        printf(" %-18s =   stopTimeout:       %s\n", " ", Str_time2str(Run.limits.stopTimeout, (char[10]){}));
-        printf(" %-18s =   startTimeout:      %s\n", " ", Str_time2str(Run.limits.startTimeout, (char[10]){}));
-        printf(" %-18s =   restartTimeout:    %s\n", " ", Str_time2str(Run.limits.restartTimeout, (char[10]){}));
+        printf(" %-18s =   networkTimeout:    %s\n", " ", Str_time2str(Run.limits.networkTimeout, (char[11]){}));
+        printf(" %-18s =   programTimeout:    %s\n", " ", Str_time2str(Run.limits.programTimeout, (char[11]){}));
+        printf(" %-18s =   stopTimeout:       %s\n", " ", Str_time2str(Run.limits.stopTimeout, (char[11]){}));
+        printf(" %-18s =   startTimeout:      %s\n", " ", Str_time2str(Run.limits.startTimeout, (char[11]){}));
+        printf(" %-18s =   restartTimeout:    %s\n", " ", Str_time2str(Run.limits.restartTimeout, (char[11]){}));
         printf(" %-18s = }\n", " ");
         printf(" %-18s = %s\n", "On reboot", onrebootnames[Run.onreboot]);
         printf(" %-18s = %d seconds with start delay %d seconds\n", "Poll time", Run.polltime, Run.startdelay);

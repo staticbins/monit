@@ -152,7 +152,7 @@ retry:
         {
                 Socket_test(p);
                 rv = State_Succeeded;
-                DEBUG("'%s' succeeded testing protocol [%s] at %s [response time %s]\n", s->name, p->protocol->name, Util_portDescription(p, buf, sizeof(buf)), Str_time2str(p->response, (char[10]){}));
+                DEBUG("'%s' succeeded testing protocol [%s] at %s [response time %s]\n", s->name, p->protocol->name, Util_portDescription(p, buf, sizeof(buf)), Str_time2str(p->response, (char[11]){}));
         }
         ELSE
         {
@@ -1156,7 +1156,7 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                 double deltaOperations = Statistics_delta(&(s->inf.filesystem->read.operations)) + Statistics_delta(&(s->inf.filesystem->write.operations));
                                 double serviceTime = deltaOperations > 0. ? deltaTime / deltaOperations : 0.;
                                 if (Util_evalDoubleQExpression(td->operator, serviceTime, td->limit_absolute)) {
-                                        Event_post(s, Event_Resource, State_Failed, td->action, "service time %.3fms/operation matches resource limit [service time %s %s/operation]", serviceTime, operatorshortnames[td->operator], Str_time2str(td->limit_absolute, (char[10]){}));
+                                        Event_post(s, Event_Resource, State_Failed, td->action, "service time %.3fms/operation matches resource limit [service time %s %s/operation]", serviceTime, operatorshortnames[td->operator], Str_time2str(td->limit_absolute, (char[11]){}));
                                         return State_Failed;
                                 }
                                 Event_post(s, Event_Resource, State_Succeeded, td->action, "service time test succeeded [current service time = %.3f ms/operations]", serviceTime);
@@ -1366,7 +1366,7 @@ State_Type check_process(Service_T s) {
                                 rv = State_Failed;
                 } else {
                         pp->is_available = Connection_Init;
-                        DEBUG("'%s' connection test paused for %s while the process is starting\n", s->name, Str_time2str(s->start->timeout - (uptimeMilli < 0 ? 0 : uptimeMilli), (char[10]){}));
+                        DEBUG("'%s' connection test paused for %s while the process is starting\n", s->name, Str_time2str(s->start->timeout - (uptimeMilli < 0 ? 0 : uptimeMilli), (char[11]){}));
                 }
         }
         for (Port_T pp = s->socketlist; pp; pp = pp->next) {
@@ -1377,7 +1377,7 @@ State_Type check_process(Service_T s) {
                                 rv = State_Failed;
                 } else {
                         pp->is_available = Connection_Init;
-                        DEBUG("'%s' connection test paused for %s while the process is starting\n", s->name, Str_time2str(s->start->timeout - (uptimeMilli < 0 ? 0 : uptimeMilli), (char[10]){}));
+                        DEBUG("'%s' connection test paused for %s while the process is starting\n", s->name, Str_time2str(s->start->timeout - (uptimeMilli < 0 ? 0 : uptimeMilli), (char[11]){}));
                 }
         }
         return rv;
@@ -1609,7 +1609,7 @@ State_Type check_program(Service_T s) {
                         int64_t execution_time = (now - s->program->started) * 1000;
                         if (execution_time > s->program->timeout) { // Program timed out
                                 rv = State_Failed;
-                                LogError("'%s' program timed out after %s. Killing program with pid %ld\n", s->name, Str_time2str(execution_time, (char[10]){}), (long)Process_getPid(P));
+                                LogError("'%s' program timed out after %s. Killing program with pid %ld\n", s->name, Str_time2str(execution_time, (char[11]){}), (long)Process_getPid(P));
                                 Process_kill(P);
                                 Process_waitFor(P); // Wait for child to exit to get correct exit value
                                 // Fall-through with P and evaluate exit value below.
@@ -1696,7 +1696,7 @@ State_Type check_remote_host(Service_T s) {
                                         Event_post(s, Event_Icmp, State_Failed, icmp->action, "ping test failed");
                                 } else {
                                         icmp->is_available = Connection_Ok;
-                                        Event_post(s, Event_Icmp, State_Succeeded, icmp->action, "ping test succeeded [response time %s]", Str_time2str(icmp->response, (char[10]){}));
+                                        Event_post(s, Event_Icmp, State_Succeeded, icmp->action, "ping test succeeded [response time %s]", Str_time2str(icmp->response, (char[11]){}));
                                 }
                                 last_ping = icmp;
                                 break;
