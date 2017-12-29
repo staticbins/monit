@@ -133,8 +133,8 @@ static boolean_t _getCifsDiskActivity(void *_inf) {
         while (fgets(line, sizeof(line), f)) {
                 if (! found) {
                         int index;
-                        char name[PATH_MAX];
-                        if (sscanf(line, "%d) %1023s", &index, name) == 2 && Str_isEqual(name, inf->filesystem->object.key)) {
+                        char name[4096];
+                        if (sscanf(line, "%d) %4095s", &index, name) == 2 && Str_isEqual(name, inf->filesystem->object.key)) {
                                 found = true;
                         }
                 } else if (found) {

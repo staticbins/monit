@@ -241,7 +241,7 @@ static boolean_t _doStart(Service_T s) {
                 if (s->start) {
                         if (s->type != Service_Process || ! ProcessTree_findProcess(s)) {
                                 LogInfo("'%s' start: '%s'\n", s->name, Util_commandDescription(s->start, (char[STRLEN]){}));
-                                char msg[STRLEN];
+                                char msg[1024];
                                 int64_t timeout = s->start->timeout * USEC_PER_MSEC;
                                 int status = _commandExecute(s, s->start, msg, sizeof(msg), &timeout);
                                 if (status < 0 || (s->type == Service_Process && _waitProcessStart(s, &timeout) != Process_Started)) {
@@ -291,7 +291,7 @@ static boolean_t _doStop(Service_T s, boolean_t unmonitor) {
         if (s->stop) {
                 if (s->monitor != Monitor_Not) {
                         int exitStatus;
-                        char msg[STRLEN];
+                        char msg[1024];
                         int64_t timeout = s->stop->timeout * USEC_PER_MSEC;
                         if (s->type == Service_Process) {
                                 int pid = ProcessTree_findProcess(s);
@@ -329,7 +329,7 @@ static boolean_t _doRestart(Service_T s) {
         if (s->restart) {
                 LogInfo("'%s' restart: '%s'\n", s->name, Util_commandDescription(s->restart, (char[STRLEN]){}));
                 Util_resetInfo(s);
-                char msg[STRLEN];
+                char msg[1024];
                 int64_t timeout = s->restart->timeout * USEC_PER_MSEC;
                 int status = _commandExecute(s, s->restart, msg, sizeof(msg), &timeout);
                 if (status < 0 || (s->type == Service_Process && _waitProcessStart(s, &timeout) != Process_Started)) {

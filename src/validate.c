@@ -146,7 +146,7 @@ static State_Type _checkConnection(Service_T s, Port_T p) {
         volatile int retry_count = p->retry;
         volatile State_Type rv = State_Succeeded;
         char buf[STRLEN];
-        char report[STRLEN] = {};
+        char report[1024] = {};
 retry:
         TRY
         {
@@ -157,7 +157,7 @@ retry:
         ELSE
         {
                 rv = State_Failed;
-                snprintf(report, STRLEN, "failed protocol test [%s] at %s -- %s", p->protocol->name, Util_portDescription(p, buf, sizeof(buf)), Exception_frame.message);
+                snprintf(report, sizeof(report), "failed protocol test [%s] at %s -- %s", p->protocol->name, Util_portDescription(p, buf, sizeof(buf)), Exception_frame.message);
         }
         END_TRY;
         if (rv == State_Failed) {

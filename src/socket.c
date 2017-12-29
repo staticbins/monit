@@ -329,7 +329,7 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
         volatile T S = NULL;
         struct addrinfo *result = _resolve(host, port, type, family);
         if (result) {
-                char error[STRLEN];
+                char error[512];
                 // The host may resolve to multiple IPs and if at least one succeeded, we have no problem and don't have to flood the log with partial errors => log only the last error
                 for (struct addrinfo *r = result; r && S == NULL; r = r->ai_next) {
                         TRY
@@ -573,7 +573,7 @@ static void _testUnix(Port_T p) {
 
 
 static void _testIp(Port_T p) {
-        char error[STRLEN];
+        char error[512];
         volatile Connection_State is_available = Connection_Failed;
         struct addrinfo *result = _resolve(p->hostname, p->target.net.port, p->type, p->family);
         if (result) {
