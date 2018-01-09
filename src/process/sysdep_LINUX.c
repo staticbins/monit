@@ -519,11 +519,10 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
                 si->cpu.usage.system = -1.;
                 si->cpu.usage.wait = -1.;
         } else {
-                unsigned long long delta = cpu_total - old_cpu_total;
-
-                si->cpu.usage.user = 100. * (double)(cpu_user - old_cpu_user) / delta;
-                si->cpu.usage.system = 100. * (double)(cpu_syst - old_cpu_syst) / delta;
-                si->cpu.usage.wait = 100. * (double)(cpu_wait - old_cpu_wait) / delta;
+                double delta = cpu_total - old_cpu_total;
+                si->cpu.usage.user = (double)(cpu_user - old_cpu_user) / delta * 100.;
+                si->cpu.usage.system = (double)(cpu_syst - old_cpu_syst) / delta * 100.;
+                si->cpu.usage.wait = (double)(cpu_wait - old_cpu_wait) / delta * 100.;
         }
 
         old_cpu_user  = cpu_user;
