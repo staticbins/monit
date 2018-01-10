@@ -270,6 +270,7 @@ static boolean_t _parseProcPidAttrCurrent(Proc_T proc) {
                 Str_trim(proc->secattr);
                 return true;
         }
+        *(proc->secattr) = 0;
         return false;
 }
 
