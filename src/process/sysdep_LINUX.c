@@ -355,7 +355,9 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         time_t starttime = _getStartTime();
         for (int i = 0; i < globbuf.gl_pathc; i++) {
                 proc.pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
-                if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags) && _parseProcPidAttrCurrent(&proc)) {
+                if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags)) {
+                        // Non-mandatory statistics (may not exist)
+                        _parseProcPidAttrCurrent(&proc);
                         // Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting)
                         pt[count].pid = proc.pid;
                         pt[count].ppid = proc.ppid;
