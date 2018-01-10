@@ -466,7 +466,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             p->protocol->name ? p->protocol->name : "",
                                             p->is_available == Connection_Ok ? p->response / 1000. : -1.); // We send the response time in [s] for backward compatibility (with microseconds precision)
                 }
-                if (S->type == Service_System && (Run.flags & Run_ProcessEngineEnabled)) {
+                if (S->type == Service_System) {
                         StringBuffer_append(B,
                                             "<system>"
                                             "<load>"

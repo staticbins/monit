@@ -12,6 +12,8 @@ Fixed: Issue #699: Monit reload is slow when triggered in the middle of the poll
 Fixed: Linux: If a process is terminated while Monit collects the process information, the calculation
 of resource usage might be incorrect. Thanks to Joshua Griffiths for patch.
 
+Fixed: Collect system statistics even if process statistics failed (independent)
+
 
 Version 5.25.1
 
