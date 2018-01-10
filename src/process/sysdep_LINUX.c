@@ -270,7 +270,6 @@ static boolean_t _parseProcPidAttrCurrent(Proc_T proc) {
                 Str_trim(proc->secattr);
                 return true;
         }
-        *(proc->secattr) = 0;
         return false;
 }
 
@@ -375,6 +374,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].cmdline = Str_dup(proc.name);
                         pt[count].secattr = Str_dup(proc.secattr);
                         count++;
+                        memset(proc, 0, sizeof(struct Proc_T));
                 }
         }
 
