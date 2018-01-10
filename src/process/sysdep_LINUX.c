@@ -374,7 +374,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].cmdline = Str_dup(proc.name);
                         pt[count].secattr = Str_dup(proc.secattr);
                         count++;
-                        memset(proc, 0, sizeof(struct Proc_T));
+                        memset(&proc, 0, sizeof(struct Proc_T));
                 }
         }
 
