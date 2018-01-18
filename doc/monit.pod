@@ -3609,7 +3609,7 @@ I<HOST> you may specify an alternative Host header
 
 I<REQUEST> you may specify an alternative request, default is "/"
 
-I<ORIGIN> you may specify an alternative origin, default is "http://www.mmonit.com"
+I<ORIGIN> you may specify an alternative origin, default is "https://mmonit.com"
 
 I<VERSION> you may specify an alternative version, default is "0"
 
@@ -4113,7 +4113,7 @@ MERCHANTABILITY or FITNESS for a particular purpose.
 =head1 SEE ALSO
 
 GNU text utilities; md5sum(1); sha1sum(1); openssl(1); glob(7);
-regex(7); I<http://www.mmonit.com/>
+regex(7); I<https://mmonit.com>
 
 
 =cut
