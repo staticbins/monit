@@ -14,6 +14,8 @@ of resource usage might be incorrect. Thanks to Joshua Griffiths for patch.
 
 Fixed: Collect system statistics even if process statistics failed (independent)
 
+Fixed: Reduce the state file related overhead
+
 
 Version 5.25.1
 

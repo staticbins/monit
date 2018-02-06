@@ -106,7 +106,8 @@ typedef enum {
         StateVersion1,
         StateVersion2,
         StateVersion3,
-        StateVersion4
+        StateVersion4,
+        StateVersionLatest = StateVersion4
 } State_Version;
 
 
@@ -229,6 +230,7 @@ typedef struct mystate0 {
 
 static int file = -1;
 static uint64_t booted = 0ULL;
+static boolean_t _stateDirty = false;
 
 
 /* ----------------------------------------------------------------- Private */
@@ -288,7 +290,7 @@ static void _updateTimestamp(Service_T S, uint64_t atime, uint64_t ctime, uint64
 
 static void _updatePermission(Service_T S, int mode) {
         if (S->perm && S->perm->test_changes)
-                S->perm->perm = mode;
+                S->perm->perm = mode & 07777;
 }
 
 
@@ -543,18 +545,14 @@ void State_save() {
                                         state.priv.directory.atime = (uint64_t)service->inf.directory->timestamp.access;
                                         state.priv.directory.ctime = (uint64_t)service->inf.directory->timestamp.change;
                                         state.priv.directory.mtime = (uint64_t)service->inf.directory->timestamp.modify;
-                                        if (service->perm) {
-                                                state.priv.directory.mode = service->perm->perm;
-                                        }
+                                        state.priv.directory.mode = service->inf.directory->mode;
                                         break;
 
                                 case Service_Fifo:
                                         state.priv.fifo.atime = (uint64_t)service->inf.fifo->timestamp.access;
                                         state.priv.fifo.ctime = (uint64_t)service->inf.fifo->timestamp.change;
                                         state.priv.fifo.mtime = (uint64_t)service->inf.fifo->timestamp.modify;
-                                        if (service->perm) {
-                                                state.priv.fifo.mode = service->perm->perm;
-                                        }
+                                        state.priv.fifo.mode = service->inf.fifo->mode;
                                         break;
 
                                 case Service_File:
@@ -564,18 +562,12 @@ void State_save() {
                                         state.priv.file.atime = (uint64_t)service->inf.file->timestamp.access;
                                         state.priv.file.ctime = (uint64_t)service->inf.file->timestamp.change;
                                         state.priv.file.mtime = (uint64_t)service->inf.file->timestamp.modify;
-                                        if (service->checksum) {
-                                                strncpy(state.priv.file.hash, service->inf.file->cs_sum, sizeof(state.priv.file.hash) - 1);
-                                        }
-                                        if (service->perm) {
-                                                state.priv.file.mode = service->perm->perm;
-                                        }
+                                        state.priv.file.mode = service->inf.file->mode;
+                                        strncpy(state.priv.file.hash, service->inf.file->cs_sum, sizeof(state.priv.file.hash) - 1);
                                         break;
 
                                 case Service_Filesystem:
-                                        if (service->perm) {
-                                                state.priv.filesystem.mode = service->perm->perm;
-                                        }
+                                        state.priv.filesystem.mode = service->inf.filesystem->mode;
                                         break;
 
                                 case Service_Net:
@@ -595,12 +587,25 @@ void State_save() {
                 if (fsync(file)) {
                         THROW(IOException, "Unable to sync -- %s", STRERROR);
                 }
+                _stateDirty = false;
         }
         ELSE
         {
                 LogError("State file '%s': %s\n", Run.files.state, Exception_frame.message);
         }
         END_TRY;
+}
+
+
+void State_dirty() {
+        _stateDirty = true;
+}
+
+
+void State_saveIfDirty() {
+        if (_stateDirty) {
+                State_save();
+        }
 }
 
 
@@ -643,6 +648,9 @@ void State_restore() {
                                 default:
                                         LogWarning("State file '%s': incompatible version %d\n", Run.files.state, version);
                                         break;
+                        }
+                        if (version != StateVersionLatest || booted != systeminfo.booted) {
+                                _stateDirty  = true;
                         }
                 }
         }

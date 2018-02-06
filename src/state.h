@@ -56,7 +56,19 @@ void State_close(void);
 
 
 /**
- * Save service state information to the state file
+ * Mark the state file as dirty
+ */
+void State_dirty(void);
+
+
+/**
+ * Save the state if dirty
+ */
+void State_saveIfDirty(void);
+
+
+/**
+ * Save the state file
  */
 void State_save(void);
 

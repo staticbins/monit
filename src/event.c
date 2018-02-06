@@ -60,6 +60,7 @@
 #include "monit.h"
 #include "alert.h"
 #include "event.h"
+#include "state.h"
 #include "ProcessTree.h"
 #include "MMonit.h"
 
@@ -77,43 +78,57 @@
 /* ------------------------------------------------------------- Definitions */
 
 EventTable_T Event_Table[] = {
-        {Event_Action,     "Action done",               "Action done",                "Action done",              "Action done"},
-        {Event_ByteIn,     "Download bytes exceeded",   "Download bytes ok",          "Download bytes changed",   "Download bytes not changed"},
-        {Event_ByteOut,    "Upload bytes exceeded",     "Upload bytes ok",            "Upload bytes changed",     "Upload bytes not changed"},
-        {Event_Checksum,   "Checksum failed",           "Checksum succeeded",         "Checksum changed",         "Checksum not changed"},
-        {Event_Connection, "Connection failed",         "Connection succeeded",       "Connection changed",       "Connection not changed"},
-        {Event_Content,    "Content failed",            "Content succeeded",          "Content match",            "Content doesn't match"},
-        {Event_Data,       "Data access error",         "Data access succeeded",      "Data access changed",      "Data access not changed"},
-        {Event_Exec,       "Execution failed",          "Execution succeeded",        "Execution changed",        "Execution not changed"},
-        {Event_FsFlag,     "Filesystem flags failed",   "Filesystem flags succeeded", "Filesystem flags changed", "Filesystem flags not changed"},
-        {Event_Gid,        "GID failed",                "GID succeeded",              "GID changed",              "GID not changed"},
-        {Event_Heartbeat,  "Heartbeat failed",          "Heartbeat succeeded",        "Heartbeat changed",        "Heartbeat not changed"},
-        {Event_Icmp,       "ICMP failed",               "ICMP succeeded",             "ICMP changed",             "ICMP not changed"},
-        {Event_Instance,   "Monit instance failed",     "Monit instance succeeded",   "Monit instance changed",   "Monit instance not changed"},
-        {Event_Invalid,    "Invalid type",              "Type succeeded",             "Type changed",             "Type not changed"},
-        {Event_Link,       "Link down",                 "Link up",                    "Link changed",             "Link not changed"},
-        {Event_NonExist,   "Does not exist",            "Exists",                     "Existence changed",        "Existence not changed"},
-        {Event_PacketIn,   "Download packets exceeded", "Download packets ok",        "Download packets changed", "Download packets not changed"},
-        {Event_PacketOut,  "Upload packets exceeded",   "Upload packets ok",          "Upload packets changed",   "Upload packets not changed"},
-        {Event_Permission, "Permission failed",         "Permission succeeded",       "Permission changed",       "Permission not changed"},
-        {Event_Pid,        "PID failed",                "PID succeeded",              "PID changed",              "PID not changed"},
-        {Event_PPid,       "PPID failed",               "PPID succeeded",             "PPID changed",             "PPID not changed"},
-        {Event_Resource,   "Resource limit matched",    "Resource limit succeeded",   "Resource limit changed",   "Resource limit not changed"},
-        {Event_Saturation, "Saturation exceeded",       "Saturation ok",              "Saturation changed",       "Saturation not changed"},
-        {Event_Size,       "Size failed",               "Size succeeded",             "Size changed",             "Size not changed"},
-        {Event_Speed,      "Speed failed",              "Speed ok",                   "Speed changed",            "Speed not changed"},
-        {Event_Status,     "Status failed",             "Status succeeded",           "Status changed",           "Status not changed"},
-        {Event_Timeout,    "Timeout",                   "Timeout recovery",           "Timeout changed",          "Timeout not changed"},
-        {Event_Timestamp,  "Timestamp failed",          "Timestamp succeeded",        "Timestamp changed",        "Timestamp not changed"},
-        {Event_Uid,        "UID failed",                "UID succeeded",              "UID changed",              "UID not changed"},
-        {Event_Uptime,     "Uptime failed",             "Uptime succeeded",           "Uptime changed",           "Uptime not changed"},
-        {Event_Exist,      "Does exist",                "Exists not",                 "Existence changed",        "Existence not changed"},
+        {Event_Action,     "Action done",               "Action done",                "Action done",              "Action done",                  State_None},
+        {Event_ByteIn,     "Download bytes exceeded",   "Download bytes ok",          "Download bytes changed",   "Download bytes not changed",   State_None},
+        {Event_ByteOut,    "Upload bytes exceeded",     "Upload bytes ok",            "Upload bytes changed",     "Upload bytes not changed",     State_None},
+        {Event_Checksum,   "Checksum failed",           "Checksum succeeded",         "Checksum changed",         "Checksum not changed",         State_None},
+        {Event_Connection, "Connection failed",         "Connection succeeded",       "Connection changed",       "Connection not changed",       State_Changed},
+        {Event_Content,    "Content failed",            "Content succeeded",          "Content match",            "Content doesn't match",        State_Changed},
+        {Event_Data,       "Data access error",         "Data access succeeded",      "Data access changed",      "Data access not changed",      State_None},
+        {Event_Exec,       "Execution failed",          "Execution succeeded",        "Execution changed",        "Execution not changed",        State_None},
+        {Event_FsFlag,     "Filesystem flags failed",   "Filesystem flags succeeded", "Filesystem flags changed", "Filesystem flags not changed", State_None},
+        {Event_Gid,        "GID failed",                "GID succeeded",              "GID changed",              "GID not changed",              State_None},
+        {Event_Heartbeat,  "Heartbeat failed",          "Heartbeat succeeded",        "Heartbeat changed",        "Heartbeat not changed",        State_None},
+        {Event_Icmp,       "ICMP failed",               "ICMP succeeded",             "ICMP changed",             "ICMP not changed",             State_None},
+        {Event_Instance,   "Monit instance failed",     "Monit instance succeeded",   "Monit instance changed",   "Monit instance not changed",   State_None},
+        {Event_Invalid,    "Invalid type",              "Type succeeded",             "Type changed",             "Type not changed",             State_None},
+        {Event_Link,       "Link down",                 "Link up",                    "Link changed",             "Link not changed",             State_None},
+        {Event_NonExist,   "Does not exist",            "Exists",                     "Existence changed",        "Existence not changed",        State_None},
+        {Event_PacketIn,   "Download packets exceeded", "Download packets ok",        "Download packets changed", "Download packets not changed", State_None},
+        {Event_PacketOut,  "Upload packets exceeded",   "Upload packets ok",          "Upload packets changed",   "Upload packets not changed",   State_None},
+        {Event_Permission, "Permission failed",         "Permission succeeded",       "Permission changed",       "Permission not changed",       State_None},
+        {Event_Pid,        "PID failed",                "PID succeeded",              "PID changed",              "PID not changed",              State_None},
+        {Event_PPid,       "PPID failed",               "PPID succeeded",             "PPID changed",             "PPID not changed",             State_None},
+        {Event_Resource,   "Resource limit matched",    "Resource limit succeeded",   "Resource limit changed",   "Resource limit not changed",   State_None},
+        {Event_Saturation, "Saturation exceeded",       "Saturation ok",              "Saturation changed",       "Saturation not changed",       State_None},
+        {Event_Size,       "Size failed",               "Size succeeded",             "Size changed",             "Size not changed",             State_Changed},
+        {Event_Speed,      "Speed failed",              "Speed ok",                   "Speed changed",            "Speed not changed",            State_Changed},
+        {Event_Status,     "Status failed",             "Status succeeded",           "Status changed",           "Status not changed",           State_None},
+        {Event_Timeout,    "Timeout",                   "Timeout recovery",           "Timeout changed",          "Timeout not changed",          State_None},
+        {Event_Timestamp,  "Timestamp failed",          "Timestamp succeeded",        "Timestamp changed",        "Timestamp not changed",        State_Changed},
+        {Event_Uid,        "UID failed",                "UID succeeded",              "UID changed",              "UID not changed",              State_None},
+        {Event_Uptime,     "Uptime failed",             "Uptime succeeded",           "Uptime changed",           "Uptime not changed",           State_None},
+        {Event_Exist,      "Does exist",                "Exists not",                 "Existence changed",        "Existence not changed",        State_None},
         /* Virtual events */
-        {Event_Null,       "No Event",                  "No Event",                   "No Event",                 "No Event"}
+        {Event_Null,       "No Event",                  "No Event",                   "No Event",                 "No Event",                     State_None}
 };
 
 
 /* ----------------------------------------------------------------- Private */
+
+
+static void _saveState(long id, State_Type state) {
+        EventTable_T *et = Event_Table;
+        while ((*et).id) {
+                if ((*et).id == id) {
+                        if ((*et).saveState & state) {
+                                State_dirty();
+                        }
+                        break;
+                }
+                et++;
+        }
+}
 
 
 /**
@@ -305,8 +320,10 @@ static void _handleAction(Event_T E, Action_T A) {
                                 return;
                         }
                 } else {
-                        if (E->source->actionratelist && (A->id == Action_Start || A->id == Action_Restart))
+                        if (E->source->actionratelist && (A->id == Action_Start || A->id == Action_Restart)) {
                                 E->source->nstart++;
+                                State_dirty();
+                        }
                         if (E->source->mode == Monitor_Passive && (A->id == Action_Start || A->id == Action_Stop  || A->id == Action_Restart))
                                 return;
                         control_service(E->source->name, A->id);
@@ -388,6 +405,8 @@ void Event_post(Service_T service, long id, State_Type state, EventAction_T acti
         ASSERT(action);
         ASSERT(s);
         ASSERT(state == State_Failed || state == State_Succeeded || state == State_Changed || state == State_ChangedNot);
+
+        _saveState(id, state);
 
         va_list ap;
         va_start(ap, s);

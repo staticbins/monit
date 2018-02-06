@@ -1877,7 +1877,7 @@ void Util_monitorSet(Service_T s) {
         if (s->monitor == Monitor_Not) {
                 s->monitor = Monitor_Init;
                 DEBUG("'%s' monitoring enabled\n", s->name);
-                State_save();
+                State_dirty();
         }
 }
 
@@ -1896,7 +1896,7 @@ void Util_monitorUnset(Service_T s) {
         if (s->eventlist)
                 gc_event(&s->eventlist);
         Util_resetInfo(s);
-        State_save();
+        State_dirty();
 }
 
 

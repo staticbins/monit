@@ -109,7 +109,7 @@
 static void  do_init(void);                   /* Initialize this application */
 static void  do_reinit(void);       /* Re-initialize the runtime application */
 static void  do_action(char **);         /* Dispatch to the submitted action */
-static void  do_exit(void);                                /* Finalize monit */
+static void  do_exit(boolean_t);                           /* Finalize monit */
 static void  do_default(void);                          /* Do default action */
 static void  handle_options(int, char **);         /* Handle program options */
 static void  help(void);             /* Print program help message to stdout */
@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
         handle_options(argc, argv);
         do_init();
         do_action(argv);
-        do_exit();
+        do_exit(false);
         return 0;
 }
 
@@ -492,7 +492,7 @@ static void do_action(char **args) {
 /**
  * Finalize monit
  */
-static void do_exit() {
+static void do_exit(boolean_t saveState) {
         set_signal_block();
         Run.flags |= Run_Stopped;
         if ((Run.flags & Run_Daemon) && ! (Run.flags & Run_Once)) {
@@ -509,6 +509,9 @@ static void do_exit() {
 
                 /* send the monit stop notification */
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_STOP, "Monit %s stopped", VERSION);
+        }
+        if (saveState) {
+                State_save();
         }
         gc();
 #ifdef HAVE_OPENSSL
@@ -563,7 +566,7 @@ static void do_default() {
                         while (now < delay) {
                                 sleep((unsigned int)(delay - now));
                                 if (Run.flags & Run_Stopped)
-                                        do_exit();
+                                        do_exit(false);
                                 now = Time_now();
                         }
                 }
@@ -581,7 +584,6 @@ static void do_default() {
 
                 while (true) {
                         validate();
-                        State_save();
 
                         /* In the case that there is no pending action then sleep */
                         if (! (Run.flags & Run_ActionPending) && ! interrupt())
@@ -592,10 +594,13 @@ static void do_default() {
                                 LogInfo("Awakened by User defined signal 1\n");
                         }
 
-                        if (Run.flags & Run_Stopped)
-                                do_exit();
-                        else if (Run.flags & Run_DoReload)
+                        if (Run.flags & Run_Stopped) {
+                                do_exit(true);
+                        } else if (Run.flags & Run_DoReload) {
                                 do_reinit();
+                        } else {
+                                State_saveIfDirty();
+                        }
                 }
         } else {
                 _validateOnce();

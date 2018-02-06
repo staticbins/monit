@@ -202,11 +202,12 @@ typedef enum {
 
 
 typedef enum {
-        State_Succeeded = 0,
-        State_Failed,
-        State_Changed,
-        State_ChangedNot,
-        State_Init
+        State_Succeeded  = 0x0,
+        State_Failed     = 0x1,
+        State_Changed    = 0x2,
+        State_ChangedNot = 0x4,
+        State_Init       = 0x8,
+        State_None       = State_Init // Alias
 } __attribute__((__packed__)) State_Type;
 
 

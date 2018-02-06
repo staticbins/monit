@@ -73,7 +73,9 @@ typedef struct myeventtable {
         char *description_succeeded;
         char *description_changed;
         char *description_changednot;
+        State_Type saveState; // Bitmap of the event states that should trigger state file update
 } EventTable_T;
+
 
 extern EventTable_T Event_Table[];
 
