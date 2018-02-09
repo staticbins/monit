@@ -4,6 +4,10 @@
 
 Version 5.25.2
 
+New: Issue #123: Added a bash completion script for monit command-line. The script is not installed
+by default, if you want to enable the bash completion for monit, copy system/bash/monit file to
+/etc/bash_completion.d/ directory or similar (depends on your bash installation).
+
 Fixed: Issue #693: If the space usage test is set with an absolute value and the monitored
 filesystem is not mounted on boot, monit returned error during configuration parsing and stopped.
 
