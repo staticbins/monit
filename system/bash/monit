@@ -47,7 +47,7 @@ _monit_servicegroups()
 {
     _monit_config
     _monit_sudo
-    servicegroups=$($sudo $monit $configuration vIt | grep "Group" | sed -e "s/.* = //")
+    servicegroups=$($sudo $monit $configuration -vIt | grep "Group" | sed -e "s/.* = //")
 }
 
 
