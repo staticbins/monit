@@ -54,7 +54,7 @@ _monit_servicegroups()
 _monit()
 {
     local cur prev
-    local options="-c -d -g -h -i -l -p -s -t -v -vv -B -H -I -V --batch --conf --daemon --group --hash --help --id --interactive --logfile --pidfile --resetid --statefile --test --verbose --version"
+    local options="--batch --conf --daemon --group --hash --help --id --interactive --logfile --pidfile --resetid --statefile --test --verbose --version"
     local commands="start stop restart monitor unmonitor reload status summary report quit validate procmatch"
     local report="up down initialising unmonitored total"
 
