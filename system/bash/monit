@@ -62,7 +62,8 @@ _monit()
     
     COMPREPLY=()
 
-    _get_comp_words_by_ref cur prev
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     case "${prev}" in
         -c|--conf|-l|--logfile|-p|--pidfile|-s|--statefile|-H|--hash)
