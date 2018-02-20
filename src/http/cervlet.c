@@ -250,7 +250,7 @@ static void _formatStatus(const char *name, Event_Type errorType, Output_Type ty
                         StringBuffer_append(res->outputbuffer, type == HTML ? "<td>" : COLOR_DEFAULT);
                 if (type == HTML) {
                         // If the output contains multiple line, wrap use <pre>, otherwise keep as is
-                        int multiline = strrchr(_value, '\n') > 0;
+                        boolean_t multiline = strrchr(_value, '\n') ? true : false;
                         if (multiline)
                                 StringBuffer_append(res->outputbuffer, "<pre>");
                         escapeHTML(res->outputbuffer, _value);
