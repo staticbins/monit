@@ -559,7 +559,8 @@ static void status_event(Event_T E, StringBuffer_T B) {
                             E->id,
                             E->state,
                             Event_get_action(E));
-        _escapeCDATA(B, E->message);
+        if (E->message)
+                _escapeCDATA(B, E->message);
         StringBuffer_append(B, "]]></message>");
         if (E->source->token)
                 StringBuffer_append(B, "<token>%s</token>", E->source->token);
