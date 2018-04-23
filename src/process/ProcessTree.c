@@ -438,6 +438,8 @@ void ProcessTree_testMatch(char *pattern) {
                                "Multiple processes match the pattern. Monit will select the process with the\n"
                                "highest uptime, the one highlighted.\n");
         }
+        regfree(regex_comp);
+        FREE(regex_comp);
 }
 
 
