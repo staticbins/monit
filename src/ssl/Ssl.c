@@ -784,7 +784,7 @@ char *Ssl_printOptions(SslOptions_T options, char *b, int size) {
         if (options->flags) {
                 int count = 0;
                 if (options->version != -1)
-                        snprintf(b + strlen(b), size - strlen(b) - 1, "%sversion: %s", count++ ? ", " : "", sslnames[options->version]);
+                        snprintf(b + strlen(b), size - strlen(b) - 1, "version: %s", sslnames[options->version]);
                 if (options->verify == true)
                         snprintf(b + strlen(b), size - strlen(b) - 1, "%sverify: enable", count++ ? ", " : "");
                 if (options->allowSelfSigned == true)
