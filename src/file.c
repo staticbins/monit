@@ -300,6 +300,7 @@ boolean_t file_readProc(char *buf, int buf_size, char *name, int pid, int *bytes
                 buf[bytes] = 0;
                 rv = true;
         } else {
+                *buf = 0;
                 DEBUG("Cannot read proc file '%s' -- %s\n", filename, STRERROR);
         }
 
