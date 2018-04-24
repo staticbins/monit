@@ -117,7 +117,7 @@ static void _parseHttpResponse(Socket_T S) {
                 if (content_length > 0 && content_length < 1024 && Socket_readLine(S, buf, sizeof(buf))) {
                         char token[] = "</h2>";
                         message = strstr(buf, token);
-                        if (strlen(message) > strlen(token)) {
+                        if (message && strlen(message) > strlen(token)) {
                                 message += strlen(token);
                                 char *footer = NULL;
                                 if ((footer = strstr(message, "<p>")) || (footer = strstr(message, "<hr>")))
