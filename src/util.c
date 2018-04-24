@@ -358,8 +358,7 @@ static int PAMquery(int num_msg, const struct pam_message **msg, struct pam_resp
 
                         default:
                                 /* Something strange... */
-                                if (response != NULL)
-                                        FREE(response);
+                                FREE(response);
                                 return PAM_CONV_ERR;
                 }
         }
