@@ -121,7 +121,8 @@ void check_pgsql(Socket_T socket) {
         /** Successful connection */
         if (! memcmp((unsigned char *)buf, (unsigned char *)responseAuthOk, 9)) {
                 /** This is where suspicious people can do SELECT query that I dont */
-                Socket_write(socket, (unsigned char *)requestTerm, sizeof(requestTerm));
+                if (Socket_write(socket, (unsigned char *)requestTerm, sizeof(requestTerm)) < 0)
+                        THROW(IOException, "PGSQL: connection terminator write error -- %s", STRERROR);
                 return;
         }
 
