@@ -52,8 +52,7 @@ void check_nntp(Socket_T socket) {
 
         Str_chomp(buf);
 
-        sscanf(buf, "%d %*s", &status);
-        if (status != 200)
+        if (sscanf(buf, "%d %*s", &status) != 1 || status != 200)
                 THROW(ProtocolException, "NNTP error: %s", buf);
 
         if (Socket_print(socket, "QUIT\r\n") < 0)
@@ -64,8 +63,7 @@ void check_nntp(Socket_T socket) {
 
         Str_chomp(buf);
 
-        sscanf(buf, "%d %*s", &status);
-        if (status != 205)
+        if (sscanf(buf, "%d %*s", &status) != 1 || status != 205)
                 THROW(ProtocolException, "NNTP error: %s", buf);
 }
 
