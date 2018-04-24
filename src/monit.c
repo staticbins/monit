@@ -661,8 +661,7 @@ static void handle_options(int argc, char **argv) {
                                 case 'd':
                                 {
                                         Run.flags |= Run_Daemon;
-                                        sscanf(optarg, "%d", &Run.polltime);
-                                        if (Run.polltime < 1) {
+                                        if (sscanf(optarg, "%d", &Run.polltime) != 1 || Run.polltime < 1) {
                                                 LogError("Option -%c requires a natural number\n", opt);
                                                 exit(1);
                                         }
