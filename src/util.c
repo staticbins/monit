@@ -2027,7 +2027,7 @@ char *Util_commandDescription(command_t command, char s[STRLEN]) {
                 len += snprintf(s + len, STRLEN - len, "%s%s", i ? " " : "", command->arg[i]);
         }
         if (len >= STRLEN - 1)
-                snprintf(s + STRLEN - 3 - 1, STRLEN, "...");
+                snprintf(s + STRLEN - 3 - 1, 4, "...");
         return s;
 }
 
