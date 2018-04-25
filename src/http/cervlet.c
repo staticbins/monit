@@ -939,7 +939,7 @@ static void handle_service(HttpRequest req, HttpResponse res) {
         }
         Service_T s = Util_getService(++name);
         if (! s) {
-                send_error(req, res, SC_NOT_FOUND, "There is no service named \"%s\"", name ? name : "");
+                send_error(req, res, SC_NOT_FOUND, "There is no service named \"%s\"", name);
                 return;
         }
         do_service(req, res, s);
