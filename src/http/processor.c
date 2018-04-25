@@ -892,6 +892,8 @@ static HttpParameter parse_parameters(char *query_string) {
                         key = NULL;
                 }
         }
+        if (key)
+                FREE(key);
         return head;
 error:
         FREE(key);
