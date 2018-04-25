@@ -183,7 +183,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         int count = 0;
         StringBuffer_T cmdline = NULL;
         if (pflags & ProcessEngine_CollectCommandLine)
-                cmdline = StringBuffer_create(64);;
+                cmdline = StringBuffer_create(64);
         for (int i = 0; i < treesize; i++) {
                 int index = count;
                 if (pinfo[i].p_tid < 0) {
