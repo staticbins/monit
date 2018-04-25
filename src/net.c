@@ -504,7 +504,7 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
                                 default:
                                         break;
                         }
-                        if (outgoing->ip) {
+                        if (s >= 0 && outgoing->ip) {
                                 if (bind(s, (struct sockaddr *)&(outgoing->addr), outgoing->addrlen) < 0) {
                                         LogError("Cannot bind to outgoing address -- %s\n", STRERROR);
                                         goto error1;
