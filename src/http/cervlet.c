@@ -556,7 +556,9 @@ static void printFavicon(HttpResponse res) {
                 Socket_print(S, "Content-length: %lu\r\n", (unsigned long)l);
                 Socket_print(S, "Content-Type: image/x-icon\r\n");
                 Socket_print(S, "Connection: close\r\n\r\n");
-                Socket_write(S, favicon, l);
+                if (Socket_write(S, favicon, l) < 0) {
+                        LogError("Error sending favicon data -- %s\n", STRERROR);
+                }
         }
 }
 
