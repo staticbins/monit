@@ -1229,12 +1229,14 @@ static boolean_t _checkSkip(Service_T s) {
         // Skip if parent is not initialized
         for (Dependant_T d = s->dependantlist; d; d = d->next ) {
                 Service_T parent = Util_getService(d->dependant);
-                if (parent->monitor != Monitor_Yes) {
-                        DEBUG("'%s' test skipped as required service '%s' is %s\n", s->name, parent->name, parent->monitor == Monitor_Init ? "initializing" : "not monitored");
-                        return true;
-                } else if (parent->error) {
-                        DEBUG("'%s' test skipped as required service '%s' has errors\n", s->name, parent->name);
-                        return true;
+                if (parent) {
+                        if (parent->monitor != Monitor_Yes) {
+                                DEBUG("'%s' test skipped as required service '%s' is %s\n", s->name, parent->name, parent->monitor == Monitor_Init ? "initializing" : "not monitored");
+                                return true;
+                        } else if (parent->error) {
+                                DEBUG("'%s' test skipped as required service '%s' has errors\n", s->name, parent->name);
+                                return true;
+                        }
                 }
         }
         return false;
