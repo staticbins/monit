@@ -3833,41 +3833,32 @@ static void addmatch(Match_T ms, int actionnumber, int linenumber) {
 
 
 static void addmatchpath(Match_T ms, Action_Type actionnumber) {
-
-        FILE *handle;
-        command_t savecommand = NULL;
-        char buf[2048];
-        int linenumber = 0;
-
         ASSERT(ms->match_path);
 
-        handle = fopen(ms->match_path, "r");
+        FILE *handle = fopen(ms->match_path, "r");
         if (handle == NULL) {
                 yyerror2("Cannot read regex match file (%s)", ms->match_path);
                 return;
         }
 
-        while (! feof(handle)) {
-                size_t len;
-
-                linenumber++;
+        command_t savecommand = NULL;
+        for (int linenumber = 1; ! feof(handle); linenumber++) {
+                char buf[2048];
 
                 if (! fgets(buf, 2048, handle))
                         continue;
 
-                len = strlen(buf);
+                size_t len = strlen(buf);
 
                 if (len == 0 || buf[0] == '\n')
                         continue;
 
-                if (buf[len-1] == '\n')
-                        buf[len-1] = 0;
+                if (buf[len - 1] == '\n')
+                        buf[len - 1] = 0;
 
                 ms->match_string = Str_dup(buf);
 
-                /* The addeventaction() called from addmatch() will reset the
-                 * command1 to NULL, but we need to duplicate the command for
-                 * each line, thus need to save it here */
+                // The addeventaction() called from addmatch() will reset the command1 to NULL, but we need to duplicate the command for each line, thus need to save it here
                 if (actionnumber == Action_Exec) {
                         if (command1 == NULL) {
                                 ASSERT(savecommand);
@@ -4912,7 +4903,7 @@ static command_t copycommand(command_t source) {
         copy->gid = source->gid;
         copy->timeout = source->timeout;
         for (i = 0; i < copy->length; i++)
-        copy->arg[i] = Str_dup(source->arg[i]);
+                copy->arg[i] = Str_dup(source->arg[i]);
         copy->arg[copy->length] = NULL;
 
         return copy;
