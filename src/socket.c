@@ -451,8 +451,10 @@ void Socket_free(T *S) {
         {
                 int type;
                 socklen_t length = sizeof(type);
-                getsockopt((*S)->socket, SOL_SOCKET, SO_TYPE, &type, &length);
-                if (type == SOCK_DGRAM) {
+                int rv = getsockopt((*S)->socket, SOL_SOCKET, SO_TYPE, &type, &length);
+                if (rv) {
+                        LogError("Freeing socket -- getsockopt failed: %s\n", STRERROR);
+                } else if (type == SOCK_DGRAM) {
                         struct sockaddr_storage addr;
                         socklen_t addrlen = sizeof(addr);
                         if (getsockname((*S)->socket, (struct sockaddr *)&addr, &addrlen) == 0) {
