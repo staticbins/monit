@@ -305,13 +305,17 @@ static void _setPingOptions(int socket, struct addrinfo *addr) {
         int ttl = 255;
         switch (addr->ai_family) {
                 case AF_INET:
-                        setsockopt(socket, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl));
+                        if (setsockopt(socket, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0)
+                                LogError("Ping: setsockopt for TTL failed -- %s\n", System_getLastError());
                         break;
 #ifdef HAVE_IPV6
                 case AF_INET6:
-                        setsockopt(socket, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &ttl, sizeof(ttl));
-                        setsockopt(socket, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &ttl, sizeof(ttl));
-                        setsockopt(socket, IPPROTO_ICMPV6, ICMP6_FILTER, &filter, sizeof(struct icmp6_filter));
+                        if (setsockopt(socket, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &ttl, sizeof(ttl)) < 0)
+                                LogError("Ping: setsockopt for multicast hops failed -- %s\n", System_getLastError());
+                        if (setsockopt(socket, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &ttl, sizeof(ttl)) < 0)
+                                LogError("Ping: setsockopt for unicast hops failed -- %s\n", System_getLastError());
+                        if (setsockopt(socket, IPPROTO_ICMPV6, ICMP6_FILTER, &filter, sizeof(struct icmp6_filter)) < 0)
+                                LogError("Ping: setsockopt for filter failed -- %s\n", System_getLastError());
                         break;
 #endif
                 default:
