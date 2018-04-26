@@ -583,16 +583,12 @@ then
    ARCH="FREEBSD"
    CFLAGS="$CFLAGS -D _REENTRANT"
    AC_CHECK_LIB([devstat], [devstat_getnumdevs])
-   AC_CHECK_LIB([zfs], [libzfs_init])
-   AC_CHECK_LIB([nvpair], [nvlist_free])
    AC_CHECK_LIB([kvm], [kvm_open])
 elif test "$architecture" = "GNU/kFreeBSD"
 then
    ARCH="FREEBSD"
    CFLAGS="$CFLAGS -D _REENTRANT"
    AC_CHECK_LIB([devstat], [devstat_getnumdevs])
-   AC_CHECK_LIB([zfs], [libzfs_init])
-   AC_CHECK_LIB([nvpair], [nvlist_free])
    AC_CHECK_LIB([kvm], [kvm_open])
 elif test "$architecture" = "NetBSD"
 then
