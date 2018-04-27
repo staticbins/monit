@@ -34,6 +34,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <ctype.h>
 #include <regex.h>
 #include <limits.h>

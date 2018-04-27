@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <sys/wait.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #include "Bootstrap.h"

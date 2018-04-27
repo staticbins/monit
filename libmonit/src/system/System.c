@@ -29,7 +29,11 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #ifdef HAVE_SYS_RANDOM_H
 #include <sys/random.h>
@@ -118,8 +122,9 @@ boolean_t System_random(void *buf, size_t nbytes) {
                 }
         }
         // Fallback to random()
+        char *_buf = buf;
         for (int i = 0; i < nbytes; i++) {
-                buf[i] = random() % 256;
+                _buf[i] = random() % 256;
         }
         return true;
 #endif

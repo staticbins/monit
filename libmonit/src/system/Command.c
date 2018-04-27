@@ -34,8 +34,10 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <pwd.h>
 #include <grp.h>
+#include <fcntl.h>
 
 #include "Str.h"
 #include "Dir.h"
