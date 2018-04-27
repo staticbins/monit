@@ -76,6 +76,8 @@ int main(void) {
                         printf("%x", buf2[i]);
                 }
                 printf("\n");
+                //
+                assert(System_randomNumber() != System_randomNumber());
         }
         printf("=> Test1: OK\n\n");
 
