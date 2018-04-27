@@ -1,6 +1,7 @@
 #include "Config.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <errno.h>
@@ -13,6 +14,7 @@
 #include "Bootstrap.h"
 #include "Str.h"
 #include "system/System.h"
+#include "system/Time.h"
 #include "Thread.h"
 
 /**
@@ -47,6 +49,8 @@ int main(void) {
 
         printf("=> Test2: random data generator\n");
         {
+                srandom((unsigned)(Time_now() + getpid()));
+                //
                 printf("\tnumber:   %"PRIx64"\n", System_randomNumber());
                 //
                 printf("\t1  byte:  ");
