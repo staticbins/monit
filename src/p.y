@@ -3841,7 +3841,8 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
                 return;
         }
 
-        command_t savecommand = NULL;
+        // The addeventaction() called from addmatch() will reset the command1 to NULL, but we need to duplicate the command for each line, thus need to save it here
+        command_t savecommand = command1;
         for (int linenumber = 1; ! feof(handle); linenumber++) {
                 char buf[2048];
 
@@ -3858,18 +3859,15 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
 
                 ms->match_string = Str_dup(buf);
 
-                // The addeventaction() called from addmatch() will reset the command1 to NULL, but we need to duplicate the command for each line, thus need to save it here
                 if (actionnumber == Action_Exec) {
                         if (command1 == NULL) {
                                 ASSERT(savecommand);
-                                command1 = savecommand;
+                                command1 = copycommand(savecommand);
                         }
-                        savecommand = copycommand(command1);
                 }
                 
                 addmatch(ms, actionnumber, linenumber);
         }
-        
         if (actionnumber == Action_Exec && savecommand)
                 gccmd(&savecommand);
         
