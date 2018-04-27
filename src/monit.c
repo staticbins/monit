@@ -108,7 +108,7 @@
 
 static void  do_init(void);                   /* Initialize this application */
 static void  do_reinit(void);       /* Re-initialize the runtime application */
-static void  do_action(char **);         /* Dispatch to the submitted action */
+static void  do_action(int, char **);    /* Dispatch to the submitted action */
 static void  do_exit(boolean_t);                           /* Finalize monit */
 static void  do_default(void);                          /* Do default action */
 static void  handle_options(int, char **);         /* Handle program options */
@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
         init_env();
         handle_options(argc, argv);
         do_init();
-        do_action(argv);
+        do_action(argc, argv);
         do_exit(false);
         return 0;
 }
@@ -405,7 +405,8 @@ static void do_reinit() {
 /**
  * Dispatch to the submitted action - actions are program arguments
  */
-static void do_action(char **args) {
+static void do_action(int argc, char **args) {
+        ASSERT(optind >= 0 && optind < argc);
         char *action = args[optind];
 
         Run.flags |= Run_Once;
