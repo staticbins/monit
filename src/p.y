@@ -3845,7 +3845,7 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
         for (int linenumber = 1; ! feof(handle); linenumber++) {
                 char buf[2048];
 
-                if (! fgets(buf, 2048, handle))
+                if (! fgets(buf, sizeof(buf), handle))
                         continue;
 
                 size_t len = strlen(buf);
