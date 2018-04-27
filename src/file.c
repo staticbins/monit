@@ -180,19 +180,8 @@ boolean_t file_checkStat(char *filename, char *description, int permmask) {
 
 
 boolean_t file_checkQueueDirectory(char *path) {
-        struct stat st;
-        if (stat(path, &st)) {
-                if (errno == ENOENT) {
-                        if (mkdir(path, 0700)) {
-                                LogError("Cannot create the event queue directory '%s' -- %s\n", path, STRERROR);
-                                return false;
-                        }
-                } else {
-                        LogError("Cannot read the event queue directory '%s' -- %s\n", path, STRERROR);
-                        return false;
-                }
-        } else if (! S_ISDIR(st.st_mode)) {
-                LogError("Event queue: '%s' is not a directory\n", path);
+        if (mkdir(path, 0700) < 0 && errno != EEXIST) {
+                LogError("Cannot create the event queue directory '%s' -- %s\n", path, STRERROR);
                 return false;
         }
         return true;
