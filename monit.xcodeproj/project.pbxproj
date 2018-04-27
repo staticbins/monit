@@ -212,7 +212,6 @@
 		52F6E74F13A74F220023F87A /* sysdep_AIX.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_AIX.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E75013A74F220023F87A /* sysdep_DARWIN.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_DARWIN.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E75113A74F220023F87A /* sysdep_FREEBSD.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_FREEBSD.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
-		52F6E75213A74F220023F87A /* sysdep_HPUX.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_HPUX.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E75313A74F220023F87A /* sysdep_LINUX.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_LINUX.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E75413A74F220023F87A /* sysdep_NETBSD.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_NETBSD.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E75513A74F220023F87A /* sysdep_OPENBSD.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_OPENBSD.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
@@ -247,7 +246,6 @@
 		52F6E77613A74F220023F87A /* sysdep_AIX.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_AIX.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E77713A74F220023F87A /* sysdep_DARWIN.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_DARWIN.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E77813A74F220023F87A /* sysdep_FREEBSD.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_FREEBSD.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
-		52F6E77913A74F220023F87A /* sysdep_HPUX.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_HPUX.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E77A13A74F220023F87A /* sysdep_LINUX.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_LINUX.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E77B13A74F220023F87A /* sysdep_NETBSD.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_NETBSD.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E77C13A74F220023F87A /* sysdep_OPENBSD.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_OPENBSD.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
@@ -538,7 +536,6 @@
 				52F6E75013A74F220023F87A /* sysdep_DARWIN.c */,
 				93C635D81E6213B5009B873B /* sysdep_DRAGONFLY.c */,
 				52F6E75113A74F220023F87A /* sysdep_FREEBSD.c */,
-				52F6E75213A74F220023F87A /* sysdep_HPUX.c */,
 				52F6E75313A74F220023F87A /* sysdep_LINUX.c */,
 				52F6E75413A74F220023F87A /* sysdep_NETBSD.c */,
 				52F6E75513A74F220023F87A /* sysdep_OPENBSD.c */,
@@ -577,7 +574,6 @@
 				52F6E77713A74F220023F87A /* sysdep_DARWIN.c */,
 				93C635D91E6213CB009B873B /* sysdep_DRAGONFLY.c */,
 				52F6E77813A74F220023F87A /* sysdep_FREEBSD.c */,
-				52F6E77913A74F220023F87A /* sysdep_HPUX.c */,
 				52F6E77A13A74F220023F87A /* sysdep_LINUX.c */,
 				52F6E77B13A74F220023F87A /* sysdep_NETBSD.c */,
 				52F6E77C13A74F220023F87A /* sysdep_OPENBSD.c */,

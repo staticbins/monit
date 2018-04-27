@@ -232,10 +232,6 @@ then
        LDFLAGS="$LDFLAGS -mtune=v9"
    fi
    AC_DEFINE([SOLARIS], 1, [Define to 1 if the system is SOLARIS])
-elif test "$architecture" = "HP-UX"
-then
-   CFLAGS="$CFLAGS -D_REENTRANT -D _INCLUDE_XOPEN_SOURCE -D _INCLUDE_XOPEN_SOURCE_EXTENDED -D _XOPEN_SOURCE_EXTENDED -D _INCLUDE_HPUX_SOURCE"
-   AC_DEFINE([HPUX], 1, [Define to 1 if the system is HPUX])
 elif test "$architecture" = "NetBSD"
 then
    CFLAGS="$CFLAGS -D_REENTRANT -Wno-char-subscripts"

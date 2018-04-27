@@ -567,11 +567,6 @@ then
    then
    	AC_DEFINE([HAVE_CPU_WAIT], [1], [Define to 1 if CPU wait information is available.])
    fi
-elif test "$architecture" = "HP-UX"
-then
-   ARCH="HPUX"
-   CFLAGS="$CFLAGS -D _REENTRANT -D _INCLUDE_XOPEN_SOURCE -D _INCLUDE_XOPEN_SOURCE_EXTENDED -D _XOPEN_SOURCE_EXTENDED -D _INCLUDE_HPUX_SOURCE"
-   AC_DEFINE([HAVE_CPU_WAIT], [1], [Define to 1 if CPU wait information is available.])
 elif test "$architecture" = "OpenBSD"
 then
    ARCH="OPENBSD"
