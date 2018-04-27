@@ -899,25 +899,19 @@ static void do_viewlog(HttpRequest req, HttpResponse res) {
         }
         do_head(res, "_viewlog", "View log", 100);
         if ((Run.flags & Run_Log) && ! (Run.flags & Run_UseSyslog)) {
-                struct stat sb;
-                if (! stat(Run.files.log, &sb)) {
-                        FILE *f = fopen(Run.files.log, "r");
-                        if (f) {
-#define BUFSIZE 512
-                                size_t n;
-                                char buf[BUFSIZE+1];
-                                StringBuffer_append(res->outputbuffer, "<br><p><form><textarea cols=120 rows=30 readonly>");
-                                while ((n = fread(buf, sizeof(char), BUFSIZE, f)) > 0) {
-                                        buf[n] = 0;
-                                        StringBuffer_append(res->outputbuffer, "%s", buf);
-                                }
-                                fclose(f);
-                                StringBuffer_append(res->outputbuffer, "</textarea></form>");
-                        } else {
-                                StringBuffer_append(res->outputbuffer, "Error opening logfile: %s", STRERROR);
+                FILE *f = fopen(Run.files.log, "r");
+                if (f) {
+                        size_t n;
+                        char buf[512];
+                        StringBuffer_append(res->outputbuffer, "<br><p><form><textarea cols=120 rows=30 readonly>");
+                        while ((n = fread(buf, sizeof(char), sizeof(buf) - 1, f)) > 0) {
+                                buf[n] = 0;
+                                StringBuffer_append(res->outputbuffer, "%s", buf);
                         }
+                        fclose(f);
+                        StringBuffer_append(res->outputbuffer, "</textarea></form>");
                 } else {
-                        StringBuffer_append(res->outputbuffer, "Error stating logfile: %s", STRERROR);
+                        StringBuffer_append(res->outputbuffer, "Error opening logfile: %s", STRERROR);
                 }
         } else {
                 StringBuffer_append(res->outputbuffer,
