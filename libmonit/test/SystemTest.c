@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <inttypes.h>
 
 #include "Bootstrap.h"
 #include "Str.h"
@@ -41,6 +42,36 @@ int main(void) {
         {
                 assert(System_getDescriptorsGuarded() <= 2<<15);
 
+        }
+        printf("=> Test1: OK\n\n");
+
+        printf("=> Test2: random data generator\n");
+        {
+                printf("\tnumber:   %"PRIx64"\n", System_randomNumber());
+                //
+                printf("\t1  byte:  ");
+                char buf0[1];
+                assert(System_random(buf0, sizeof(buf0)));
+                for (int i = 0; i < sizeof(buf0); i++) {
+                        printf("%x", buf0[i]);
+                }
+                printf("\n");
+                //
+                printf("\t4  bytes: ");
+                char buf1[4];
+                assert(System_random(buf1, sizeof(buf1)));
+                for (int i = 0; i < sizeof(buf1); i++) {
+                        printf("%x", buf1[i]);
+                }
+                printf("\n");
+                //
+                printf("\t16 bytes: ");
+                char buf2[16];
+                assert(System_random(buf2, sizeof(buf2)));
+                for (int i = 0; i < sizeof(buf2); i++) {
+                        printf("%x", buf2[i]);
+                }
+                printf("\n");
         }
         printf("=> Test1: OK\n\n");
 

@@ -116,7 +116,7 @@ AC_CHECK_HEADERS([ctype.h errno.h fcntl.h limits.h pthread.h setjmp.h \
                   sys/sendfile.h sys/dirent.h poll.h sys/poll.h sys/event.h \
                   stropts.h sys/ioctl.h sys/filio.h kstat.h ifaddrs.h \
                   net/if_media.h netinet/in.h sys/sysctl.h net/if_dl.h \
-                  sys/protosw.h mach/boolean.h uvm/uvm_param.h])
+                  sys/random.h sys/protosw.h mach/boolean.h uvm/uvm_param.h])
 AC_CHECK_HEADERS([net/if.h net/route.h], [], [],
         [
          #ifdef HAVE_SYS_TYPES_H
@@ -191,6 +191,10 @@ AC_CACHE_CHECK([vsnprintf is c99 conformant],
                         [AC_MSG_ERROR(cross-compiling: please set 'libmonit_cv_vsnprintf_c99_conformant=[yes|no]')])])
 
 AC_CHECK_FUNCS([timegm])
+
+# random number generators
+AC_CHECK_FUNCS([getrandom])
+AC_CHECK_FUNCS([arc4random_buf])
 
 # ------------------------------------------------------------------------
 # Architecture/OS

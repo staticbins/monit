@@ -77,4 +77,20 @@ void System_error(const char *e, ...) __attribute__((format (printf, 1, 2)));
 int System_getDescriptorsGuarded(void);
 
 
+/**
+ * Initialize the buf of size nbytes with random data.
+ * @param buf The target buffer
+ * @param nbtyes The target buffer size in bytes
+ * @return true on success, otherwise false
+ */
+boolean_t System_random(void *buf, size_t nbytes);
+
+
+/**
+ * Get random number
+ * @return random number
+ */
+uint64_t System_randomNumber(void);
+
+
 #endif

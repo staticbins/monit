@@ -31,6 +31,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef HAVE_SYS_RANDOM_H
+#include <sys/random.h>
+#endif
+
 #include "Str.h"
 #include "system/System.h"
 
@@ -95,5 +99,36 @@ int System_getDescriptorsGuarded() {
                 fileDescriptors = getdtablesize();
         assert(fileDescriptors > 2);
         return (fileDescriptors > max) ? max : fileDescriptors;
+}
+
+
+boolean_t System_random(void *buf, size_t nbytes) {
+#ifdef HAVE_ARC4RANDOM_BUF
+        arc4random_buf(buf, nbytes);
+        return true;
+#elif defined GETRANDOM
+        return (getrandom(buf, nbytes, 0) == nbytes);
+#else
+        int fd = open("/dev/urandom", O_RDONLY);
+        if (fd >= 0) {
+                int bytes = read(fd, buf, nbytes);
+                close(fd);
+                if (bytes == nbytes) {
+                        return true;
+                }
+        }
+        // Fallback to random()
+        for (int i = 0; i < nbytes; i++) {
+                buf[i] = random() % 256;
+        }
+        return true;
+#endif
+}
+
+
+uint64_t System_randomNumber() {
+        uint64_t random;
+        System_random(&random, sizeof(random));
+        return random;
 }
 

@@ -53,7 +53,7 @@
  *
  */
 void check_radius(Socket_T socket) {
-        int i, length, left;
+        int length, left;
         int secret_len;
         Port_T P;
         md5_context_t ctx;
@@ -124,8 +124,7 @@ void check_radius(Socket_T socket) {
         secret_len = (int)strlen(secret);
 
         /* get 16 bytes of random data */
-        for (i = 0; i < 16; i++)
-                request[i + 4] = ((unsigned int)random()) & 0xff;
+        System_random(request, 16);
 
         /* sign the packet */
         Util_hmacMD5(request, sizeof(request), (unsigned char *)secret, secret_len, request + 22);

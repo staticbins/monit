@@ -1444,9 +1444,9 @@ void Util_printServiceList() {
 
 char *Util_getToken(MD_T token) {
         md5_context_t ctx;
-        char buf[STRLEN] = {};
+        char buf[32] = {};
         MD_T digest;
-        snprintf(buf, STRLEN, "%lu%d%lu", (unsigned long)Time_now(), getpid(), random());
+        System_random(buf, sizeof(buf));
         md5_init(&ctx);
         md5_append(&ctx, (const md5_byte_t *)buf, STRLEN - 1);
         md5_finish(&ctx, (md5_byte_t *)digest);

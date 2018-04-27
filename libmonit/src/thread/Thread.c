@@ -25,6 +25,8 @@
 
 #include "Config.h"
 
+#include <stdint.h>
+
 #include "system/System.h"
 #include "Thread.h"
 

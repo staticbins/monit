@@ -99,11 +99,11 @@ void check_sip(Socket_T socket) {
 
         if (Socket_print(socket,
                          "OPTIONS %s:%s SIP/2.0\r\n"
-                         "Via: SIP/2.0/%s %s:%d;branch=z9hG4bKh%ld%s\r\n"
+                         "Via: SIP/2.0/%s %s:%d;branch=z9hG4bKh%"PRIx64"%s\r\n"
                          "Max-Forwards: %d\r\n"
                          "To: <%s:%s>\r\n"
-                         "From: monit <%s:monit@%s>;tag=%ld\r\n"
-                         "Call-ID: %ld\r\n"
+                         "From: monit <%s:monit@%s>;tag=%"PRIx64"\r\n"
+                         "Call-ID: %"PRIx64"\r\n"
                          "CSeq: 63104 OPTIONS\r\n"
                          "Contact: <%s:%s:%d>\r\n"
                          "Accept: application/sdp\r\n"
@@ -114,15 +114,15 @@ void check_sip(Socket_T socket) {
                          transport,                    // via transport udp|tcp
                          myip,                         // who its from
                          port,                         // our port
-                         random(),                     // branch
+                         System_randomNumber(),        // branch
                          rport,                        // rport option
                          P->parameters.sip.maxforward ? (P->parameters.sip.maxforward == INT_MAX ? 0 : P->parameters.sip.maxforward) : 70, // maximum forwards
                          proto,                        // protocol
                          target,                       // to
                          proto,                        // protocol
                          myip,                         // from host
-                         random(),                     // tag
-                         random(),                     // call id
+                         System_randomNumber(),        // tag
+                         System_randomNumber(),        // call id
                          proto,                        // protocol
                          myip,                         // contact host
                          port,                         // contact port
