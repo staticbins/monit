@@ -406,7 +406,6 @@ static void do_reinit() {
  * Dispatch to the submitted action - actions are program arguments
  */
 static void do_action(int argc, char **args) {
-        ASSERT(optind >= 0 && optind < argc);
         char *action = args[optind];
 
         Run.flags |= Run_Once;
