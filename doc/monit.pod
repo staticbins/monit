@@ -3333,9 +3333,9 @@ For example:
  then restart
 
 I<METHOD> set the HTTP request method. If not specified, Monit prefers
-the HTTP HEAD request method to save bandwidth, unless a response content
-or response checksum is tested. As some webservers may not support the
-HEAD method, one may want to set the method explicitly.
+the HTTP GET request method, which is more common then the HEAD method.
+One may want to set the method explicitly to HEAD to save the network
+bandwidth.
 
 I<STATUS> option can be used to explicitly test the HTTP status code
 returned by the HTTP server. If not used, the HTTP protocol test will

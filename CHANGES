@@ -21,6 +21,12 @@ Fixed: Collect system statistics even if process statistics failed (independent)
 
 Fixed: Reduce the state file related overhead
 
+Changed: HTTP protocol test: switched the default protocol from HEAD to GET. The HEAD method is not
+supported by some webservers thus the simplified test syntax failed for some users if the method was
+not specified explicitly. To continue using the HEAD method with reduced network usage, add the method
+option:
+    if failed port 443 protocol https method HEAD then alert
+
 
 Version 5.25.1
 
