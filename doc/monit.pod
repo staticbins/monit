@@ -3030,8 +3030,8 @@ using the PING4 or the PING6 keyword instead of PING.
 The B<COUNT> parameter specifies how many consecutive ping requests
 will be sent to the host in one cycle at maximum. The default value is 3.
 
-The B<SIZE> parameter specifies the ping request data size. Default
-is 64 bytes.
+The B<SIZE> parameter specifies the ping request payload size. Default
+is 64 bytes, minimum is 8 bytes, maximum 1492 bytes.
 
 If no reply arrive within B<TIMEOUT> seconds, Monit reports an error.
 If at least one reply was received, the ping test is considered a

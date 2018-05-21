@@ -1889,6 +1889,11 @@ icmpcount       : COUNT NUMBER {
 
 icmpsize        : SIZE NUMBER {
                         icmpset.size = $<number>2;
+                        if (icmpset.size < 8) {
+                                yyerror2("The minimum ping size is 8 bytes");
+                        } else if (icmpset.size > 1492) {
+                                yyerror2("The maximum ping size is 1492 bytes");
+                        }
                  }
                 ;
 

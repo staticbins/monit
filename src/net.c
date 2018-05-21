@@ -393,7 +393,7 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
         char buf[ICMP_MAXSIZE] = {};
         switch (addr->ai_family) {
                 case AF_INET:
-                        in_len = sizeof(struct ip) + sizeof(struct icmp);
+                        in_len = 36; // 20 bytes for IP header + 8 bytes for minimum ICMP fields (type, code, checksum, id, seq) + 8 bytes for data payload
                         break;
 #ifdef HAVE_IPV6
                 case AF_INET6:
@@ -403,7 +403,10 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                 default:
                         break;
         }
-        while (read_timeout > 0 && Net_canRead(socket, read_timeout) && ! (Run.flags & Run_Stopped)) {
+        while (read_timeout > 0 && Net_canRead(socket, read_timeout)) {
+                if (Run.flags & Run_Stopped) {
+                        return -1.;
+                }
                 int64_t stopped = Time_micro();
                 struct sockaddr_storage in_addr;
                 socklen_t addrlen = sizeof(in_addr);
@@ -525,7 +528,7 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
         }
         _setPingOptions(s, addr);
         uint16_t id = getpid() & 0xFFFF;
-        for (int retry = 1; retry <= maxretries; retry++) {
+        for (int retry = 1; retry <= maxretries && ! (Run.flags & Run_Stopped); retry++) {
                 int64_t started = Time_micro();
                 if (_sendPing(hostname, s, addr, size, retry, maxretries, id, started) && (response = _receivePing(hostname, s, addr, retry, maxretries, id, started, timeout)) >= 0.)
                         break;
