@@ -104,7 +104,8 @@ static void _substitute(Mail_T m, Event_T e) {
         ASSERT(m);
         ASSERT(e);
 
-        // If the sender address contains a $HOST macro, expand it to FQDN hostname, otherwise it was overriden via a mail-format "from" option
+        if (Str_sub(m->from->name, "$HOST"))
+                Util_replaceString(&m->from->name, "$HOST", _getFQDNhostname(m->host));
         if (Str_sub(m->from->address, "$HOST"))
                 Util_replaceString(&m->from->address, "$HOST", _getFQDNhostname(m->host));
 
