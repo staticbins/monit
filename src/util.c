@@ -441,42 +441,31 @@ static Auth_T PAMcheckUserGroup(const char *uname) {
 
 
 char *Util_replaceString(char **src, const char *old, const char *new) {
-        int i;
-        size_t d;
-
         ASSERT(src);
         ASSERT(*src);
         ASSERT(old);
         ASSERT(new);
 
-        i = Util_countWords(*src, old);
-        d = strlen(new)-strlen(old);
-
-        if (i == 0)
-                return *src;
-        if (d > 0)
-                d *= i;
-        else
-                d = 0;
-
-        {
-                char *p, *q;
+        int i = Util_countWords(*src, old);
+        if (i) {
                 size_t l = strlen(old);
+                size_t d = strlen(new) - l;
+                if (d > 0) {
+                        d *= i;
+                } else {
+                        d = 0;
+                }
                 char *buf = CALLOC(sizeof(char), strlen(*src) + d + 1);
-
-                q = *src;
+                char *p;
+                char *q = *src;
                 *buf = 0;
-
                 while ((p = strstr(q, old))) {
-
-                        *p = '\0';
+                        *p = 0;
                         strcat(buf, q);
                         strcat(buf, new);
                         p += l;
                         q = p;
-
                 }
-
                 strcat(buf, q);
                 FREE(*src);
                 *src = buf;
