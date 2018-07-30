@@ -4,6 +4,9 @@
 
 Version 5.25.3
 
+Fixed: Issue #619: The HTTP protocol test may log SSL read errors and the content/checksum test may
+fail when the server sends chunked encoded response. 
+
 Fixed: Issue #749: $HOST doesn't work in the "name" part of the "from:" in mail-format message
 
 

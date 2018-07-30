@@ -611,8 +611,9 @@ static void _testIp(Port_T p) {
                                 }
                                 FINALLY
                                 {
-                                        if (S)
+                                        if (S) {
                                                 Socket_free((Socket_T *)&S);
+                                        }
                                 }
                                 END_TRY;
                         } else {
