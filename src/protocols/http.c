@@ -145,8 +145,8 @@ static void _checkChecksum(const char *data, int length, char *expectedChecksum,
                         {
                                 sha1_context_t ctx_sha1;
                                 sha1_init(&ctx_sha1);
-                                sha1_append(&ctx_sha1, (md5_byte_t *)data, length);
-                                sha1_finish(&ctx_sha1, (md5_byte_t *)hash);
+                                sha1_append(&ctx_sha1, (const unsigned char *)data, length);
+                                sha1_finish(&ctx_sha1, (unsigned char *)hash);
                                 keyLength = 20; /* Raw key bytes not string chars! */
                         }
                         break;
