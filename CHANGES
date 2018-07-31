@@ -9,6 +9,9 @@ fail when the server sends chunked encoded response.
 
 Fixed: Issue #749: $HOST doesn't work in the "name" part of the "from:" in mail-format message
 
+Fixed: Issue #759: The "stop" action for "check program" has no effect if the "every" statement
+is used to skip monitoring in some cycles.
+
 
 Version 5.25.2
 
