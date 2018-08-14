@@ -383,9 +383,6 @@ static void _handleEvent(Service_T S, Event_T E) {
                 S->error &= ~E->id;
                 _handleAction(E, E->action->succeeded);
         }
-
-        /* Possible event state change was handled so we will reset the flag. */
-        E->state_changed = false;
 }
 
 

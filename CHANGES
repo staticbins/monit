@@ -12,6 +12,8 @@ Fixed: Issue #749: $HOST doesn't work in the "name" part of the "from:" in mail-
 Fixed: Issue #759: The "stop" action for "check program" has no effect if the "every" statement
 is used to skip monitoring in some cycles.
 
+Fixed: Issue #764: Monit may crash if "unmonitor" or "stop" action was triggered by some test
+
 
 Version 5.25.2
 
