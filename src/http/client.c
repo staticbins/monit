@@ -82,15 +82,17 @@ static void _argument(StringBuffer_T data, const char *name, const char *value) 
 
 
 static char *_getBasicAuthHeader() {
-        Auth_T c = Run.httpd.credentials;
+        Auth_T auth = NULL;
         // Find the first cleartext credential for authorization
-        while (c != NULL) {
-                if (c->digesttype == Digest_Cleartext && ! c->is_readonly)
-                        break;
-                c = c->next;
+        for (Auth_T c = Run.httpd.credentials; c; c = c->next) {
+                if (c->digesttype == Digest_Cleartext) {
+                        if (! auth || auth->is_readonly) {
+                                auth = c;
+                        }
+                }
         }
-        if (c)
-                return Util_getBasicAuthHeader(c->uname, c->passwd);
+        if (auth)
+                return Util_getBasicAuthHeader(auth->uname, auth->passwd);
         return NULL;
 }
 
