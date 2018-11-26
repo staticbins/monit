@@ -273,6 +273,16 @@ static boolean_t _parseProcPidAttrCurrent(Proc_T proc) {
         return false;
 }
 
+
+static double _usagePercent(unsigned long long previous, unsigned long long current, double total) {
+        if (current < previous) {
+                // The counter jumped back (observed for cpu wait metric on Linux 4.15) or wrapped
+                return 0.;
+        }
+        return (double)(current - previous) / total * 100.;
+}
+
+
 /* ------------------------------------------------------------------ Public */
 
 
@@ -523,9 +533,9 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
                 si->cpu.usage.wait = -1.;
         } else {
                 double delta = cpu_total - old_cpu_total;
-                si->cpu.usage.user = (double)(cpu_user - old_cpu_user) / delta * 100.;
-                si->cpu.usage.system = (double)(cpu_syst - old_cpu_syst) / delta * 100.;
-                si->cpu.usage.wait = (double)(cpu_wait - old_cpu_wait) / delta * 100.;
+                si->cpu.usage.user = _usagePercent(old_cpu_user, cpu_user, delta);
+                si->cpu.usage.system = _usagePercent(old_cpu_syst, cpu_syst, delta);
+                si->cpu.usage.wait = _usagePercent(old_cpu_wait, cpu_wait, delta);
         }
 
         old_cpu_user  = cpu_user;
