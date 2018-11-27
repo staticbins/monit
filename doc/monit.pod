@@ -935,7 +935,7 @@ will be denied access and are logged with their IP-address.
 =head4 PAM
 
 PAM is supported on platforms which provide PAM (such as Linux,
-Mac OS X, FreeBSD, NetBSD).
+macOS, FreeBSD, NetBSD).
 
 Syntax:
 
@@ -946,7 +946,7 @@ interface. Monit uses a PAM service called I<monit> for PAM
 authentication, see the PAM manual page for detailed instructions on
 how to set the PAM service and PAM authentication plugins.
 
-Sample PAM service for Monit on Mac OS X (store as
+Sample PAM service for Monit on macOS (store as
 "/etc/pam.d/monit" file):
 
   # monit: auth account password session
@@ -3498,7 +3498,7 @@ Example:
         protocol mysql username "foo" password "bar"
      then alert
 
-or with unix-socket and OS X start/stop commands
+or with unix-socket start/stop commands
 
  check process mysql with pidfile /var/run/mysqld/mysqld.pid
      start program = "/usr/local/mysql/support-files/mysql.server start"
