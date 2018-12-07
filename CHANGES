@@ -20,6 +20,8 @@ Fixed: Issue #764: Monit may crash if "unmonitor" or "stop" action was triggered
 Fixed: Issue #769: Monit CLI status command doesn't work if only read-only credentials is present
 in the 'set httpd' statement.
 
+Fixed: Issue #784: Radius protocol test regression from 5.25.2. Thanks to Jason Young for patch.
+
 Fixed: The CPU user/system/wait statistics may show negative value if the system counter jumps back or wraps.
 
 
