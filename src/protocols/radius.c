@@ -124,7 +124,7 @@ void check_radius(Socket_T socket) {
         secret_len = (int)strlen(secret);
 
         /* get 16 bytes of random data */
-        System_random(request, 16);
+        System_random(request + 4, 16);
 
         /* sign the packet */
         Util_hmacMD5(request, sizeof(request), (unsigned char *)secret, secret_len, request + 22);
