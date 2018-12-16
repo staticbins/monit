@@ -55,18 +55,6 @@
 
 #define DEFAULT_PERM 0666
 
-#define RETURN_FILETYPE(X) do { \
-        switch ((X) & S_IFMT) { \
-        case S_IFREG:  return 'r'; \
-        case S_IFDIR:  return 'd'; \
-        case S_IFCHR:  return 'c'; \
-        case S_IFBLK:  return 'b'; \
-        case S_IFLNK:  return 'l'; \
-        case S_IFIFO:  return 'p'; \
-        case S_IFSOCK: return 's'; \
-        default:       return '?'; \
-} } while (0)
-
 const char SEPARATOR_CHAR = '/';
 const char *SEPARATOR = "/";
 const char PATH_SEPARATOR_CHAR = ':';
@@ -183,14 +171,22 @@ int File_exist(const char *file) {
 
 
 char File_type(const char *file) {
-        if (file) {
-                struct stat buf;
-                if (stat(file, &buf) == 0)
-                        RETURN_FILETYPE(buf.st_mode);
-        }
-        return '?';
+    if (file) {
+        struct stat buf;
+        if (stat(file, &buf) == 0)
+            switch ((buf.st_mode) & S_IFMT) {
+                case S_IFREG:  return 'r';
+                case S_IFDIR:  return 'd';
+                case S_IFCHR:  return 'c';
+                case S_IFBLK:  return 'b';
+                case S_IFLNK:  return 'l';
+                case S_IFIFO:  return 'p';
+                case S_IFSOCK: return 's';
+                default:       return '?';
+            }
+    }
+    return '?';
 }
-
 
 off_t File_size(const char *file) {
         if (file) {
