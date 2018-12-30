@@ -199,7 +199,7 @@ int Time_year(time_t time);
  * @param result The buffer to write the date string too
  * @return a pointer to the result buffer
  */
-char *Time_string(time_t time, char result[26]);
+char *Time_string(time_t time, char result[static 26]);
 
 
 /**
@@ -213,7 +213,7 @@ char *Time_string(time_t time, char result[26]);
  * @param result The buffer to write the date string too
  * @return a pointer to the result buffer
  */
-char *Time_gmtstring(time_t time, char result[30]);
+char *Time_gmtstring(time_t time, char result[static 30]);
 
 
 /**
@@ -245,7 +245,7 @@ char *Time_fmt(char *result, int size, const char *format, time_t time);
  * @return a pointer to the result buffer or NULL if <code>result</code>
  * was NULL
  */
-char *Time_uptime(time_t sec, char result[24]);
+char *Time_uptime(time_t sec, char result[static 24]);
 
 
 /**
