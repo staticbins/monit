@@ -4,6 +4,7 @@ LDADD = ../libmonit.la
 AM_CPPFLAGS = -I../src/ -I../src/util -I../src/net -I../src/io -I../src/exceptions -I../src/statistics -I../src/thread 
 
 noinst_PROGRAMS = StrTest \
+                  FmtTest \
                   SystemTest \
                   ListTest \
                   DirTest \
@@ -18,6 +19,7 @@ noinst_PROGRAMS = StrTest \
                   CommandTest
 
 StrTest_SOURCES = StrTest.c
+FmtTest_SOURCES = FmtTest.c
 CommandTest_SOURCES = CommandTest.c
 SystemTest_SOURCES = SystemTest.c
 ListTest_SOURCES = ListTest.c

@@ -389,29 +389,7 @@ int main(void) {
         }
         printf("=> Test22: OK\n\n");
 
-        printf("=> Test23: Str_bytes2str\n");
-        {
-                char str[10];
-                Str_bytes2str(0, str);
-                assert(Str_isEqual(str, "0 B"));
-                Str_bytes2str(2048, str);
-                assert(Str_isEqual(str, "2 KB"));
-                Str_bytes2str(2097152, str);
-                assert(Str_isEqual(str, "2 MB"));
-                Str_bytes2str(2621440, str);
-                assert(Str_isEqual(str, "2.5 MB"));
-                Str_bytes2str(9083741824, str);
-                assert(Str_isEqual(str, "8.5 GB"));
-                Str_bytes2str(9083741824987653, str);
-                assert(Str_isEqual(str, "8.1 PB"));
-                Str_bytes2str(LLONG_MAX, str);
-                assert(Str_isEqual(str, "8 EB"));
-                Str_bytes2str(-9083741824, str);
-                assert(Str_isEqual(str, "-8.5 GB"));
-        }
-        printf("=> Test23: OK\n\n");
-
-        printf("=> Test24: Str_unescape\n");
+        printf("=> Test23: Str_unescape\n");
         {
                 char s[] = "foo\\'ba\\`r\\}baz";
                 char t[] = "\\&gt\\;";
@@ -420,9 +398,9 @@ int main(void) {
                 assert(Str_isEqual(Str_unescape("&;", t), "&gt;"));
                 assert(Str_unescape("@*!#$%&/(=", NULL) == NULL);
         }
-        printf("=> Test24: OK\n\n");
+        printf("=> Test23: OK\n\n");
 
-        printf("=> Test25: Str_compareConstantTime\n");
+        printf("=> Test24: Str_compareConstantTime\n");
         {
                 assert(Str_compareConstantTime(NULL,     NULL)        == 0);
                 assert(Str_compareConstantTime("abcdef", NULL)        != 0);
@@ -438,37 +416,7 @@ int main(void) {
                 unsigned char ko[] = "11111111111111111111111111111111111111111111111111111111111111111"; // 65 characters should fail
                 assert(Str_compareConstantTime(ko, ko) != 0);
         }
-        printf("=> Test25: OK\n\n");
-
-        printf("=> Test26: Str_time2str\n");
-        {
-                char str[13];
-                Str_time2str(0, str);
-                assert(Str_isEqual(str, "0 ms"));
-                Str_time2str(0.5, str);
-                assert(Str_isEqual(str, "0.500 ms"));
-                Str_time2str(1, str);
-                assert(Str_isEqual(str, "1 ms"));
-                Str_time2str(999.999, str);
-                assert(Str_isEqual(str, "999.999 ms"));
-                Str_time2str(2000, str);
-                assert(Str_isEqual(str, "2 s"));
-                Str_time2str(2123, str);
-                assert(Str_isEqual(str, "2.123 s"));
-                Str_time2str(60000, str);
-                assert(Str_isEqual(str, "1 m"));
-                Str_time2str(90000, str);
-                assert(Str_isEqual(str, "1.500 m"));
-                Str_time2str(3600000, str);
-                assert(Str_isEqual(str, "1 h"));
-                Str_time2str(1258454321, str);
-                assert(Str_isEqual(str, "14.565 d"));
-                Str_time2str(3e+12, str);
-                assert(Str_isEqual(str, "95.129 y"));
-                Str_time2str(-2000, str);
-                assert(Str_isEqual(str, "-2 s"));
-        }
-        printf("=> Test26: OK\n\n");
+        printf("=> Test24: OK\n\n");
 
         printf("============> Str Tests: OK\n\n");
         return 0;

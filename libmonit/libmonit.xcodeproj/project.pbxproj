@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		521ECE3921D85CFE00F8045E /* Fmt.h in Headers */ = {isa = PBXBuildFile; fileRef = 521ECE3721D85CFE00F8045E /* Fmt.h */; };
+		521ECE3A21D85CFE00F8045E /* Fmt.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3821D85CFE00F8045E /* Fmt.c */; };
+		521ECE3C21D85EC100F8045E /* FmtTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3B21D85EC100F8045E /* FmtTest.c */; };
 		522FF2FA192E702D00C62A13 /* TimeTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8613A5212700FC4089 /* TimeTest.c */; };
 		523FFE7C19AFE7B30018595D /* StrTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8313A5212700FC4089 /* StrTest.c */; };
 		52A31C841A653235009D3D83 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
@@ -110,6 +113,10 @@
 
 /* Begin PBXFileReference section */
 		5205CE261A59FEA500DB6380 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		521ECE3721D85CFE00F8045E /* Fmt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fmt.h; sourceTree = "<group>"; };
+		521ECE3821D85CFE00F8045E /* Fmt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Fmt.c; sourceTree = "<group>"; };
+		521ECE3B21D85EC100F8045E /* FmtTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FmtTest.c; sourceTree = "<group>"; };
+		521ECE3D21D862D700F8045E /* StringBufferTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = StringBufferTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		522539AC18B91092003EB002 /* THIRDPARTY */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = THIRDPARTY; sourceTree = "<group>"; };
 		5239CECF1A59E0C500A032B8 /* Link.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = Link.inc; sourceTree = "<group>"; };
 		5239CED11A59E0C500A032B8 /* Link.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = Link.inc; sourceTree = "<group>"; };
@@ -188,7 +195,6 @@
 		52F8BB461ECE567A0007DF91 /* libz.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.dylib; path = ../../../../../usr/lib/libz.1.dylib; sourceTree = "<group>"; };
 		93EAFCB31E1BFAC800B31673 /* Statistics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Statistics.c; sourceTree = "<group>"; };
 		93EAFCB41E1BFAC800B31673 /* Statistics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Statistics.h; sourceTree = "<group>"; };
-		93F2DC5A208F6B49003C6D4F /* StringBufferTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = StringBufferTest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -322,6 +328,7 @@
 				52936F8113A5212700FC4089 /* OutputStreamTest.c */,
 				52936F8213A5212700FC4089 /* StringBufferTest.c */,
 				52936F8313A5212700FC4089 /* StrTest.c */,
+				521ECE3B21D85EC100F8045E /* FmtTest.c */,
 				52936F8413A5212700FC4089 /* SystemTest.c */,
 				52936F8613A5212700FC4089 /* TimeTest.c */,
 			);
@@ -357,8 +364,8 @@
 				5274583A13A1009C00C422FE /* test */,
 				52936F9513A5216B00FC4089 /* config */,
 				52A31C831A6531DF009D3D83 /* Products */,
+				521ECE3D21D862D700F8045E /* StringBufferTest */,
 				52F8BB431ECE55D60007DF91 /* Frameworks */,
-				93F2DC5A208F6B49003C6D4F /* StringBufferTest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -459,6 +466,8 @@
 				52D7967913A6CE560014CED2 /* Str.h */,
 				52D7967A13A6CE560014CED2 /* StringBuffer.c */,
 				52D7967B13A6CE560014CED2 /* StringBuffer.h */,
+				521ECE3721D85CFE00F8045E /* Fmt.h */,
+				521ECE3821D85CFE00F8045E /* Fmt.c */,
 			);
 			path = util;
 			sourceTree = "<group>";
@@ -488,6 +497,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				521ECE3921D85CFE00F8045E /* Fmt.h in Headers */,
 				52E737DC1EE71099007BF939 /* ProtocolException.h in Headers */,
 				93EAFCB91E1BFAC800B31673 /* Statistics.h in Headers */,
 			);
@@ -564,7 +574,7 @@
 			);
 			name = StringBufferTest;
 			productName = CommandTest;
-			productReference = 93F2DC5A208F6B49003C6D4F /* StringBufferTest */;
+			productReference = 521ECE3D21D862D700F8045E /* StringBufferTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		52FDD6A7189C2036008E3D5E /* CommandTest */ = {
@@ -640,10 +650,12 @@
 				52D7968113A6CE560014CED2 /* assert.c in Sources */,
 				52D7968413A6CE560014CED2 /* Exception.c in Sources */,
 				52D7968913A6CE560014CED2 /* Dir.c in Sources */,
+				521ECE3A21D85CFE00F8045E /* Fmt.c in Sources */,
 				52D7968B13A6CE560014CED2 /* File.c in Sources */,
 				52D7968D13A6CE560014CED2 /* InputStream.c in Sources */,
 				52D7968F13A6CE560014CED2 /* OutputStream.c in Sources */,
 				52D7969113A6CE560014CED2 /* Command.c in Sources */,
+				521ECE3C21D85EC100F8045E /* FmtTest.c in Sources */,
 				93EAFCB81E1BFAC800B31673 /* Statistics.c in Sources */,
 				52D7969313A6CE560014CED2 /* Mem.c in Sources */,
 				52D7969513A6CE560014CED2 /* Net.c in Sources */,
@@ -718,7 +730,7 @@
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = TimeTest;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -740,7 +752,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = TimeTest;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -765,7 +777,7 @@
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = StrTest;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -787,7 +799,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = StrTest;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -959,7 +971,7 @@
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -981,7 +993,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -1006,7 +1018,7 @@
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -1028,7 +1040,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "";
 			};

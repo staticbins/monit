@@ -30,6 +30,7 @@ libmonit_la_SOURCES = \
                   src/system/Link.c \
                   src/util/List.c \
                   src/util/Str.c \
+                  src/util/Fmt.c \
                   src/util/StringBuffer.c \
                   src/thread/Thread.c
 

@@ -442,24 +442,5 @@ int Str_cmp(const void *x, const void *y);
 int Str_compareConstantTime(const void *x, const void *y);
 
 
-/**
- * Convert the numeric bytes value to a string representation scaled to
- * human friendly storage unit [B, kB, MB, etc.].
- * @param bytes Byte value to convert
- * @param s A result buffer, must be large enough to hold 10 chars
- * @return A pointer to s
- */
-char *Str_bytes2str(double bytes, char s[10]);
-
-
-/**
- * Convert the time in milliseconds to human friendlier unit (ms/s/m/h/d/y).
- * @param milli The time value in milliseconds to present
- * @param s A result buffer, must be large enough to hold 11 chars
- * @return A pointer to s
- */
-char *Str_time2str(double milli, char s[11]);
-
-
 #endif
 

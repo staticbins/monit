@@ -80,7 +80,6 @@ int main(void) {
                 assert(Str_isEqual(result, "34m"));
                 printf("\tResult: uptime 0: %s\n", Time_uptime(0, result));
                 assert(Str_isEqual(result, ""));
-                assert(Time_uptime(0, NULL) == NULL);
         }
         printf("=> Test4: OK\n\n");
 

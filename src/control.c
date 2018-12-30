@@ -61,6 +61,7 @@
 #include "system/Time.h"
 
 // libmonit
+#include "util/Fmt.h"
 #include "exceptions/AssertException.h"
 
 
@@ -143,7 +144,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, int6
                                 *timeout -= RETRY_INTERVAL;
                         } while ((status = Process_exitStatus(P)) < 0 && *timeout > 0 && ! (Run.flags & Run_Stopped));
                         if (*timeout <= 0)
-                                snprintf(msg, msglen, "Program '%s' timed out after %s", Util_commandDescription(c, (char[STRLEN]){}), Str_time2str(_timeoutMilli, (char[11]){}));
+                                snprintf(msg, msglen, "Program '%s' timed out after %s", Util_commandDescription(c, (char[STRLEN]){}), Fmt_time2str(_timeoutMilli, (char[11]){}));
                         int n, total = 0;
                         char buf[STRLEN];
                         do {
