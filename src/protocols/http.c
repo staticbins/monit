@@ -55,7 +55,122 @@
  */
 
 
+/* ------------------------------------------------------------- Definitions */
+
+
+#define BUFSIZE 4096
+
+
+typedef union ChecksumContext_T {
+        md5_context_t  md5;
+        sha1_context_t sha1;
+} *ChecksumContext_T;
+
+
 /* ----------------------------------------------------------------- Private */
+
+
+static void _contentVerify(Port_T P, const char *data) {
+        if (P->url_request && P->url_request->regex) {
+                boolean_t rv = false;
+                char error[STRLEN];
+                int regex_return = regexec(P->url_request->regex, data, 0, NULL, 0);
+                switch (P->url_request->operator) {
+                        case Operator_Equal:
+                                if (regex_return == 0) {
+                                        rv = true;
+                                        DEBUG("HTTP: Regular expression matches\n");
+                                } else {
+                                        char errbuf[STRLEN];
+                                        regerror(regex_return, NULL, errbuf, sizeof(errbuf));
+                                        snprintf(error, sizeof(error), "Regular expression doesn't match: %s", errbuf);
+                                }
+                                break;
+                        case Operator_NotEqual:
+                                if (regex_return == 0) {
+                                        snprintf(error, sizeof(error), "Regular expression matches");
+                                } else {
+                                        rv = true;
+                                        DEBUG("HTTP: Regular expression doesn't match\n");
+                                }
+                                break;
+                        default:
+                                snprintf(error, sizeof(error), "Invalid content operator");
+                                break;
+                }
+                if (! rv)
+                        THROW(ProtocolException, "HTTP error: %s", error);
+        }
+}
+
+
+static void _checksumInit(Port_T P, ChecksumContext_T context) {
+        if (P->parameters.http.checksum) {
+                switch (P->parameters.http.hashtype) {
+                        case Hash_Md5:
+                                md5_init(&(context->md5));
+                                break;
+                        case Hash_Sha1:
+                                sha1_init(&(context->sha1));
+                                break;
+                        default:
+                                THROW(ProtocolException, "HTTP checksum error: Unknown hash type");
+                }
+        }
+}
+
+
+static void _checksumFinish(Port_T P, ChecksumContext_T context, MD_T hash) {
+        if (P->parameters.http.checksum) {
+                switch (P->parameters.http.hashtype) {
+                        case Hash_Md5:
+                                md5_finish(&(context->md5), (md5_byte_t *)hash);
+                                break;
+                        case Hash_Sha1:
+                                sha1_finish(&(context->sha1), (unsigned char *)hash);
+                                break;
+                        default:
+                                THROW(ProtocolException, "HTTP checksum error: Unknown hash type");
+                }
+        }
+}
+
+
+static void _checksumAppend(Port_T P, ChecksumContext_T context, const char *input, int inputLength) {
+        if (P->parameters.http.checksum) {
+                switch (P->parameters.http.hashtype) {
+                        case Hash_Md5:
+                                md5_append(&(context->md5), (const md5_byte_t *)input, inputLength);
+                                break;
+                        case Hash_Sha1:
+                                sha1_append(&(context->sha1), (const unsigned char *)input, inputLength);
+                                break;
+                        default:
+                                THROW(ProtocolException, "HTTP checksum error: Unknown hash type");
+                }
+        }
+}
+
+
+static void _checksumVerify(Port_T P, MD_T hash) {
+        if (P->parameters.http.checksum) {
+                int keyLength = 0;
+                switch (P->parameters.http.hashtype) {
+                        case Hash_Md5:
+                                keyLength = 16; /* Raw key bytes not string chars! */
+                                break;
+                        case Hash_Sha1:
+                                keyLength = 20; /* Raw key bytes not string chars! */
+                                break;
+                        default:
+                                THROW(ProtocolException, "HTTP checksum error: Unknown hash type");
+                }
+                MD_T hashString = {};
+                if (strncasecmp(Util_digest2Bytes((unsigned char *)hash, keyLength, hashString), P->parameters.http.checksum, keyLength * 2) != 0)
+                        THROW(ProtocolException, "HTTP checksum error: Data checksum mismatch (expected %s got %s)", P->parameters.http.checksum, hashString);
+                DEBUG("HTTP: Succeeded testing data checksum\n");
+        }
+}
 
 
 static boolean_t _hasHeader(List_T list, const char *name) {
@@ -84,124 +199,59 @@ static unsigned _getChunkSize(Socket_T socket) {
 }
 
 
-static void _readDataFromSocket(Socket_T socket, char *data, int *wantBytes, int *haveBytes) {
+static int _readDataFromSocket(Port_T P, Socket_T socket, char *data, int wantBytes) {
+        int readBytes = 0;
         do {
-                int n = Socket_read(socket, data + *haveBytes, *wantBytes);
+                int n = Socket_read(socket, data + readBytes, wantBytes - readBytes);
                 if (n <= 0) {
                         THROW(ProtocolException, "HTTP error: Receiving data -- %s", STRERROR);
                 }
-                (*haveBytes) += n;
-                (*wantBytes) -= n;
-        } while (*wantBytes > 0);
-}
-
-
-static void _checkContent(const char *data, Request_T R) {
-        boolean_t rv = false;
-        char error[STRLEN];
-        int regex_return = regexec(R->regex, data, 0, NULL, 0);
-        switch (R->operator) {
-                case Operator_Equal:
-                        if (regex_return == 0) {
-                                rv = true;
-                                DEBUG("HTTP: Regular expression matches\n");
-                        } else {
-                                char errbuf[STRLEN];
-                                regerror(regex_return, NULL, errbuf, sizeof(errbuf));
-                                snprintf(error, sizeof(error), "Regular expression doesn't match: %s", errbuf);
-                        }
-                        break;
-                case Operator_NotEqual:
-                        if (regex_return == 0) {
-                                snprintf(error, sizeof(error), "Regular expression matches");
-                        } else {
-                                rv = true;
-                                DEBUG("HTTP: Regular expression doesn't match\n");
-                        }
-                        break;
-                default:
-                        snprintf(error, sizeof(error), "Invalid content operator");
-                        break;
+                readBytes += n;
+        } while (readBytes < wantBytes);
+        if (readBytes != wantBytes) {
+                THROW(ProtocolException, "HTTP error: Content too small -- the server announced %d bytes but just %d bytes were received", wantBytes, readBytes);
         }
-        if (! rv)
-                THROW(ProtocolException, "HTTP error: %s", error);
+        return readBytes;
 }
 
 
-static void _checkChecksum(const char *data, int length, char *expectedChecksum, Hash_Type hashType) {
-        MD_T hash;
-        int keyLength = 0;
-        switch (hashType) {
-                case Hash_Md5:
-                        {
-                                md5_context_t ctx_md5;
-                                md5_init(&ctx_md5);
-                                md5_append(&ctx_md5, (const md5_byte_t *)data, length);
-                                md5_finish(&ctx_md5, (md5_byte_t *)hash);
-                                keyLength = 16; /* Raw key bytes not string chars! */
-                        }
-                        break;
-                case Hash_Sha1:
-                        {
-                                sha1_context_t ctx_sha1;
-                                sha1_init(&ctx_sha1);
-                                sha1_append(&ctx_sha1, (const unsigned char *)data, length);
-                                sha1_finish(&ctx_sha1, (unsigned char *)hash);
-                                keyLength = 20; /* Raw key bytes not string chars! */
-                        }
-                        break;
-                default:
-                        THROW(ProtocolException, "HTTP checksum error: Unknown hash type");
+static void _readData(Socket_T socket, Port_T P, volatile char **data, int wantBytes, int *haveBytes, ChecksumContext_T context) {
+        if (P->url_request && P->url_request->regex) {
+                // The content test is required => cache the whole body
+                *data = realloc((void *)*data, *haveBytes + wantBytes + 1);
+                *haveBytes += _readDataFromSocket(P, socket, (void *)*data + *haveBytes, wantBytes);
+                _checksumAppend(P, context, (const char *)*data, wantBytes);
+                *(*data + *haveBytes) = 0;
+        } else {
+                // No content check is required => use small buffer and compute the checksum on the fly
+                *haveBytes = 0;
+                for (int readBytes = (wantBytes < BUFSIZE) ? wantBytes : BUFSIZE; *haveBytes < wantBytes; readBytes = (wantBytes - *haveBytes) < BUFSIZE ? (wantBytes - *haveBytes) : BUFSIZE) {
+                        _readDataFromSocket(P, socket, (void *)*data, readBytes);
+                        _checksumAppend(P, context, (const char *)*data, readBytes);
+                        *haveBytes += readBytes;
+                }
         }
-        MD_T result;
-        if (strncasecmp(Util_digest2Bytes((unsigned char *)hash, keyLength, result), expectedChecksum, keyLength * 2) != 0)
-                THROW(ProtocolException, "HTTP checksum error: Document checksum mismatch");
-        DEBUG("HTTP: Succeeded testing document checksum\n");
 }
 
 
-static void _checkBody(Port_T P, const char *body, int contentLength) {
-        if (P->url_request && P->url_request->regex)
-                _checkContent(body, P->url_request);
-        if (P->parameters.http.checksum)
-                _checkChecksum(body, contentLength, P->parameters.http.checksum, P->parameters.http.hashtype);
-}
-
-
-static void _processBodyChunked(Socket_T socket, Port_T P, int *contentLength) {
+static void _processBodyChunked(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context) {
+        char crlf[2] = {};
         int wantBytes = 0;
         int haveBytes = 0;
-        volatile char *data = NULL;
-        TRY
-        {
-                while ((wantBytes = _getChunkSize(socket)) && haveBytes < Run.limits.httpContentBuffer) {
-                        if (haveBytes + wantBytes > Run.limits.httpContentBuffer) {
-                                DEBUG("HTTP: content buffer limit exceeded -- limiting the data to %d\n", Run.limits.httpContentBuffer);
-                                wantBytes = Run.limits.httpContentBuffer - haveBytes;
-                        } else {
-                                wantBytes += 2; // Read CRLF terminator too
-                        }
-                        if (data) {
-                                data = realloc((void *)data, haveBytes + wantBytes);
-                        } else {
-                                data = CALLOC(1, wantBytes);
-                        }
-                        _readDataFromSocket(socket, (void *)data, &wantBytes, &haveBytes);
-                        // Shave the CRLF terminator off the data
-                        haveBytes -= 2;
-                        data[haveBytes] = 0;
+        while ((wantBytes = _getChunkSize(socket)) && haveBytes < Run.limits.httpContentBuffer) {
+                if (haveBytes + wantBytes > Run.limits.httpContentBuffer) {
+                        DEBUG("HTTP: content buffer limit exceeded -- limiting the data to %d\n", Run.limits.httpContentBuffer);
+                        wantBytes = Run.limits.httpContentBuffer - haveBytes;
                 }
-                _checkBody(P, (void *)data, haveBytes);
+                _readData(socket, P, data, wantBytes, &haveBytes, context);
+                // Read the CRLF terminator
+                _readDataFromSocket(P, socket, crlf, 2);
         }
-        FINALLY
-        {
-                free((void *)data);
-        }
-        END_TRY;
 }
 
 
-static void _processBodyContentLength(Socket_T socket, Port_T P, int *contentLength) {
+static void _processBodyContentLength(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context) {
+        int haveBytes = 0;
         if (*contentLength < 0) {
                 THROW(ProtocolException, "HTTP error: Missing Content-Length header");
         } else if (*contentLength == 0) {
@@ -210,22 +260,7 @@ static void _processBodyContentLength(Socket_T socket, Port_T P, int *contentLen
                 DEBUG("HTTP: content buffer limit exceeded -- limiting the data to %d\n", Run.limits.httpContentBuffer);
                 *contentLength = Run.limits.httpContentBuffer;
         }
-        int haveBytes = 0;
-        int wantBytes = *contentLength;
-        char *data = CALLOC(1, *contentLength + 1);
-        TRY
-        {
-                _readDataFromSocket(socket, data, &wantBytes, &haveBytes);
-                if (haveBytes != *contentLength) {
-                        THROW(ProtocolException, "HTTP error: Content too small -- the server announced %d bytes but just %d bytes were received", *contentLength, haveBytes);
-                }
-                _checkBody(P, data, haveBytes);
-        }
-        FINALLY
-        {
-                FREE(data);
-        }
-        END_TRY;
+        _readData(socket, P, data, *contentLength, &haveBytes, context);
 }
 
 
@@ -243,7 +278,7 @@ static void _processStatus(Socket_T socket, Port_T P) {
 }
 
 
-static void _processHeaders(Socket_T socket, Port_T P, void (**processBody)(Socket_T socket, Port_T P, int *contentLength), int *contentLength) {
+static void _processHeaders(Socket_T socket, Port_T P, void (**processBody)(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context), int *contentLength) {
         char buf[512] = {};
 
         while (Socket_readLine(socket, buf, sizeof(buf))) {
@@ -272,13 +307,30 @@ static void _processHeaders(Socket_T socket, Port_T P, void (**processBody)(Sock
  */
 static void _checkResponse(Socket_T socket, Port_T P) {
         int contentLength = -1;
-        void (*processBody)(Socket_T socket, Port_T P, int *contentLength) = NULL;
+        void (*processBody)(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context) = NULL;
 
         _processStatus(socket, P);
         _processHeaders(socket, P, &processBody, &contentLength);
         if ((P->url_request && P->url_request->regex) || P->parameters.http.checksum) {
                 if (processBody) {
-                        processBody(socket, P, &contentLength);
+                        MD_T hash = {};
+                        volatile char *data = CALLOC(1, BUFSIZE);
+                        union ChecksumContext_T context = {};
+                        TRY
+                        {
+                                // Read data
+                                _checksumInit(P, &context);
+                                processBody(socket, P, &data, &contentLength, &context);
+                                _checksumFinish(P, &context, hash);
+                                // Perform tests
+                                _checksumVerify(P, hash);
+                                _contentVerify(P, (char *)data);
+                        }
+                        FINALLY
+                        {
+                                free((void *)data);
+                        }
+                        END_TRY;
                 } else {
                         THROW(ProtocolException, "HTTP error: uknown transfer encoding");
                 }
