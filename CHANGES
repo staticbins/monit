@@ -22,6 +22,9 @@ in the 'set httpd' statement.
 
 Fixed: Issue #784: Radius protocol test regression from 5.25.2. Thanks to Jason Young for patch.
 
+Fixed: Issue #790: check process: The exec action's environment contains invalid value for
+MONIT_PROCESS_* variables.
+
 Fixed: The CPU user/system/wait statistics may show negative value if the system counter jumps back or wraps.
 
 
