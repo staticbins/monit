@@ -73,7 +73,7 @@ typedef union ChecksumContext_T {
 static void _contentVerify(Port_T P, const char *data) {
         if (P->url_request && P->url_request->regex) {
                 boolean_t rv = false;
-                char error[STRLEN];
+                char error[512];
                 int regex_return = regexec(P->url_request->regex, data, 0, NULL, 0);
                 switch (P->url_request->operator) {
                         case Operator_Equal:

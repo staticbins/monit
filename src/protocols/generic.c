@@ -106,7 +106,7 @@ void check_generic(Socket_T socket) {
                         if (regex_return != 0) {
                                 char e[STRLEN];
                                 regerror(regex_return, g->expect, e, STRLEN);
-                                char error[STRLEN];
+                                char error[512];
                                 snprintf(error, sizeof(error), "GENERIC: received unexpected data [%s] -- %s", Str_trunc(Str_trim(buf), sizeof(error) - 128), e);
                                 FREE(buf);
                                 THROW(ProtocolException, "%s", error);
