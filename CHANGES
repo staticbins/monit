@@ -30,6 +30,8 @@ Fixed: The CPU user/system/wait statistics may show negative value if the system
 Fixed: XSS vulnerabilitty: HTML escape the log file content when viewed via Monit GUI. Thanks for Zack Flack
 for report.
 
+Fixed: Buffer overrun vulnerability in URL decoding. Thanks to Zack Flack for report.
+
 
 Version 5.25.2
 
