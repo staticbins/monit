@@ -27,7 +27,8 @@ MONIT_PROCESS_* variables.
 
 Fixed: The CPU user/system/wait statistics may show negative value if the system counter jumps back or wraps.
 
-Fixed: HTML escape the log file content when viewed via Monit GUI.
+Fixed: XSS vulnerabilitty: HTML escape the log file content when viewed via Monit GUI. Thanks for Zack Flack
+for report.
 
 
 Version 5.25.2
