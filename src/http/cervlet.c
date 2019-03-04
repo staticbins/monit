@@ -907,7 +907,7 @@ static void do_viewlog(HttpRequest req, HttpResponse res) {
                         StringBuffer_append(res->outputbuffer, "<br><p><form><textarea cols=120 rows=30 readonly>");
                         while ((n = fread(buf, sizeof(char), sizeof(buf) - 1, f)) > 0) {
                                 buf[n] = 0;
-                                StringBuffer_append(res->outputbuffer, "%s", buf);
+                                escapeHTML(res->outputbuffer, buf);
                         }
                         fclose(f);
                         StringBuffer_append(res->outputbuffer, "</textarea></form>");
