@@ -8,7 +8,6 @@ FmtTest && \
 TimeTest && \
 SystemTest && \
 ListTest && \
-LinkTest && \
 StringBufferTest && \
 DirTest && \
 InputStreamTest && \
