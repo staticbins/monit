@@ -101,17 +101,15 @@
 
 #include "Ssl.h"
 #include "Address.h"
-#include "statistics/Statistics.h"
-#include "net/socket.h"
 #include "net/Link.h"
+#include "statistics/Statistics.h"
+
 
 // libmonit
 #include "system/Command.h"
 #include "system/Process.h"
 #include "util/Str.h"
 #include "util/StringBuffer.h"
-#include "net/Link.h"
-#include "statistics/Statistics.h"
 #include "thread/Thread.h"
 
 
