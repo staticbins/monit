@@ -15,7 +15,7 @@ YACCFLAGS	= -dvt
 POD2MAN		= @POD2MAN@
 POD2MANFLAGS	= @POD2MANFLAGS@
 
-AM_CPPFLAGS	= $(CPPFLAGS) $(EXTCPPFLAGS) -D@ARCH@ -DSYSCONFDIR="\"@sysconfdir@\"" -I./src -I./src/device -I./src/http -I./src/notification -I./src/process -I./src/protocols -I./src/ssl -I./src/terminal -I./libmonit/src
+AM_CPPFLAGS	= $(CPPFLAGS) $(EXTCPPFLAGS) -D@ARCH@ -DSYSCONFDIR="\"@sysconfdir@\"" -I./src -I./src/device -I./src/http -I./src/notification -I./src/process -I./src/protocols -I./src/ssl -I./src/terminal -I./src/net -I./src/statistics -I./libmonit/src
 AM_LDFLAGS	= $(LDFLAGS) $(EXTLDFLAGS) -L./lib/
 
 bin_PROGRAMS	= monit
@@ -33,11 +33,10 @@ monit_SOURCES	= src/y.tab.c \
 		  src/log.c \
 		  src/md5.c \
 		  src/md5_crypt.c \
-		  src/net/net.c \
-                  src/net/socket.c \
-                  src/net/Link.c \
 		  src/sha1.c \
 		  src/signal.c \
+                  src/net/net.c \
+		  src/net/socket.c \
 		  src/spawn.c \
 		  src/state.c \
 		  src/util.c \
@@ -54,7 +53,7 @@ monit_SOURCES	= src/y.tab.c \
 		  src/notification/MMonit.c \
 		  src/notification/SMTP.c \
 		  src/process/ProcessTree.c \
-		  src/process/sysdep_@ARCH@.c \
+                  src/process/sysdep_@ARCH@.c \
 		  src/protocols/apache_status.c \
 		  src/protocols/clamav.c \
 		  src/protocols/default.c \
@@ -93,7 +92,9 @@ monit_SOURCES	= src/y.tab.c \
 		  src/ssl/Ssl.c \
 		  src/terminal/Box.c \
 		  src/terminal/Color.c \
-                  src/statistics/Statistics.c
+                  src/statistics/Statistics.c \
+                  src/net/Link.c 
+
 
 monit_LDADD 	= libmonit/libmonit.la
 monit_LDFLAGS 	= -static $(EXTLDFLAGS)

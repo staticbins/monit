@@ -53,7 +53,6 @@ void(*_ErrorHandler)(const char *error, va_list ap) = NULL;
 
 void Bootstrap(void) {
         Exception_init();
-        Thread_init();
 }
 
 

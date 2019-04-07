@@ -110,6 +110,8 @@
 #include "system/Process.h"
 #include "util/Str.h"
 #include "util/StringBuffer.h"
+#include "net/Link.h"
+#include "statistics/Statistics.h"
 #include "thread/Thread.h"
 
 

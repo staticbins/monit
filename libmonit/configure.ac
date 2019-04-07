@@ -159,35 +159,7 @@ AC_CHECK_HEADERS([ctype.h errno.h fcntl.h limits.h pthread.h setjmp.h \
                   sys/sendfile.h sys/dirent.h poll.h sys/poll.h sys/event.h \
                   stropts.h sys/ioctl.h sys/filio.h kstat.h ifaddrs.h \
                   net/if_media.h netinet/in.h sys/sysctl.h net/if_dl.h \
-                  sys/random.h sys/protosw.h])
-AC_CHECK_HEADERS([net/if.h net/route.h], [], [],
-        [
-         #ifdef HAVE_SYS_TYPES_H
-         #include <sys/types.h>
-         #endif
-         #if HAVE_SYS_SOCKET_H
-         #include <sys/socket.h>
-         #endif
-         #if HAVE_NETINET_IN_SYSTM_H
-         #include <netinet/in.h>
-         #endif
-         #if HAVE_NETINET_IN_SYSTM_H
-         #include <netinet/in_systm.h>
-         #endif
-         #if HAVE_NETINET_IP_H
-         #include <netinet/ip.h>
-         #endif
-        ])
-AC_CHECK_HEADERS([ \
-        libperfstat.h \
-        ],
-        [],
-        [],
-        [
-         #ifdef HAVE_SYS_PROTOSW_H
-         #include <sys/protosw.h>
-         #endif
-        ])
+                  sys/random.h sys/protosw.h mach/boolean.h uvm/uvm_param.h])
 
 # ------------------------------------------------------------------------
 # Types

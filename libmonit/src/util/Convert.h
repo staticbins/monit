@@ -27,7 +27,7 @@
 #define CONVERT_INCLUDED
 
 /**
- * General purpose value units string <b>Convert</b> <b>class methods</b>.
+ * General purpose Unit value string <b>Formatter</b> <b>class methods</b>.
  *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
@@ -42,7 +42,7 @@
  * @param s A result buffer, must be large enough to hold 10 chars
  * @return A pointer to s
  */
-char *Convert_bytes2str(double bytes, char s[static 10]);
+char *Fmt_byte(double bytes, char s[static 10]);
 
 
 /**
@@ -51,7 +51,7 @@ char *Convert_bytes2str(double bytes, char s[static 10]);
  * @param s A result buffer, must be large enough to hold 11 chars
  * @return A pointer to s
  */
-char *Convert_time2str(double milli, char s[static 11]);
+char *Fmt_ms(double milli, char s[static 11]);
 
 
 #endif

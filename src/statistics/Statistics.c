@@ -25,7 +25,11 @@
 
 #include "config.h"
 
+#include <stdint.h>
+
 #include "monit.h"
+
+#include "Statistics.h"
 
 
 /**
