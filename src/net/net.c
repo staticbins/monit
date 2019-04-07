@@ -456,11 +456,11 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                 } else {
                         memcpy(&started, data, sizeof(int64_t));
                         double response = (double)(stopped - started) / 1000.; // Convert microseconds to milliseconds
-                        DEBUG("Ping response for %s %d/%d succeeded -- received id=%d sequence=%d response_time=%s\n", hostname, retry, maxretries, in_id, in_seq, Fmt_time2str(response, (char[11]){}));
+                        DEBUG("Ping response for %s %d/%d succeeded -- received id=%d sequence=%d response_time=%s\n", hostname, retry, maxretries, in_id, in_seq, Fmt_ms(response, (char[11]){}));
                         return response; // Wait for one response only
                 }
         }
-        _LogWarningOrError(retry, maxretries, "Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Fmt_time2str(timeout, (char[11]){}));
+        _LogWarningOrError(retry, maxretries, "Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Fmt_ms(timeout, (char[11]){}));
         return -1.;
 }
 

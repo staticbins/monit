@@ -8,7 +8,7 @@ DIST_SUBDIRS    = . test
 
 EXTRA_DIST      = README COPYING bootstrap test src config
 
-AM_CPPFLAGS     = $(CPPFLAGS) $(DBCPPFLAGS) -I./src -I./src/exceptions -I./src/io -I./src/net -I./src/statistics -I./src/util -I./src/thread
+AM_CPPFLAGS     = $(CPPFLAGS) $(DBCPPFLAGS) -I./src -I./src/exceptions -I./src/io -I./src/net -I./src/util -I./src/thread
 
 # libmonit is built static
 noinst_LTLIBRARIES = libmonit.la
@@ -21,18 +21,15 @@ libmonit_la_SOURCES = \
                   src/io/File.c \
                   src/io/InputStream.c \
                   src/io/OutputStream.c \
-                  src/statistics/Statistics.c \
                   src/system/Mem.c \
                   src/system/Net.c \
                   src/system/Time.c \
                   src/system/Command.c \
                   src/system/System.c \
-                  src/system/Link.c \
                   src/util/List.c \
                   src/util/Str.c \
                   src/util/Fmt.c \
-                  src/util/StringBuffer.c \
-                  src/thread/Thread.c
+                  src/util/StringBuffer.c
 
 dist-hook::
 	-rm -rf `find $(distdir) -name "._*"`
