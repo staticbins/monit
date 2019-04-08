@@ -7,9 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		521ECE3921D85CFE00F8045E /* Convert.h in Headers */ = {isa = PBXBuildFile; fileRef = 521ECE3721D85CFE00F8045E /* Convert.h */; };
-		521ECE3A21D85CFE00F8045E /* Convert.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3821D85CFE00F8045E /* Convert.c */; };
-		521ECE3C21D85EC100F8045E /* ConvertTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3B21D85EC100F8045E /* ConvertTest.c */; };
+		521C6648225B7DD7001E8544 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
+		521C664E225B7DF5001E8544 /* FmtTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3B21D85EC100F8045E /* FmtTest.c */; };
+		521ECE3921D85CFE00F8045E /* Fmt.h in Headers */ = {isa = PBXBuildFile; fileRef = 521ECE3721D85CFE00F8045E /* Fmt.h */; };
+		521ECE3A21D85CFE00F8045E /* Fmt.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3821D85CFE00F8045E /* Fmt.c */; };
+		521ECE3C21D85EC100F8045E /* FmtTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3B21D85EC100F8045E /* FmtTest.c */; };
 		522FF2FA192E702D00C62A13 /* TimeTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8613A5212700FC4089 /* TimeTest.c */; };
 		523FFE7C19AFE7B30018595D /* StrTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8313A5212700FC4089 /* StrTest.c */; };
 		52A31C841A653235009D3D83 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
@@ -39,6 +41,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		521C6644225B7DD7001E8544 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52A12C2213A0FFAB00C6CEB7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 52A12C2A13A0FFAB00C6CEB7;
+			remoteInfo = libmonit;
+		};
 		529D79B81A59EE1D003C3931 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 52A12C2213A0FFAB00C6CEB7 /* Project object */;
@@ -70,6 +79,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		521C6649225B7DD7001E8544 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		522FF2F5192E700200C62A13 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -110,11 +128,13 @@
 
 /* Begin PBXFileReference section */
 		5205CE261A59FEA500DB6380 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		521C661E225AC8BF001E8544 /* StringBufferTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = StringBufferTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		521C663D225B7DC6001E8544 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		521C664D225B7DD7001E8544 /* FmtTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FmtTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		521ECE3721D85CFE00F8045E /* Fmt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fmt.h; sourceTree = "<group>"; };
 		521ECE3821D85CFE00F8045E /* Fmt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Fmt.c; sourceTree = "<group>"; };
 		521ECE3B21D85EC100F8045E /* FmtTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FmtTest.c; sourceTree = "<group>"; };
 		522539AC18B91092003EB002 /* THIRDPARTY */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = THIRDPARTY; sourceTree = "<group>"; };
-		52622FF122578C0E00DB7DFA /* StringBufferTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = StringBufferTest; path = /Users/hauk/src/monit/libmonit/build/Debug/StringBufferTest; sourceTree = "<absolute>"; };
 		5274580B13A1009C00C422FE /* bootstrap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = bootstrap; sourceTree = "<group>"; };
 		5274580C13A1009C00C422FE /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; lineEnding = 0; path = configure.ac; sourceTree = "<group>"; };
 		5274580D13A1009C00C422FE /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
@@ -182,6 +202,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		521C6647225B7DD7001E8544 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				521C6648225B7DD7001E8544 /* libmonit.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		522FF2F3192E700200C62A13 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -226,6 +254,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		521C663C225B7DC6001E8544 /* FmtTest */ = {
+			isa = PBXGroup;
+			children = (
+				521C663D225B7DC6001E8544 /* main.c */,
+			);
+			path = FmtTest;
+			sourceTree = "<group>";
+		};
 		5274583A13A1009C00C422FE /* test */ = {
 			isa = PBXGroup;
 			children = (
@@ -269,8 +305,12 @@
 				5274580D13A1009C00C422FE /* Makefile.am */,
 				52D7964813A6CE560014CED2 /* src */,
 				5274583A13A1009C00C422FE /* test */,
+				52936F9513A5216B00FC4089 /* config */,
+				521C663C225B7DC6001E8544 /* FmtTest */,
 				52A31C831A6531DF009D3D83 /* Products */,
 				52F8BB431ECE55D60007DF91 /* Frameworks */,
+				521C661E225AC8BF001E8544 /* StringBufferTest */,
+				521C664D225B7DD7001E8544 /* FmtTest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -396,6 +436,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		521C6642225B7DD7001E8544 /* FmtTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 521C664A225B7DD7001E8544 /* Build configuration list for PBXNativeTarget "FmtTest" */;
+			buildPhases = (
+				521C6645225B7DD7001E8544 /* Sources */,
+				521C6647225B7DD7001E8544 /* Frameworks */,
+				521C6649225B7DD7001E8544 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				521C6643225B7DD7001E8544 /* PBXTargetDependency */,
+			);
+			name = FmtTest;
+			productName = CommandTest;
+			productReference = 521C664D225B7DD7001E8544 /* FmtTest */;
+			productType = "com.apple.product-type.tool";
+		};
 		522FF2F0192E700200C62A13 /* TimeTest */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 522FF2F6192E700200C62A13 /* Build configuration list for PBXNativeTarget "TimeTest" */;
@@ -464,7 +522,7 @@
 			);
 			name = StringBufferTest;
 			productName = CommandTest;
-			productReference = 52622FF122578C0E00DB7DFA /* StringBufferTest */;
+			productReference = 521C661E225AC8BF001E8544 /* StringBufferTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		52FDD6A7189C2036008E3D5E /* CommandTest */ = {
@@ -512,11 +570,20 @@
 				522FF2F0192E700200C62A13 /* TimeTest */,
 				523FFE7219AFE7610018595D /* StrTest */,
 				52F8BB361ECE55270007DF91 /* StringBufferTest */,
+				521C6642225B7DD7001E8544 /* FmtTest */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		521C6645225B7DD7001E8544 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				521C664E225B7DF5001E8544 /* FmtTest.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		522FF2F1192E700200C62A13 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -576,6 +643,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		521C6643225B7DD7001E8544 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 52A12C2A13A0FFAB00C6CEB7 /* libmonit */;
+			targetProxy = 521C6644225B7DD7001E8544 /* PBXContainerItemProxy */;
+		};
 		529D79B91A59EE1D003C3931 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 52A12C2A13A0FFAB00C6CEB7 /* libmonit */;
@@ -599,6 +671,53 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		521C664B225B7DD7001E8544 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Debug;
+		};
+		521C664C225B7DD7001E8544 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Release;
+		};
 		522FF2F7192E700200C62A13 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -947,6 +1066,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		521C664A225B7DD7001E8544 /* Build configuration list for PBXNativeTarget "FmtTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				521C664B225B7DD7001E8544 /* Debug */,
+				521C664C225B7DD7001E8544 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		522FF2F6192E700200C62A13 /* Build configuration list for PBXNativeTarget "TimeTest" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
