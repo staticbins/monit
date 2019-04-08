@@ -128,7 +128,6 @@
 /* Begin PBXFileReference section */
 		5205CE261A59FEA500DB6380 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		521C661E225AC8BF001E8544 /* StringBufferTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = StringBufferTest; sourceTree = BUILT_PRODUCTS_DIR; };
-		521C663D225B7DC6001E8544 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		521C664D225B7DD7001E8544 /* FmtTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FmtTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		521ECE3721D85CFE00F8045E /* Fmt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fmt.h; sourceTree = "<group>"; };
 		521ECE3821D85CFE00F8045E /* Fmt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Fmt.c; sourceTree = "<group>"; };
@@ -252,14 +251,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		521C663C225B7DC6001E8544 /* FmtTest */ = {
-			isa = PBXGroup;
-			children = (
-				521C663D225B7DC6001E8544 /* main.c */,
-			);
-			path = FmtTest;
-			sourceTree = "<group>";
-		};
 		5274583A13A1009C00C422FE /* test */ = {
 			isa = PBXGroup;
 			children = (
@@ -311,7 +302,6 @@
 				52D7964813A6CE560014CED2 /* src */,
 				5274583A13A1009C00C422FE /* test */,
 				52936F9513A5216B00FC4089 /* config */,
-				521C663C225B7DC6001E8544 /* FmtTest */,
 				52A31C831A6531DF009D3D83 /* Products */,
 				52F8BB431ECE55D60007DF91 /* Frameworks */,
 				521C661E225AC8BF001E8544 /* StringBufferTest */,
