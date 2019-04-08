@@ -34,10 +34,8 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-static double epsilon = 1e-2; // larger epsilon for rounding with 1-2 decimal
-
-static inline boolean_t _isIntegral(double x) {
-    return fabs(x - round(x)) < epsilon;
+static inline boolean_t _isIntegral(double x, double precision) {
+    return fabs(x - round(x)) < precision;
 }
 
 
@@ -55,7 +53,7 @@ static inline char *_bytestr(double bytes, char s[static 10], int base) {
                 if (bytes >= base) {
                         bytes /= base;
                 } else {
-                        snprintf(s, 10, _isIntegral(bytes) ? "%s%.0lf %s" : "%s%.1lf %s", sign, bytes, kNotation[i]);
+                        snprintf(s, 10, _isIntegral(bytes, 0.05) ? "%s%.0lf %s" : "%s%.1lf %s", sign, bytes, kNotation[i]);
                         break;
                 }
         }
@@ -99,7 +97,7 @@ char *Fmt_ms(double milli, char s[static 11]) {
         if (milli >= conversion[i].base) {
             milli /= conversion[i].base;
         } else {
-            snprintf(s, 11, _isIntegral(milli) ? "%s%.0lf %s" : "%s%.2lf %s", sign, milli, conversion[i].suffix);
+            snprintf(s, 11, _isIntegral(milli, 0.0005) ? "%s%.0lf %s" : "%s%.3lf %s", sign, milli, conversion[i].suffix);
             break;
         }
     }
