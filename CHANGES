@@ -1,6 +1,13 @@
-                     CHANGES version 5.25.3
+                     CHANGES version 6.0.0
 
            This file summarizes changes made since 5.0
+
+Version 6.0.0
+
+New: The load average test now allows to set the per-CPU-core limit, so it allows for generic
+load average limit policy regardless of CPU count. Example:
+        if loadavg(1m) per core > 2 then alert
+
 
 Version 5.25.3
 
