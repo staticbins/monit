@@ -23,7 +23,7 @@
  */
 
 
-#include "Config.h"
+#include "config.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -60,10 +60,17 @@
 #include <libperfstat.h>
 #endif
 
-#include "system/Link.h"
+#include "monit.h"
+
+#include "statistics/Statistics.h"
+#include "Link.h"
+
+// libmonit
+#include "exceptions/AssertException.h"
+#include "system/Mem.h"
 #include "system/Time.h"
 #include "system/System.h"
-#include "Str.h"
+#include "util/Str.h"
 
 
 /**

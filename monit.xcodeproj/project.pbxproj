@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		521725CC225AA57F00988A35 /* Statistics.c in Sources */ = {isa = PBXBuildFile; fileRef = 52622FF7225A63B000DB7DFA /* Statistics.c */; };
+		521725E3225AA8BB00988A35 /* sysdep_DARWIN.c in Sources */ = {isa = PBXBuildFile; fileRef = 52F6E75013A74F220023F87A /* sysdep_DARWIN.c */; };
 		523753E71F34BC1C001522CD /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9397E3081D897CCA008CAD1F /* libz.tbd */; };
+		52623029225A658300DB7DFA /* Link.c in Sources */ = {isa = PBXBuildFile; fileRef = 52623016225A658300DB7DFA /* Link.c */; };
 		52A1311D13A7886800583257 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A1311C13A7886800583257 /* libmonit.a */; };
 		52AE77CC14037DA300D2861D /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 52AE77CA14037DA300D2861D /* sha1.c */; };
 		52AE77CF14037E6A00D2861D /* md5_crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 52AE77CD14037E6A00D2861D /* md5_crypt.c */; };
@@ -16,7 +19,6 @@
 		52F6E80713A74F220023F87A /* control.c in Sources */ = {isa = PBXBuildFile; fileRef = 52F6E74913A74F220023F87A /* control.c */; };
 		52F6E80813A74F220023F87A /* daemonize.c in Sources */ = {isa = PBXBuildFile; fileRef = 52F6E74A13A74F220023F87A /* daemonize.c */; };
 		52F6E80913A74F220023F87A /* device_common.c in Sources */ = {isa = PBXBuildFile; fileRef = 52F6E74D13A74F220023F87A /* device_common.c */; };
-		52F6E80B13A74F220023F87A /* sysdep_DARWIN.c in Sources */ = {isa = PBXBuildFile; fileRef = 52F6E75013A74F220023F87A /* sysdep_DARWIN.c */; };
 		52F6E81313A74F220023F87A /* env.c in Sources */ = {isa = PBXBuildFile; fileRef = 52F6E75813A74F220023F87A /* env.c */; };
 		52F6E81413A74F220023F87A /* event.c in Sources */ = {isa = PBXBuildFile; fileRef = 52F6E75913A74F220023F87A /* event.c */; };
 		52F6E81513A74F220023F87A /* file.c in Sources */ = {isa = PBXBuildFile; fileRef = 52F6E75B13A74F220023F87A /* file.c */; };
@@ -151,6 +153,13 @@
 			remoteGlobalIDString = 523FFE7B19AFE7610018595D;
 			remoteInfo = StrTest;
 		};
+		52F74ACF225B91E4004FCCFB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 521C664D225B7DD7001E8544;
+			remoteInfo = FmtTest;
+		};
 		52FDD6B5189C2762008E3D5E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
@@ -186,6 +195,18 @@
 		5205879F18CF7235006296CB /* monit.service.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = monit.service.in; sourceTree = "<group>"; };
 		520587A118CF7235006296CB /* monit.upstart.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = monit.upstart.in; sourceTree = "<group>"; };
 		520587A218CF7235006296CB /* rc.monit */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = rc.monit; sourceTree = "<group>"; };
+		521725E6225AA9C100988A35 /* Link.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = Link.inc; sourceTree = "<group>"; };
+		521725E8225AA9C100988A35 /* Link.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = Link.inc; sourceTree = "<group>"; };
+		521725EA225AA9C100988A35 /* Link.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = Link.inc; sourceTree = "<group>"; };
+		521725EC225AA9C100988A35 /* Link.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = Link.inc; sourceTree = "<group>"; };
+		521725EE225AA9C100988A35 /* Link.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = Link.inc; sourceTree = "<group>"; };
+		521725F0225AA9C100988A35 /* Link.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = Link.inc; sourceTree = "<group>"; };
+		521725F2225AA9C100988A35 /* Link.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = Link.inc; sourceTree = "<group>"; };
+		521725F4225AA9C100988A35 /* Link.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = Link.inc; sourceTree = "<group>"; };
+		52622FF7225A63B000DB7DFA /* Statistics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Statistics.c; sourceTree = "<group>"; };
+		52622FF8225A63B000DB7DFA /* Statistics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Statistics.h; sourceTree = "<group>"; };
+		52623016225A658300DB7DFA /* Link.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Link.c; sourceTree = "<group>"; };
+		52623017225A658300DB7DFA /* Link.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Link.h; sourceTree = "<group>"; };
 		528EA77213A74E05003DA4BE /* monit */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = monit; sourceTree = BUILT_PRODUCTS_DIR; };
 		528F7DB318BCABC9004BF9B5 /* CONTRIBUTORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CONTRIBUTORS; sourceTree = "<group>"; };
 		52A1310B13A7882A00583257 /* libmonit.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libmonit.xcodeproj; path = libmonit/libmonit.xcodeproj; sourceTree = "<group>"; };
@@ -289,6 +310,7 @@
 		52F6E7AD13A74F220023F87A /* util.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = util.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E7AE13A74F220023F87A /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = util.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		52F6E7AF13A74F220023F87A /* validate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = validate.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		52F74AD1225B9870004FCCFB /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		52FFBA1118A7E785001F9962 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		9303FB7F18C47E7000138D72 /* websocket.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = websocket.c; sourceTree = "<group>"; };
 		9305FD591A96873200B7F8A2 /* Ssl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Ssl.c; sourceTree = "<group>"; };
@@ -411,10 +433,113 @@
 			path = startup;
 			sourceTree = "<group>";
 		};
+		521725E4225AA9C100988A35 /* os */ = {
+			isa = PBXGroup;
+			children = (
+				521725E5225AA9C100988A35 /* dragonfly */,
+				521725E7225AA9C100988A35 /* netbsd */,
+				521725E9225AA9C100988A35 /* freebsd */,
+				521725EB225AA9C100988A35 /* macosx */,
+				521725ED225AA9C100988A35 /* linux */,
+				521725EF225AA9C100988A35 /* openbsd */,
+				521725F1225AA9C100988A35 /* solaris */,
+				521725F3225AA9C100988A35 /* aix */,
+			);
+			path = os;
+			sourceTree = "<group>";
+		};
+		521725E5225AA9C100988A35 /* dragonfly */ = {
+			isa = PBXGroup;
+			children = (
+				521725E6225AA9C100988A35 /* Link.inc */,
+			);
+			path = dragonfly;
+			sourceTree = "<group>";
+		};
+		521725E7225AA9C100988A35 /* netbsd */ = {
+			isa = PBXGroup;
+			children = (
+				521725E8225AA9C100988A35 /* Link.inc */,
+			);
+			path = netbsd;
+			sourceTree = "<group>";
+		};
+		521725E9225AA9C100988A35 /* freebsd */ = {
+			isa = PBXGroup;
+			children = (
+				521725EA225AA9C100988A35 /* Link.inc */,
+			);
+			path = freebsd;
+			sourceTree = "<group>";
+		};
+		521725EB225AA9C100988A35 /* macosx */ = {
+			isa = PBXGroup;
+			children = (
+				521725EC225AA9C100988A35 /* Link.inc */,
+			);
+			path = macosx;
+			sourceTree = "<group>";
+		};
+		521725ED225AA9C100988A35 /* linux */ = {
+			isa = PBXGroup;
+			children = (
+				521725EE225AA9C100988A35 /* Link.inc */,
+			);
+			path = linux;
+			sourceTree = "<group>";
+		};
+		521725EF225AA9C100988A35 /* openbsd */ = {
+			isa = PBXGroup;
+			children = (
+				521725F0225AA9C100988A35 /* Link.inc */,
+			);
+			path = openbsd;
+			sourceTree = "<group>";
+		};
+		521725F1225AA9C100988A35 /* solaris */ = {
+			isa = PBXGroup;
+			children = (
+				521725F2225AA9C100988A35 /* Link.inc */,
+			);
+			path = solaris;
+			sourceTree = "<group>";
+		};
+		521725F3225AA9C100988A35 /* aix */ = {
+			isa = PBXGroup;
+			children = (
+				521725F4225AA9C100988A35 /* Link.inc */,
+			);
+			path = aix;
+			sourceTree = "<group>";
+		};
+		52622FF6225A634D00DB7DFA /* net */ = {
+			isa = PBXGroup;
+			children = (
+				521725E4225AA9C100988A35 /* os */,
+				52623017225A658300DB7DFA /* Link.h */,
+				52623016225A658300DB7DFA /* Link.c */,
+				52F6E77013A74F220023F87A /* net.c */,
+				52F6E77113A74F220023F87A /* net.h */,
+				52F6E7A413A74F220023F87A /* socket.c */,
+				52F6E7A513A74F220023F87A /* socket.h */,
+			);
+			path = net;
+			sourceTree = "<group>";
+		};
+		52622FF9225A63B000DB7DFA /* statistics */ = {
+			isa = PBXGroup;
+			children = (
+				52622FF8225A63B000DB7DFA /* Statistics.h */,
+				52622FF7225A63B000DB7DFA /* Statistics.c */,
+			);
+			path = statistics;
+			sourceTree = "<group>";
+		};
 		528EA76713A74E05003DA4BE = {
 			isa = PBXGroup;
 			children = (
 				52A1310B13A7882A00583257 /* libmonit.xcodeproj */,
+				52F74AD1225B9870004FCCFB /* .gitignore */,
 				52D25EDC17C0E8680039D3E4 /* bootstrap */,
 				52D25EDD17C0E8680039D3E4 /* CHANGES */,
 				52D25EDE17C0E8680039D3E4 /* configure.ac */,
@@ -450,6 +575,7 @@
 				524981ED194B368C004A50DB /* TimeTest */,
 				52F675FD19B873A100E1FF1E /* StrTest */,
 				52AE7B981FEC8EBD00B838B3 /* StringBufferTest */,
+				52F74AD0225B91E4004FCCFB /* FmtTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -483,6 +609,8 @@
 		52F6E74313A74F220023F87A /* src */ = {
 			isa = PBXGroup;
 			children = (
+				52622FF9225A63B000DB7DFA /* statistics */,
+				52622FF6225A634D00DB7DFA /* net */,
 				9345745E1C771C9C00FF170F /* notification */,
 				52F6E74B13A74F220023F87A /* device */,
 				52F6E75E13A74F220023F87A /* http */,
@@ -496,11 +624,11 @@
 				52F6E74A13A74F220023F87A /* daemonize.c */,
 				52F6E75813A74F220023F87A /* env.c */,
 				52F6E75913A74F220023F87A /* event.c */,
+				52F6E76813A74F220023F87A /* http.c */,
 				52F6E75A13A74F220023F87A /* event.h */,
 				52F6E75B13A74F220023F87A /* file.c */,
 				52F6E75C13A74F220023F87A /* file.h */,
 				52F6E75D13A74F220023F87A /* gc.c */,
-				52F6E76813A74F220023F87A /* http.c */,
 				52F6E76913A74F220023F87A /* l.l */,
 				52F6E76B13A74F220023F87A /* log.c */,
 				52F6E76C13A74F220023F87A /* md5.c */,
@@ -509,14 +637,10 @@
 				52F6E76D13A74F220023F87A /* md5.h */,
 				52F6E76E13A74F220023F87A /* monit.c */,
 				52F6E76F13A74F220023F87A /* monit.h */,
-				52F6E77013A74F220023F87A /* net.c */,
-				52F6E77113A74F220023F87A /* net.h */,
 				52F6E77213A74F220023F87A /* p.y */,
 				52AE77CA14037DA300D2861D /* sha1.c */,
 				52AE77CB14037DA300D2861D /* sha1.h */,
 				52F6E7A313A74F220023F87A /* signal.c */,
-				52F6E7A413A74F220023F87A /* socket.c */,
-				52F6E7A513A74F220023F87A /* socket.h */,
 				52F6E7A613A74F220023F87A /* spawn.c */,
 				52F6E7AA13A74F220023F87A /* state.c */,
 				52F6E7AB13A74F220023F87A /* state.h */,
@@ -699,7 +823,7 @@
 		528EA76913A74E05003DA4BE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0930;
+				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = "Tildeslash Ltd.";
 				TargetAttributes = {
 					528EA77113A74E05003DA4BE = {
@@ -710,10 +834,11 @@
 			};
 			buildConfigurationList = 528EA76C13A74E05003DA4BE /* Build configuration list for PBXProject "monit" */;
 			compatibilityVersion = "Xcode 6.3";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 528EA76713A74E05003DA4BE;
 			productRefGroup = 528EA77313A74E05003DA4BE /* Products */;
@@ -760,6 +885,13 @@
 			remoteRef = 52F675FC19B873A100E1FF1E /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		52F74AD0225B91E4004FCCFB /* FmtTest */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = FmtTest;
+			remoteRef = 52F74ACF225B91E4004FCCFB /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		52FDD6B6189C2762008E3D5E /* CommandTest */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
@@ -774,15 +906,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				521725E3225AA8BB00988A35 /* sysdep_DARWIN.c in Sources */,
+				521725CC225AA57F00988A35 /* Statistics.c in Sources */,
 				52F6E80513A74F220023F87A /* alert.c in Sources */,
 				52F6E80713A74F220023F87A /* control.c in Sources */,
 				52F6E80813A74F220023F87A /* daemonize.c in Sources */,
 				52F6E80913A74F220023F87A /* device_common.c in Sources */,
-				52F6E80B13A74F220023F87A /* sysdep_DARWIN.c in Sources */,
 				52F6E81313A74F220023F87A /* env.c in Sources */,
 				52F6E81413A74F220023F87A /* event.c in Sources */,
 				52F6E81513A74F220023F87A /* file.c in Sources */,
 				52F6E81613A74F220023F87A /* gc.c in Sources */,
+				52623029225A658300DB7DFA /* Link.c in Sources */,
 				52F6E81713A74F220023F87A /* base64.c in Sources */,
 				52F6E81813A74F220023F87A /* cervlet.c in Sources */,
 				52F6E81913A74F220023F87A /* engine.c in Sources */,
@@ -864,6 +998,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = NO;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = NO;
@@ -928,6 +1063,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = NO;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = NO;

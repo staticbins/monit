@@ -67,6 +67,11 @@
  */
 #define Mutex_T pthread_mutex_t
 /**
+ * Once control object type
+ * @hideinitializer
+ */
+#define Once_T pthread_once_t
+/**
  * Read/Write Lock object type
  * @hideinitializer
  */
@@ -116,6 +121,14 @@
  * @hideinitializer
  */
 #define Thread_join(thread) wrapper(pthread_join(thread, NULL))
+/**
+ * Execute the ctor function once
+ * @param control A Once_T object
+ * @param ctor The init routine to call once with no arguments
+ * @exception AssertException If thread once failed
+ * @hideinitializer
+ */
+#define Thread_once(control, ctor) pthread_once(&(control), ctor)
 //@}
 /** @name Semaphore methods */
 //@{
@@ -294,35 +307,5 @@
  */
 #define ThreadData_get(key) pthread_getspecific((key))
 //@}
-
-
-/* ----------------------------------------------------------------- Methods */
-
-
-//<< Start filter-out
-
-/**
- * Initialize Threads. This method should be called at program startup
- */
-void Thread_init(void);
-
-
-/**
- * Shutdown and cleanup threads. This method should be called at program termination
- */
-void Thread_fini(void);
-
-
-//>> End filter-out
-
-
-/**
- * Create a new thread in a detached state
- * @param thread The thread to create
- * @param threadFunc The thread routine to execute
- * @param threadArgs Arguments to <code>threadFunc</code>
- * @exception AssertException If thread creation failed
- */
-void Thread_createDetached(Thread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs);
 
 #endif
