@@ -2318,22 +2318,9 @@ resourcechild   : CHILDREN operator NUMBER {
                 ;
 
 resourceload    : resourceloadavg coremultiplier operator value {
-                        switch ($<number>1) {
-                                case Resource_LoadAverage1m:
-                                        resourceset.resource_id = $<number>2 > 1 ? Resource_LoadAveragePerCore1m : $<number>1;
-                                        break;
-                                case Resource_LoadAverage5m:
-                                        resourceset.resource_id = $<number>2 > 1 ? Resource_LoadAveragePerCore5m : $<number>1;
-                                        break;
-                                case Resource_LoadAverage15m:
-                                        resourceset.resource_id = $<number>2 > 1 ? Resource_LoadAveragePerCore15m : $<number>1;
-                                        break;
-                                default:
-                                        resourceset.resource_id = $<number>1;
-                                        break;
-                        }
+                        resourceset.resource_id = $<number>1;
                         resourceset.operator = $<number>3;
-                        resourceset.limit = $<real>4;
+                        resourceset.limit = $<real>4 * $<number>2;
                   }
                 ;
 
@@ -2346,8 +2333,7 @@ coremultiplier  : /* EMPTY */ { $<number>$ = 1; }
                 | CORE        { $<number>$ = systeminfo.cpu.count; }
                 ;
 
-
-resourceread    : READ operator value unit currenttime {
+resourceread    : DISK READ operator value unit currenttime {
                         resourceset.resource_id = Resource_ReadBytes;
                         resourceset.operator = $<number>2;
                         resourceset.limit = $<real>3 * $<number>4;
