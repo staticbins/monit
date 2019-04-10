@@ -121,6 +121,8 @@ typedef enum {
 
 #include "Ssl.h"
 #include "Address.h"
+#include "net/Link.h"
+#include "statistics/Statistics.h"
 
 
 // libmonit
@@ -128,8 +130,6 @@ typedef enum {
 #include "system/Process.h"
 #include "util/Str.h"
 #include "util/StringBuffer.h"
-#include "system/Link.h"
-#include "statistics/Statistics.h"
 #include "thread/Thread.h"
 
 

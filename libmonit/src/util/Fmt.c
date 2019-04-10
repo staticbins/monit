@@ -34,36 +34,49 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-static double epsilon = 1e-6;
+static inline boolean_t _isIntegral(double x, double precision) {
+    return fabs(x - round(x)) < precision;
+}
 
-static boolean_t _isInt(double x) {
-    return fabs(x - round(x)) < epsilon;
+
+/* ------------------------------------------------------- Private Methods */
+
+
+static inline char *_bytestr(double bytes, char s[static 10], int base) {
+        assert(s);
+        const char *kNotation[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", NULL};
+        *s = 0;
+        char *sign = (bytes < 0) ? "-" : "";
+        bytes = fabs(bytes);
+        assert(bytes < 1e+24);
+        for (int i = 0; kNotation[i]; i++) {
+                if (bytes >= base) {
+                        bytes /= base;
+                } else {
+                        snprintf(s, 10, _isIntegral(bytes, 0.05) ? "%s%.0lf %s" : "%s%.1lf %s", sign, bytes, kNotation[i]);
+                        break;
+                }
+        }
+        return s;
 }
 
 
 /* -------------------------------------------------------- Public Methods */
 
 
-char *Fmt_bytes2str(double bytes, char s[static 10]) {
-    assert(s);
-    static const char *kNotation[] = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", NULL};
-    *s = 0;
-    char *sign = (bytes < 0) ? "-" : "";
-    bytes = fabs(bytes);
-    assert(bytes < 1e+24);
-    for (int i = 0; kNotation[i]; i++) {
-        if (bytes >= 1024) {
-            bytes /= 1024;
-        } else {
-            snprintf(s, 10, _isInt(bytes) ? "%s%.0lf %s" : "%s%.1lf %s", sign, bytes, kNotation[i]);
-            break;
-        }
-    }
-    return s;
+char *Fmt_ibyte(double bytes, char s[static 10]) {
+        int base = 1024;
+        return _bytestr(bytes, s, base);
 }
 
 
-char *Fmt_time2str(double milli, char s[static 11]) {
+char *Fmt_byte(double bytes, char s[static 10]) {
+        int base = 1000;
+        return _bytestr(bytes, s, base);
+}
+
+
+char *Fmt_ms(double milli, char s[static 11]) {
     assert(s);
     struct conversion {
         double base;
@@ -84,7 +97,7 @@ char *Fmt_time2str(double milli, char s[static 11]) {
         if (milli >= conversion[i].base) {
             milli /= conversion[i].base;
         } else {
-            snprintf(s, 11, _isInt(milli) ? "%s%.0lf %s" : "%s%.3lf %s", sign, milli, conversion[i].suffix);
+            snprintf(s, 11, _isIntegral(milli, 0.0005) ? "%s%.0lf %s" : "%s%.3lf %s", sign, milli, conversion[i].suffix);
             break;
         }
     }
