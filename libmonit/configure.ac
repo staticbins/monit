@@ -105,6 +105,40 @@ AC_ARG_ENABLE(profiling,
     ]
 )
 
+# ---------------------------------------------------------------------------
+# Libraries 
+# ---------------------------------------------------------------------------
+
+AC_CHECK_LIB([pthread], [pthread_create], [], [AC_MSG_ERROR([POSIX thread library is required])])
+AC_CHECK_LIB([m], [round], [], [AC_MSG_ERROR([Math library is required])])
+AC_ARG_WITH([libev],
+        AS_HELP_STRING([--with-libev(=<path>)],
+                [Path is optional and if given should specify the full path to the libev
+                 installation. E.g. --with-libev=/usr/local/]),
+        [
+                if test "x$withval" = "xyes"; then
+                        AC_CHECK_LIB([ev], [ev_run], [], [AC_MSG_ERROR([libev not found])])
+                        AC_CHECK_HEADERS([ev.h], [], [AC_MSG_ERROR([ev.h not found])])
+                elif test "x$withval" != "xno"; then
+                        AC_MSG_CHECKING([for libev in $withval])
+                        LDFLAGS="-L$withval/lib -lev $LDFLAGS "
+                        CFLAGS="-I$withval/include $CFLAGS"
+                        if test -r "$withval/lib/libev.a" -a -r "$withval/include/ev.h"; then
+                                AC_DEFINE([HAVE_LIBEV], [1], [Define if you have libev library])
+                                AC_DEFINE([HAVE_LIBEV_H], [1], [Define if you have libev header])
+                                AC_MSG_RESULT([ok])
+                        else
+                                AC_MSG_ERROR([libev not found in $withval])
+                        fi
+                else
+                        AC_MSG_ERROR([libev is required])
+                fi
+        ],
+        [
+                AC_CHECK_LIB([ev], [ev_run], [], [AC_MSG_ERROR([libev not found])])
+                AC_CHECK_HEADERS([ev.h], [], [AC_MSG_ERROR([ev.h not found])])
+        ]
+)
 AC_ARG_WITH([zlib],
         AS_HELP_STRING([--with-zlib(=<path>)],
                 [Link Monit with zlib. An optional path argument may
@@ -133,20 +167,10 @@ AC_ARG_WITH([zlib],
                 zlib="false"
         fi
      ],[
-        AC_CHECK_LIB([z], [zlibVersion], [], [
-                zlib="false"
-                AC_MSG_ERROR([libz not found])
-        ])
-        AC_CHECK_HEADERS([zlib.h])
+        AC_CHECK_LIB([z], [zlibVersion], [], [AC_MSG_ERROR([libz not found])])
+        AC_CHECK_HEADERS([zlib.h], [], [AC_MSG_ERROR([zlib.h not found])])
      ]
 )
-
-# ---------------------------------------------------------------------------
-# Libraries 
-# ---------------------------------------------------------------------------
-
-AC_CHECK_LIB([pthread], [pthread_create], [], [AC_MSG_ERROR([POSIX thread library is required])])
-AC_CHECK_LIB([m], [round], [], [AC_MSG_ERROR([Math library is required])])
 
 # ---------------------------------------------------------------------------
 # Header files 
@@ -260,12 +284,11 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_C_CONST
 AC_C_BIGENDIAN
-# Define _GNU_SOURCE so we can have Posix headers etc included. We use the
-# -std=cXX compiler switch which only include a minimum of C headers
-CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
-# Compiler; tune warnings and make the char type unsigned
+# Compiler; tune warnings and make the char type unsigned and enable C11 support
 CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
+# Require C11 support
+AC_CHECK_HEADERS([stdint.h], [CFLAGS="$CFLAGS -std=c11"], [AC_MSG_ERROR([Toolchain does not support C11])])
 # does this compiler support -Wno-pointer-sign ?
 svd_CFLAGS="$CFLAGS"
 CFLAGS="-Wno-pointer-sign $CFLAGS"
@@ -274,18 +297,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"]
 svd_CFLAGS="$CFLAGS"
 CFLAGS="-Wno-address $CFLAGS"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
-
-# Require at least C99 and use C11 if available
-AC_RUN_IFELSE(
-[AC_LANG_PROGRAM([], [dnl
-        #ifdef __STDC_VERSION__
-        #if __STDC_VERSION__ >= 201112L
-        return 0;
-        #endif
-        #endif
-        return 1;
-        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"])
-AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
 
 # ------------------------------------------------------------------------
 # IPv6 Support
