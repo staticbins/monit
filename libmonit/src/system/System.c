@@ -95,7 +95,7 @@ void System_error(const char *e, ...) {
 }
 
 
-int System_getDescriptorsGuarded() {
+int System_fds() {
         int max = 2<<15;
         int fileDescriptors = (int)sysconf(_SC_OPEN_MAX);
         if (fileDescriptors < 2)
