@@ -20,7 +20,7 @@
  */
 
 
-bool timeout_called = false;
+_Bool timeout_called = false;
 
 
 static void onExec(Process_T P) {
