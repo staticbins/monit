@@ -61,7 +61,13 @@
 /**
  * The standard error routine
  */
-#define ERROR	System_error
+#define ERROR   System_error
+
+
+/**
+ * The standard debug routine
+ */
+#define DEBUG   System_debug
 
 
 /* ------------------------------------------------------------ Exceptions */
@@ -90,6 +96,15 @@
 #ifndef HAVE_UCHAR_T
 typedef unsigned char uchar_t;
 #endif
+
+
+/* -------------------------------------------------------------- Globals  */
+
+
+/**
+ * Library Debug flag. If set to true, emit debug output
+ */
+extern _Bool MonitDebug;
 
 
 #endif
