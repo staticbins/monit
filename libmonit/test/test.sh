@@ -15,4 +15,5 @@ OutputStreamTest && \
 FileTest && \
 ExceptionTest && \
 NetTest && \
-CommandTest
+CommandTest && \
+SchedulerTest

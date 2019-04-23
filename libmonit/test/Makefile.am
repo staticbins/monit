@@ -15,7 +15,8 @@ noinst_PROGRAMS = StrTest \
                   ExceptionTest \
                   NetTest \
                   TimeTest \
-                  CommandTest
+                  CommandTest \
+                  SchedulerTest
 
 StrTest_SOURCES = StrTest.c
 ConvertTest_SOURCES = ConvertTest.c
@@ -30,6 +31,7 @@ FileTest_SOURCES = FileTest.c
 ExceptionTest_SOURCES = ExceptionTest.c
 NetTest_SOURCES = NetTest.c
 TimeTest_SOURCES = TimeTest.c
+SchedulerTest_SOURCES = SchedulerTest.c
 
 DISTCLEANFILES = *~ 
 
