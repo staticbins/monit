@@ -55,8 +55,10 @@
 #include "SMTP.h"
 
 // libmonit
-#include "system/Time.h"
 #include "util/Str.h"
+#include "system/Time.h"
+#include "system/System.h"
+#include "exceptions/AssertException.h"
 #include "exceptions/IOException.h"
 
 

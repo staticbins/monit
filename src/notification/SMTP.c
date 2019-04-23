@@ -65,6 +65,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/AssertException.h"
 #include "exceptions/ProtocolException.h"
 
 

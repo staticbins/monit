@@ -27,6 +27,8 @@
 #include "protocol.h"
 #include "SMTP.h"
 
+#include "exceptions/AssertException.h"
+
 
 /* --------------------------------------------------------------- Public */
 
