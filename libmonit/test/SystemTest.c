@@ -41,7 +41,9 @@ int main(void) {
 
         printf("=> Test1: check filedescriptors wrapper\n");
         {
-                assert(System_getDescriptorsGuarded() <= 2<<15);
+                int fds = System_fds();
+                assert(fds <= 2<<15);
+                assert(fds >= 3);
 
         }
         printf("=> Test1: OK\n\n");

@@ -69,6 +69,14 @@ void System_error(const char *e, ...) __attribute__((format (printf, 1, 2)));
 
 
 /**
+ * Prints the given message to <code>stdout</code> if the <code>MonitDebug</code>
+ * variable is set to true, otherwise this function does nothing.
+ * @param e A formated (printf-style) message string
+ */
+void System_debug(const char *e, ...) __attribute__((format (printf, 1, 2)));
+
+
+/**
  * Returns the number of available file descriptors for a process.
  * This method uses <code>sysconf</code> internally, but returns
  * a fixed size of <code>2^16</code> if the value is larger. 
@@ -78,17 +86,24 @@ int System_fds(void);
 
 
 /**
- * Initialize the buf of size nbytes with random data.
- * @param buf The target buffer
- * @param nbtyes The target buffer size in bytes
- * @return true on success, otherwise false
+ * Returns the number of available CPU cores on the system.
+ * @return Numbers of available CPU cores on the system
  */
-bool System_random(void *buf, size_t nbytes);
+int System_cpus(void);
 
 
 /**
- * Get random number
- * @return random number
+ * Initialize the buf of size nbytes with random data.
+ * @param buf The target buffer
+ * @param nbytes The target buffer size in bytes
+ * @return true on success, otherwise false
+ */
+_Bool System_random(void *buf, size_t nbytes);
+
+
+/**
+ * Get a random number
+ * @return a random number
  */
 unsigned long long System_randomNumber(void);
 

@@ -33,6 +33,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <sys/sysctl.h>
 
 #ifdef HAVE_SYS_RANDOM_H
 #include <sys/random.h>
@@ -54,6 +56,7 @@
 /* ----------------------------------------------------------- Definitions */
 
 
+extern _Bool MonitDebug;
 extern void(*_AbortHandler)(const char *error, va_list ap);
 extern void(*_ErrorHandler)(const char *error, va_list ap);
 
@@ -95,6 +98,16 @@ void System_error(const char *e, ...) {
 }
 
 
+void System_debug(const char *e, ...) {
+        if (MonitDebug) {
+                va_list ap;
+                va_start(ap, e);
+                vfprintf(stdout, e, ap);
+                va_end(ap);
+        }
+}
+
+
 int System_fds() {
         int max = 2<<15;
         int fileDescriptors = (int)sysconf(_SC_OPEN_MAX);
@@ -105,7 +118,21 @@ int System_fds() {
 }
 
 
-bool System_random(void *buf, size_t nbytes) {
+int System_cpus(void) {
+        static int ncores = 0;
+        if (!ncores) {
+                ncores = (int)sysconf(_SC_NPROCESSORS_ONLN);
+                if (ncores <= 0) {
+                        int mib[2] = {CTL_HW, HW_NCPU};
+                        size_t len = sizeof(ncores);
+                        sysctl(mib, 2, &ncores, &len, NULL, 0);
+                }
+        }
+        return ncores;
+}
+
+
+_Bool System_random(void *buf, size_t nbytes) {
 #ifdef HAVE_ARC4RANDOM_BUF
         arc4random_buf(buf, nbytes);
         return true;
@@ -114,14 +141,14 @@ bool System_random(void *buf, size_t nbytes) {
 #else
         int fd = open("/dev/urandom", O_RDONLY);
         if (fd >= 0) {
-                int bytes = read(fd, buf, nbytes);
+                ssize_t bytes = read(fd, buf, nbytes);
                 close(fd);
                 if (bytes == nbytes) {
                         return true;
                 }
         }
         // Fallback to random()
-        char *_buf = buf;
+        char *_buf = (char *)buf;
         for (int i = 0; i < nbytes; i++) {
                 _buf[i] = random() % 256;
         }
@@ -131,7 +158,7 @@ bool System_random(void *buf, size_t nbytes) {
 
 
 unsigned long long System_randomNumber() {
-        unsigned long long random;
+        uint64_t random = 0;
         System_random(&random, sizeof(random));
         return random;
 }
