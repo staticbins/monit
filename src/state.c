@@ -54,6 +54,7 @@
 #include "state.h"
 
 // libmonit
+#include "exceptions/AssertException.h"
 #include "exceptions/IOException.h"
 
 

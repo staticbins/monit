@@ -41,6 +41,7 @@
 #include "protocol.h"
 
 // libmonit
+#include "system/System.h"
 #include "exceptions/IOException.h"
 #include "exceptions/ProtocolException.h"
 

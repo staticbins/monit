@@ -143,6 +143,7 @@
 #include "util/Convert.h"
 #include "system/Net.h"
 #include "system/Time.h"
+#include "system/System.h"
 #include "exceptions/AssertException.h"
 #include "exceptions/IOException.h"
 
