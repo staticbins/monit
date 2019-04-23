@@ -44,22 +44,7 @@
 
 
 /**
- * Implementation of the Task scheduler.
- *
- * The Scheduler uses ev_periodic to schedule periodic and at Tasks.
- * The one-time Task uses ev_timer. The execution of the Task is delegated
- * to the pool of worker threads managed by an internal Dispatcher instance.
- *
- * The allocated Task objects are managed in a list and can be
- * allocated with Scheduler_task() and returned with Scheduler_cancel()
- * methods. In the case that the Task is canceled but it is just being executed,
- * then the timer will stop and cancelTask method will return immediately, but
- * internally the Task in-progress is allowed to finish and the object will be
- * marked for reuse after the execution finished.
- *
- * Multiple different Tasks can execute at the same time, but each only in one
- * instance - if the Task is still running and the timer expires, then
- * the Task will be skipped in the given cycle.
+ * Implementation of Scheduler and Task.
  *
  * This Scheduler is thread-safe.
  *
@@ -116,16 +101,17 @@ struct Task_T {
         T scheduler;
 };
 
+
+/* --------------------------------------------------------------- Private */
+
+
 static inline _Bool _available_task(void *e) {
         Task_T task = e;
         return (task && task->isavailable && !task->inprogress);
 }
 
 
-/* --------------------------------------------------------------- Private */
-
-
-static inline void dispatch(Task_T t) {
+static inline void _dispatch(Task_T t) {
         int p = 0;
         if (atomic_compare_exchange_strong(&t->inprogress, &p, 1)) {
                 t->executed = ev_now(t->scheduler->loop);
@@ -135,8 +121,7 @@ static inline void dispatch(Task_T t) {
 }
 
 
-// The event loop thread
-static void *loop_run(void *t) {
+static void *_loop(void *t) {
         T scheduler = (T)t;
         LOCK(scheduler->lock)
         {
@@ -148,47 +133,38 @@ static void *loop_run(void *t) {
 }
 
 
-// libev callback executed when the loop processed the events and is suspended (can be modified)
-static void loop_release(EV_P) {
+static void _loop_release(EV_P) {
         T scheduler = (T)ev_userdata(EV_A);
         Mutex_unlock(scheduler->lock);
 }
 
 
-// libev callback executed when the loop starts collecting the events (must not be modified)
-static void loop_acquire(EV_P) {
+static void _loop_acquire(EV_P) {
         T scheduler = (T)ev_userdata(EV_A);
         Mutex_lock(scheduler->lock);
 }
 
 
-/* libev async callback which wakes up the event loop, performs the reconfiguration after loop 
- changes and/or breaks the loop if the Scheduler is stopped, allowing the loop thread to exit */
-static void loop_notify(EV_P_ ev_async *w, int revents) {
+static void _loop_notify(EV_P_ ev_async *w, int revents) {
         T scheduler = (T)ev_userdata(EV_A);
         if (scheduler->stopped)
                 ev_break(loop, EVBREAK_ALL);
 }
 
 
-/* libev timer callback which delegates the Task execution to Dispatcher if it is not in 
- progress already and notes the time when the event was detected */
-static void task_timer(EV_P_ ev_timer *w, int revents) {
+static void _timer_cb(EV_P_ ev_timer *w, int revents) {
         Task_T t = (Task_T)w;
         ev_timer_stop(t->scheduler->loop, w);
-        dispatch(t);
+        _dispatch(t);
 }
 
 
-/* libev periodic callback which delegates the Task execution to Dispatcher if it is not in 
- progress already and notes the time when the event was detected */
-static void task_periodic(EV_P_ ev_periodic *w, int revents) {
-        dispatch((Task_T)w);
+static void _periodic_cb(EV_P_ ev_periodic *w, int revents) {
+        _dispatch((Task_T)w);
 }
 
 
-// Dispatcher callback which executes the Task worker
-static void task_worker(void *t) {
+static void _worker(void *t) {
         Task_T task = t;
         if (task->type == Task_Once || task->type == Task_At)
                 task->state = Task_Limbo;
@@ -210,24 +186,23 @@ static void task_worker(void *t) {
 }
 
 
-static void scheduler_start(T S) {
+static void _start(T S) {
         assert(S);
         if (S->stopped) {
                 S->stopped = false;
                 DEBUG("Starting Scheduler\n");
-                Thread_create(S->thread, loop_run, S);
+                Thread_create(S->thread, _loop, S);
         }
 }
 
 
-static void scheduler_stop(T S) {
+static void _stop(T S) {
         assert(S);
         LOCK(S->lock)
         {
                 S->stopped = true;
         }
         END_LOCK;
-        // Break the loop and stop timers
         ev_async_send(S->loop, &S->loop_notify);
         Thread_join(S->thread);
         while (List_length(S->tasks) > 0) {
@@ -250,29 +225,29 @@ T Scheduler_new(int workers) {
         }
         Mutex_init(S->lock);
         ev_set_userdata(S->loop, S);
-        ev_set_loop_release_cb(S->loop, loop_release, loop_acquire);
-        ev_async_init(&S->loop_notify, loop_notify);
+        ev_set_loop_release_cb(S->loop, _loop_release, _loop_acquire);
+        ev_async_init(&S->loop_notify, _loop_notify);
         ev_async_start(S->loop, &S->loop_notify);
         S->tasks = List_new();
-        S->dispatcher = Dispatcher_new(workers, 60, task_worker);
+        S->dispatcher = Dispatcher_new(workers, 60, _worker);
         S->stopped = true;
-        scheduler_start(S);
+        _start(S);
         return S;
 }
 
 
 void Scheduler_free(T *S) {
         assert(S && *S);
-        scheduler_stop(*S);
-        ev_loop_destroy((*S)->loop);
+        _stop(*S);
         Dispatcher_free(&(*S)->dispatcher);
+        ev_loop_destroy((*S)->loop);
         List_free(&(*S)->tasks);
         Mutex_destroy((*S)->lock);
         FREE(*S);
 }
 
 
-Task_T Scheduler_task(T S, const char name[static 20]) {
+Task_T Scheduler_task(T S, const char *name) {
         assert(S);
         assert(name);
         Task_T task = NULL;
@@ -309,6 +284,7 @@ void Task_once(Task_T t, double offset) {
 
 void Task_periodic(Task_T t, double offset, double interval) {
         assert(t);
+        assert(interval > 0);
         assert(t->type == Task_None || t->type == Task_Periodic);
         t->type = Task_Periodic;
         t->offset = offset;
@@ -398,10 +374,10 @@ void Task_start(Task_T t) {
                 if (! t->scheduler->stopped) {
                         if (t->type == Task_Once) {
                                 ev_now_update(t->scheduler->loop);
-                                ev_timer_init(&(t->ev.t), task_timer, t->offset, 0);
+                                ev_timer_init(&(t->ev.t), _timer_cb, t->offset, 0);
                                 ev_timer_start(t->scheduler->loop, &(t->ev.t));
                         } else {
-                                ev_periodic_init(&(t->ev.p), task_periodic, t->offset, (t->type == Task_At) ? 0 : t->interval, NULL);
+                                ev_periodic_init(&(t->ev.p), _periodic_cb, t->offset, (t->type == Task_At) ? 0 : t->interval, NULL);
                                 ev_periodic_start(t->scheduler->loop, &(t->ev.p));
                         }
                         t->state = Task_Started;
@@ -418,9 +394,6 @@ void Task_cancel(Task_T t) {
         assert(t->isavailable == false);
         LOCK(t->scheduler->lock)
         {
-                /* The task worker can be still in progress or in Dispatcher queue, so just stop the timer
-                 and mark it as available for reuse. The Task is still protected by inprogress flag which
-                 will get reset when it will finish */
                 if (t->type == Task_Once)
                         ev_timer_stop(t->scheduler->loop, &(t->ev.t));
                 else
