@@ -105,13 +105,13 @@ void Task_once(T t, double offset);
 
 /**
  * Specifies a periodic task. I.e. the task is to be scheduled for periodic
- * execution. The offset parameter specify the offset of the top of the hour
- * for when the task should run and interval the next time the task should
- * run. For example to run the task every 10 minutes starting 5 minutes past
- * the first hour, e.g. 10:05, 10:15..10:55, 11:05 etc. use
- * Task_periodic(300, 600) where 300 = 5 min and 600 = 10 min.
+ * execution. The offset parameter specify the offset within interval
+ * for when the task should run and interval specify the next time the task
+ * should run. For example to run the task 5 minutes past every hour, e.g.
+ * 10:05, 11:05, 12:05 etc. use Task_periodic(300, 3600.) where 300 = 5 min
+ * and 3600 = 1 hour.
  * @param t Task object
- * @param offset of the (first) hour for when the task should run. Value in
+ * @param offset within interval for when the task should run. Value in
  * seconds. Typical values for offset are something between 0 and interval
  * @param interval Task interval in seconds (value > 0)
  */
