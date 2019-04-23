@@ -135,13 +135,10 @@ time_t timegm(struct tm *tm)
 #endif
 
 
-#define _i2a(i) (x[0] = ((i) / 10) + '0', x[1] = ((i) % 10) + '0')
-
-
 #define TEST_RANGE(v, f, t) \
         do { \
                 if (v < f || v > t) \
-                        THROW(AssertException, "#v is outside the range (%d..%d)", f, t); \
+                        THROW(AssertException, "#v is outside the range <%d..%d>", f, t); \
         } while (0)
 static const char days[] = "SunMonTueWedThuFriSat";
 static const char months[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
@@ -153,7 +150,7 @@ static const char months[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
 static inline int _a2i(const char *a, int l) {
         int n = 0;
         for (; *a && l--; a++)
-                n = n * 10 + (*a) - '0';
+                n = n * 10 + (*a - '0');
         return n;
 }
 
@@ -165,6 +162,8 @@ time_t Time_toTimestamp(const char *s) {
         if (STR_DEF(s)) {
                 struct tm t = {};
                 if (Time_toDateTime(s, &t)) {
+                        if (t.tm_year == 0)
+                                THROW(AssertException, "Invalid date/time");
                         t.tm_year -= 1900;
                         time_t offset = t.TM_GMTOFF;
                         return timegm(&t) - offset;
@@ -192,752 +191,327 @@ struct tm *Time_toDateTime(const char *s, struct tm *t) {
                         THROW(AssertException, "Invalid date or time");
                 }
                 token = cursor;
-                
-#line 198 "<stdout>"
-{
-	unsigned char yych;
-	unsigned int yyaccept = 0;
-	yych = *YYCURSOR;
-	switch (yych) {
-	case '+':
-	case '-':	goto yy4;
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy5;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-			goto yyeof;
-		}
-		goto yy2;
-	}
-yy2:
-	++YYCURSOR;
-yy3:
-#line 274 "src/system/Time.re"
-	{
-                        continue;
-                 }
-#line 229 "<stdout>"
-yy4:
-	yyaccept = 0;
-	yych = *(YYMARKER = ++YYCURSOR);
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy6;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy3;
-	}
-yy5:
-	yyaccept = 0;
-	yych = *(YYMARKER = ++YYCURSOR);
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy8;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy3;
-	}
-yy6:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy9;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy7:
-	YYCURSOR = YYMARKER;
-	switch (yyaccept) {
-	case 0: 	goto yy3;
-	case 1: 	goto yy10;
-	case 2: 	goto yy25;
-	case 3: 	goto yy30;
-	default:	goto yy36;
-	}
-yy8:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy12;
-	case ':':	goto yy13;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-			goto yy7;
-		}
-		goto yy11;
-	}
-yy9:
-	yyaccept = 1;
-	yych = *(YYMARKER = ++YYCURSOR);
-	switch (yych) {
-	case '\n':	goto yy10;
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy15;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-			goto yy10;
-		}
-		goto yy14;
-	}
-yy10:
-#line 259 "src/system/Time.re"
-	{ // Timezone: +-HH:MM, +-HH or +-HHMM is offset from UTC in seconds
-                        if (have_time) { // Only set timezone if we have parsed time
-                                tm.TM_GMTOFF = _a2i(token + 1, 2) * 3600;
-                                if (isdigit(token[3]))
-                                        tm.TM_GMTOFF += _a2i(token + 3, 2) * 60;
-                                else if (isdigit(token[4]))
-                                        tm.TM_GMTOFF += _a2i(token + 4, 2) * 60;
-                                if (token[0] == '-')
-                                        tm.TM_GMTOFF *= -1;
-                        } else if (! have_date) { // No date nor time
-                                THROW(AssertException, "Invalid date or time");
-                        }
-                        continue;
-                 }
-#line 352 "<stdout>"
-yy11:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy16;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy12:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy17;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy13:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy18;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy14:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy19;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy15:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy20;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy16:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy21;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy17:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy23;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-			goto yy7;
-		}
-		goto yy22;
-	}
-yy18:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy24;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy19:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy26;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy20:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy26;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy10;
-	}
-yy21:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy7;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-			goto yy7;
-		}
-		goto yy27;
-	}
-yy22:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy28;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy23:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy29;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy24:
-	yyaccept = 2;
-	yych = *(YYMARKER = ++YYCURSOR);
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy25;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-			goto yy25;
-		}
-		goto yy27;
-	}
-yy25:
-#line 251 "src/system/Time.re"
-	{ // Time: HH:MM
-                        tm.tm_hour = _a2i(token, 2);
-                        tm.tm_min  = _a2i(token + 3, 2);
-                        tm.tm_sec  = 0;
-                        have_time = true;
-                        continue;
-                 }
-#line 618 "<stdout>"
-yy26:
-	++YYCURSOR;
-	goto yy10;
-yy27:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy31;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy28:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy32;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy29:
-	yyaccept = 3;
-	yych = *(YYMARKER = ++YYCURSOR);
-	switch (yych) {
-	case ',':
-	case '.':	goto yy33;
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy34;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy30;
-	}
-yy30:
-#line 243 "src/system/Time.re"
-	{ // Compressed Time: HHMMSS
-                        tm.tm_hour = _a2i(token, 2);
-                        tm.tm_min  = _a2i(token + 2, 2);
-                        tm.tm_sec  = _a2i(token + 4, 2);
-                        have_time = true;
-                        continue;
-                 }
-#line 688 "<stdout>"
-yy31:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy35;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy32:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy7;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-			goto yy7;
-		}
-		goto yy37;
-	}
-yy33:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy38;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy34:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy40;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy35:
-	yyaccept = 4;
-	yych = *(YYMARKER = ++YYCURSOR);
-	switch (yych) {
-	case ',':
-	case '.':	goto yy42;
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy43;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy36;
-	}
-yy36:
-#line 235 "src/system/Time.re"
-	{ // Time: HH:MM:SS
-                        tm.tm_hour = _a2i(token, 2);
-                        tm.tm_min  = _a2i(token + 3, 2);
-                        tm.tm_sec  = _a2i(token + 6, 2);
-                        have_time = true;
-                        continue;
-                 }
-#line 792 "<stdout>"
-yy37:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy44;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy38:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy38;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy30;
-	}
-yy40:
-	++YYCURSOR;
-#line 219 "src/system/Time.re"
-	{ // Compressed Date: YYYYMMDD
-                        tm.tm_year  = _a2i(token, 4);
-                        tm.tm_mon   = _a2i(token + 4, 2) - 1;
-                        tm.tm_mday  = _a2i(token + 6, 2);
-                        have_date = true;
-                        continue;
-                 }
-#line 839 "<stdout>"
-yy42:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy45;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy43:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy47;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy44:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy49;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy7;
-	}
-yy45:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy45;
-	default:
-		if (YYLIMIT <= YYCURSOR) {
-		}
-		goto yy36;
-	}
-yy47:
-	++YYCURSOR;
-#line 227 "src/system/Time.re"
-	{ // Date: dd/mm/yyyy
-                        tm.tm_mday  = _a2i(token, 2);
-                        tm.tm_mon   = _a2i(token + 3, 2) - 1;
-                        tm.tm_year  = _a2i(token + 6, 4);
-                        have_date = true;
-                        continue;
-                 }
-#line 922 "<stdout>"
-yy49:
-	++YYCURSOR;
-#line 211 "src/system/Time.re"
-	{ // Date: YYYY-MM-DD
-                        tm.tm_year  = _a2i(token, 4);
-                        tm.tm_mon   = _a2i(token + 5, 2) - 1;
-                        tm.tm_mday  = _a2i(token + 8, 2);
-                        have_date = true;
-                        continue;
-                 }
-#line 933 "<stdout>"
-yyeof:
-#line 207 "src/system/Time.re"
-	{ // EOF
-                        THROW(AssertException, "Invalid date or time");
-                 }
-#line 939 "<stdout>"
-}
-#line 277 "src/system/Time.re"
 
+                {
+                        unsigned char yych;
+                        unsigned int yyaccept = 0;
+                        static const unsigned char yybm[] = {
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                128, 128, 128, 128, 128, 128, 128, 128,
+                                128, 128,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                                0,   0,   0,   0,   0,   0,   0,   0,
+                        };
+                        yych = *cursor;
+                        if (yych <= ',') {
+                                if (yych == '+') goto yy4;
+                        } else {
+                                if (yych <= '-') goto yy4;
+                                if (yych <= '/') goto yy2;
+                                if (yych <= '9') goto yy5;
+                        }
+                yy2:
+                        ++cursor;
+                yy3:
+                        {
+                                continue;
+                        }
+                yy4:
+                        yyaccept = 0;
+                        yych = *(marker = ++cursor);
+                        if (yych <= '/') goto yy3;
+                        if (yych <= '9') goto yy6;
+                        goto yy3;
+                yy5:
+                        yyaccept = 0;
+                        yych = *(marker = ++cursor);
+                        if (yych <= '/') goto yy3;
+                        if (yych <= '9') goto yy8;
+                        goto yy3;
+                yy6:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy9;
+                yy7:
+                        cursor = marker;
+                        if (yyaccept <= 2) {
+                                if (yyaccept <= 1) {
+                                        if (yyaccept == 0) {
+                                                goto yy3;
+                                        } else {
+                                                goto yy10;
+                                        }
+                                } else {
+                                        goto yy25;
+                                }
+                        } else {
+                                if (yyaccept == 3) {
+                                        goto yy30;
+                                } else {
+                                        goto yy36;
+                                }
+                        }
+                yy8:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy11;
+                        if (yych <= '9') goto yy12;
+                        if (yych <= ':') goto yy13;
+                        goto yy11;
+                yy9:
+                        yyaccept = 1;
+                        yych = *(marker = ++cursor);
+                        if (yych == '\n') goto yy10;
+                        if (yych <= '/') goto yy14;
+                        if (yych <= '9') goto yy15;
+                        goto yy14;
+                yy10:
+                        { // Timezone: +-HH:MM, +-HH or +-HHMM is offset from UTC in seconds
+                                if (have_time) { // Only set timezone if we have parsed time
+                                        tm.TM_GMTOFF = _a2i(token + 1, 2) * 3600;
+                                        if (isdigit(token[3]))
+                                                tm.TM_GMTOFF += _a2i(token + 3, 2) * 60;
+                                        else if (isdigit(token[4]))
+                                                tm.TM_GMTOFF += _a2i(token + 4, 2) * 60;
+                                        if (token[0] == '-')
+                                                tm.TM_GMTOFF *= -1;
+                                }
+                                continue;
+                        }
+                yy11:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy16;
+                        goto yy7;
+                yy12:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy17;
+                        goto yy7;
+                yy13:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy18;
+                        goto yy7;
+                yy14:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy19;
+                        goto yy7;
+                yy15:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy20;
+                        goto yy7;
+                yy16:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy21;
+                        goto yy7;
+                yy17:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy22;
+                        if (yych <= '9') goto yy23;
+                        goto yy22;
+                yy18:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy24;
+                        goto yy7;
+                yy19:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy26;
+                        goto yy7;
+                yy20:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy10;
+                        if (yych <= '9') goto yy26;
+                        goto yy10;
+                yy21:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy27;
+                        if (yych <= '9') goto yy7;
+                        goto yy27;
+                yy22:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy28;
+                        goto yy7;
+                yy23:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy29;
+                        goto yy7;
+                yy24:
+                        yyaccept = 2;
+                        yych = *(marker = ++cursor);
+                        if (yych <= '/') goto yy27;
+                        if (yych >= ':') goto yy27;
+                yy25:
+                        { // Time: HH:MM
+                                tm.tm_hour = _a2i(token, 2);
+                                tm.tm_min  = _a2i(token + 3, 2);
+                                tm.tm_sec  = 0;
+                                have_time = true;
+                                continue;
+                        }
+
+                yy26:
+                        ++cursor;
+                        goto yy10;
+                yy27:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy31;
+                        goto yy7;
+                yy28:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy32;
+                        goto yy7;
+                yy29:
+                        yyaccept = 3;
+                        yych = *(marker = ++cursor);
+                        if (yych <= '-') {
+                                if (yych == ',') goto yy33;
+                        } else {
+                                if (yych <= '.') goto yy33;
+                                if (yych <= '/') goto yy30;
+                                if (yych <= '9') goto yy34;
+                        }
+                yy30:
+                        { // Compressed Time: HHMMSS
+                                tm.tm_hour = _a2i(token, 2);
+                                tm.tm_min  = _a2i(token + 2, 2);
+                                tm.tm_sec  = _a2i(token + 4, 2);
+                                have_time = true;
+                                continue;
+                        }
+                yy31:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy35;
+                        goto yy7;
+                yy32:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy37;
+                        if (yych <= '9') goto yy7;
+                        goto yy37;
+                yy33:
+                        yych = *++cursor;
+                        if (yybm[0+yych] & 128) {
+                                goto yy38;
+                        }
+                        goto yy7;
+                yy34:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy40;
+                        goto yy7;
+                yy35:
+                        yyaccept = 4;
+                        yych = *(marker = ++cursor);
+                        if (yych <= '-') {
+                                if (yych == ',') goto yy42;
+                        } else {
+                                if (yych <= '.') goto yy42;
+                                if (yych <= '/') goto yy36;
+                                if (yych <= '9') goto yy43;
+                        }
+                yy36:
+                        { // Time: HH:MM:SS
+                                tm.tm_hour = _a2i(token, 2);
+                                tm.tm_min  = _a2i(token + 3, 2);
+                                tm.tm_sec  = _a2i(token + 6, 2);
+                                have_time = true;
+                                continue;
+                        }
+                yy37:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy44;
+                        goto yy7;
+                yy38:
+                        yych = *++cursor;
+                        if (yybm[0+yych] & 128) {
+                                goto yy38;
+                        }
+                        goto yy30;
+                yy40:
+                        ++cursor;
+                        { // Compressed Date: YYYYMMDD
+                                tm.tm_year  = _a2i(token, 4);
+                                tm.tm_mon   = _a2i(token + 4, 2) - 1;
+                                tm.tm_mday  = _a2i(token + 6, 2);
+                                have_date = true;
+                                continue;
+                        }
+                yy42:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy45;
+                        goto yy7;
+                yy43:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy47;
+                        goto yy7;
+                yy44:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy7;
+                        if (yych <= '9') goto yy49;
+                        goto yy7;
+                yy45:
+                        yych = *++cursor;
+                        if (yych <= '/') goto yy36;
+                        if (yych <= '9') goto yy45;
+                        goto yy36;
+                yy47:
+                        ++cursor;
+                        { // Date: dd/mm/yyyy
+                                tm.tm_mday  = _a2i(token, 2);
+                                tm.tm_mon   = _a2i(token + 3, 2) - 1;
+                                tm.tm_year  = _a2i(token + 6, 4);
+                                have_date = true;
+                                continue;
+                        }
+                yy49:
+                        ++cursor;
+                        { // Date: YYYY-MM-DD
+                                tm.tm_year  = _a2i(token, 4);
+                                tm.tm_mon   = _a2i(token + 5, 2) - 1;
+                                tm.tm_mday  = _a2i(token + 8, 2);
+                                have_date = true;
+                                continue;
+                        }
+                }
         }
         return NULL;
 }

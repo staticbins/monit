@@ -50,8 +50,9 @@
  * information, the time is expected and assumed to be in the GTM timezone,
  * i.e. in UTC. Example:
  * <pre>
- *  Time_toTimestamp("2013-12-15 00:12:58Z") -> 1387066378
- *  Time_toTimestamp("2013-12-14 19:12:58-05:00") -> 1387066378
+ *  Time_toTimestamp("2019-12-28 00:12:58") -> 1577491978
+ *  Time_toTimestamp("2019-12-27 19:12:58-05:00") -> 1577491978
+ *  Time_toTimestamp("28/12/2019 00.12.58") -> 1577491978
  * </pre>
  * @param s The Date String to parse. Time is expected to be in UTC, but
  * local time with timezone information is also allowed.
@@ -60,6 +61,7 @@
  * @exception AssertException If the parameter value cannot be converted
  * to a valid timestamp
  */
+#define Time_parse Time_toTimestamp
 time_t Time_toTimestamp(const char *s);
 
 
@@ -190,8 +192,8 @@ int Time_year(time_t time);
 
 /**
  * Returns a RFC1123 date string for the given UTC time. The returned string
- * is computed in the local timezone. The result buffer must be large enough
- * to hold at least 26 bytes. Example:
+ * represents the given time in the <b>local</b> timezone. The result buffer
+ * must be large enough to hold at least 26 bytes. Example:
  * <pre>
  *  Time_string(1253052085, buf) -> "Wed, 16 Sep 2009 12:01:25"
  * </pre>
