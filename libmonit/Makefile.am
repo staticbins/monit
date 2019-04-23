@@ -26,6 +26,8 @@ libmonit_la_SOURCES = \
                   src/system/Time.c \
                   src/system/Command.c \
                   src/system/System.c \
+                  src/system/Scheduler.c \
+                  src/thread/Dispatcher.c \
                   src/util/List.c \
                   src/util/Str.c \
                   src/util/Fmt.c \
