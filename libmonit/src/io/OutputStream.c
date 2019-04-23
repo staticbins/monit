@@ -62,7 +62,7 @@ struct T {
         time_t timeout;
         uchar_t *limit;
         uchar_t *length;
-        boolean_t isclosed;
+        _Bool isclosed;
         int sessionWritten;
         long long int bytesWritten;
         uchar_t buffer[BUFFER_SIZE + 1];
