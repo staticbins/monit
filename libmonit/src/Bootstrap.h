@@ -71,4 +71,11 @@ void Bootstrap_setAbortHandler(void(*abortHandler)(const char *error, va_list ap
 void Bootstrap_setErrorHandler(void(*errorHandler)(const char *error, va_list ap));
 
 
+/**
+ * Set the debug flag for the library
+ * @param flag If true the library will emit debug information to stdout
+ */
+void Bootstrap_setDebug(_Bool flag);
+
+
 #endif
