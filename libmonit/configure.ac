@@ -257,7 +257,7 @@ AC_C_BIGENDIAN
 # Compiler; tune warnings and make the char type unsigned and enable C11 support
 CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
 # Require C11 support
-AC_CHECK_HEADERS([stdint.h], [CFLAGS="$CFLAGS -std=c11"], [AC_MSG_ERROR([Toolchain does not support C11])])
+AC_CHECK_HEADERS([stdint.h stdatomic.h stdbool.h], [CFLAGS="$CFLAGS -std=c11"], [AC_MSG_ERROR([Toolchain does not support C11])])
 # does this compiler support -Wno-pointer-sign ?
 svd_CFLAGS="$CFLAGS"
 CFLAGS="-Wno-pointer-sign $CFLAGS"
