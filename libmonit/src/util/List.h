@@ -130,6 +130,16 @@ void List_cat(T L, T list);
 
 
 /**
+ * Find an element e in the list using a predicate function
+ * @param L A List object
+ * @param predicate A function predicate. The function should
+ * return true if element e is found otherwise false
+ * @return The element found or NULL if not found
+ */
+void *List_find(T L, _Bool(*predicate)(void *e));
+
+
+/**
  * Reverse the order of the elements in the List
  * @param L A List object
  */
@@ -161,6 +171,7 @@ void List_clear(T L);
  * @exception MemoryException if allocation failed
  */
 void **List_toArray(T L);
+
 
 #undef T
 #endif
