@@ -125,7 +125,6 @@ static void *_loop(void *t) {
         T scheduler = (T)t;
         LOCK(scheduler->lock)
         {
-                pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, 0);
                 ev_run(scheduler->loop, 0);
         }
         END_LOCK;
