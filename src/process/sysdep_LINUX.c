@@ -176,9 +176,9 @@ static time_t _getStartTime(void) {
 }
 
 
-// parse /proc/PID/stat
+// parse /proc/PID/stat 
 static bool _parseProcPidStat(Proc_T proc) {
-        char buf[8192];
+        char buf[4096];
         char *tmp = NULL;
         if (! file_readProc(buf, sizeof(buf), "stat", proc->pid, NULL)) {
                 DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->pid);
@@ -651,19 +651,16 @@ error:
  * @return: true if successful, false if failed (or not available)
  */
 bool used_system_cpu_sysdep(SystemInfo_T *si) {
-        int rv;
-        unsigned long long cpu_total;      // Total CPU time
-        unsigned long long cpu_user;       // Time spent in user mode
-        unsigned long long cpu_nice;       // Time spent in user mode with low priority (nice)
-        unsigned long long cpu_syst;       // Time spent in system mode
-        unsigned long long cpu_idle;       // Time idle
-        unsigned long long cpu_iowait;     // Time waiting for I/O to complete. This value is not reliable
-        unsigned long long cpu_hardirq;    // Time servicing hardware interrupts
-        unsigned long long cpu_softirq;    // Time servicing software interrupts
-        unsigned long long cpu_steal;      // Stolen time, which is the time spent in other operating systems when running in a virtualized environment
-        unsigned long long cpu_guest;      // Time spent running a virtual CPU for guest operating systems under the control of the Linux kernel
-        unsigned long long cpu_guest_nice; // Time spent running a niced guest (virtual CPU for guest operating systems under the control of the Linux kernel)
-        char buf[8192];
+        bool rv;
+        unsigned long long cpu_total;
+        unsigned long long cpu_user;
+        unsigned long long cpu_nice;
+        unsigned long long cpu_syst;
+        unsigned long long cpu_idle;
+        unsigned long long cpu_wait;
+        unsigned long long cpu_irq;
+        unsigned long long cpu_softirq;
+        char buf[STRLEN];
 
         if (! file_readProc(buf, sizeof(buf), "stat", -1, NULL)) {
                 LogError("system statistic error -- cannot read /proc/stat\n");

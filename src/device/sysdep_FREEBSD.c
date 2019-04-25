@@ -166,7 +166,7 @@ static bool _parseDevice(const char *path, Device_T device) {
 }
 
 
-static bool _getStatistics(unsigned long long now) {
+static bool _getStatistics(uint64_t now) {
         // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
         if (now > _statistics.timestamp + 1000 || now < _statistics.timestamp - 1000) {
                 if (devstat_getdevs(NULL, &(_statistics.disk)) == -1) {
@@ -179,14 +179,14 @@ static bool _getStatistics(unsigned long long now) {
 }
 
 
-static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
+static bool _getDummyDiskActivity(void *_inf) {
         return true;
 }
 
 
 static bool _getBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        unsigned long long now = Time_milli();
+        uint64_t now = Time_milli();
         bool rv = _getStatistics(now);
         if (rv) {
                 for (int i = 0; i < _statistics.disk.dinfo->numdevs; i++) {

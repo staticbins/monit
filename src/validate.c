@@ -1837,8 +1837,8 @@ State_Type check_system(Service_T s) {
 
 
 State_Type check_net(Service_T s) {
-        volatile bool havedata = true;
-        volatile State_Type rv = State_Succeeded;
+        bool havedata = true;
+        State_Type rv = State_Succeeded;
         TRY
         {
                 Link_update(s->inf.net->stats);

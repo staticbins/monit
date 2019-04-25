@@ -230,7 +230,7 @@ typedef struct mystate0 {
 
 
 static int file = -1;
-static unsigned long long booted = 0ULL;
+static uint64_t booted = 0ULL;
 static bool _stateDirty = false;
 
 

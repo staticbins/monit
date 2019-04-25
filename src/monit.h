@@ -28,6 +28,8 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 #ifdef HAVE_KINFO_H
 #include <kinfo.h>
@@ -96,9 +98,6 @@
 #include <vm/vm.h>
 #endif
 
-#include <stdbool.h>
-
-
 #include "Ssl.h"
 #include "Address.h"
 #include "net/Link.h"
@@ -139,6 +138,14 @@
 #define SSL_TIMEOUT        15000
 #define SMTP_TIMEOUT       30000
 
+
+/* ------------------------------------------------------ Type definitions */
+
+
+// The internal 8-bit char type
+#ifndef HAVE_UCHAR_T
+typedef unsigned char uchar_t;
+#endif
 
 //FIXME: refactor Run_Flags to bit field
 typedef enum {
@@ -1016,7 +1023,7 @@ typedef struct Device_T {
         char key[PATH_MAX];
         char module[256];
         char type[64];
-        unsigned long long flags;
+        uint64_t flags;
         bool (*getDiskUsage)(void *);
         bool (*getDiskActivity)(void *);
 } *Device_T;

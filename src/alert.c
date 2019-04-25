@@ -205,7 +205,7 @@ static MailServer_T _connectMTA(void) {
 
 
 static bool _send(List_T list) {
-        volatile bool failed = false;
+        bool failed = false;
         if (List_length(list)) {
                 volatile Mail_T m = NULL;
                 volatile SMTP_T smtp = NULL;
@@ -277,7 +277,7 @@ static bool _send(List_T list) {
 }
 
 
-static bool _hasRecipient(Mail_T list, const char *recipient) {
+bool _hasRecipient(Mail_T list, const char *recipient) {
         for (Mail_T l = list; l; l = l->next)
                 if (IS(recipient, l->to))
                         return true;

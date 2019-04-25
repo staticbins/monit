@@ -72,7 +72,7 @@ struct T {
         struct {
                 struct {
                         bool enabled;
-                        const char *color;
+                        char *color;
                 } header;
         } options;
         unsigned int columnsCount;
@@ -155,7 +155,7 @@ static void _cacheColor(BoxColumn_T *column) {
 // Print a row. If wrap is enabled and the text excceeds width, return true (printed text up to column width, repetition possible to print the rest), otherwise false
 static bool _printRow(T t) {
         bool repeat = false;
-        for (unsigned int i = 0; i < t->columnsCount; i++) {
+        for (int i = 0; i < t->columnsCount; i++) {
                 StringBuffer_append(t->b, COLOR_DARKGRAY BOX_VERTICAL COLOR_RESET " ");
                 if (*(t->columns[i]._color))
                         StringBuffer_append(t->b, "%s", t->columns[i]._color);

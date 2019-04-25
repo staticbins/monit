@@ -62,7 +62,7 @@ char *file_findControlFile(void);
  * @param pidfile The name of the pidfile to create
  * @return true if the file was created, otherwise false.
  */
-bool file_createPidFile(const char *pidfile);
+bool file_createPidFile(char *pidfile);
 
 
 /**
@@ -75,7 +75,7 @@ bool file_createPidFile(const char *pidfile);
  * @param permmask The permission mask for the file
  * @return true if the test succeeded otherwise false
  */
-bool file_checkStat(const char *filename, const char *description, mode_t permmask);
+bool file_checkStat(char *filename, char *description, int permmask);
 
 
 /**
@@ -84,7 +84,7 @@ bool file_checkStat(const char *filename, const char *description, mode_t permma
  * @param path The fully qualified path to the directory
  * @return true if the succeeded otherwise false
  */
-bool file_checkQueueDirectory(const char *path);
+bool file_checkQueueDirectory(char *path);
 
 
 /**
@@ -93,7 +93,7 @@ bool file_checkQueueDirectory(const char *path);
  * @param mode The queue limit
  * @return true if the succeeded otherwise false
  */
-bool file_checkQueueLimit(const char *path, int limit);
+bool file_checkQueueLimit(char *path, int limit);
 
 
 /**
@@ -103,7 +103,7 @@ bool file_checkQueueLimit(const char *path, int limit);
  * @param size Size of the data to be written
  * @return true if the succeeded otherwise false
  */
-bool file_writeQueue(FILE *file, const void *data, size_t size);
+bool file_writeQueue(FILE *file, void *data, size_t size);
 
 
 /**
@@ -125,7 +125,7 @@ void *file_readQueue(FILE *file, size_t *size);
  * @param bytes_read number of bytes read to buffer
  * @return true if succeeded otherwise false.
  */
-bool file_readProc(char *buf, int buf_size, const char *name, int pid, int *bytes_read);
+bool file_readProc(char *buf, int buf_size, char *name, int pid, int *bytes_read);
 
 
 #endif

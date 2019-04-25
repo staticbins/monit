@@ -89,7 +89,7 @@ static bool _getDiskUsage(void *_inf) {
 }
 
 
-static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
+static bool _getDummyDiskActivity(void *_inf) {
         return true;
 }
 

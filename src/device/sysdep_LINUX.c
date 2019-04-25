@@ -120,7 +120,7 @@ static bool _getDiskUsage(void *_inf) {
 }
 
 
-static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
+static bool _getDummyDiskActivity(void *_inf) {
         return true;
 }
 
@@ -173,7 +173,7 @@ static bool _getNfsDiskActivity(void *_inf) {
         }
         unsigned long long now = Time_milli();
         char line[PATH_MAX];
-        char pattern[2 * PATH_MAX];
+        char pattern[PATH_MAX];
         bool found = false;
         snprintf(pattern, sizeof(pattern), "device %s ", inf->filesystem->object.device);
         while (fgets(line, sizeof(line), f)) {
@@ -234,7 +234,7 @@ static bool _getZfsDiskActivity(void *_inf) {
 }
 
 
-static bool _getVxfsDiskActivity(void *_inf) {
+static bool _getSysfsBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
 
         // Get the major and minor node number to find the statistic data.

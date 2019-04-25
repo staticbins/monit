@@ -233,7 +233,7 @@ static char *_getUptime(time_t delta, char s[256]) {
 }
 
 
-__attribute__((format (printf, 7, 8))) static void _formatStatus(const char *name, Event_Type errorType, Output_Type type, HttpResponse res, Service_T s, bool validValue, const char *value, ...) {
+static void _formatStatus(const char *name, Event_Type errorType, Output_Type type, HttpResponse res, Service_T s, bool validValue, const char *value, ...) {
         if (type == HTML) {
                 StringBuffer_append(res->outputbuffer, "<tr><td>%c%s</td>", toupper(name[0]), name + 1);
         } else {
@@ -282,10 +282,10 @@ __attribute__((format (printf, 7, 8))) static void _formatStatus(const char *nam
 }
 
 
-static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *name) {
-        char header[STRLEN] = {};
-        if (Statistics_initialized(&(io->bytes))) {
-                snprintf(header, sizeof(header), "%s bytes", name);
+static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *header, const char *name) {
+        bool hasOps = Statistics_initialized(&(io->operations));
+        bool hasBytes = Statistics_initialized(&(io->bytes));
+        if (hasOps && hasBytes) {
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
                 _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytes)), (char[10]){}));
         }
@@ -404,8 +404,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         if (s->inf.filesystem->f_filesfree > 0)
                                                 _formatStatus("inodes free", Event_Resource, type, res, s, true, "%lld [%.1f%%]", s->inf.filesystem->f_filesfree, (float)100 * (float)s->inf.filesystem->f_filesfree / (float)s->inf.filesystem->f_files);
                                 }
-                                _printIOStatistics(type, res, s, &(s->inf.filesystem->read), "read");
-                                _printIOStatistics(type, res, s, &(s->inf.filesystem->write), "write");
+                                _printIOStatistics(type, res, s, &(s->inf.filesystem->read), "read", "read");
+                                _printIOStatistics(type, res, s, &(s->inf.filesystem->write), "write", "write");
                                 bool hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
                                 bool hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
                                 bool hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));

@@ -112,7 +112,7 @@ static struct mylogpriority {
 /**
  * Open a log file or syslog
  */
-static bool open_log(void) {
+static bool open_log() {
         if (Run.flags & Run_UseSyslog) {
                 openlog(prog, LOG_PID, Run.facility);
         } else {

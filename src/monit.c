@@ -107,7 +107,7 @@
 
 static void  do_init(void);                   /* Initialize this application */
 static void  do_reinit(void);       /* Re-initialize the runtime application */
-static void  do_action(List_T);          /* Dispatch to the submitted action */
+static void  do_action(int, char **);    /* Dispatch to the submitted action */
 static void  do_exit(bool);                           /* Finalize monit */
 static void  do_default(void);                          /* Do default action */
 static void  handle_options(int, char **, List_T); /* Handle program options */
@@ -136,18 +136,19 @@ Sem_T    heartbeatCond;
 Mutex_T  heartbeatMutex;
 static volatile bool heartbeatRunning = false;
 
-const char *actionnames[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
-const char *modenames[] = {"active", "passive"};
-const char *onrebootnames[] = {"start", "nostart", "laststate"};
-const char *checksumnames[] = {"UNKNOWN", "MD5", "SHA1"};
-const char *operatornames[] = {"less than", "less than or equal to", "greater than", "greater than or equal to", "equal to", "not equal to", "changed"};
-const char *operatorshortnames[] = {"<", "<=", ">", ">=", "=", "!=", "<>"};
-const char *servicetypes[] = {"Filesystem", "Directory", "File", "Process", "Remote Host", "System", "Fifo", "Program", "Network"};
-const char *pathnames[] = {"Path", "Path", "Path", "Pid file", "Path", "", "Path"};
-const char *icmpnames[] = {"Reply", "", "", "Destination Unreachable", "Source Quench", "Redirect", "", "", "Ping", "", "", "Time Exceeded", "Parameter Problem", "Timestamp Request", "Timestamp Reply", "Information Request", "Information Reply", "Address Mask Request", "Address Mask Reply"};
-const char *socketnames[] = {"unix", "IP", "IPv4", "IPv6"};
-const char *timestampnames[] = {"modify/change time", "access time", "change time", "modify time"};
-const char *httpmethod[] = {"", "HEAD", "GET"};
+char *actionnames[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
+char *modenames[] = {"active", "passive"};
+char *onrebootnames[] = {"start", "nostart", "laststate"};
+char *checksumnames[] = {"UNKNOWN", "MD5", "SHA1"};
+char *operatornames[] = {"less than", "less than or equal to", "greater than", "greater than or equal to", "equal to", "not equal to", "changed"};
+char *operatorshortnames[] = {"<", "<=", ">", ">=", "=", "!=", "<>"};
+char *servicetypes[] = {"Filesystem", "Directory", "File", "Process", "Remote Host", "System", "Fifo", "Program", "Network"};
+char *pathnames[] = {"Path", "Path", "Path", "Pid file", "Path", "", "Path"};
+char *icmpnames[] = {"Reply", "", "", "Destination Unreachable", "Source Quench", "Redirect", "", "", "Ping", "", "", "Time Exceeded", "Parameter Problem", "Timestamp Request", "Timestamp Reply", "Information Request", "Information Reply", "Address Mask Request", "Address Mask Reply"};
+char *sslnames[] = {"auto", "v2", "v3", "tlsv1", "tlsv1.1", "tlsv1.2", "tlsv1.3"};
+char *socketnames[] = {"unix", "IP", "IPv4", "IPv6"};
+char *timestampnames[] = {"modify/change time", "access time", "change time", "modify time"};
+char *httpmethod[] = {"", "HEAD", "GET"};
 
 
 /* ------------------------------------------------------------------ Public */

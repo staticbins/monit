@@ -326,7 +326,7 @@ static void _setPingOptions(int socket, struct addrinfo *addr) {
 }
 
 
-static bool _sendPing(const char *hostname, int socket, struct addrinfo *addr, int size, int retry, int maxretries, int id, long long started) {
+static bool _sendPing(const char *hostname, int socket, struct addrinfo *addr, int size, int retry, int maxretries, int id, int64_t started) {
         char buf[ICMP_MAXSIZE] = {};
         int header_len = 0;
         unsigned long out_len = 0;

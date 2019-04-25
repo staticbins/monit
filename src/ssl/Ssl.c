@@ -212,7 +212,7 @@ static Hash_Type _optionsChecksumType(Hash_Type checksumType) {
 
 
 static bool _setVersion(SSL_CTX *ctx, SslOptions_T options) {
-        unsigned long versionMask = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1;
+        long version = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1;
 #if defined HAVE_TLSV1_1
         versionMask |= SSL_OP_NO_TLSv1_1;
 #endif
@@ -302,7 +302,7 @@ static bool _setVersion(SSL_CTX *ctx, SslOptions_T options) {
 }
 
 
-static bool _retry(int socket, int *timeout, bool (*callback)(int socket, time_t milliseconds)) {
+static bool _retry(int socket, int *timeout, int (*callback)(int socket, time_t milliseconds)) {
         long long start = Time_milli();
         if (callback(socket, *timeout)) {
                 long long stop = Time_milli();
@@ -528,6 +528,7 @@ void Ssl_threadCleanup() {
 }
 
 
+void Ssl_setFipsMode(bool enabled) {
 #ifdef OPENSSL_FIPS
 void Ssl_setFipsMode(bool enabled) {
         if (enabled && ! FIPS_mode() && ! FIPS_mode_set(1))
