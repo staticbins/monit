@@ -25,7 +25,7 @@
 
 #ifndef LIST_INCLUDED
 #define LIST_INCLUDED
-
+#include <stdbool.h>
 
 /**
  * A <b>List</b> is a sequence of zero or more elements. A List can be used
@@ -136,7 +136,7 @@ void List_cat(T L, T list);
  * return true if element e is found otherwise false
  * @return The element found or NULL if not found
  */
-void *List_find(T L, _Bool(*predicate)(void *e));
+void *List_find(T L, bool(*predicate)(void *e));
 
 
 /**

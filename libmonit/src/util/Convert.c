@@ -34,7 +34,7 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-static inline _Bool _isIntegral(double x, double precision) {
+static inline bool _isIntegral(double x, double precision) {
     return fabs(x - round(x)) < precision;
 }
 

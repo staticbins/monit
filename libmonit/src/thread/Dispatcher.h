@@ -71,7 +71,7 @@ void Dispatcher_free(T *D);
  * @param data The data to be processed
  * @return true if data was added to the queue otherwise false.
  */
-_Bool Dispatcher_add(T D, void *data);
+bool Dispatcher_add(T D, void *data);
 
 
 #undef T

@@ -46,7 +46,7 @@
 
 void(*_AbortHandler)(const char *error, va_list ap) = NULL;
 void(*_ErrorHandler)(const char *error, va_list ap) = NULL;
-_Bool MonitDebug = false;
+bool MonitDebug = false;
 
 
 /* ---------------------------------------------------------------- Public */
@@ -67,7 +67,7 @@ void Bootstrap_setErrorHandler(void(*errorHandler)(const char *error, va_list ap
 }
 
 
-void Bootstrap_setDebug(_Bool flag) {
+void Bootstrap_setDebug(bool flag) {
         MonitDebug = flag;
 }
 

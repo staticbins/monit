@@ -150,7 +150,7 @@ void *List_remove(T L, void *e) {
         return NULL;
 }
 
-void *List_find(T L, _Bool(*predicate)(void *e)) {
+void *List_find(T L, bool(*predicate)(void *e)) {
         assert(L);
         assert(predicate);
         for (list_t p = L->head; p; p = p->next) {
