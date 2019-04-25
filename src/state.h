@@ -46,7 +46,7 @@
  * Open the state file
  * @return true if succeeded, otherwise false
  */
-boolean_t State_open(void);
+bool State_open(void);
 
 
 /**

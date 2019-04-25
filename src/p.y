@@ -136,9 +136,9 @@
 
 
 struct precedence_t {
-        boolean_t daemon;
-        boolean_t logfile;
-        boolean_t pidfile;
+        bool daemon;
+        bool logfile;
+        bool pidfile;
 };
 
 struct rate_t {
@@ -216,7 +216,7 @@ static Digest_Type digesttype = Digest_Cleartext;
 
 static void  preparse(void);
 static void  postparse(void);
-static boolean_t _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing);
+static bool _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing);
 static void  addmail(char *, Mail_T, Mail_T *);
 static Service_T createservice(Service_Type, char *, char *, State_Type (*)(Service_T));
 static void  addservice(Service_T);
@@ -245,7 +245,7 @@ static void  addcommand(int, unsigned);
 static void  addargument(char *);
 static void  addmmonit(Mmonit_T);
 static void  addmailserver(MailServer_T);
-static boolean_t addcredentials(char *, char *, Digest_Type, boolean_t);
+static bool addcredentials(char *, char *, Digest_Type, bool);
 #ifdef HAVE_LIBPAM
 static void  addpamauth(char *, int);
 #endif
@@ -301,7 +301,7 @@ static void  check_depend(void);
 static void  setsyslog(char *);
 static command_t copycommand(command_t);
 static int verifyMaxForward(int);
-static void _setPEM(char **store, char *path, const char *description, boolean_t isFile);
+static void _setPEM(char **store, char *path, const char *description, bool isFile);
 static void _setSSLOptions(SslOptions_T options);
 static void addsecurityattribute(char *, Action_Type, Action_Type);
 
@@ -2940,7 +2940,7 @@ void yywarning2(const char *s, ...) {
  * The Parser hook - start parsing the control file
  * Returns true if parsing succeeded, otherwise false
  */
-boolean_t parse(char *controlfile) {
+bool parse(char *controlfile) {
         ASSERT(controlfile);
 
         servicelist = tail = current = NULL;
@@ -3124,7 +3124,7 @@ static void postparse() {
 }
 
 
-static boolean_t _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing) {
+static bool _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing) {
         struct addrinfo *result, hints = {.ai_flags = AI_NUMERICHOST};
         int status = getaddrinfo(ip, NULL, &hints, &result);
         if (status == 0) {
@@ -4420,7 +4420,7 @@ static void addpamauth(char* groupname, int readonly) {
 /*
  * Add Basic Authentication credentials
  */
-static boolean_t addcredentials(char *uname, char *passwd, Digest_Type dtype, boolean_t readonly) {
+static bool addcredentials(char *uname, char *passwd, Digest_Type dtype, bool readonly) {
         Auth_T c;
 
         ASSERT(uname);
@@ -4800,8 +4800,8 @@ static void check_depend() {
         Service_T s;
         Service_T depends_on = NULL;
         Service_T* dlt = &depend_list; /* the current tail of it                                 */
-        boolean_t done;                /* no unvisited nodes left?                               */
-        boolean_t found_some;          /* last iteration found anything new ?                    */
+        bool done;                /* no unvisited nodes left?                               */
+        bool found_some;          /* last iteration found anything new ?                    */
         depend_list = NULL;            /* depend_list will be the topological sorted servicelist */
 
         do {
@@ -4913,7 +4913,7 @@ static command_t copycommand(command_t source) {
 }
 
 
-static void _setPEM(char **store, char *path, const char *description, boolean_t isFile) {
+static void _setPEM(char **store, char *path, const char *description, bool isFile) {
         if (*store) {
                 yyerror2("Duplicate %s", description);
         } else if (! File_exist(path)) {

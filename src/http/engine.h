@@ -50,14 +50,14 @@ void Engine_cleanup(void);
  * @param pattern A hostname, IP address or network identifier in IP/mask format to be added to the allow list
  * @return true if the the pattern was added, otherwise false
  */
-boolean_t Engine_addAllow(char *pattern);
+bool Engine_addAllow(char *pattern);
 
 
 /**
  * Are any hosts present in the host allow list?
  * @return true if the host allow list is non-empty, otherwise false
  */
-boolean_t Engine_hasAllow(void);
+bool Engine_hasAllow(void);
 
 
 /**

@@ -36,7 +36,7 @@
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+bool Filesystem_getByMountpoint(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         LogError("Unsupported filesystem data collection method\n");
@@ -44,7 +44,7 @@ boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
 }
 
 
-boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
+bool Filesystem_getByDevice(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         LogError("Unsupported filesystem data collection method\n");

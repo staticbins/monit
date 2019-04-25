@@ -116,7 +116,7 @@ void daemonize() {
  * @param sig Signal to send daemon to
  * @return true if signal was send, otherwise false
  */
-boolean_t kill_daemon(int sig) {
+bool kill_daemon(int sig) {
         pid_t pid;
         if ((pid = exist_daemon()) > 0) {
                 if (kill(pid, sig) < 0) {

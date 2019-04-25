@@ -123,7 +123,7 @@
 
 #define T Ssl_T
 struct T {
-        boolean_t accepted;
+        bool accepted;
         int socket;
         SslOptions_T options;
         SSL *handler;
@@ -156,12 +156,12 @@ static Ssl_Version _optionsVersion(int version) {
 }
 
 
-static boolean_t _optionsVerify(short verify) {
+static bool _optionsVerify(short verify) {
         return verify != -1 ? verify : Run.ssl.verify != -1 ? Run.ssl.verify : false;
 }
 
 
-static boolean_t _optionsAllowSelfSigned(short allowSelfSigned) {
+static bool _optionsAllowSelfSigned(short allowSelfSigned) {
         return allowSelfSigned != -1 ? allowSelfSigned : Run.ssl.allowSelfSigned != -1 ? Run.ssl.allowSelfSigned : false;
 }
 
@@ -201,7 +201,7 @@ static Hash_Type _optionsChecksumType(Hash_Type checksumType) {
 }
 
 
-static boolean_t _setVersion(SSL_CTX *ctx, SslOptions_T options) {
+static bool _setVersion(SSL_CTX *ctx, SslOptions_T options) {
         long version = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1;
 #if defined HAVE_TLSV1_1
         version |= SSL_OP_NO_TLSv1_1;
@@ -289,7 +289,7 @@ static boolean_t _setVersion(SSL_CTX *ctx, SslOptions_T options) {
 }
 
 
-static boolean_t _retry(int socket, int *timeout, int (*callback)(int socket, time_t milliseconds)) {
+static bool _retry(int socket, int *timeout, int (*callback)(int socket, time_t milliseconds)) {
         long long start = Time_milli();
         if (callback(socket, *timeout)) {
                 long long stop = Time_milli();
@@ -437,7 +437,7 @@ static int _verifyClientCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
 }
 
 
-static boolean_t _setServerNameIdentification(T C, const char *hostname) {
+static bool _setServerNameIdentification(T C, const char *hostname) {
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
         struct sockaddr_storage addr;
         // If the name is set and we use TLS protocol, enable the SNI extension (provided the hostname value is not an IP address)
@@ -454,7 +454,7 @@ static boolean_t _setServerNameIdentification(T C, const char *hostname) {
 }
 
 
-static boolean_t _setClientCertificate(T C, const char *file) {
+static bool _setClientCertificate(T C, const char *file) {
         if (SSL_CTX_use_certificate_chain_file(C->ctx, file) != 1) {
                 LogError("SSL client certificate chain loading failed: %s\n", SSLERROR);
                 return false;
@@ -515,7 +515,7 @@ void Ssl_threadCleanup() {
 }
 
 
-void Ssl_setFipsMode(boolean_t enabled) {
+void Ssl_setFipsMode(bool enabled) {
 #ifdef OPENSSL_FIPS
         if (enabled && ! FIPS_mode() && ! FIPS_mode_set(1))
                 THROW(AssertException, "SSL: cannot enter FIPS mode -- %s", SSLERROR);
@@ -592,7 +592,7 @@ void Ssl_free(T *C) {
 
 void Ssl_close(T C) {
         ASSERT(C);
-        boolean_t retry = false;
+        bool retry = false;
         int timeout = Run.limits.networkTimeout;
         do {
                 int rv = SSL_shutdown(C->handler);
@@ -629,7 +629,7 @@ void Ssl_connect(T C, int socket, int timeout, const char *name) {
         SSL_set_connect_state(C->handler);
         SSL_set_fd(C->handler, C->socket);
         _setServerNameIdentification(C, name);
-        boolean_t retry = false;
+        bool retry = false;
         do {
                 int rv = SSL_connect(C->handler);
                 if (rv < 0) {
@@ -661,7 +661,7 @@ int Ssl_write(T C, void *b, int size, int timeout) {
         ASSERT(C);
         int n = 0;
         if (size > 0) {
-                boolean_t retry = false;
+                bool retry = false;
                 do {
                         switch (SSL_get_error(C->handler, (n = SSL_write(C->handler, b, size)))) {
                                 case SSL_ERROR_NONE:
@@ -702,7 +702,7 @@ int Ssl_read(T C, void *b, int size, int timeout) {
         ASSERT(C);
         int n = 0;
         if (size > 0) {
-                boolean_t retry = false;
+                bool retry = false;
                 do {
                         switch (SSL_get_error(C->handler, (n = SSL_read(C->handler, b, size)))) {
                                 case SSL_ERROR_NONE:
@@ -941,13 +941,13 @@ void SslServer_freeConnection(SslServer_T S, T *C) {
 }
 
 
-boolean_t SslServer_accept(T C, int socket, int timeout) {
+bool SslServer_accept(T C, int socket, int timeout) {
         ASSERT(C);
         ASSERT(socket >= 0);
         C->socket = socket;
         SSL_set_accept_state(C->handler);
         SSL_set_fd(C->handler, C->socket);
-        boolean_t retry = false;
+        bool retry = false;
         do {
                 int rv = SSL_accept(C->handler);
                 if (rv < 0) {

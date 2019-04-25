@@ -154,7 +154,7 @@ static time_t _getStartTime() {
 
 
 // parse /proc/PID/stat 
-static boolean_t _parseProcPidStat(Proc_T proc) {
+static bool _parseProcPidStat(Proc_T proc) {
         char buf[4096];
         char *tmp = NULL;
         if (! file_readProc(buf, sizeof(buf), "stat", proc->pid, NULL)) {
@@ -190,7 +190,7 @@ static boolean_t _parseProcPidStat(Proc_T proc) {
 
 
 // parse /proc/PID/status
-static boolean_t _parseProcPidStatus(Proc_T proc) {
+static bool _parseProcPidStatus(Proc_T proc) {
         char buf[4096];
         char *tmp = NULL;
         if (! file_readProc(buf, sizeof(buf), "status", proc->pid, NULL)) {
@@ -218,7 +218,7 @@ static boolean_t _parseProcPidStatus(Proc_T proc) {
 
 
 // parse /proc/PID/io
-static boolean_t _parseProcPidIO(Proc_T proc) {
+static bool _parseProcPidIO(Proc_T proc) {
         char buf[4096];
         char *tmp = NULL;
         if (_statistics.hasIOStatistics) {
@@ -246,7 +246,7 @@ static boolean_t _parseProcPidIO(Proc_T proc) {
 
 
 // parse /proc/PID/cmdline
-static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
+static bool _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
         if (pflags & ProcessEngine_CollectCommandLine) {
                 int bytes = 0;
                 char buf[4096];
@@ -265,7 +265,7 @@ static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
 
 
 // parse /proc/PID/attr/current
-static boolean_t _parseProcPidAttrCurrent(Proc_T proc) {
+static bool _parseProcPidAttrCurrent(Proc_T proc) {
         if (file_readProc(proc->secattr, sizeof(proc->secattr), "attr/current", proc->pid, NULL)) {
                 Str_trim(proc->secattr);
                 return true;
@@ -286,7 +286,7 @@ static double _usagePercent(unsigned long long previous, unsigned long long curr
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         if ((hz = sysconf(_SC_CLK_TCK)) <= 0.) {
                 DEBUG("system statistic error -- cannot get hz: %s\n", STRERROR);
                 return false;
@@ -425,7 +425,7 @@ int getloadavg_sysdep(double *loadv, int nelem) {
  * This routine returns real memory in use.
  * @return: true if successful, false if failed
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         char          *ptr;
         char           buf[2048];
         unsigned long  mem_free = 0UL;
@@ -489,8 +489,8 @@ error:
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
-        boolean_t rv;
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
+        bool rv;
         unsigned long long cpu_total;
         unsigned long long cpu_user;
         unsigned long long cpu_nice;

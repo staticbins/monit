@@ -1133,10 +1133,10 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                 case Resource_ServiceTime:
                         {
                                 double deltaTime = 0.;
-                                boolean_t hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
-                                boolean_t hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
-                                boolean_t hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
-                                boolean_t hasRunTime = Statistics_initialized(&(s->inf.filesystem->time.run));
+                                bool hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
+                                bool hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
+                                bool hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
+                                bool hasRunTime = Statistics_initialized(&(s->inf.filesystem->time.run));
                                 // Some platforms have detailed R/W time (Linux, MacOS), other just total R/W time (*BSD), Solaris has total R/W time with wait/run granularity. To make the test cross-platform and simple, we operate on sum
                                 if (! hasReadTime && ! hasWriteTime && ! hasWaitTime && ! hasRunTime) {
                                         DEBUG("'%s' warning -- no data are available for service time test\n", s->name);
@@ -1192,7 +1192,7 @@ static void _checkTimeout(Service_T s) {
 }
 
 
-static boolean_t _incron(Service_T s, time_t now) {
+static bool _incron(Service_T s, time_t now) {
         if ((now - s->every.last_run) > 59) { // Minute is the lowest resolution, so only run once per minute
                 if (Time_incron(s->every.spec.cron, now)) {
                         s->every.last_run = now;
@@ -1206,7 +1206,7 @@ static boolean_t _incron(Service_T s, time_t now) {
 /**
  * Returns true if validation should be skiped for this service in this cycle, otherwise false. Handle every statement
  */
-static boolean_t _checkSkip(Service_T s) {
+static bool _checkSkip(Service_T s) {
         ASSERT(s);
         time_t now = Time_now();
         if (s->every.type == Every_SkipCycles) {
@@ -1247,7 +1247,7 @@ static boolean_t _checkSkip(Service_T s) {
 /**
  * Returns true if scheduled action was performed
  */
-static boolean_t _doScheduledAction(Service_T s) {
+static bool _doScheduledAction(Service_T s) {
         int rv = false;
         Action_Type action = s->doaction;
         if (action != Action_Ignored) {
@@ -1309,7 +1309,7 @@ int validate() {
 State_Type check_process(Service_T s) {
         ASSERT(s);
         State_Type rv = State_Succeeded;
-        boolean_t checkResources = false;
+        bool checkResources = false;
         pid_t pid = ProcessTree_findProcess(s);
         if (! pid) {
                 for (NonExist_T l = s->nonexistlist; l; l = l->next) {
@@ -1740,7 +1740,7 @@ State_Type check_system(Service_T s) {
 
 
 State_Type check_net(Service_T s) {
-        boolean_t havedata = true;
+        bool havedata = true;
         State_Type rv = State_Succeeded;
         TRY
         {

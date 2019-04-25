@@ -231,7 +231,7 @@ typedef struct mystate0 {
 
 static int file = -1;
 static uint64_t booted = 0ULL;
-static boolean_t _stateDirty = false;
+static bool _stateDirty = false;
 
 
 /* ----------------------------------------------------------------- Private */
@@ -491,7 +491,7 @@ static void _restoreV0(int services) {
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t State_open() {
+bool State_open() {
         State_close();
         if ((file = open(Run.files.state, O_RDWR | O_CREAT, 0600)) == -1) {
                 LogError("State file '%s': cannot open for write -- %s\n", Run.files.state, STRERROR);

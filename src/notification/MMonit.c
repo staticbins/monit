@@ -69,7 +69,7 @@
  * @param D Data to send
  * @return true if the message sending succeeded otherwise false
  */
-static boolean_t _send(Socket_T socket, Mmonit_T C, StringBuffer_T sb) {
+static bool _send(Socket_T socket, Mmonit_T C, StringBuffer_T sb) {
         char *auth = Util_getBasicAuthHeader(C->url->user, C->url->password);
         const void *body = NULL;
         size_t bodyLength = 0;
@@ -110,7 +110,7 @@ static boolean_t _send(Socket_T socket, Mmonit_T C, StringBuffer_T sb) {
  * @param C An mmonit object
  * @return true if the response is valid otherwise false
  */
-static boolean_t _receive(Socket_T socket, Mmonit_T C) {
+static bool _receive(Socket_T socket, Mmonit_T C) {
         int  status;
         char buf[STRLEN];
         if (! Socket_readLine(socket, buf, sizeof(buf))) {

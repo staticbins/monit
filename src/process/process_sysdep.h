@@ -25,11 +25,11 @@
 #ifndef MONIT_PROCESS_SYSDEP_H
 #define MONIT_PROCESS_SYSDEP_H
 
-boolean_t init_process_info_sysdep(void);
+bool init_process_info_sysdep(void);
 int init_proc_info_sysdep(void);
 int getloadavg_sysdep (double *, int);
-boolean_t used_system_memory_sysdep(SystemInfo_T *);
-boolean_t used_system_cpu_sysdep(SystemInfo_T *);
+bool used_system_memory_sysdep(SystemInfo_T *);
+bool used_system_cpu_sysdep(SystemInfo_T *);
 int    initprocesstree_sysdep(ProcessTree_T **, ProcessEngine_Flags);
 
 #endif

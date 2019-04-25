@@ -28,6 +28,8 @@
 
 #include "config.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 #ifdef HAVE_KINFO_H
 #include <kinfo.h>
@@ -89,9 +91,6 @@
 #include <sys/socket.h>
 #endif
 
-#ifdef HAVE_MACH_BOOLEAN_H
-#include <mach/boolean.h>
-#endif
 #ifdef HAVE_UVM_UVM_PARAM_H
 #include <uvm/uvm_param.h>
 #endif
@@ -102,20 +101,6 @@
 #include <inttypes.h>
 #else
 #define PRIu64 "llu"
-#endif
-
-
-//FIXME: we can export this type in libmonit
-#ifndef HAVE_BOOLEAN_T
-#undef true
-#undef false
-typedef enum {
-        false = 0,
-        true
-} __attribute__((__packed__)) boolean_t;
-#else
-#define false 0
-#define true  1
 #endif
 
 
@@ -161,6 +146,14 @@ typedef enum {
 
 #define START_DELAY        0
 
+
+/* ------------------------------------------------------ Type definitions */
+
+
+// The internal 8-bit char type
+#ifndef HAVE_UCHAR_T
+typedef unsigned char uchar_t;
+#endif
 
 //FIXME: refactor Run_Flags to bit field
 typedef enum {
@@ -467,8 +460,8 @@ typedef struct Limits_T {
 typedef struct command_t {
         char *arg[ARGMAX];                             /**< Program with arguments */
         short length;                       /**< The length of the arguments array */
-        boolean_t has_uid;      /**< true if a new uid is defined for this Command */
-        boolean_t has_gid;      /**< true if a new gid is defined for this Command */
+        bool has_uid;      /**< true if a new uid is defined for this Command */
+        bool has_gid;      /**< true if a new gid is defined for this Command */
         uid_t uid;         /**< The user id to switch to when running this Command */
         gid_t gid;        /**< The group id to switch to when running this Command */
         unsigned timeout;     /**< Max seconds which we wait for method to execute */
@@ -502,7 +495,7 @@ typedef struct URL_T {
         char *path;                                        /**< URL path     part */
         char *query;                                       /**< URL query    part */
         int   port;                                        /**< URL port     part */
-        boolean_t ipv6;
+        bool ipv6;
 } *URL_T;
 
 
@@ -561,7 +554,7 @@ typedef struct Auth_T {
         char *passwd;                                /**< The users password data */
         char *groupname;                                      /**< PAM group name */
         Digest_Type digesttype;                /**< How did we store the password */
-        boolean_t is_readonly; /**< true if this is a read-only authenticated user*/
+        bool is_readonly; /**< true if this is a read-only authenticated user*/
         struct Auth_T *next;                 /**< Next credential or NULL if last */
 } *Auth_T;
 
@@ -682,7 +675,7 @@ typedef struct Port_T {
                 } generic;
                 struct {
                         Hash_Type hashtype;           /**< Type of hash for a checksum (optional) */
-                        boolean_t hasStatus;                    /**< Is explicit HTTP status set? */
+                        bool hasStatus;                    /**< Is explicit HTTP status set? */
                         Operator_Type operator;                         /**< HTTP status operator */
                         Http_Method method;
                         int status;                                              /**< HTTP status */
@@ -761,8 +754,8 @@ typedef struct Resource_T {
 
 /** Defines timestamp object */
 typedef struct Timestamp_T {
-        boolean_t initialized;              /**< true if timestamp was initialized */
-        boolean_t test_changes;       /**< true if we only should test for changes */
+        bool initialized;              /**< true if timestamp was initialized */
+        bool test_changes;       /**< true if we only should test for changes */
         Timestamp_Type type;
         Operator_Type operator;                           /**< Comparison operator */
         uint64_t time;                                    /**< Timestamp watermark */
@@ -801,7 +794,7 @@ typedef struct Every_T {
 
 
 typedef struct Status_T {
-        boolean_t initialized;                 /**< true if status was initialized */
+        bool initialized;                 /**< true if status was initialized */
         Operator_Type operator;                           /**< Comparison operator */
         int return_value;                /**< Return value of the program to check */
         EventAction_T action;  /**< Description of the action upon event occurence */
@@ -825,8 +818,8 @@ typedef struct Program_T {
 
 /** Defines size object */
 typedef struct Size_T {
-        boolean_t initialized;                   /**< true if size was initialized */
-        boolean_t test_changes;       /**< true if we only should test for changes */
+        bool initialized;                   /**< true if size was initialized */
+        bool test_changes;       /**< true if we only should test for changes */
         Operator_Type operator;                           /**< Comparison operator */
         unsigned long long size;                               /**< Size watermark */
         EventAction_T action;  /**< Description of the action upon event occurence */
@@ -889,8 +882,8 @@ typedef struct Bandwidth_T {
 
 /** Defines checksum object */
 typedef struct Checksum_T {
-        boolean_t initialized;               /**< true if checksum was initialized */
-        boolean_t test_changes;       /**< true if we only should test for changes */
+        bool initialized;               /**< true if checksum was initialized */
+        bool test_changes;       /**< true if we only should test for changes */
         Hash_Type type;                   /**< The type of hash (e.g. md5 or sha1) */
         int   length;                                      /**< Length of the hash */
         MD_T  hash;                     /**< A checksum hash computed for the path */
@@ -900,15 +893,15 @@ typedef struct Checksum_T {
 
 /** Defines permission object */
 typedef struct Perm_T {
-        boolean_t test_changes;       /**< true if we only should test for changes */
+        bool test_changes;       /**< true if we only should test for changes */
         int perm;                                           /**< Access permission */
         EventAction_T action;  /**< Description of the action upon event occurence */
 } *Perm_T;
 
 /** Defines match object */
 typedef struct Match_T {
-        boolean_t ignore;                                        /**< Ignore match */
-        boolean_t not;                                           /**< Invert match */
+        bool ignore;                                        /**< Ignore match */
+        bool not;                                           /**< Invert match */
         char    *match_string;                                   /**< Match string */ //FIXME: union?
         char    *match_path;                         /**< File with matching rules */ //FIXME: union?
         regex_t *regex_comp;                                    /**< Match compile */
@@ -997,7 +990,7 @@ typedef struct IOStatistics_T {
 
 
 typedef struct Device_T {
-        boolean_t mounted;
+        bool mounted;
         int generation;
         int instance;
         char partition;
@@ -1007,8 +1000,8 @@ typedef struct Device_T {
         char module[256];
         char type[64];
         uint64_t flags;
-        boolean_t (*getDiskUsage)(void *);
-        boolean_t (*getDiskActivity)(void *);
+        bool (*getDiskUsage)(void *);
+        bool (*getDiskActivity)(void *);
 } *Device_T;
 
 
@@ -1034,7 +1027,7 @@ typedef struct FileSystemInfo_T {
         int gid;                                              /**< Owner's gid */
         int mode;                                              /**< Permission */
         char flags[STRLEN];                              /**< Filesystem flags */
-        boolean_t flagsChanged;          /**< True if filesystem flags changed */
+        bool flagsChanged;          /**< True if filesystem flags changed */
         struct IOStatistics_T read;                       /**< Read statistics */
         struct IOStatistics_T write;                     /**< Write statistics */
         struct {
@@ -1077,7 +1070,7 @@ typedef struct FifoInfo_T {
 
 
 typedef struct ProcessInfo_T {
-        boolean_t zombie;
+        bool zombie;
         pid_t _pid;                           /**< Process PID from last cycle */
         pid_t _ppid;                   /**< Process parent PID from last cycle */
         pid_t pid;                          /**< Process PID from actual cycle */
@@ -1124,7 +1117,7 @@ typedef struct Service_T {
         /** Common parameters */
         char *name;                                  /**< Service descriptive name */
         State_Type (*check)(struct Service_T *);/**< Service verification function */
-        boolean_t visited; /**< Service visited flag, set if dependencies are used */
+        bool visited; /**< Service visited flag, set if dependencies are used */
         Service_Type type;                             /**< Monitored service type */
         Monitor_State monitor;                             /**< Monitor state flag */
         Monitor_Mode mode;                    /**< Monitoring mode for the service */
@@ -1199,7 +1192,7 @@ typedef struct Service_T {
                 Monitor_Mode      mode;             /**< Monitoring mode for the service */
                 Service_Type      type;                      /**< Monitored service type */
                 State_Type        state;                                 /**< Test state */
-                boolean_t         state_changed;              /**< true if state changed */
+                bool         state_changed;              /**< true if state changed */
                 Handler_Type      flag;                     /**< The handlers state flag */
                 long long         state_map;           /**< Event bitmap for last cycles */
                 unsigned int      count;                             /**< The event rate */
@@ -1338,11 +1331,11 @@ extern char *httpmethod[];
 
 /* FIXME: move remaining prototypes into seperate header-files */
 
-boolean_t parse(char *);
-boolean_t control_service(const char *, Action_Type);
-boolean_t control_service_string(List_T, const char *);
+bool parse(char *);
+bool control_service(const char *, Action_Type);
+bool control_service_string(List_T, const char *);
 void  spawn(Service_T, command_t, Event_T);
-boolean_t log_init(void);
+bool log_init(void);
 void  LogEmergency(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogAlert(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogCritical(const char *, ...) __attribute__((format (printf, 1, 2)));
@@ -1372,12 +1365,12 @@ void  gc(void);
 void  gc_mail_list(Mail_T *);
 void  gccmd(command_t *);
 void  gc_event(Event_T *e);
-boolean_t kill_daemon(int);
+bool kill_daemon(int);
 int   exist_daemon(void);
-boolean_t sendmail(Mail_T);
+bool sendmail(Mail_T);
 void  init_env(void);
 void  monit_http(Httpd_Action);
-boolean_t can_http(void);
+bool can_http(void);
 void set_signal_block(void);
 State_Type check_process(Service_T);
 State_Type check_filesystem(Service_T);
@@ -1390,7 +1383,7 @@ State_Type check_program(Service_T);
 State_Type check_net(Service_T);
 int  check_URL(Service_T s);
 void status_xml(StringBuffer_T, Event_T, int, const char *);
-boolean_t  do_wakeupcall(void);
-boolean_t interrupt(void);
+bool  do_wakeupcall(void);
+bool interrupt(void);
 
 #endif
