@@ -79,7 +79,7 @@ static long cpu_syst_old = 0;
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         size_t size = sizeof(systeminfo.cpu.count);
         if (sysctlbyname("hw.logicalcpu", &systeminfo.cpu.count, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.logicalcpu failed: %s\n", STRERROR);
@@ -244,7 +244,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
  * This routine returns real memory in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         /* Memory */
         vm_statistics_data_t page_info;
         mach_msg_type_number_t count = HOST_VM_INFO_COUNT;
@@ -275,7 +275,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
         long                      total;
         long                      total_new = 0;
         kern_return_t             kret;

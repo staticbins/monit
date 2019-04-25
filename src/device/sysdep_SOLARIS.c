@@ -96,14 +96,14 @@ static struct {
 /* ----------------------------------------------------------------- Private */
 
 
-static boolean_t _getDummyDiskActivity(void *_inf) {
+static bool _getDummyDiskActivity(void *_inf) {
         return true;
 }
 
 
-static boolean_t _getZfsDiskActivity(void *_inf) {
+static bool _getZfsDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        boolean_t rv = false;
+        bool rv = false;
         libzfs_handle_t *z = libzfs_init();
         libzfs_print_on_error(z, 1);
         zpool_handle_t *zp = zpool_open_canfail(z, inf->filesystem->object.key);
@@ -131,9 +131,9 @@ static boolean_t _getZfsDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _getKstatDiskActivity(void *_inf) {
+static bool _getKstatDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        boolean_t rv = false;
+        bool rv = false;
         kstat_ctl_t *kctl = kstat_open();
         if (kctl) {
                 kstat_t *kstat;
@@ -160,7 +160,7 @@ static boolean_t _getKstatDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _getDiskUsage(void *_inf) {
+static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
         if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
@@ -178,18 +178,18 @@ static boolean_t _getDiskUsage(void *_inf) {
 }
 
 
-static boolean_t _compareMountpoint(const char *mountpoint, struct extmnttab *mnt) {
+static bool _compareMountpoint(const char *mountpoint, struct extmnttab *mnt) {
         return IS(mountpoint, mnt->mnt_mountp);
 }
 
 
-static boolean_t _compareDevice(const char *device, struct extmnttab *mnt) {
+static bool _compareDevice(const char *device, struct extmnttab *mnt) {
         char target[PATH_MAX] = {};
         return (IS(device, mnt->mnt_special) || (realpath(mnt->mnt_special, target) && IS(device, target)));
 }
 
 
-static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct extmnttab *mnt)) {
+static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct extmnttab *mnt)) {
         FILE *f = fopen(MNTTAB, "r");
         if (! f) {
                 LogError("Cannot open %s\n", MNTTAB);
@@ -197,7 +197,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
         }
         resetmnttab(f);
         struct extmnttab mnt;
-        boolean_t rv = false;
+        bool rv = false;
         inf->filesystem->object.generation = _statistics.generation;
         while (getextmntent(f, &mnt, sizeof(struct extmnttab)) == 0) {
                 if (compare(path, &mnt)) {
@@ -280,7 +280,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 }
 
 
-static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct extmnttab *mnt)) {
+static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct extmnttab *mnt)) {
         struct stat sb;
         if (stat(MNTTAB, &sb) != 0 || _statistics.timestamp != (uint64_t)((double)sb.st_mtim.tv_sec * 1000. + (double)sb.st_mtim.tv_nsec / 1000000.)) {
                 DEBUG("Mount notification: change detected\n");
@@ -300,14 +300,14 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+bool Filesystem_getByMountpoint(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareMountpoint);
 }
 
 
-boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
+bool Filesystem_getByDevice(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareDevice);

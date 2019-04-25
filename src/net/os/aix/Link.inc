@@ -32,7 +32,7 @@
  */
 
 
-static boolean_t _update(T L, const char *interface) {
+static bool _update(T L, const char *interface) {
         perfstat_id_t id;
         perfstat_netinterface_t buf;
         snprintf(id.name, sizeof(id.name), interface);

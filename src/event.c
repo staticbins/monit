@@ -137,7 +137,7 @@ static void _saveState(long id, State_Type state) {
  * @param S Actual posted state
  * @return The event state
  */
-static boolean_t _checkState(Event_T E, State_Type S) {
+static bool _checkState(Event_T E, State_Type S) {
         ASSERT(E);
         int count = 0;
         State_Type state = (S == State_Succeeded || S == State_ChangedNot) ? State_Succeeded : State_Failed; /* translate to 0/1 class */
@@ -198,7 +198,7 @@ static void _queueAdd(Event_T E) {
                 return;
         }
 
-        boolean_t rv;
+        bool rv;
 
         /* write event structure version */
         int version = EVENT_VERSION;
@@ -245,7 +245,7 @@ error:
 static void _queueUpdate(Event_T E, const char *file_name) {
         int version = EVENT_VERSION;
         Action_Type action = Event_get_action(E);
-        boolean_t rv;
+        bool rv;
 
         ASSERT(E);
         ASSERT(E->flag != Handler_Succeeded);

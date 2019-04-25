@@ -72,7 +72,7 @@ void SslServer_freeConnection(T S, Ssl_T *C);
  * @param timeout Milliseconds to wait for connection to be established
  * @return true if succeeded or false if failed
  */
-boolean_t SslServer_accept(Ssl_T C, int socket, int timeout);
+bool SslServer_accept(Ssl_T C, int socket, int timeout);
 
 
 #undef T

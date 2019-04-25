@@ -143,6 +143,7 @@
 #include "util/Fmt.h"
 #include "system/Net.h"
 #include "system/Time.h"
+#include "system/System.h"
 #include "exceptions/AssertException.h"
 #include "exceptions/IOException.h"
 
@@ -325,7 +326,7 @@ static void _setPingOptions(int socket, struct addrinfo *addr) {
 }
 
 
-static boolean_t _sendPing(const char *hostname, int socket, struct addrinfo *addr, int size, int retry, int maxretries, int id, int64_t started) {
+static bool _sendPing(const char *hostname, int socket, struct addrinfo *addr, int size, int retry, int maxretries, int id, int64_t started) {
         char buf[ICMP_MAXSIZE] = {};
         int header_len = 0;
         int out_len = 0;
@@ -411,7 +412,7 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                 int64_t stopped = Time_micro();
                 struct sockaddr_storage in_addr;
                 socklen_t addrlen = sizeof(in_addr);
-                boolean_t in_addrmatch = false, in_typematch = false;
+                bool in_addrmatch = false, in_typematch = false;
                 do {
                         n = recvfrom(socket, buf, sizeof(buf), 0, (struct sockaddr *)&in_addr, &addrlen);
                 } while (n == -1 && errno == EINTR);

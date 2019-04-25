@@ -92,7 +92,7 @@ char *Util_digest2Bytes(unsigned char *digest, int mdlen, MD_T result);
  * @param md5_resblock The buffer to write the MD5 result to or NULL to skip the MD5
  * @return false if failed, otherwise true
  */
-boolean_t Util_getStreamDigests(FILE *stream, void *sha_resblock, void *md5_resblock);
+bool Util_getStreamDigests(FILE *stream, void *sha_resblock, void *md5_resblock);
 
 
 /**
@@ -110,7 +110,7 @@ void Util_printHash(char *file);
  * @param bufsize The size of the buffer
  * @return false if failed, otherwise true
  */
-boolean_t Util_getChecksum(char *file, Hash_Type hashtype, char *buf, int bufsize);
+bool Util_getChecksum(char *file, Hash_Type hashtype, char *buf, int bufsize);
 
 
 /**
@@ -136,7 +136,7 @@ Service_T Util_getService(const char *name);
  * @return true if the service name exist in the
  * servicelist, otherwise false
  */
-boolean_t Util_existService(const char *name);
+bool Util_existService(const char *name);
 
 
 /**
@@ -197,7 +197,7 @@ pid_t Util_getPid(char *pidfile);
  * @param url an url string to test
  * @return true if url is url safe otherwise false
  */
-boolean_t Util_isurlsafe(const char *url);
+bool Util_isurlsafe(const char *url);
 
 /**
  * Escape an url string converting unsafe characters to a hex (%xx)
@@ -206,7 +206,7 @@ boolean_t Util_isurlsafe(const char *url);
  * @param isParameterValue true if the string is url parameter value
  * @return the escaped string
  */
-char *Util_urlEncode(char *string, boolean_t isParameterValue);
+char *Util_urlEncode(char *string, bool isParameterValue);
 
 
 /**
@@ -253,7 +253,7 @@ Auth_T Util_getUserCredentials(char *uname);
  * @return true if the passwords match for the given uname otherwise
  * false
  */
-boolean_t Util_checkCredentials(char *uname, char *outside);
+bool Util_checkCredentials(char *uname, char *outside);
 
 
 /**
@@ -268,7 +268,7 @@ void Util_resetInfo(Service_T s);
  * @param s The service to test
  * @return true if available otherwise false
  */
-boolean_t Util_hasServiceStatus(Service_T s);
+bool Util_hasServiceStatus(Service_T s);
 
 
 /**
@@ -290,7 +290,7 @@ char *Util_getHTTPHostHeader(Socket_T s, char *hostBuf, int len);
  * @param rightExpression rval
  * @return the boolean value of the expression
  */
-boolean_t Util_evalQExpression(Operator_Type operator, long long left, long long right);
+bool Util_evalQExpression(Operator_Type operator, long long left, long long right);
 
 
 /**
@@ -300,7 +300,7 @@ boolean_t Util_evalQExpression(Operator_Type operator, long long left, long long
  * @param rightExpression rval
  * @return the boolean value of the expression
  */
-boolean_t Util_evalDoubleQExpression(Operator_Type operator, double left, double right);
+bool Util_evalDoubleQExpression(Operator_Type operator, double left, double right);
 
 
 /*

@@ -55,8 +55,10 @@
 #include "SMTP.h"
 
 // libmonit
-#include "system/Time.h"
 #include "util/Str.h"
+#include "system/Time.h"
+#include "system/System.h"
+#include "exceptions/AssertException.h"
 #include "exceptions/IOException.h"
 
 
@@ -203,8 +205,8 @@ static MailServer_T _connectMTA() {
 }
 
 
-static boolean_t _send(List_T list) {
-        boolean_t failed = false;
+static bool _send(List_T list) {
+        bool failed = false;
         if (List_length(list)) {
                 volatile Mail_T m = NULL;
                 volatile SMTP_T smtp = NULL;
@@ -276,7 +278,7 @@ static boolean_t _send(List_T list) {
 }
 
 
-boolean_t _hasRecipient(Mail_T list, const char *recipient) {
+bool _hasRecipient(Mail_T list, const char *recipient) {
         for (Mail_T l = list; l; l = l->next)
                 if (IS(recipient, l->to))
                         return true;

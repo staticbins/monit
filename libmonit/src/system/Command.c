@@ -495,7 +495,7 @@ Process_T Command_execute(T C) {
         assert(_args(C));
         volatile int exec_error = 0;
         Process_T P = _Process_new();
-        int descriptors = System_getDescriptorsGuarded();
+        int descriptors = System_fds();
         _createPipes(P);
         if ((P->pid = vfork()) < 0) {
                 ERROR("Command: fork failed -- %s\n", System_getLastError());

@@ -63,10 +63,10 @@
 #include "device.h"
 
 
-boolean_t filesystem_usage(Service_T s) {
+bool filesystem_usage(Service_T s) {
         ASSERT(s);
         struct stat sb;
-        boolean_t rv = false;
+        bool rv = false;
         int st = lstat(s->path, &sb);
         if (st == 0) {
                 if (S_ISLNK(sb.st_mode)) {

@@ -37,6 +37,7 @@
 
 // libmonit
 #include "exceptions/IOException.h"
+#include "exceptions/AssertException.h"
 #include "exceptions/ProtocolException.h"
 
 /**
@@ -72,7 +73,7 @@ typedef union ChecksumContext_T {
 
 static void _contentVerify(Port_T P, const char *data) {
         if (P->url_request && P->url_request->regex) {
-                boolean_t rv = false;
+                bool rv = false;
                 char error[512];
                 int regex_return = regexec(P->url_request->regex, data, 0, NULL, 0);
                 switch (P->url_request->operator) {
@@ -173,7 +174,7 @@ static void _checksumVerify(Port_T P, MD_T hash) {
 }
 
 
-static boolean_t _hasHeader(List_T list, const char *name) {
+static bool _hasHeader(List_T list, const char *name) {
         if (list) {
                 for (list_t h = list->head; h; h = h->next) {
                         char *header = h->e;

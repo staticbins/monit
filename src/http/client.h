@@ -32,7 +32,7 @@
  * @param services List of services
  * @return true if succeeded otherwise false
  */
-boolean_t HttpClient_action(const char *action, List_T services);
+bool HttpClient_action(const char *action, List_T services);
 
 
 /**
@@ -40,7 +40,7 @@ boolean_t HttpClient_action(const char *action, List_T services);
  * @param type Report type or NULL
  * @return true if succeeded otherwise false
  */
-boolean_t HttpClient_report(const char *type);
+bool HttpClient_report(const char *type);
 
 
 /**
@@ -49,7 +49,7 @@ boolean_t HttpClient_report(const char *type);
  * @param service Service name or NULL
  * @return true if succeeded otherwise false
  */
-boolean_t HttpClient_status(const char *group, const char *service);
+bool HttpClient_status(const char *group, const char *service);
 
 
 /**
@@ -58,7 +58,7 @@ boolean_t HttpClient_status(const char *group, const char *service);
  * @param service Service name or NULL
  * @return true if succeeded otherwise false
  */
-boolean_t HttpClient_summary(const char *group, const char *service);
+bool HttpClient_summary(const char *group, const char *service);
 
 
 #endif

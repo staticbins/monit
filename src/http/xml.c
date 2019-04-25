@@ -49,13 +49,13 @@
 #include <unistd.h>
 #endif
 
-// libmonit
-#include "util/List.h"
-
 #include "monit.h"
 #include "event.h"
 #include "ProcessTree.h"
 #include "protocol.h"
+
+// libmonit
+#include "util/List.h"
 
 
 /**
@@ -308,10 +308,10 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                 }
                                 _ioStatistics(B, "read", &(S->inf.filesystem->read));
                                 _ioStatistics(B, "write", &(S->inf.filesystem->write));
-                                boolean_t hasReadTime = Statistics_initialized(&(S->inf.filesystem->time.read));
-                                boolean_t hasWriteTime = Statistics_initialized(&(S->inf.filesystem->time.write));
-                                boolean_t hasWaitTime = Statistics_initialized(&(S->inf.filesystem->time.wait));
-                                boolean_t hasRunTime = Statistics_initialized(&(S->inf.filesystem->time.run));
+                                bool hasReadTime = Statistics_initialized(&(S->inf.filesystem->time.read));
+                                bool hasWriteTime = Statistics_initialized(&(S->inf.filesystem->time.write));
+                                bool hasWaitTime = Statistics_initialized(&(S->inf.filesystem->time.wait));
+                                bool hasRunTime = Statistics_initialized(&(S->inf.filesystem->time.run));
                                 if (hasReadTime || hasWriteTime || hasWaitTime || hasRunTime) {
                                         StringBuffer_append(B, "<servicetime>");
                                         if (hasReadTime)

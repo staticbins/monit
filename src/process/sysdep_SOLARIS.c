@@ -108,7 +108,7 @@ static long   old_total = 0;
 
 #define MAXSTRSIZE 80
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         systeminfo.cpu.count = sysconf( _SC_NPROCESSORS_ONLN);
         page_size = getpagesize();
         systeminfo.memory.size = (uint64_t)sysconf(_SC_PHYS_PAGES) * (uint64_t)page_size;
@@ -210,7 +210,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
  * This routine returns kbyte of real memory in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         int                 n, num;
         kstat_ctl_t        *kctl;
         kstat_named_t      *knamed;
@@ -314,7 +314,7 @@ again:
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
         int             ncpu = 0, ncpus;
         long            cpu_user = 0, cpu_syst = 0, cpu_wait = 0, total = 0, diff_total;
         kstat_ctl_t    *kctl;

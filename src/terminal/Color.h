@@ -97,7 +97,7 @@
  * Test terminal color support
  * @return true if colors are supported, otherwise false
  */
-boolean_t Color_support(void);
+bool Color_support(void);
 
 
 /**

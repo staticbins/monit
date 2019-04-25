@@ -90,15 +90,15 @@
 static struct {
         int fd;                                    // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
         int generation;                            // Increment each time the mount table is changed
-        boolean_t (*getBlockDiskActivity)(void *); // Disk activity callback: _getProcfsBlockDiskActivity (old kernels), _getSysfsBlockDiskActivity (new kernels)
-        boolean_t (*getCifsDiskActivity)(void *);  // Disk activity callback: _getCifsDiskActivity if /proc/fs/cifs/Stats is present, otherwise _getDummyDiskActivity
+        bool (*getBlockDiskActivity)(void *); // Disk activity callback: _getProcfsBlockDiskActivity (old kernels), _getSysfsBlockDiskActivity (new kernels)
+        bool (*getCifsDiskActivity)(void *);  // Disk activity callback: _getCifsDiskActivity if /proc/fs/cifs/Stats is present, otherwise _getDummyDiskActivity
 } _statistics = {};
 
 
 /* ----------------------------------------------------------------- Private */
 
 
-static boolean_t _getDiskUsage(void *_inf) {
+static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
         if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
@@ -115,12 +115,12 @@ static boolean_t _getDiskUsage(void *_inf) {
 }
 
 
-static boolean_t _getDummyDiskActivity(void *_inf) {
+static bool _getDummyDiskActivity(void *_inf) {
         return true;
 }
 
 
-static boolean_t _getCifsDiskActivity(void *_inf) {
+static bool _getCifsDiskActivity(void *_inf) {
         Info_T inf = _inf;
         FILE *f = fopen(CIFSSTAT, "r");
         if (! f) {
@@ -129,7 +129,7 @@ static boolean_t _getCifsDiskActivity(void *_inf) {
         }
         uint64_t now = Time_milli();
         char line[PATH_MAX];
-        boolean_t found = false;
+        bool found = false;
         while (fgets(line, sizeof(line), f)) {
                 if (! found) {
                         int index;
@@ -159,7 +159,7 @@ static boolean_t _getCifsDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _getNfsDiskActivity(void *_inf) {
+static bool _getNfsDiskActivity(void *_inf) {
         Info_T inf = _inf;
         FILE *f = fopen(NFSSTAT, "r");
         if (! f) {
@@ -169,7 +169,7 @@ static boolean_t _getNfsDiskActivity(void *_inf) {
         uint64_t now = Time_milli();
         char line[PATH_MAX];
         char pattern[PATH_MAX];
-        boolean_t found = false;
+        bool found = false;
         snprintf(pattern, sizeof(pattern), "device %s ", inf->filesystem->object.device);
         while (fgets(line, sizeof(line), f)) {
                 if (! found && Str_startsWith(line, pattern)) {
@@ -199,7 +199,7 @@ static boolean_t _getNfsDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _getZfsDiskActivity(void *_inf) {
+static bool _getZfsDiskActivity(void *_inf) {
         Info_T inf = _inf;
         char path[PATH_MAX];
         snprintf(path, sizeof(path), "/proc/spl/kstat/zfs/%s/io", inf->filesystem->object.key);
@@ -229,7 +229,7 @@ static boolean_t _getZfsDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _getSysfsBlockDiskActivity(void *_inf) {
+static bool _getSysfsBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
         char path[PATH_MAX];
         snprintf(path, sizeof(path), "/sys/class/block/%s/stat", inf->filesystem->object.key);
@@ -257,7 +257,7 @@ static boolean_t _getSysfsBlockDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _getProcfsBlockDiskActivity(void *_inf) {
+static bool _getProcfsBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
         FILE *f = fopen(DISKSTAT, "r");
         if (f) {
@@ -286,26 +286,26 @@ static boolean_t _getProcfsBlockDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _compareMountpoint(const char *mountpoint, struct mntent *mnt) {
+static bool _compareMountpoint(const char *mountpoint, struct mntent *mnt) {
         return IS(mountpoint, mnt->mnt_dir);
 }
 
 
-static boolean_t _compareDevice(const char *device, struct mntent *mnt) {
+static bool _compareDevice(const char *device, struct mntent *mnt) {
         char target[PATH_MAX] = {};
         // The device listed in /etc/mtab can be a device mapper symlink (e.g. /dev/mapper/centos-root -> /dev/dm-1) ... lookup the device as is first (support for NFS/CIFS/SSHFS/etc.) and fallback to realpath if it didn't match
         return (Str_isEqual(device, mnt->mnt_fsname) || (realpath(mnt->mnt_fsname, target) && Str_isEqual(device, target)));
 }
 
 
-static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct mntent *mnt)) {
+static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct mntent *mnt)) {
         FILE *f = setmntent(MOUNTS, "r");
         if (! f) {
                 LogError("Cannot open %s\n", MOUNTS);
                 return false;
         }
         inf->filesystem->object.generation = _statistics.generation;
-        boolean_t mounted = false;
+        bool mounted = false;
         struct mntent *mnt;
         char flags[STRLEN];
         while ((mnt = getmntent(f))) {
@@ -363,7 +363,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 }
 
 
-static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct mntent *mnt)) {
+static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct mntent *mnt)) {
         // Mount/unmount notification: open the /proc/self/mounts file if we're in daemon mode and keep it open until monit
         // stops, so we can poll for mount table changes
         // FIXME: when libev is added register the mount table handler in libev and stop polling here
@@ -414,14 +414,14 @@ static void __attribute__ ((destructor)) _destructor() {
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+bool Filesystem_getByMountpoint(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareMountpoint);
 }
 
 
-boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
+bool Filesystem_getByDevice(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareDevice);

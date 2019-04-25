@@ -38,7 +38,7 @@
 /* ------------------------------------------------------------- Definitions */
 
 
-static boolean_t _isSolarisX = false;
+static bool _isSolarisX = false;
 
 
 typedef struct Interface_T {
@@ -51,7 +51,7 @@ typedef struct Interface_T {
 
 
 // Parse the interface name like e1000g1 into module:instance -> e1000g:1
-static boolean_t _parseInterface(const char *name, Interface_T interface) {
+static bool _parseInterface(const char *name, Interface_T interface) {
         for (int len = strlen(name), i = len - 1; i >= 0; i--) {
                 if (! isdigit(*(name + i))) {
                         strncpy(interface->module, name, i + 1 < sizeof(interface->module) ? i + 1 : sizeof(interface->module) - 1);
@@ -159,7 +159,7 @@ static void _setStatistics(T L, kstat_t *ksp) {
 }
 
 
-static boolean_t _update(T L, const char *interface) {
+static bool _update(T L, const char *interface) {
         /*
          * Handle IP alias
          */

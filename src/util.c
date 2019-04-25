@@ -124,6 +124,7 @@
 #include "io/File.h"
 #include "util/Fmt.h"
 #include "system/Time.h"
+#include "system/System.h"
 #include "exceptions/AssertException.h"
 #include "exceptions/IOException.h"
 
@@ -372,7 +373,7 @@ static int PAMquery(int num_msg, const struct pam_message **msg, struct pam_resp
 /**
  * Validate login/passwd via PAM service "monit"
  */
-static boolean_t PAMcheckPasswd(const char *login, const char *passwd) {
+static bool PAMcheckPasswd(const char *login, const char *passwd) {
         int rv;
         pam_handle_t *pamh = NULL;
         struct ad_user user_info = {
@@ -594,7 +595,7 @@ char *Util_digest2Bytes(unsigned char *digest, int mdlen, MD_T result) {
 }
 
 
-boolean_t Util_getStreamDigests(FILE *stream, void *sha1_resblock, void *md5_resblock) {
+bool Util_getStreamDigests(FILE *stream, void *sha1_resblock, void *md5_resblock) {
 #define HASHBLOCKSIZE 4096
         md5_context_t ctx_md5;
         sha1_context_t ctx_sha1;
@@ -669,7 +670,7 @@ void Util_printHash(char *file) {
 }
 
 
-boolean_t Util_getChecksum(char *file, Hash_Type hashtype, char *buf, int bufsize) {
+bool Util_getChecksum(char *file, Hash_Type hashtype, char *buf, int bufsize) {
         int hashlength = 16;
 
         ASSERT(file);
@@ -691,7 +692,7 @@ boolean_t Util_getChecksum(char *file, Hash_Type hashtype, char *buf, int bufsiz
         if (File_isFile(file)) {
                 FILE *f = fopen(file, "r");
                 if (f) {
-                        boolean_t fresult = false;
+                        bool fresult = false;
                         MD_T sum;
 
                         switch (hashtype) {
@@ -779,7 +780,7 @@ int Util_getNumberOfServices() {
 }
 
 
-boolean_t Util_existService(const char *name) {
+bool Util_existService(const char *name) {
         ASSERT(name);
         return Util_getService(name) ? true : false;
 }
@@ -931,7 +932,7 @@ void Util_printRunList() {
 void Util_printService(Service_T s) {
         ASSERT(s);
 
-        boolean_t sgheader = false;
+        bool sgheader = false;
         char buffer[STRLEN];
         StringBuffer_T buf = StringBuffer_create(STRLEN);
 
@@ -1515,7 +1516,7 @@ pid_t Util_getPid(char *pidfile) {
 }
 
 
-boolean_t Util_isurlsafe(const char *url) {
+bool Util_isurlsafe(const char *url) {
         ASSERT(url && *url);
         for (int i = 0; url[i]; i++)
                 if (urlunsafe[(unsigned char)url[i]])
@@ -1524,7 +1525,7 @@ boolean_t Util_isurlsafe(const char *url) {
 }
 
 
-char *Util_urlEncode(char *string, boolean_t isParameterValue) {
+char *Util_urlEncode(char *string, bool isParameterValue) {
         char *escaped = NULL;
         if (string) {
                 char *p;
@@ -1597,7 +1598,7 @@ void Util_redirectStdFds() {
 
 
 void Util_closeFds() {
-        for (int i = 3, descriptors = System_getDescriptorsGuarded(); i < descriptors; i++) {
+        for (int i = 3, descriptors = System_fds(); i < descriptors; i++) {
                 close(i);
         }
         errno = 0;
@@ -1619,7 +1620,7 @@ Auth_T Util_getUserCredentials(char *uname) {
 }
 
 
-boolean_t Util_checkCredentials(char *uname, char *outside) {
+bool Util_checkCredentials(char *uname, char *outside) {
         Auth_T c = Util_getUserCredentials(uname);
         char outside_crypt[STRLEN];
         if (c == NULL)
@@ -1776,7 +1777,7 @@ void Util_resetInfo(Service_T s) {
 }
 
 
-boolean_t Util_hasServiceStatus(Service_T s) {
+bool Util_hasServiceStatus(Service_T s) {
         return((s->monitor & Monitor_Yes) && ! (s->error & Event_NonExist) && ! (s->error & Event_Data));
 }
 
@@ -1784,7 +1785,7 @@ boolean_t Util_hasServiceStatus(Service_T s) {
 char *Util_getHTTPHostHeader(Socket_T s, char *hostBuf, int len) {
         int port = Socket_getRemotePort(s);
         const char *host = Socket_getRemoteHost(s);
-        boolean_t ipv6 = Str_sub(host, ":") ? true : false;
+        bool ipv6 = Str_sub(host, ":") ? true : false;
         if (port == 80 || port == 443)
                 snprintf(hostBuf, len, "%s%s%s", ipv6 ? "[" : "", host, ipv6 ? "]" : "");
         else
@@ -1793,7 +1794,7 @@ char *Util_getHTTPHostHeader(Socket_T s, char *hostBuf, int len) {
 }
 
 
-boolean_t Util_evalQExpression(Operator_Type operator, long long left, long long right) {
+bool Util_evalQExpression(Operator_Type operator, long long left, long long right) {
         switch (operator) {
                 case Operator_Greater:
                         if (left > right)
@@ -1828,7 +1829,7 @@ boolean_t Util_evalQExpression(Operator_Type operator, long long left, long long
 }
 
 
-boolean_t Util_evalDoubleQExpression(Operator_Type operator, double left, double right) {
+bool Util_evalDoubleQExpression(Operator_Type operator, double left, double right) {
         switch (operator) {
                 case Operator_Greater:
                         if (left > right)
