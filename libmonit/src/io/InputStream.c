@@ -59,7 +59,7 @@ struct T {
         int offset;
         int length;
         time_t timeout;
-        _Bool isclosed;
+        bool isclosed;
         uchar_t buffer[BUFFER_SIZE];
 };
 

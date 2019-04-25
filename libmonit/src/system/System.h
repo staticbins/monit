@@ -98,7 +98,7 @@ int System_cpus(void);
  * @param nbytes The target buffer size in bytes
  * @return true on success, otherwise false
  */
-_Bool System_random(void *buf, size_t nbytes);
+bool System_random(void *buf, size_t nbytes);
 
 
 /**

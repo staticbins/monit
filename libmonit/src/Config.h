@@ -104,7 +104,7 @@ typedef unsigned char uchar_t;
 /**
  * Library Debug flag. If set to true, emit debug output
  */
-extern _Bool MonitDebug;
+extern bool MonitDebug;
 
 
 #endif

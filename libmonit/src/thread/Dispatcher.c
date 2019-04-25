@@ -125,7 +125,7 @@ static int _dtor(T D) {
 
 static void *_server(void *arg) {
 	T D = arg;
-	_Bool timedout = 0;
+	bool timedout = 0;
         struct timeval tv;
 	struct timespec timeout = {};
 	int status = pthread_mutex_lock(&D->mutex);
@@ -216,7 +216,7 @@ void Dispatcher_free(T *D) {
 }
 
 
-_Bool Dispatcher_add(T D, void *data) {
+bool Dispatcher_add(T D, void *data) {
 	assert(D);
 	assert(data);
 	int status = pthread_mutex_lock(&D->mutex);

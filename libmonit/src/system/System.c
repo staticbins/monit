@@ -57,7 +57,7 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-extern _Bool MonitDebug;
+extern bool MonitDebug;
 extern void(*_AbortHandler)(const char *error, va_list ap);
 extern void(*_ErrorHandler)(const char *error, va_list ap);
 
@@ -133,7 +133,7 @@ int System_cpus(void) {
 }
 
 
-_Bool System_random(void *buf, size_t nbytes) {
+bool System_random(void *buf, size_t nbytes) {
 #ifdef HAVE_ARC4RANDOM_BUF
         arc4random_buf(buf, nbytes);
         return true;

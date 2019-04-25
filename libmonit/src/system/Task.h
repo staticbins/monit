@@ -181,7 +181,7 @@ double Task_getInterval(T t);
  * @param t Task object.
  * @return True if Task is canceled otherwise false
  */
-_Bool Task_isCanceled(T t);
+bool Task_isCanceled(T t);
 
 
 /**
