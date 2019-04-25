@@ -27,12 +27,12 @@
 #define TASK_INCLUDED
 
 
-/** 
- * A <b>Task</b> represents work executed by a <b>Scheduler</b>. 
+/**
+ * A <b>Task</b> represents work executed by a <b>Scheduler</b>.
  * A new Task is created with Scheduler_task() and started with
  * Task_start(). A started Task can be canceled at any time by
  * using Task_cancel(), after which the Task object is returned to
- * the Scheduler for reuse and the caller should no longer use it. 
+ * the Scheduler for reuse and the caller should no longer use it.
  * You can also modify properties of a task and then reschedule the
  * task with Task_restart().
  *
@@ -40,42 +40,46 @@
  * <ul>
  * <li>A <b>one-time</b> task is specified with Task_once().
  * Time is in seconds and specify how long the Scheduler
- * should wait before it will execute the task. For instance to 
+ * should wait before it will execute the task. For instance to
  * execute a task once, 5 seconds from now, use Task_once(5.0).
- * A one-time Task is executed exactly one time and automatically
- * canceled by the Scheduler <i>unless</i> explicitly restarted in
- * the worker. Despite its name, a one-time task is normally
- * reused and restarted within the worker. Such tasks are often used
- * for timeout operations.
+ * A one-time Task is executed exactly one time. Despite its name,
+ * a one-time task is normally reused and restarted within the worker.
+ * Such tasks are often used for timeout operations. If the Task
+ * is not needed anymore call Task_cancel() to return the Task to
+ * the Scheduler for reuse.
  *
  * <li>A <b>periodic</b> task is specified with Task_periodic().
- * A periodic task runs continuously with a set interval. Two values are 
+ * A periodic task runs continuously with a set interval. Two values are
  * used: <i>offset</i> specify the offset of the hour and <i>interval</i>,
- * how often the task should run. For example, to specify a task that 
+ * how often the task should run. For example, to specify a task that
  * should run at the top of every hour, use Task_periodic(0, 3600).
- * To specify a periodic task that should run half-past every hour, e.g. 
+ * To specify a periodic task that should run half-past every hour, e.g.
  * 10:30, 11:30, 12:30 etc, use Task_periodic(1800, 3600).
  *
  * <li>A <b>one-time</b> task to be run <b>at</b> a specific time is specified
  * with Task_at(). In difference to the above tasks an <b>at</b> task uses
- * wall-clock time to specify when to run. For example, 
+ * wall-clock time to specify when to run. For example,
  * Task_at(Time_parse("2019-12-28 00:12:58")). An <i>at</i> Task is executed
- * exactly one time and automatically canceled by the Scheduler <i>unless</i>
- * explicitly restarted in the worker.
+ * exactly one time. The Task can be restarted at a later time if needed
+ * again, otherwise cancel the Task with Task_cancel() so it can be returned
+ * to the Scheduler and reused.
  *
- * <li>You can change the time or offset of any Task and reschedule or 
+ * <li>You can change the time or offset of any Task and reschedule or
  * restart the task. A one-time task such as an <code>at</code> or a
- * <code>once</code> task must be restarted in the worker, otherwise it
- * will automatically be canceled by the Scheduler and reused.
- * 
+ * <code>once</code> task must be restarted to run again. If not needed
+ * anymore, call Task_cancel() to return the Task to the Scheduler for
+ * reuse.
+ *
  * <li>Use Task_setData() to associate <b>data</b> with a Task and
  * Task_getData() to access the data.
  *
  * <li>Use Task_setWorker() to set the callback-function for a Task. The
- * Scheduler calls this function to perform the actual <b>work</b> of the Task. 
+ * Scheduler calls this function to perform the actual <b>work</b> of the Task.
  * </ul>
  *
  * @see Scheduler.h
+ * @author https://www.tildeslash.com/
+ * @see https://www.mmonit.com/
  * @file
  */
 
@@ -87,11 +91,11 @@ typedef struct T *T;
 //@{
 
 /**
- * Specifies a one-time task. I.e. the task is scheduled for 
+ * Specifies a one-time task. I.e. the task is scheduled for
  * execution once and only once. The worker callback function
- * <b>must</b> call Task_restart() before it returns to restart
- * the task, otherwise the Task is automatically canceled after
- * the worker finish and the Task is reused by the Scheduler.
+ * can rescehdule and call Task_restart() to restart the task,
+ * otherwise cancel the Task after the worker finish with
+ * Task_cancel() so it can be reused by the Scheduler.
  * Example: to start the task 5 seconds from now use Task_once(5.)
  * The value is specified in seconds, but fractions of seconds can
  * be used to specify a shorter time. For instance to specify a task
@@ -119,11 +123,11 @@ void Task_periodic(T t, double offset, double interval);
 
 
 /**
- * Specifies a one-time task to be run <b>at</b> a specific time. The 
+ * Specifies a one-time task to be run <b>at</b> a specific time. The
  * task is scheduled for execution once and only once at the specified time.
- * The callback function should call Task_restart() before it returns otherwise
- * the task will automatically be canceled and reused by the Scheduler.
- * Example: Task_at(Time_parse("Fri, 29 Jan 2011 at 09:05:00")).
+ * The Task can be rescheduled and restarted with Task_restart(). Use
+ * Task_cancel() if the Task is not needed anymore so it can be reused by
+ * the Scheduler. Example: Task_at(Time_parse("Fri, 29 Jan 2011 at 09:05:00")).
  * @param t Task object
  * @param time The time (number of seconds since the EPOCH) to start
  * the task.
@@ -177,11 +181,11 @@ double Task_getInterval(T t);
 
 
 /**
- * Returns true if the Task is canceled otherwise false
+ * Returns true if the Task was started otherwise false
  * @param t Task object.
- * @return True if Task is canceled otherwise false
+ * @return True if Task was started otherwise false
  */
-bool Task_isCanceled(T t);
+bool Task_isStarted(T t);
 
 
 /**
@@ -236,19 +240,14 @@ void Task_cancel(T t);
 
 /**
  * Restart the task. Only a started Task might be restarted and it is a
- * checked runtime error to try to restart a canceled task. Calling this
- * method from inside a worker function is always safe and the recommended
- * way to restart a one-time Task. Outside a worker function you should
- * use Task_isCanceled() to test if the Task is canceled before attempting
- * to restart.
+ * checked runtime error to try to restart a canceled task.
  * @param t A Task object
  * @exception AssertException if the task has not previously been started
  * with Task_start() or if the Task is canceled.
-
+ 
  */
 void Task_restart(T t);
 
 
 #undef T
 #endif
-

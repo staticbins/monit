@@ -38,7 +38,7 @@ int main(void) {
         Bootstrap(); // Need to initialize library
 
         printf("============> Start Scheduler Tests\n\n");
-
+        
         printf("=> Test0: create/destroy\n");
         {
                 scheduler = Scheduler_new(20);
@@ -47,7 +47,7 @@ int main(void) {
                 assert(scheduler == NULL);
         }
         printf("=> Test0: OK\n\n");
-
+        
         printf("=> Test1: create/cancel task\n");
         {
                 scheduler = Scheduler_new(3);
@@ -63,7 +63,7 @@ int main(void) {
                 Task_cancel(task);
         }
         printf("=> Test1: OK\n\n");
-
+        
         printf("=> Test2: create/cancel task twice and verify the reused task object is clear so no orphaned data from previous instance will be used if not all are set again\n");
         {
                 int data = 123;
@@ -86,8 +86,9 @@ int main(void) {
                 assert(*_data == 123);
                 // worker
                 Task_setWorker(task1, worker);
+                assert(!Task_isStarted(task1));
                 Task_cancel(task1);
-
+                
                 Task_T task2 = Scheduler_task(scheduler, "task2");
                 assert(task2);
                 assert(task1 == task2); // task2 should reuse canceled task1
@@ -97,10 +98,11 @@ int main(void) {
                 assert(Task_getData(task2) == NULL);
                 assert(Task_lastRun(task2) == 0);
                 assert(Task_nextRun(task2) == 0);
+                assert(!Task_isStarted(task2));
                 Task_cancel(task2);
         }
         printf("=> Test2: OK\n\n");
-
+        
         printf("=> Test3: test one-time task\n");
         {
                 int data = 123;
@@ -116,9 +118,10 @@ int main(void) {
                 assert(_data == &data);
                 assert(*_data == 124);
                 printf("\tactive task data OK\n");
+                Task_cancel(task3);
         }
         printf("=> Test3: OK\n\n");
-
+        
         printf("=> Test4: test periodic task\n");
         {
                 int data = 123;
@@ -142,7 +145,7 @@ int main(void) {
                 printf("\tcanceled task data OK\n");
         }
         printf("=> Test4: OK\n\n");
-
+        
         printf("=> Test5: test at-time task\n");
         {
                 int data = 123;
@@ -158,9 +161,10 @@ int main(void) {
                 assert(_data == &data);
                 assert(*_data == 124);
                 printf("\tactive task data OK\n");
+                Task_cancel(task5);
         }
         printf("=> Test5: OK\n\n");
-
+        
         printf("=> Test6: run more tasks then the size of dispatcher pool and verify they were executed\n");
         {
                 int data6_1 = 51339;
@@ -201,21 +205,20 @@ int main(void) {
                 Task_start(task6_4);
                 Task_start(task6_5);
                 sleep(5);
+                Task_cancel(task6_1);
+                Task_cancel(task6_2);
+                Task_cancel(task6_3);
+                Task_cancel(task6_4);
+                Task_cancel(task6_5);
                 // verify all the tasks finished
                 assert(data6_1 == 51340);
                 assert(data6_2 == 51340);
                 assert(data6_3 == 51340);
                 assert(data6_4 == 51340);
                 assert(data6_5 == 51340);
-                // Assert that all tasks are automatically canceled
-                assert(Task_isCanceled(task6_1));
-                assert(Task_isCanceled(task6_2));
-                assert(Task_isCanceled(task6_3));
-                assert(Task_isCanceled(task6_4));
-                assert(Task_isCanceled(task6_5));
         }
         printf("=> Test6: OK\n\n");
-
+        
         printf("=> Test7: verify unique instance of periodic task will run if the timer expires again while the same task is still being executed\n");
         {
                 int data = 51339;
@@ -232,7 +235,7 @@ int main(void) {
                 assert(data == 51340); // verify the task executed only once
         }
         printf("=> Test7: OK\n\n");
-
+        
         printf("=> Test8: try active task restart\n");
         {
                 int data = 123;
@@ -253,10 +256,10 @@ int main(void) {
                 assert(data == 123);
                 sleep(2);
                 assert(data == 124);
-                assert(Task_isCanceled(task8));
+                Task_cancel(task8);
         }
         printf("=> Test8: OK\n\n");
-
+        
         printf("=> Test9: Restart once task\n");
         {
                 int data = 998;
@@ -269,10 +272,10 @@ int main(void) {
                 Task_start(task9);
                 sleep(2);
                 assert(data == 1000); // Assert that the task ran twice
-                assert(Task_isCanceled(task9));
+                Task_cancel(task9);
         }
         printf("=> Test9: OK\n\n");
-
+        
         printf("=> Test10: cancel task in progress and verify it finished after the cancelation\n");
         {
                 int data = 51339;
@@ -291,7 +294,7 @@ int main(void) {
                 assert(data == 51340);
         }
         printf("=> Test10: OK\n\n");
-
+        
         printf("=> Test11: reconfigure the task schedule and restart the task\n");
         {
                 int data = 51339;
@@ -327,10 +330,9 @@ int main(void) {
                 printf("\tthe task will run at %lu\n", Task_nextRun(task11));
                 Task_cancel(task11);
                 assert(data == 51339);
-                assert(Task_isCanceled(task11));
         }
         printf("=> Test11: OK\n\n");
-
+        
         printf("=> Test12: stop the scheduler with active tasks\n");
         {
                 int data12_1 = 51339;
@@ -349,7 +351,7 @@ int main(void) {
                 assert(scheduler == NULL);
         }
         printf("=> Test12: OK\n\n");
-
+        
         printf("=> Test13: stop the scheduler with active self-rescheduling task\n");
         {
                 scheduler = Scheduler_new(20);
@@ -366,7 +368,7 @@ int main(void) {
                 assert(scheduler == NULL);
         }
         printf("=> Test13: OK\n\n");
-
+        
         printf("============> Scheduler Tests: OK\n\n");
 
         return 0;
