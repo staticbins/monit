@@ -388,6 +388,7 @@ AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_PID_T
 AC_TYPE_SIGNAL
+AC_CHECK_TYPES([uchar_t])
 
 # Check for structures.
 AC_STRUCT_TM
@@ -436,11 +437,7 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_C_CONST
 AC_C_BIGENDIAN
-# Define _GNU_SOURCE so we can have Posix headers etc included. We use the
-# -std=cXX compiler switch which only include a minimum of C headers
-CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
-# Compiler; tune warnings and make the char type unsigned
 CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
 # does this compiler support -Wno-pointer-sign ?
 svd_CFLAGS="$CFLAGS"
@@ -461,8 +458,35 @@ AC_RUN_IFELSE(
         #endif
         return 1;
         ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"])
-AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
+AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not support C99 headers])])
 
+# ------------------------------------------------------------------------
+# Atomic support
+# ------------------------------------------------------------------------
+AC_CHECK_HEADERS([stdatomic.h], [have_atomic_h="yes"], [have_atomic_h="no"])
+if test $have_atomic_h = "no"
+then
+        AC_MSG_CHECKING(for Atomic support)
+        if test `uname` = "Darwin" -o `uname` = "FreeBSD"
+        then
+                AC_MSG_RESULT(yes)
+        elif test `uname` = "SunOS"
+        then
+                AC_CHECK_HEADER([atomic.h],
+                [AC_MSG_RESULT(yes)],
+                [AC_MSG_ERROR([atomic.h is required for atomic support])])
+        else
+                AC_RUN_IFELSE([AC_LANG_PROGRAM([],[dnl
+                #if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 1)))
+                return 0;
+                #else
+                return 1;
+                #endif
+	        ])],
+	        [AC_MSG_RESULT(yes)],
+	        [AC_MSG_FAILURE([GCC version > 4.1 is required for atomic support])])
+        fi
+fi
 
 # ------------------------------------------------------------------------
 # IPv6 Support
