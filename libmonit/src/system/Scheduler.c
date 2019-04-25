@@ -35,6 +35,7 @@
 
 #include "Str.h"
 #include "List.h"
+#include "Atomic.h"
 #include "Thread.h"
 #include "Dispatcher.h"
 #include "system/Time.h"
@@ -76,7 +77,7 @@ typedef enum {
 struct T {
         struct ev_loop *loop;
         ev_async loop_notify;
-        _Bool stopped;
+        bool stopped;
         Mutex_T lock;
         Thread_T thread;
         List_T tasks;
@@ -94,10 +95,10 @@ struct Task_T {
         double offset;
         double interval;
         Task_Status state;
-        _Bool isavailable;
+        bool isavailable;
         void(*worker)(Task_T p);
         ev_tstamp executed;
-        atomic_int inprogress;
+        Atomic_T inprogress;
         T scheduler;
 };
 
@@ -105,15 +106,14 @@ struct Task_T {
 /* --------------------------------------------------------------- Private */
 
 
-static inline _Bool _available_task(void *e) {
+static inline bool _available_task(void *e) {
         Task_T task = e;
-        return (task && task->isavailable && !task->inprogress);
+        return (task && task->isavailable && !Atomic_read(task->inprogress));
 }
 
 
 static inline void _dispatch(Task_T t) {
-        int p = 0;
-        if (atomic_compare_exchange_strong(&t->inprogress, &p, 1)) {
+        if (Atomic_cas(t->inprogress, 0, 1)) {
                 t->executed = ev_now(t->scheduler->loop);
                 if (! Dispatcher_add(t->scheduler->dispatcher, t))
                         ERROR("Scheduler: could not add task '%s' to the dispatcher\n", t->name);
@@ -179,7 +179,7 @@ static void _worker(void *t) {
         {
                 if (task->state == Task_Limbo)
                         Task_cancel(task);
-                atomic_store(&task->inprogress, 0);
+                Atomic_set(task->inprogress, 0);
         }
         END_TRY;
 }
@@ -329,7 +329,7 @@ double Task_getInterval(Task_T t) {
 }
 
 
-_Bool Task_isCanceled(Task_T t) {
+bool Task_isCanceled(Task_T t) {
         assert(t);
         return t->state == Task_Canceled;
 }
@@ -373,7 +373,7 @@ void Task_start(Task_T t) {
                 if (! t->scheduler->stopped) {
                         if (t->type == Task_Once) {
                                 ev_now_update(t->scheduler->loop);
-                                ev_timer_init(&(t->ev.t), _timer_cb, t->offset, 0);
+                                ev_timer_init(&(t->ev.t), _timer_cb, t->offset, t->offset);
                                 ev_timer_start(t->scheduler->loop, &(t->ev.t));
                         } else {
                                 ev_periodic_init(&(t->ev.p), _periodic_cb, t->offset, (t->type == Task_At) ? 0 : t->interval, NULL);

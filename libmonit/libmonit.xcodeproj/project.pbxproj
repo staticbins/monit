@@ -41,6 +41,7 @@
 		52D7969F13A6CE560014CED2 /* List.c in Sources */ = {isa = PBXBuildFile; fileRef = 52D7967613A6CE560014CED2 /* List.c */; };
 		52D796A113A6CE560014CED2 /* Str.c in Sources */ = {isa = PBXBuildFile; fileRef = 52D7967813A6CE560014CED2 /* Str.c */; };
 		52D796A313A6CE560014CED2 /* StringBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 52D7967A13A6CE560014CED2 /* StringBuffer.c */; };
+		52DA27A822713A0700C6C67F /* Atomic.h in Headers */ = {isa = PBXBuildFile; fileRef = 52DA27A722713A0700C6C67F /* Atomic.h */; };
 		52E737DC1EE71099007BF939 /* ProtocolException.h in Headers */ = {isa = PBXBuildFile; fileRef = 52E737DB1EE71099007BF939 /* ProtocolException.h */; };
 		52F8BB3C1ECE55270007DF91 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
 		52F8BB421ECE554D0007DF91 /* StringBufferTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8213A5212700FC4089 /* StringBufferTest.c */; };
@@ -229,6 +230,7 @@
 		52D7967913A6CE560014CED2 /* Str.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Str.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		52D7967A13A6CE560014CED2 /* StringBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = StringBuffer.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52D7967B13A6CE560014CED2 /* StringBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = StringBuffer.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		52DA27A722713A0700C6C67F /* Atomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Atomic.h; sourceTree = "<group>"; };
 		52E737DB1EE71099007BF939 /* ProtocolException.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProtocolException.h; sourceTree = "<group>"; };
 		52F8BB441ECE55D70007DF91 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		52F8BB461ECE567A0007DF91 /* libz.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.dylib; path = ../../../../../usr/lib/libz.1.dylib; sourceTree = "<group>"; };
@@ -431,6 +433,7 @@
 		52D7966F13A6CE560014CED2 /* thread */ = {
 			isa = PBXGroup;
 			children = (
+				52DA27A722713A0700C6C67F /* Atomic.h */,
 				52D7967313A6CE560014CED2 /* Thread.h */,
 				5280A6D2226674CD00A4C0B3 /* Dispatcher.h */,
 				5280A6D1226674CD00A4C0B3 /* Dispatcher.c */,
@@ -472,6 +475,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5280A6DC22667D5B00A4C0B3 /* Task.h in Headers */,
+				52DA27A822713A0700C6C67F /* Atomic.h in Headers */,
 				5280A6D8226674E000A4C0B3 /* Scheduler.h in Headers */,
 				521ECE3921D85CFE00F8045E /* Fmt.h in Headers */,
 				52E737DC1EE71099007BF939 /* ProtocolException.h in Headers */,
