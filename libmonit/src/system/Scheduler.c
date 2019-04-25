@@ -70,8 +70,7 @@ typedef enum {
 typedef enum {
         Task_Initial = 0,
         Task_Started,
-        Task_Canceled,
-        Task_Limbo
+        Task_Canceled
 } Task_Status;
 
 struct T {
@@ -114,7 +113,6 @@ static inline bool _available_task(void *e) {
 
 static inline void _dispatch(Task_T t) {
         if (Atomic_cas(t->inprogress, 0, 1)) {
-                t->executed = ev_now(t->scheduler->loop);
                 if (! Dispatcher_add(t->scheduler->dispatcher, t))
                         ERROR("Scheduler: could not add task '%s' to the dispatcher\n", t->name);
         }
@@ -165,8 +163,6 @@ static void _periodic_cb(EV_P_ ev_periodic *w, int revents) {
 
 static void _worker(void *t) {
         Task_T task = t;
-        if (task->type == Task_Once || task->type == Task_At)
-                task->state = Task_Limbo;
         TRY
         {
                 task->worker(task);
@@ -177,8 +173,7 @@ static void _worker(void *t) {
         }
         FINALLY
         {
-                if (task->state == Task_Limbo)
-                        Task_cancel(task);
+                task->executed = ev_now(task->scheduler->loop);
                 Atomic_set(task->inprogress, 0);
         }
         END_TRY;
@@ -329,9 +324,9 @@ double Task_getInterval(Task_T t) {
 }
 
 
-bool Task_isCanceled(Task_T t) {
+bool Task_isStarted(Task_T t) {
         assert(t);
-        return t->state == Task_Canceled;
+        return t->state == Task_Started;
 }
 
 
@@ -409,7 +404,7 @@ void Task_restart(Task_T t) {
         assert(t);
         assert(t->isavailable == false);
         assert(t->worker);
-        assert(t->state == Task_Started || t->state == Task_Limbo);
+        assert(t->state == Task_Started);
         LOCK(t->scheduler->lock)
         {
                 if (! t->scheduler->stopped) {
@@ -429,7 +424,6 @@ void Task_restart(Task_T t) {
                                 default:
                                         break;
                         }
-                        t->state = Task_Started;
                         ev_async_send(t->scheduler->loop, &t->scheduler->loop_notify);
                 }
         }
