@@ -168,11 +168,7 @@ typedef struct {
  * @param A An Atomic object to lock
  * @hideinitializer
  */
-#if HAVE_STDATOMIC_H
-#define Atomic_lock(A) do { while (atomic_exchange(&(&(A))->counter, 1)) usleep(1); } while(0)
-#else
 #define Atomic_lock(A) do { while (Atomic_cas(A, 0, 1) == 0) usleep(1); } while(0)
-#endif
 
 
 /**
