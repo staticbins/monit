@@ -146,20 +146,7 @@ AC_CHECK_HEADERS([ctype.h errno.h fcntl.h limits.h pthread.h setjmp.h \
 # Types
 # ------------------------------------------------------------------------
 
-AC_CHECK_TYPES([boolean_t], [], [],
-        [
-         #ifdef HAVE_SYS_TYPES_H
-         #include <sys/types.h>
-         #endif
-         #ifdef HAVE_MACH_BOOLEAN_H
-         #include <mach/boolean.h>
-         #endif
-         #ifdef HAVE_UVM_UVM_PARAM_H
-         #include <uvm/uvm_param.h>
-         #endif
-        ])
 AC_CHECK_TYPES([uchar_t])
-AC_CHECK_TYPES([uint32_t])
 
 # ------------------------------------------------------------------------
 # Functions 
@@ -256,8 +243,6 @@ AC_C_BIGENDIAN
 
 # Compiler; tune warnings and make the char type unsigned and enable C11 support
 CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
-# Require C11 support
-AC_CHECK_HEADERS([stdint.h stdatomic.h stdbool.h], [CFLAGS="$CFLAGS -std=c11"], [AC_MSG_ERROR([Toolchain does not support C11])])
 # does this compiler support -Wno-pointer-sign ?
 svd_CFLAGS="$CFLAGS"
 CFLAGS="-Wno-pointer-sign $CFLAGS"
@@ -266,6 +251,46 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"]
 svd_CFLAGS="$CFLAGS"
 CFLAGS="-Wno-address $CFLAGS"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+
+# Require at least C99 and use C11 if available
+AC_RUN_IFELSE(
+[AC_LANG_PROGRAM([], [dnl
+        #ifdef __STDC_VERSION__
+        #if __STDC_VERSION__ >= 201112L
+        return 0;
+        #endif
+        #endif
+        return 1;
+        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"])
+AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not support C99 headers])])
+
+# ------------------------------------------------------------------------
+# Atomic support
+# ------------------------------------------------------------------------
+AC_CHECK_HEADERS([stdatomic.h], [have_atomic_h="yes"], [have_atomic_h="no"])
+if test $have_atomic_h = "no"
+then
+        AC_MSG_CHECKING(for Atomic support)
+        if test `uname` = "Darwin" -o `uname` = "FreeBSD"
+        then
+                AC_MSG_RESULT(yes)
+        elif test `uname` = "SunOS"
+        then
+                AC_CHECK_HEADER([atomic.h],
+                [AC_MSG_RESULT(yes)],
+                [AC_MSG_ERROR([atomic.h is required for atomic support])])
+        else
+                AC_RUN_IFELSE([AC_LANG_PROGRAM([],[dnl
+                #if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 1)))
+                return 0;
+                #else
+                return 1;
+                #endif
+	        ])],
+	        [AC_MSG_RESULT(yes)],
+	        [AC_MSG_FAILURE([GCC version > 4.1 is required for atomic support])])
+        fi
+fi
 
 # ------------------------------------------------------------------------
 # IPv6 Support
