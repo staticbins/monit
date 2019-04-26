@@ -251,8 +251,8 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
 
         /* Swap */
         int mib[16] = {};
-        unsigned long long total = 0ULL;
-        unsigned long long used  = 0ULL;
+        uint64_t total = 0ULL;
+        uint64_t used  = 0ULL;
         size_t miblen = sizeof(mib) / sizeof(mib[0]);
         if (sysctlnametomib("vm.swap_info", mib, &miblen) == -1) {
                 LogError("system statistics error -- cannot get swap usage: %s\n", STRERROR);

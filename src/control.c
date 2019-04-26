@@ -124,7 +124,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
                 switch (S->type) {
                         case Service_Process:
                                 Command_vSetEnv(C, "MONIT_PROCESS_PID", "%d", S->inf.process->pid);
-                                Command_vSetEnv(C, "MONIT_PROCESS_MEMORY", "%llu", (unsigned long long)((double)S->inf.process->mem / 1024.));
+                                Command_vSetEnv(C, "MONIT_PROCESS_MEMORY", "%llu", (uint64_t)((double)S->inf.process->mem / 1024.));
                                 Command_vSetEnv(C, "MONIT_PROCESS_CHILDREN", "%d", S->inf.process->children);
                                 Command_vSetEnv(C, "MONIT_PROCESS_CPU_PERCENT", "%.1f", S->inf.process->cpu_percent);
                                 break;

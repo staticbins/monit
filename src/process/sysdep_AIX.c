@@ -117,10 +117,10 @@ int getargs(struct procentry64 *processBuffer, int bufferLen, char *argsBuffer, 
 
 static int                page_size;
 static int                cpu_initialized = 0;
-static unsigned long long cpu_total_old = 0ULL;
-static unsigned long long cpu_user_old  = 0ULL;
-static unsigned long long cpu_syst_old  = 0ULL;
-static unsigned long long cpu_iowait_old  = 0ULL;
+static uint64_t cpu_total_old = 0ULL;
+static uint64_t cpu_user_old  = 0ULL;
+static uint64_t cpu_syst_old  = 0ULL;
+static uint64_t cpu_wait_old  = 0ULL;
 
 
 bool init_process_info_sysdep(void) {
@@ -295,11 +295,11 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
  */
 bool used_system_cpu_sysdep(SystemInfo_T *si) {
         perfstat_cpu_total_t cpu;
-        unsigned long long cpu_total;
-        unsigned long long cpu_total_new = 0ULL;
-        unsigned long long cpu_user      = 0ULL;
-        unsigned long long cpu_syst      = 0ULL;
-        unsigned long long cpu_iowait      = 0ULL;
+        uint64_t cpu_total;
+        uint64_t cpu_total_new = 0ULL;
+        uint64_t cpu_user      = 0ULL;
+        uint64_t cpu_syst      = 0ULL;
+        uint64_t cpu_wait      = 0ULL;
 
         if (perfstat_cpu_total(NULL, &cpu, sizeof(perfstat_cpu_total_t), 1) < 0) {
                 LogError("system statistic error -- perfstat_cpu_total failed: %s\n", STRERROR);

@@ -92,7 +92,7 @@ static void _escapeCDATA(StringBuffer_T B, const char *buf) {
 static void document_head(StringBuffer_T B, int V, const char *myip) {
         StringBuffer_append(B, "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>");
         if (V == 2)
-                StringBuffer_append(B, "<monit id=\"%s\" incarnation=\"%lld\" version=\"%s\"><server>", Run.id, (long long)Run.incarnation, VERSION);
+                StringBuffer_append(B, "<monit id=\"%s\" incarnation=\"%lld\" version=\"%s\"><server>", Run.id, (int64_t)Run.incarnation, VERSION);
         else
                 StringBuffer_append(B,
                                     "<monit>"
@@ -101,7 +101,7 @@ static void document_head(StringBuffer_T B, int V, const char *myip) {
                                     "<incarnation>%lld</incarnation>"
                                     "<version>%s</version>",
                                     Run.id,
-                                    (long long)Run.incarnation,
+                                    (int64_t)Run.incarnation,
                                     VERSION);
         StringBuffer_append(B,
                             "<uptime>%lld</uptime>"
@@ -109,7 +109,7 @@ static void document_head(StringBuffer_T B, int V, const char *myip) {
                             "<startdelay>%d</startdelay>"
                             "<localhostname>%s</localhostname>"
                             "<controlfile>%s</controlfile>",
-                            (long long)ProcessTree_getProcessUptime(getpid()),
+                            (int64_t)ProcessTree_getProcessUptime(getpid()),
                             Run.polltime,
                             Run.startdelay,
                             Run.system->name ? Run.system->name : "",
@@ -141,8 +141,8 @@ static void document_head(StringBuffer_T B, int V, const char *myip) {
                             systeminfo.uname.version,
                             systeminfo.uname.machine,
                             systeminfo.cpu.count,
-                            (unsigned long long)((double)systeminfo.memory.size / 1024.),   // Send as kB for backward compatibility
-                            (unsigned long long)((double)systeminfo.swap.size / 1024.)); // Send as kB for backward compatibility
+                            (uint64_t)((double)systeminfo.memory.size / 1024.),   // Send as kB for backward compatibility
+                            (uint64_t)((double)systeminfo.swap.size / 1024.)); // Send as kB for backward compatibility
 }
 
 
@@ -208,7 +208,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                             "<monitormode>%d</monitormode>"
                             "<onreboot>%d</onreboot>"
                             "<pendingaction>%d</pendingaction>",
-                            (long long)S->collected.tv_sec,
+                            (int64_t)S->collected.tv_sec,
                             (long)S->collected.tv_usec,
                             S->error,
                             S->error_hint,
@@ -255,7 +255,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         S->inf.file->timestamp.access,
                                         S->inf.file->timestamp.change,
                                         S->inf.file->timestamp.modify,
-                                        (long long)S->inf.file->size);
+                                        (int64_t)S->inf.file->size);
                                 if (S->checksum)
                                         StringBuffer_append(B, "<checksum type=\"%s\">%s</checksum>", checksumnames[S->checksum->type], S->inf.file->cs_sum);
                                 break;
@@ -412,7 +412,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         S->inf.process->uid,
                                         S->inf.process->euid,
                                         S->inf.process->gid,
-                                        (long long)S->inf.process->uptime);
+                                        (int64_t)S->inf.process->uptime);
                                 if (Run.flags & Run_ProcessEngineEnabled) {
                                         StringBuffer_append(B,
                                                 "<threads>%d</threads>"
@@ -439,8 +439,8 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 S->inf.process->children,
                                                 S->inf.process->mem_percent,
                                                 S->inf.process->total_mem_percent,
-                                                (unsigned long long)((double)S->inf.process->mem / 1024.),       // Send as kB for backward compatibility
-                                                (unsigned long long)((double)S->inf.process->total_mem / 1024.), // Send as kB for backward compatibility
+                                                (uint64_t)((double)S->inf.process->mem / 1024.),       // Send as kB for backward compatibility
+                                                (uint64_t)((double)S->inf.process->total_mem / 1024.), // Send as kB for backward compatibility
                                                 S->inf.process->cpu_percent,
                                                 S->inf.process->total_cpu_percent,
                                                 S->inf.process->filedescriptors.open,
@@ -532,9 +532,9 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.,
 #endif
                                             systeminfo.memory.usage.percent,
-                                            (unsigned long long)((double)systeminfo.memory.usage.bytes / 1024.),               // Send as kB for backward compatibility
+                                            (uint64_t)((double)systeminfo.memory.usage.bytes / 1024.),               // Send as kB for backward compatibility
                                             systeminfo.swap.usage.percent,
-                                            (unsigned long long)((double)systeminfo.swap.usage.bytes / 1024.));             // Send as kB for backward compatibility
+                                            (uint64_t)((double)systeminfo.swap.usage.bytes / 1024.));             // Send as kB for backward compatibility
                 }
                 if (S->type == Service_Program && S->program->started) {
                         StringBuffer_append(B,
@@ -542,7 +542,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             "<started>%lld</started>"
                                             "<status>%d</status>"
                                             "<output><![CDATA[",
-                                            (long long)S->program->started,
+                                            (int64_t)S->program->started,
                                             S->program->exitStatus);
                         _escapeCDATA(B, StringBuffer_toString(S->program->lastOutput));
                         StringBuffer_append(B,
@@ -585,7 +585,7 @@ static void status_event(Event_T E, StringBuffer_T B) {
                             "<state>%d</state>"
                             "<action>%d</action>"
                             "<message><![CDATA[",
-                            (long long)E->collected.tv_sec,
+                            (int64_t)E->collected.tv_sec,
                             (long)E->collected.tv_usec,
                             E->id == Event_Instance ? "Monit" : E->source->name,
                             E->type,

@@ -142,9 +142,9 @@ int Str_parseInt(const char *s) {
 }
 
 
-long long Str_parseLLong(const char *s) {
+int64_t Str_parseLLong(const char *s) {
         char *e;
-        long long l;
+        int64_t l;
         if (STR_UNDEF(s))
                 THROW(NumberFormatException, "For input string null");
         errno = 0;

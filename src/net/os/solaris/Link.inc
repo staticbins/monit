@@ -124,18 +124,18 @@ static kstat_t *_getKstat(kstat_ctl_t *kc, char *name) {
 }
 
 
-static long long _getKstatValue(kstat_t *ksp, char *value) {
+static int64_t _getKstatValue(kstat_t *ksp, char *value) {
         const kstat_named_t *kdata = kstat_data_lookup(ksp, value);
         if (kdata) {
                 switch (kdata->data_type) {
                         case KSTAT_DATA_INT32:
-                                return (long long)kdata->value.i32;
+                                return (int64_t)kdata->value.i32;
                         case KSTAT_DATA_UINT32:
-                                return (long long)kdata->value.ui32;
+                                return (int64_t)kdata->value.ui32;
                         case KSTAT_DATA_INT64:
-                                return (long long)kdata->value.i64;
+                                return (int64_t)kdata->value.i64;
                         case KSTAT_DATA_UINT64:
-                                return (long long)kdata->value.ui64;
+                                return (int64_t)kdata->value.ui64;
                 }
                 THROW(AssertException, "Unsupported kstat data type 0x%x", kdata->data_type);
         }

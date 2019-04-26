@@ -834,7 +834,7 @@ typedef struct Size_T {
         bool initialized;                   /**< true if size was initialized */
         bool test_changes;       /**< true if we only should test for changes */
         Operator_Type operator;                           /**< Comparison operator */
-        unsigned long long size;                               /**< Size watermark */
+        uint64_t size;                               /**< Size watermark */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
@@ -845,7 +845,7 @@ typedef struct Size_T {
 /** Defines uptime object */
 typedef struct Uptime_T {
         Operator_Type operator;                           /**< Comparison operator */
-        unsigned long long uptime;                           /**< Uptime watermark */
+        uint64_t uptime;                           /**< Uptime watermark */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
@@ -863,7 +863,7 @@ typedef struct LinkStatus_T {
 
 typedef struct LinkSpeed_T {
         int duplex;                                        /**< Last duplex status */
-        long long speed;                                     /**< Last speed [bps] */
+        int64_t speed;                                     /**< Last speed [bps] */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
@@ -885,7 +885,7 @@ typedef struct Bandwidth_T {
         Operator_Type operator;                           /**< Comparison operator */
         Time_Type range;                            /**< Time range to watch: unit */
         int rangecount;                            /**< Time range to watch: count */
-        unsigned long long limit;                              /**< Data watermark */
+        uint64_t limit;                              /**< Data watermark */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
@@ -997,7 +997,7 @@ typedef struct FileSystem_T {
         Resource_Type resource;               /**< Whether to check inode or space */
         Operator_Type operator;                           /**< Comparison operator */
         //FIXME: union
-        long long limit_absolute;                          /**< Watermark - blocks */
+        int64_t limit_absolute;                          /**< Watermark - blocks */
         float limit_percent;                              /**< Watermark - percent */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
@@ -1037,13 +1037,13 @@ typedef struct TimestampInfo_T {
 
 
 typedef struct FileSystemInfo_T {
-        long long  f_blocks;              /**< Total data blocks in filesystem */
-        long long  f_blocksfree;   /**< Free blocks available to non-superuser */
-        long long  f_blocksfreetotal;           /**< Free blocks in filesystem */
-        long long  f_blocksused;                  /**< Used space total blocks */
-        long long  f_files;                /**< Total file nodes in filesystem */
-        long long  f_filesfree;             /**< Free file nodes in filesystem */
-        long long  f_filesused;                  /**< Used inode total objects */
+        int64_t  f_blocks;              /**< Total data blocks in filesystem */
+        int64_t  f_blocksfree;   /**< Free blocks available to non-superuser */
+        int64_t  f_blocksfreetotal;           /**< Free blocks in filesystem */
+        int64_t  f_blocksused;                  /**< Used space total blocks */
+        int64_t  f_files;                /**< Total file nodes in filesystem */
+        int64_t  f_filesfree;             /**< Free file nodes in filesystem */
+        int64_t  f_filesused;                  /**< Used inode total objects */
         float inode_percent;                        /**< Used inode percentage */
         float space_percent;                        /**< Used space percentage */
         int f_bsize;                                  /**< Transfer block size */
@@ -1229,7 +1229,7 @@ typedef struct Service_T {
                 State_Type        state;                                 /**< Test state */
                 bool         state_changed;              /**< true if state changed */
                 Handler_Type      flag;                     /**< The handlers state flag */
-                long long         state_map;           /**< Event bitmap for last cycles */
+                int64_t         state_map;           /**< Event bitmap for last cycles */
                 unsigned int      count;                             /**< The event rate */
                 char             *message;    /**< Optional message describing the event */
                 EventAction_T     action;           /**< Description of the event action */

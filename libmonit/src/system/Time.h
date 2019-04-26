@@ -121,7 +121,7 @@ time_t Time_now(void);
  * Coordinated Universal Time (UTC).
  * @exception AssertException If time could not be obtained
  */
-long long Time_milli(void);
+int64_t Time_milli(void);
 
 
 /**
@@ -131,7 +131,7 @@ long long Time_milli(void);
  * Coordinated Universal Time (UTC).
  * @exception AssertException If time could not be obtained
  */
-long long Time_micro(void);
+int64_t Time_micro(void);
 
 
 /**

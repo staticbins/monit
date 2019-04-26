@@ -222,8 +222,8 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         kstat_t            *kstat;
         swaptbl_t          *s;
         char               *strtab;
-        unsigned long long  total = 0ULL;
-        unsigned long long  used  = 0ULL;
+        uint64_t  total = 0ULL;
+        uint64_t  used  = 0ULL;
 
         /* Memory */
         kctl = kstat_open();
