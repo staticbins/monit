@@ -539,19 +539,19 @@ time_t Time_now(void) {
 }
 
 
-long long int Time_milli(void) {
+int64_t Time_milli(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
                 THROW(AssertException, "%s", System_getLastError());
-	return (long long int)t.tv_sec * 1000  +  (long long int)t.tv_usec / 1000;
+	return (int64_t)t.tv_sec * 1000  +  (int64_t)t.tv_usec / 1000;
 }
 
 
-long long int Time_micro(void) {
+int64_t Time_micro(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
                 THROW(AssertException, "%s", System_getLastError());
-	return (long long int)t.tv_sec * 1000000  +  (long long int)t.tv_usec;
+	return (int64_t)t.tv_sec * 1000000  +  (int64_t)t.tv_usec;
 }
 
 
@@ -688,15 +688,15 @@ char *Time_uptime(time_t sec, char *result) {
                 result[0] = 0;
                 if (sec > 0) {
                         if ((r = sec/86400) > 0) {
-                                n = snprintf(result, 24, "%lldd", (long long)r);
+                                n = snprintf(result, 24, "%lldd", (int64_t)r);
                                 sec -= r * 86400;
                         }
                         if ((r = sec/3600) > 0) {
-                                n += snprintf(result + n, (24 - n), "%s%lldh", n ? ", " : "", (long long)r);
+                                n += snprintf(result + n, (24 - n), "%s%lldh", n ? ", " : "", (int64_t)r);
                                 sec -= r * 3600;
                         }
                         r = sec/60;
-                        snprintf(result + n, (24 - n), "%s%lldm", n ? ", " : "", (long long)r);
+                        snprintf(result + n, (24 - n), "%s%lldm", n ? ", " : "", (int64_t)r);
                 }
         }
         return result;

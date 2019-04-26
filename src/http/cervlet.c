@@ -352,9 +352,9 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 
                         case Service_Net:
                                 {
-                                        long long speed = Link_getSpeed(s->inf.net->stats);
-                                        long long ibytes = Link_getBytesInPerSecond(s->inf.net->stats);
-                                        long long obytes = Link_getBytesOutPerSecond(s->inf.net->stats);
+                                        int64_t speed = Link_getSpeed(s->inf.net->stats);
+                                        int64_t ibytes = Link_getBytesInPerSecond(s->inf.net->stats);
+                                        int64_t obytes = Link_getBytesOutPerSecond(s->inf.net->stats);
                                         _formatStatus("link", Event_Link, type, res, s, Link_getState(s->inf.net->stats) == 1, "%d errors", Link_getErrorsInPerSecond(s->inf.net->stats) + Link_getErrorsOutPerSecond(s->inf.net->stats));
                                         if (speed > 0) {
                                                 _formatStatus("capacity", Event_Speed, type, res, s, Link_getState(s->inf.net->stats) == 1, "%.0lf Mb/s %s-duplex", (double)speed / 1000000., Link_getDuplex(s->inf.net->stats) == 1 ? "full" : "half");

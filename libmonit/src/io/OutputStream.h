@@ -120,7 +120,7 @@ int OutputStream_isClosed(T S);
  * @param S An OutputStream object
  * @return The total number of bytes written
  */
-long long int OutputStream_getBytesWritten(T S);
+int64_t OutputStream_getBytesWritten(T S);
 
 //@}
 

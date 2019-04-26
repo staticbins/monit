@@ -105,7 +105,7 @@ bool System_random(void *buf, size_t nbytes);
  * Get a random number
  * @return a random number
  */
-unsigned long long System_randomNumber(void);
+uint64_t System_randomNumber(void);
 
 
 #endif

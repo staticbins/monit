@@ -151,7 +151,7 @@ static bool _checkState(Event_T E, State_Type S) {
         /* Compare as many bits as cycles able to trigger the action */
         for (int i = 0; i < action->cycles; i++) {
                 /* Check the state of the particular cycle given by the bit position */
-                long long flag = (E->state_map >> i) & 0x1;
+                int64_t flag = (E->state_map >> i) & 0x1;
 
                 /* Count occurrences of the posted state */
                 if (flag == state)
@@ -188,7 +188,7 @@ static void _queueAdd(Event_T E) {
 
         /* compose the file name of actual timestamp and service name */
         char file_name[PATH_MAX];
-        snprintf(file_name, PATH_MAX, "%s/%lld_%lx", Run.eventlist_dir, (long long)Time_now(), (long unsigned)E->source->name);
+        snprintf(file_name, PATH_MAX, "%s/%lld_%lx", Run.eventlist_dir, (int64_t)Time_now(), (long unsigned)E->source->name);
 
         LogInfo("Adding event to the queue file %s for later delivery\n", file_name);
 

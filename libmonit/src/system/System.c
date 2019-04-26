@@ -158,7 +158,7 @@ bool System_random(void *buf, size_t nbytes) {
 }
 
 
-unsigned long long System_randomNumber() {
+uint64_t System_randomNumber() {
         uint64_t random = 0;
         System_random(&random, sizeof(random));
         return random;

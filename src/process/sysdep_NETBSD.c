@@ -245,7 +245,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
  */
 bool used_system_cpu_sysdep(SystemInfo_T *si) {
         int       mib[] = {CTL_KERN, KERN_CP_TIME};
-        long long cp_time[CPUSTATES];
+        int64_t cp_time[CPUSTATES];
         long      total_new = 0;
         long      total;
         size_t    len;

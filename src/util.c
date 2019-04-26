@@ -1794,7 +1794,7 @@ char *Util_getHTTPHostHeader(Socket_T s, char *hostBuf, int len) {
 }
 
 
-bool Util_evalQExpression(Operator_Type operator, long long left, long long right) {
+bool Util_evalQExpression(Operator_Type operator, int64_t left, int64_t right) {
         switch (operator) {
                 case Operator_Greater:
                         if (left > right)

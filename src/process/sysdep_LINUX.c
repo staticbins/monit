@@ -108,7 +108,7 @@ typedef struct Proc_T {
         int                 item_threads;
         unsigned long       item_utime;
         unsigned long       item_stime;
-        unsigned long long  item_starttime;
+        uint64_t  item_starttime;
         uint64_t            read_bytes;
         uint64_t            write_bytes;
         char                name[4096];
@@ -130,10 +130,10 @@ static void __attribute__ ((constructor)) _constructor() {
 
 #define NSEC_PER_SEC    1000000000L
 
-static unsigned long long old_cpu_user     = 0;
-static unsigned long long old_cpu_syst     = 0;
-static unsigned long long old_cpu_wait     = 0;
-static unsigned long long old_cpu_total    = 0;
+static uint64_t old_cpu_user     = 0;
+static uint64_t old_cpu_syst     = 0;
+static uint64_t old_cpu_wait     = 0;
+static uint64_t old_cpu_total    = 0;
 
 static long page_size = 0;
 
@@ -274,7 +274,7 @@ static bool _parseProcPidAttrCurrent(Proc_T proc) {
 }
 
 
-static double _usagePercent(unsigned long long previous, unsigned long long current, double total) {
+static double _usagePercent(uint64_t previous, uint64_t current, double total) {
         if (current < previous) {
                 // The counter jumped back (observed for cpu wait metric on Linux 4.15) or wrapped
                 return 0.;
@@ -491,14 +491,14 @@ error:
  */
 bool used_system_cpu_sysdep(SystemInfo_T *si) {
         bool rv;
-        unsigned long long cpu_total;
-        unsigned long long cpu_user;
-        unsigned long long cpu_nice;
-        unsigned long long cpu_syst;
-        unsigned long long cpu_idle;
-        unsigned long long cpu_wait;
-        unsigned long long cpu_irq;
-        unsigned long long cpu_softirq;
+        uint64_t cpu_total;
+        uint64_t cpu_user;
+        uint64_t cpu_nice;
+        uint64_t cpu_syst;
+        uint64_t cpu_idle;
+        uint64_t cpu_wait;
+        uint64_t cpu_irq;
+        uint64_t cpu_softirq;
         char buf[STRLEN];
 
         if (! file_readProc(buf, sizeof(buf), "stat", -1, NULL)) {

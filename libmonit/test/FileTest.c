@@ -52,7 +52,7 @@ int main(void) {
                 char c;
                 int i;
                 long j;
-                long long k;
+                int64_t k;
                 struct stat s;
                 assert(stat(path, &s) == 0);
                 assert((j = File_mtime(path)) > 0);

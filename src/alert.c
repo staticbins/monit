@@ -247,7 +247,7 @@ static bool _send(List_T list) {
                                                 m->subject,
                                                 now,
                                                 VERSION,
-                                                (long long)Time_now(), System_randomNumber(), Run.mail_hostname ? Run.mail_hostname : Run.system->name,
+                                                (int64_t)Time_now(), System_randomNumber(), Run.mail_hostname ? Run.mail_hostname : Run.system->name,
                                                 m->message) <= 0
                                    )
                                 {

@@ -820,7 +820,7 @@ static State_Type _checkSize(Service_T s, off_t size) {
 /**
  * Test uptime
  */
-static State_Type _checkUptime(Service_T s, long long uptime) {
+static State_Type _checkUptime(Service_T s, int64_t uptime) {
         ASSERT(s);
         State_Type rv = State_Succeeded;
         if (uptime < 0)
@@ -828,9 +828,9 @@ static State_Type _checkUptime(Service_T s, long long uptime) {
         for (Uptime_T ul = s->uptimelist; ul; ul = ul->next) {
                 if (Util_evalQExpression(ul->operator, uptime, ul->uptime)) {
                         rv = State_Failed;
-                        Event_post(s, Event_Uptime, State_Failed, ul->action, "uptime test failed for %s -- current uptime is %llu seconds", s->path, (unsigned long long)uptime);
+                        Event_post(s, Event_Uptime, State_Failed, ul->action, "uptime test failed for %s -- current uptime is %llu seconds", s->path, (uint64_t)uptime);
                 } else {
-                        Event_post(s, Event_Uptime, State_Succeeded, ul->action, "uptime test succeeded [current uptime = %llu seconds]", (unsigned long long)uptime);
+                        Event_post(s, Event_Uptime, State_Succeeded, ul->action, "uptime test succeeded [current uptime = %llu seconds]", (uint64_t)uptime);
                 }
         }
         return rv;
@@ -1219,11 +1219,11 @@ static bool _checkSkip(Service_T s) {
                 s->every.spec.cycle.counter = 0;
         } else if (s->every.type == Every_Cron && ! _incron(s, now)) {
                 s->monitor |= Monitor_Waiting;
-                DEBUG("'%s' test skipped as current time (%lld) does not match every's cron spec \"%s\"\n", s->name, (long long)now, s->every.spec.cron);
+                DEBUG("'%s' test skipped as current time (%lld) does not match every's cron spec \"%s\"\n", s->name, (int64_t)now, s->every.spec.cron);
                 return true;
         } else if (s->every.type == Every_NotInCron && Time_incron(s->every.spec.cron, now)) {
                 s->monitor |= Monitor_Waiting;
-                DEBUG("'%s' test skipped as current time (%lld) matches every's cron spec \"not %s\"\n", s->name, (long long)now, s->every.spec.cron);
+                DEBUG("'%s' test skipped as current time (%lld) matches every's cron spec \"not %s\"\n", s->name, (int64_t)now, s->every.spec.cron);
                 return true;
         }
         s->monitor &= ~Monitor_Waiting;
@@ -1768,7 +1768,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_Link, State_Succeeded, link->action, "link up");
         }
         // Link errors
-        long long oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
+        int64_t oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
         for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
                 if (oerrors > 0) {
                         rv = State_Failed;
@@ -1777,7 +1777,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_Link, State_Succeeded, link->action, "upload errors check succeeded");
                 }
         }
-        long long ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
+        int64_t ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
         for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
                 if (ierrors > 0) {
                         rv = State_Failed;
@@ -1788,7 +1788,7 @@ State_Type check_net(Service_T s) {
         }
         // Link speed
         int duplex = Link_getDuplex(s->inf.net->stats);
-        long long speed = Link_getSpeed(s->inf.net->stats);
+        int64_t speed = Link_getSpeed(s->inf.net->stats);
         for (LinkSpeed_T link = s->linkspeedlist; link; link = link->next) {
                 if (speed > 0 && link->speed) {
                         if (duplex > -1 && duplex != link->duplex)
@@ -1829,7 +1829,7 @@ State_Type check_net(Service_T s) {
         // Upload
         char buf1[10], buf2[10];
         for (Bandwidth_T upload = s->uploadbyteslist; upload; upload = upload->next) {
-                long long obytes;
+                int64_t obytes;
                 switch (upload->range) {
                         case Time_Minute:
                                 obytes = Link_getBytesOutPerMinute(s->inf.net->stats, upload->rangecount);
@@ -1850,7 +1850,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_ByteOut, State_Succeeded, upload->action, "%supload check succeeded [current upload rate %s in last %d %s]", upload->range != Time_Second ? "total " : "", Fmt_ibyte(obytes, buf1), upload->rangecount, Util_timestr(upload->range));
         }
         for (Bandwidth_T upload = s->uploadpacketslist; upload; upload = upload->next) {
-                long long opackets;
+                int64_t opackets;
                 switch (upload->range) {
                         case Time_Minute:
                                 opackets = Link_getPacketsOutPerMinute(s->inf.net->stats, upload->rangecount);
@@ -1872,7 +1872,7 @@ State_Type check_net(Service_T s) {
         }
         // Download
         for (Bandwidth_T download = s->downloadbyteslist; download; download = download->next) {
-                long long ibytes;
+                int64_t ibytes;
                 switch (download->range) {
                         case Time_Minute:
                                 ibytes = Link_getBytesInPerMinute(s->inf.net->stats, download->rangecount);
@@ -1893,7 +1893,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_ByteIn, State_Succeeded, download->action, "%sdownload check succeeded [current download rate %s in last %d %s]", download->range != Time_Second ? "total " : "", Fmt_ibyte(ibytes, buf1), download->rangecount, Util_timestr(download->range));
         }
         for (Bandwidth_T download = s->downloadpacketslist; download; download = download->next) {
-                long long ipackets;
+                int64_t ipackets;
                 switch (download->range) {
                         case Time_Minute:
                                 ipackets = Link_getPacketsInPerMinute(s->inf.net->stats, download->rangecount);
