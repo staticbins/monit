@@ -1,6 +1,11 @@
-                     CHANGES version 5.25.3
+                     CHANGES version 5.25.4
 
            This file summarizes changes made since 5.0
+
+Version 5.25.4
+
+Fixed: Filesystem with missing free inodes statistics (such as CEPH) shown wrong free value (-1).
+
 
 Version 5.25.3
 

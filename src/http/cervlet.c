@@ -387,7 +387,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         s->inf.filesystem->f_blocks > 0 ? ((float)100 * (float)s->inf.filesystem->f_blocksfreetotal / (float)s->inf.filesystem->f_blocks) : 0);
                                 if (s->inf.filesystem->f_files > 0) {
                                         _formatStatus("inodes total", Event_Null, type, res, s, true, "%lld", s->inf.filesystem->f_files);
-                                        _formatStatus("inodes free", Event_Resource, type, res, s, true, "%lld [%.1f%%]", s->inf.filesystem->f_filesfree, (float)100 * (float)s->inf.filesystem->f_filesfree / (float)s->inf.filesystem->f_files);
+                                        if (s->inf.filesystem->f_filesfree > 0)
+                                                _formatStatus("inodes free", Event_Resource, type, res, s, true, "%lld [%.1f%%]", s->inf.filesystem->f_filesfree, (float)100 * (float)s->inf.filesystem->f_filesfree / (float)s->inf.filesystem->f_files);
                                 }
                                 _printIOStatistics(type, res, s, &(s->inf.filesystem->read), "read", "read");
                                 _printIOStatistics(type, res, s, &(s->inf.filesystem->write), "write", "write");
