@@ -1,8 +1,10 @@
-                     CHANGES version 5.25.4
+                     CHANGES version 5.26.0
 
            This file summarizes changes made since 5.0
 
-Version 5.25.4
+Version 5.26.0
+
+New: Add the MQTT protocol test.
 
 Fixed: Filesystem with missing free inodes statistics (such as CEPH) shown wrong free value (-1).
 

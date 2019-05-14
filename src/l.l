@@ -316,6 +316,7 @@ rsync             { return RSYNC; }
 tns               { return TNS; }
 pgsql             { return PGSQL; }
 websocket         { return WEBSOCKET; }
+mqtt              { return MQTT; }
 origin            { return ORIGIN; }
 version           { return VERSIONOPT; }
 sip               { return SIP; }
