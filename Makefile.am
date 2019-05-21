@@ -70,6 +70,7 @@ monit_SOURCES	= src/y.tab.c \
 		  src/protocols/lmtp.c \
 		  src/protocols/memcache.c \
 		  src/protocols/mongodb.c \
+		  src/protocols/mqtt.c \
 		  src/protocols/mysql.c \
 		  src/protocols/nntp.c \
 		  src/protocols/ntp3.c \
