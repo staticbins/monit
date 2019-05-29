@@ -1557,6 +1557,9 @@ protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                 | PROTOCOL MONGODB  {
                         portset.protocol = Protocol_get(Protocol_MONGODB);
                   }
+                | PROTOCOL MQTT mqttlist {
+                        portset.protocol = Protocol_get(Protocol_MQTT);
+                  }
                 | PROTOCOL MYSQL mysqllist {
                         portset.protocol = Protocol_get(Protocol_MYSQL);
                   }
@@ -1625,9 +1628,6 @@ protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                 | PROTOCOL MEMCACHE {
                         portset.protocol = Protocol_get(Protocol_MEMCACHE);
                   }
-                | PROTOCOL MQTT {
-                        portset.protocol = Protocol_get(Protocol_MQTT);
-                  }
                 | PROTOCOL WEBSOCKET websocketlist {
                         portset.protocol = Protocol_get(Protocol_WEBSOCKET);
                   }
@@ -1678,6 +1678,18 @@ smtp            : username {
                   }
                 | password {
                         portset.parameters.smtp.password = $<string>1;
+                  }
+                ;
+
+mqttlist        : /* EMPTY */
+                | mqttlist mqtt
+                ;
+
+mqtt            : username {
+                        portset.parameters.mqtt.username = $<string>1;
+                  }
+                | password {
+                        portset.parameters.mqtt.password = $<string>1;
                   }
                 ;
 

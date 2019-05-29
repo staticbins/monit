@@ -396,6 +396,9 @@ static void _gcportlist(Port_T *p) {
         } else if ((*p)->protocol->check == check_generic) {
                 if ((*p)->parameters.generic.sendexpect)
                         _gcgeneric(&(*p)->parameters.generic.sendexpect);
+        } else if ((*p)->protocol->check == check_mqtt) {
+                FREE((*p)->parameters.mqtt.username);
+                FREE((*p)->parameters.mqtt.password);
         } else if ((*p)->protocol->check == check_mysql) {
                 FREE((*p)->parameters.mysql.username);
                 FREE((*p)->parameters.mysql.password);

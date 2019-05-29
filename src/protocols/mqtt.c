@@ -133,6 +133,7 @@ typedef struct {
 
 typedef enum {
         MQTT_Init = 0,
+        MQTT_ConnectSent,
         MQTT_Connected
 } __attribute__((__packed__)) mqtt_state_t;
 
@@ -147,7 +148,7 @@ typedef struct mqtt_t {
 /* ------------------------------------------------------ Request handlers */
 
 
-static boolean_t _connect(mqtt_t *mqtt) {
+static void _connectRequest(mqtt_t *mqtt) {
         mqtt_connect_request_t connect = {
                 .header.messageType = MQTT_Type_ConnectRequest,
                 .header.flags       = 0,
@@ -157,9 +158,11 @@ static boolean_t _connect(mqtt_t *mqtt) {
                 .protocolName[2]                    = 'T',
                 .protocolName[3]                    = 'T',
                 .protocolLevel                      = 4,    // protocol for version 3.1.1
-                .flags                              = MQTT_ConnectRequest_CleanSession, //FIXME: support MQTT_ConnectRequest_Password + MQTT_ConnectRequest_Username if set
+                .flags                              = MQTT_ConnectRequest_CleanSession,
                 .keepAlive                          = htons(1)
         };
+        mqtt_payload_t userName = NULL;
+        mqtt_payload_t password = NULL;
         // Client ID
         uint16_t *clientIdentifierLength = (uint16_t *)connect.data;
         char *clientIdentifierData = connect.data + sizeof(uint16_t);
@@ -172,17 +175,44 @@ static boolean_t _connect(mqtt_t *mqtt) {
         Util_getToken(clientIdentifierData + 6);
         *clientIdentifierLength = htons(strlen(clientIdentifierData));
         // Username
-//        mqtt_payload_t userName = {};
+        if (mqtt->port->parameters.mqtt.username) {
+                connect.flags |= MQTT_ConnectRequest_Username;
+                int length = strlen(mqtt->port->parameters.mqtt.username);
+                userName = (mqtt_payload_t)(connect.data + sizeof(uint16_t) + strlen(clientIdentifierData));
+                userName->length = htons(length);
+                strncpy(userName->data, mqtt->port->parameters.mqtt.username, length);
+        }
         // Password
-//        mqtt_payload_t password = {};
-        //FIXME: implement connect with optional username and password
-        connect.header.messageLength = sizeof(mqtt_connect_request_t) - sizeof(mqtt_header_t) - sizeof(connect.data) + 2 + strlen(clientIdentifierData);
-        if (Socket_write(mqtt->socket, &connect, sizeof(mqtt_header_t) + 10 + 2 + strlen(clientIdentifierData)) < 0) {
+        if (mqtt->port->parameters.mqtt.password) {
+                connect.flags |= MQTT_ConnectRequest_Password;
+                int length = strlen(mqtt->port->parameters.mqtt.password);
+                password = (mqtt_payload_t)(connect.data + (sizeof(uint16_t) + strlen(clientIdentifierData)) + (userName ? (sizeof(uint16_t) + strlen(mqtt->port->parameters.mqtt.username)) : 0));
+                password->length = htons(length);
+                strncpy(password->data, mqtt->port->parameters.mqtt.password, length);
+        }
+        connect.header.messageLength = sizeof(mqtt_connect_request_t) - sizeof(mqtt_header_t) - sizeof(connect.data) + (2 + strlen(clientIdentifierData)) + (userName ? 2 + strlen(mqtt->port->parameters.mqtt.username) : 0) + (password ? 2 + strlen(mqtt->port->parameters.mqtt.password) : 0);
+        if (Socket_write(mqtt->socket, &connect, sizeof(mqtt_header_t) + 10 + 2 + strlen(clientIdentifierData) + (userName ? (sizeof(uint16_t) + strlen(mqtt->port->parameters.mqtt.username)) : 0) + (password ? 2 + strlen(mqtt->port->parameters.mqtt.password) : 0)) < 0) {
                 THROW(IOException, "Cannot connect -- %s\n", STRERROR);
         }
-        //FIXME: check connect response
+        mqtt->state = MQTT_ConnectSent;
+}
+
+
+static void _connectResponse(mqtt_t *mqtt) {
+        mqtt_connect_response_t response = {};
+        if (Socket_read(mqtt->socket, &response, sizeof(mqtt_connect_response_t)) < sizeof(mqtt_connect_response_t)) {
+                THROW(IOException, "Error receiving server response -- %s", STRERROR);
+        }
+        if (response.header.messageType != MQTT_Type_ConnectResponse) {
+                THROW(ProtocolException, "Unexpected response type -- 0x%x", response.header.messageType);
+        }
+        if (response.header.messageLength != 2) {
+                THROW(ProtocolException, "Unexpected response length -- %d", response.header.messageLength);
+        }
+        if (response.returnCode != MQTT_ConnectResponse_Accepted) {
+                THROW(ProtocolException, "Unexpected response code -- %d", response.returnCode);
+        }
         mqtt->state = MQTT_Connected;
-        return true;
 }
 
 
@@ -191,7 +221,7 @@ static void _disconnect(mqtt_t *mqtt) {
                 mqtt_disconnect_request_t disconnect = {
                         .header.messageType   = MQTT_Type_Disconnect,
                         .header.flags         = 0,
-                        .header.messageLength                 = 0
+                        .header.messageLength = 0
                 };
                 if (Socket_write(mqtt->socket, &disconnect, sizeof(mqtt_disconnect_request_t)) < 0) {
                         THROW(IOException, "Cannot disconnect -- %s\n", STRERROR);
@@ -212,7 +242,8 @@ static void _disconnect(mqtt_t *mqtt) {
 void check_mqtt(Socket_T socket) {
         ASSERT(socket);
         mqtt_t mqtt = {.state = MQTT_Init, .socket = socket, .port = Socket_getPort(socket)};
-        _connect(&mqtt);
+        _connectRequest(&mqtt);
+        _connectResponse(&mqtt);
         _disconnect(&mqtt);
 }
 
