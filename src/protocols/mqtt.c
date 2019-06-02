@@ -83,8 +83,67 @@ typedef enum {
         MQTT_ConnectResponse_Refused_Protocol,
         MQTT_ConnectResponse_Refused_ClientIdentifier,
         MQTT_ConnectResponse_Refused_ServiceUnavailable,
-        MQTT_ConnectResponse_Refused_Credentials
+        MQTT_ConnectResponse_Refused_Credentials,
+        MQTT_ConnectResponse_Refused_NotAuthorized
 } __attribute__((__packed__)) MQTT_ConnectResponse_Codes;
+
+
+const char *_describeType(int type) {
+        switch (type) {
+                case MQTT_Type_ConnectRequest:
+                        return "Connect Request";
+                case MQTT_Type_ConnectResponse:
+                        return "Connect Response";
+                case MQTT_Type_PublishRequest:
+                        return "Publish Request";
+                case MQTT_Type_PublishResponse:
+                        return "Publish Response";
+                case MQTT_Type_PublishReceived:
+                        return "Publish Received";
+                case MQTT_Type_PublishRelease:
+                        return "Publish Release";
+                case MQTT_Type_PublishComplete:
+                        return "Publish Complete";
+                case MQTT_Type_SubscribeRequest:
+                        return "Subscribe Request";
+                case MQTT_Type_SubscribeResponse:
+                        return "Subscribe Response";
+                case MQTT_Type_UnsubscribeRequest:
+                        return "Unsubscribe Request";
+                case MQTT_Type_UnsubscribeResponse:
+                        return "Unsubscribe Response";
+                case MQTT_Type_PingRequest:
+                        return "Ping Request";
+                case MQTT_Type_PingResponse:
+                        return "Ping Response";
+                case MQTT_Type_Disconnect:
+                        return "Disconnect";
+                default:
+                        break;
+        }
+        return "unknown";
+}
+
+
+const char *_describeConnectionCode(int code) {
+        switch (code) {
+                case MQTT_ConnectResponse_Accepted:
+                        return "Connection accepted";
+                case MQTT_ConnectResponse_Refused_Protocol:
+                        return "Connection Refused: unacceptable protocol version";
+                case MQTT_ConnectResponse_Refused_ClientIdentifier:
+                        return "Connection Refused: client identifier rejected";
+                case MQTT_ConnectResponse_Refused_ServiceUnavailable:
+                        return "Connection Refused: server unavailable";
+                case MQTT_ConnectResponse_Refused_Credentials:
+                        return "Connection Refused: bad user name or password";
+                case MQTT_ConnectResponse_Refused_NotAuthorized:
+                        return "Connection Refused: not authorized";
+                default:
+                        break;
+        }
+        return "unknown";
+}
 
 
 /* -------------------------------------------------------------- Messages */
@@ -204,16 +263,16 @@ static void _connectRequest(mqtt_t *mqtt) {
 static void _connectResponse(mqtt_t *mqtt) {
         mqtt_connect_response_t response = {};
         if (Socket_read(mqtt->socket, &response, sizeof(mqtt_connect_response_t)) < sizeof(mqtt_connect_response_t)) {
-                THROW(IOException, "Error receiving server response -- %s", STRERROR);
+                THROW(IOException, "Error receiving connection response -- %s", STRERROR);
         }
         if (response.header.messageType != MQTT_Type_ConnectResponse) {
-                THROW(ProtocolException, "Unexpected response type -- 0x%x", response.header.messageType); //FIXME: code -> string
+                THROW(ProtocolException, "Unexpected connection response type -- %s (%d)", _describeType(response.header.messageType), response.header.messageType);
         }
         if (response.header.messageLength != 2) {
-                THROW(ProtocolException, "Unexpected response length -- %d", response.header.messageLength);
+                THROW(ProtocolException, "Unexpected connection response length -- %d", response.header.messageLength);
         }
         if (response.returnCode != MQTT_ConnectResponse_Accepted) {
-                THROW(ProtocolException, "Unexpected response code -- %d", response.returnCode); //FIXME: code -> string
+                THROW(ProtocolException, "Unexpected connection response code -- %s (%d)", _describeConnectionCode(response.returnCode), response.returnCode);
         }
         mqtt->state = MQTT_Connected;
 }
