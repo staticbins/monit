@@ -71,6 +71,7 @@ typedef enum {
 
 // Connect request flags (see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718030) - we use just subset for CONNECT and DISCONNECT
 typedef enum {
+        MQTT_ConnectRequest_None         = 0x00,
         MQTT_ConnectRequest_CleanSession = 0x02,
         MQTT_ConnectRequest_Password     = 0x40,
         MQTT_ConnectRequest_Username     = 0x80
@@ -86,64 +87,6 @@ typedef enum {
         MQTT_ConnectResponse_Refused_Credentials,
         MQTT_ConnectResponse_Refused_NotAuthorized
 } __attribute__((__packed__)) MQTT_ConnectResponse_Codes;
-
-
-const char *_describeType(int type) {
-        switch (type) {
-                case MQTT_Type_ConnectRequest:
-                        return "Connect Request";
-                case MQTT_Type_ConnectResponse:
-                        return "Connect Response";
-                case MQTT_Type_PublishRequest:
-                        return "Publish Request";
-                case MQTT_Type_PublishResponse:
-                        return "Publish Response";
-                case MQTT_Type_PublishReceived:
-                        return "Publish Received";
-                case MQTT_Type_PublishRelease:
-                        return "Publish Release";
-                case MQTT_Type_PublishComplete:
-                        return "Publish Complete";
-                case MQTT_Type_SubscribeRequest:
-                        return "Subscribe Request";
-                case MQTT_Type_SubscribeResponse:
-                        return "Subscribe Response";
-                case MQTT_Type_UnsubscribeRequest:
-                        return "Unsubscribe Request";
-                case MQTT_Type_UnsubscribeResponse:
-                        return "Unsubscribe Response";
-                case MQTT_Type_PingRequest:
-                        return "Ping Request";
-                case MQTT_Type_PingResponse:
-                        return "Ping Response";
-                case MQTT_Type_Disconnect:
-                        return "Disconnect";
-                default:
-                        break;
-        }
-        return "unknown";
-}
-
-
-const char *_describeConnectionCode(int code) {
-        switch (code) {
-                case MQTT_ConnectResponse_Accepted:
-                        return "Connection accepted";
-                case MQTT_ConnectResponse_Refused_Protocol:
-                        return "Connection Refused: unacceptable protocol version";
-                case MQTT_ConnectResponse_Refused_ClientIdentifier:
-                        return "Connection Refused: client identifier rejected";
-                case MQTT_ConnectResponse_Refused_ServiceUnavailable:
-                        return "Connection Refused: server unavailable";
-                case MQTT_ConnectResponse_Refused_Credentials:
-                        return "Connection Refused: bad user name or password";
-                case MQTT_ConnectResponse_Refused_NotAuthorized:
-                        return "Connection Refused: not authorized";
-                default:
-                        break;
-        }
-        return "unknown";
-}
 
 
 /* -------------------------------------------------------------- Messages */
@@ -207,6 +150,74 @@ typedef struct mqtt_t {
 /* ------------------------------------------------------ Request handlers */
 
 
+static const char *_describeType(int type) {
+        switch (type) {
+                case MQTT_Type_ConnectRequest:
+                        return "Connect Request";
+                case MQTT_Type_ConnectResponse:
+                        return "Connect Response";
+                case MQTT_Type_PublishRequest:
+                        return "Publish Request";
+                case MQTT_Type_PublishResponse:
+                        return "Publish Response";
+                case MQTT_Type_PublishReceived:
+                        return "Publish Received";
+                case MQTT_Type_PublishRelease:
+                        return "Publish Release";
+                case MQTT_Type_PublishComplete:
+                        return "Publish Complete";
+                case MQTT_Type_SubscribeRequest:
+                        return "Subscribe Request";
+                case MQTT_Type_SubscribeResponse:
+                        return "Subscribe Response";
+                case MQTT_Type_UnsubscribeRequest:
+                        return "Unsubscribe Request";
+                case MQTT_Type_UnsubscribeResponse:
+                        return "Unsubscribe Response";
+                case MQTT_Type_PingRequest:
+                        return "Ping Request";
+                case MQTT_Type_PingResponse:
+                        return "Ping Response";
+                case MQTT_Type_Disconnect:
+                        return "Disconnect";
+                default:
+                        break;
+        }
+        return "unknown";
+}
+
+
+static const char *_describeConnectionCode(int code) {
+        switch (code) {
+                case MQTT_ConnectResponse_Accepted:
+                        return "Connection accepted";
+                case MQTT_ConnectResponse_Refused_Protocol:
+                        return "Connection Refused: unacceptable protocol version";
+                case MQTT_ConnectResponse_Refused_ClientIdentifier:
+                        return "Connection Refused: client identifier rejected";
+                case MQTT_ConnectResponse_Refused_ServiceUnavailable:
+                        return "Connection Refused: server unavailable";
+                case MQTT_ConnectResponse_Refused_Credentials:
+                        return "Connection Refused: bad user name or password";
+                case MQTT_ConnectResponse_Refused_NotAuthorized:
+                        return "Connection Refused: not authorized";
+                default:
+                        break;
+        }
+        return "unknown";
+}
+
+
+static void _payload(mqtt_connect_request_t *request, const char *data, MQTT_ConnectRequest_Flags flags) {
+        size_t dataLength = strlen(data);
+        mqtt_payload_t payload = (mqtt_payload_t)(request->data + request->header.messageLength);
+        strncpy(payload->data, data, dataLength);
+        payload->length = htons(dataLength);
+        request->header.messageLength += sizeof(payload->length) + dataLength;
+        request->flags |= flags;
+}
+
+
 static void _connectRequest(mqtt_t *mqtt) {
         mqtt_connect_request_t connect = {
                 .header.messageType                 = MQTT_Type_ConnectRequest,
@@ -222,33 +233,18 @@ static void _connectRequest(mqtt_t *mqtt) {
         };
 
         // Client ID
-        MD_T id = {};
-        mqtt_payload_t clientId = (mqtt_payload_t)(connect.data);
-        snprintf(clientId->data, sizeof(MD_T), "monit-%s", Util_getToken(id));
-        size_t length = strlen(clientId->data);
-        clientId->length = htons(length);
-        connect.header.messageLength += sizeof(clientId->length) + length;
+        char id[STRLEN] = {};
+        snprintf(id, sizeof(id), "monit-%lld", (long long)Run.incarnation);
+        _payload(&connect, id, MQTT_ConnectRequest_None);
 
         // Username
-        mqtt_payload_t userName = NULL;
         if (mqtt->port->parameters.mqtt.username) {
-                size_t length = strlen(mqtt->port->parameters.mqtt.username);
-                userName = (mqtt_payload_t)(connect.data + connect.header.messageLength);
-                userName->length = htons(length);
-                strncpy(userName->data, mqtt->port->parameters.mqtt.username, length);
-                connect.header.messageLength += sizeof(userName->length) + length;
-                connect.flags |= MQTT_ConnectRequest_Username;
+                _payload(&connect, mqtt->port->parameters.mqtt.username, MQTT_ConnectRequest_Username);
         }
 
         // Password
-        mqtt_payload_t password = NULL;
         if (mqtt->port->parameters.mqtt.password) {
-                size_t length = strlen(mqtt->port->parameters.mqtt.password);
-                password = (mqtt_payload_t)(connect.data + connect.header.messageLength);
-                password->length = htons(length);
-                strncpy(password->data, mqtt->port->parameters.mqtt.password, length);
-                connect.header.messageLength += sizeof(password->length) + length;
-                connect.flags |= MQTT_ConnectRequest_Password;
+                _payload(&connect, mqtt->port->parameters.mqtt.password, MQTT_ConnectRequest_Password);
         }
 
         connect.header.messageLength += sizeof(mqtt_connect_request_t) - sizeof(mqtt_header_t) - sizeof(connect.data);
