@@ -3203,6 +3203,7 @@ knows how to speak:
  I<LMTP>
  I<MEMCACHE>
  I<MONGODB>
+ I<MQTT>
  I<MYSQL>
  I<NNTP>
  I<NTP3>
@@ -3462,6 +3463,26 @@ Example:
         dnslimit > 50% or
         waitlimit < 20%
  then alert
+
+
+=head4 MQTT
+
+Syntax:
+
+ PROTOCOL MQTT [USERNAME string PASSWORD string]
+
+I<USERNAME> MQTT username
+
+I<PASSWORD> MQTT password
+
+Username and password (credentials) are B<optional>.
+
+Example:
+
+ check process mosquitto with pidfile /var/run/mosquitto.pid
+     start program = "/sbin/start mosquitto"
+     stop program = "/sbin/stop mosquitto"
+     if failed port 1883 protocol mqtt then alert
 
 
 =head4 MYSQL
