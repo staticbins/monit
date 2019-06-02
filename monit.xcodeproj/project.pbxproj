@@ -81,6 +81,7 @@
 		9365D22B1E28F3FC00FCF3FB /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9365D22A1E28F3FC00FCF3FB /* IOKit.framework */; };
 		9365D2311E28F40800FCF3FB /* DiskArbitration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9365D2301E28F40800FCF3FB /* DiskArbitration.framework */; };
 		9365D2331E28F41500FCF3FB /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9365D2321E28F41500FCF3FB /* CoreFoundation.framework */; };
+		9373D69722A3B5E200CCAC92 /* mqtt.c in Sources */ = {isa = PBXBuildFile; fileRef = 9373D69222A3B5E200CCAC92 /* mqtt.c */; };
 		9378737B1A13907100CF8C5E /* sieve.c in Sources */ = {isa = PBXBuildFile; fileRef = 9378737A1A13907100CF8C5E /* sieve.c */; };
 		93A23ED41C85E6890076FBFE /* Address.c in Sources */ = {isa = PBXBuildFile; fileRef = 93A23ED21C85E6890076FBFE /* Address.c */; };
 		93DE91B01CBAED0400BC8E0C /* client.c in Sources */ = {isa = PBXBuildFile; fileRef = 93DE91AE1CBAED0400BC8E0C /* client.c */; };
@@ -310,6 +311,7 @@
 		9365D22A1E28F3FC00FCF3FB /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		9365D2301E28F40800FCF3FB /* DiskArbitration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DiskArbitration.framework; path = System/Library/Frameworks/DiskArbitration.framework; sourceTree = SDKROOT; };
 		9365D2321E28F41500FCF3FB /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		9373D69222A3B5E200CCAC92 /* mqtt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mqtt.c; sourceTree = "<group>"; };
 		9378737A1A13907100CF8C5E /* sieve.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sieve.c; sourceTree = "<group>"; };
 		9397E3081D897CCA008CAD1F /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		93A23ED21C85E6890076FBFE /* Address.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Address.c; sourceTree = "<group>"; };
@@ -601,6 +603,7 @@
 				52F6E78D13A74F220023F87A /* ldap3.c */,
 				52F6E78E13A74F220023F87A /* lmtp.c */,
 				52F6E78F13A74F220023F87A /* memcache.c */,
+				9373D69222A3B5E200CCAC92 /* mqtt.c */,
 				52F6E79013A74F220023F87A /* mysql.c */,
 				52F6E79113A74F220023F87A /* nntp.c */,
 				9357B19919F2F5A400329B3F /* mongodb.c */,
@@ -699,7 +702,7 @@
 		528EA76913A74E05003DA4BE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0930;
+				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = "Tildeslash Ltd.";
 				TargetAttributes = {
 					528EA77113A74E05003DA4BE = {
@@ -710,10 +713,11 @@
 			};
 			buildConfigurationList = 528EA76C13A74E05003DA4BE /* Build configuration list for PBXProject "monit" */;
 			compatibilityVersion = "Xcode 6.3";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 528EA76713A74E05003DA4BE;
 			productRefGroup = 528EA77313A74E05003DA4BE /* Products */;
@@ -813,6 +817,7 @@
 				52F6E83713A74F220023F87A /* imap.c in Sources */,
 				52F6E83813A74F220023F87A /* ldap2.c in Sources */,
 				52F6E83913A74F220023F87A /* ldap3.c in Sources */,
+				9373D69722A3B5E200CCAC92 /* mqtt.c in Sources */,
 				52F6E83A13A74F220023F87A /* lmtp.c in Sources */,
 				52F6E83B13A74F220023F87A /* memcache.c in Sources */,
 				93A23ED41C85E6890076FBFE /* Address.c in Sources */,
@@ -864,6 +869,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = NO;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = NO;
@@ -928,6 +934,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = NO;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = NO;

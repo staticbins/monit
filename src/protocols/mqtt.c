@@ -92,13 +92,13 @@ typedef enum {
 
 typedef struct {
 #if BYTE_ORDER == LITTLE_ENDIAN
-        uint8_t  flags       : 4;
-        uint8_t  messageType : 4;
+        uint8_t   flags       : 4;
+        MQTT_Type messageType : 4;
 #else
-        uint8_t  messageType : 4;
-        uint8_t  flags       : 4;
+        MQTT_Type messageType : 4;
+        uint8_t   flags       : 4;
 #endif
-        uint8_t  messageLength;
+        uint8_t   messageLength;
 } mqtt_header_t;
 
 
@@ -150,8 +150,8 @@ typedef struct mqtt_t {
 
 static void _connectRequest(mqtt_t *mqtt) {
         mqtt_connect_request_t connect = {
-                .header.messageType = MQTT_Type_ConnectRequest,
-                .header.flags       = 0,
+                .header.messageType                 = MQTT_Type_ConnectRequest,
+                .header.flags                       = 0,
                 .protocolNameLength                 = htons(4),
                 .protocolName[0]                    = 'M',
                 .protocolName[1]                    = 'Q',
@@ -161,37 +161,40 @@ static void _connectRequest(mqtt_t *mqtt) {
                 .flags                              = MQTT_ConnectRequest_CleanSession,
                 .keepAlive                          = htons(1)
         };
-        mqtt_payload_t userName = NULL;
-        mqtt_payload_t password = NULL;
+
         // Client ID
-        uint16_t *clientIdentifierLength = (uint16_t *)connect.data;
-        char *clientIdentifierData = connect.data + sizeof(uint16_t);
-        clientIdentifierData[0] = 'm';
-        clientIdentifierData[1] = 'o';
-        clientIdentifierData[2] = 'n';
-        clientIdentifierData[3] = 'i';
-        clientIdentifierData[4] = 't';
-        clientIdentifierData[5] = '-';
-        Util_getToken(clientIdentifierData + 6);
-        *clientIdentifierLength = htons(strlen(clientIdentifierData));
+        MD_T id = {};
+        mqtt_payload_t clientId = (mqtt_payload_t)(connect.data);
+        snprintf(clientId->data, sizeof(MD_T), "monit-%s", Util_getToken(id));
+        size_t length = strlen(clientId->data);
+        clientId->length = htons(length);
+        connect.header.messageLength += sizeof(clientId->length) + length;
+
         // Username
+        mqtt_payload_t userName = NULL;
         if (mqtt->port->parameters.mqtt.username) {
-                connect.flags |= MQTT_ConnectRequest_Username;
-                int length = strlen(mqtt->port->parameters.mqtt.username);
-                userName = (mqtt_payload_t)(connect.data + sizeof(uint16_t) + strlen(clientIdentifierData));
+                size_t length = strlen(mqtt->port->parameters.mqtt.username);
+                userName = (mqtt_payload_t)(connect.data + connect.header.messageLength);
                 userName->length = htons(length);
                 strncpy(userName->data, mqtt->port->parameters.mqtt.username, length);
+                connect.header.messageLength += sizeof(userName->length) + length;
+                connect.flags |= MQTT_ConnectRequest_Username;
         }
+
         // Password
+        mqtt_payload_t password = NULL;
         if (mqtt->port->parameters.mqtt.password) {
-                connect.flags |= MQTT_ConnectRequest_Password;
-                int length = strlen(mqtt->port->parameters.mqtt.password);
-                password = (mqtt_payload_t)(connect.data + (sizeof(uint16_t) + strlen(clientIdentifierData)) + (userName ? (sizeof(uint16_t) + strlen(mqtt->port->parameters.mqtt.username)) : 0));
+                size_t length = strlen(mqtt->port->parameters.mqtt.password);
+                password = (mqtt_payload_t)(connect.data + connect.header.messageLength);
                 password->length = htons(length);
                 strncpy(password->data, mqtt->port->parameters.mqtt.password, length);
+                connect.header.messageLength += sizeof(password->length) + length;
+                connect.flags |= MQTT_ConnectRequest_Password;
         }
-        connect.header.messageLength = sizeof(mqtt_connect_request_t) - sizeof(mqtt_header_t) - sizeof(connect.data) + (2 + strlen(clientIdentifierData)) + (userName ? 2 + strlen(mqtt->port->parameters.mqtt.username) : 0) + (password ? 2 + strlen(mqtt->port->parameters.mqtt.password) : 0);
-        if (Socket_write(mqtt->socket, &connect, sizeof(mqtt_header_t) + 10 + 2 + strlen(clientIdentifierData) + (userName ? (sizeof(uint16_t) + strlen(mqtt->port->parameters.mqtt.username)) : 0) + (password ? 2 + strlen(mqtt->port->parameters.mqtt.password) : 0)) < 0) {
+
+        connect.header.messageLength += sizeof(mqtt_connect_request_t) - sizeof(mqtt_header_t) - sizeof(connect.data);
+
+        if (Socket_write(mqtt->socket, &connect, sizeof(mqtt_header_t) + connect.header.messageLength) < 0) {
                 THROW(IOException, "Cannot connect -- %s\n", STRERROR);
         }
         mqtt->state = MQTT_ConnectSent;
@@ -204,13 +207,13 @@ static void _connectResponse(mqtt_t *mqtt) {
                 THROW(IOException, "Error receiving server response -- %s", STRERROR);
         }
         if (response.header.messageType != MQTT_Type_ConnectResponse) {
-                THROW(ProtocolException, "Unexpected response type -- 0x%x", response.header.messageType);
+                THROW(ProtocolException, "Unexpected response type -- 0x%x", response.header.messageType); //FIXME: code -> string
         }
         if (response.header.messageLength != 2) {
                 THROW(ProtocolException, "Unexpected response length -- %d", response.header.messageLength);
         }
         if (response.returnCode != MQTT_ConnectResponse_Accepted) {
-                THROW(ProtocolException, "Unexpected response code -- %d", response.returnCode);
+                THROW(ProtocolException, "Unexpected response code -- %d", response.returnCode); //FIXME: code -> string
         }
         mqtt->state = MQTT_Connected;
 }
