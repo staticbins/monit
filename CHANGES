@@ -4,14 +4,18 @@
 
 Version 5.26.0
 
+New: The load average test now allows to set the per-CPU-core limit, so it 
+     allows for generic load average limit policy regardless of CPU count. Example:
+        if loadavg(1m) per core > 2 then alert
+
 New: Added the MQTT protocol test.
- Syntax:
-     IF FAILED PORT <number> PROTOCOL MQTT [USERNAME <string> PASSWORD <string>] THEN ALERT
- Example:
-   check process mosquitto with pidfile /var/run/mosquitto.pid
-     start program = "/sbin/start mosquitto"
-     stop program = "/sbin/stop mosquitto"
-     if failed port 1883 protocol mqtt then alert
+     Syntax:
+         IF FAILED PORT <number> PROTOCOL MQTT [USERNAME <string> PASSWORD <string>] THEN ALERT
+     Example:
+         check process mosquitto with pidfile /var/run/mosquitto.pid
+           start program = "/sbin/start mosquitto"
+           stop program = "/sbin/stop mosquitto"
+           if failed port 1883 protocol mqtt then alert
 
 Fixed: Filesystem with missing free inodes statistics (such as CEPH) shown wrong free value (-1).
 
