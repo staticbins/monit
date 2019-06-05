@@ -65,7 +65,8 @@ typedef enum {
         Protocol_MONGODB,
         Protocol_SIEVE,
         Protocol_SPAMASSASSIN,
-        Protocol_FAIL2BAN
+        Protocol_FAIL2BAN,
+        Protocol_MQTT
 } Protocol_Type;
 
 
@@ -101,6 +102,7 @@ void check_lmtp(Socket_T);
 void check_gps(Socket_T);
 void check_radius(Socket_T);
 void check_memcache(Socket_T);
+void check_mqtt(Socket_T);
 void check_websocket(Socket_T);
 
 

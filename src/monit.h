@@ -695,6 +695,10 @@ typedef struct Port_T {
                 struct {
                         char *username;
                         char *password;
+                } mqtt;
+                struct {
+                        char *username;
+                        char *password;
                 } mysql;
                 struct {
                         char *secret;

@@ -71,7 +71,8 @@ static Protocol_T protocols[] = {
         &(struct Protocol_T){"MONGODB",         check_mongodb},
         &(struct Protocol_T){"SIEVE",           check_sieve},
         &(struct Protocol_T){"SPAMASSASSIN",    check_spamassassin},
-        &(struct Protocol_T){"FAIL2BAN",        check_fail2ban}
+        &(struct Protocol_T){"FAIL2BAN",        check_fail2ban},
+        &(struct Protocol_T){"MQTT",            check_mqtt}
 };
 
 

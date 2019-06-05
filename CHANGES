@@ -1,8 +1,17 @@
-                     CHANGES version 5.25.4
+                     CHANGES version 5.26.0
 
            This file summarizes changes made since 5.0
 
-Version 5.25.4
+Version 5.26.0
+
+New: Added the MQTT protocol test.
+ Syntax:
+     IF FAILED PORT <number> PROTOCOL MQTT [USERNAME <string> PASSWORD <string>] THEN ALERT
+ Example:
+   check process mosquitto with pidfile /var/run/mosquitto.pid
+     start program = "/sbin/start mosquitto"
+     stop program = "/sbin/stop mosquitto"
+     if failed port 1883 protocol mqtt then alert
 
 Fixed: Filesystem with missing free inodes statistics (such as CEPH) shown wrong free value (-1).
 
