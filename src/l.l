@@ -355,7 +355,6 @@ cleanuplimit      { return CLEANUPLIMIT; }
 mem(ory)?         { return MEMORY; }
 swap              { return SWAP; }
 total[ ]?mem(ory)? { return TOTALMEMORY; }
-core              { return CORE; }
 cpu               { return CPU; }
 total[ ]?cpu      { return TOTALCPU; }
 child(ren)?       { return CHILDREN; }

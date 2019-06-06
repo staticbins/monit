@@ -346,7 +346,7 @@ static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Typ
 %token CHECKPROC CHECKFILESYS CHECKFILE CHECKDIR CHECKHOST CHECKSYSTEM CHECKFIFO CHECKPROGRAM CHECKNET
 %token THREADS CHILDREN METHOD GET HEAD STATUS ORIGIN VERSIONOPT READ WRITE OPERATION SERVICETIME DISK
 %token RESOURCE MEMORY TOTALMEMORY LOADAVG1 LOADAVG5 LOADAVG15 SWAP
-%token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CORE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
+%token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
 %token UID EUID GID MMONIT INSTANCE USERNAME PASSWORD
 %token TIME ATIME CTIME MTIME CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH 
@@ -2318,20 +2318,16 @@ resourcechild   : CHILDREN operator NUMBER {
                   }
                 ;
 
-resourceload    : resourceloadavg coremultiplier operator value {
+resourceload    : resourceloadavg operator value {
                         resourceset.resource_id = $<number>1;
-                        resourceset.operator = $<number>3;
-                        resourceset.limit = $<real>4 * $<number>2;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3;
                   }
                 ;
 
 resourceloadavg : LOADAVG1  { $<number>$ = Resource_LoadAverage1m; }
                 | LOADAVG5  { $<number>$ = Resource_LoadAverage5m; }
                 | LOADAVG15 { $<number>$ = Resource_LoadAverage15m; }
-                ;
-
-coremultiplier  : /* EMPTY */ { $<number>$ = 1; }
-                | CORE        { $<number>$ = systeminfo.cpu.count; }
                 ;
 
 resourceread    : DISK READ operator value unit currenttime {
