@@ -406,6 +406,16 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
 }
 
 
+static State_Type _checkLoadAverage(Resource_T r, double loadavg, char *name, char report[STRLEN]) {
+        if (Util_evalDoubleQExpression(r->operator, loadavg, r->limit)) {
+                snprintf(report, STRLEN, "%s of %.1f matches resource limit [%s %s %.1f]", name, loadavg, name, operatorshortnames[r->operator], r->limit);
+                return State_Failed;
+        }
+        snprintf(report, STRLEN, "%s check succeeded [current %s = %.1f]", name, name, loadavg);
+        return State_Succeeded;
+}
+
+
 static State_Type _checkSystemResources(Service_T s, Resource_T r) {
         ASSERT(s);
         ASSERT(r);
@@ -507,30 +517,27 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                         break;
 
                 case Resource_LoadAverage1m:
-                        if (Util_evalDoubleQExpression(r->operator, systeminfo.loadavg[0], r->limit)) {
-                                rv = State_Failed;
-                                snprintf(report, STRLEN, "loadavg(1min) of %.1f matches resource limit [loadavg(1min) %s %.1f]", systeminfo.loadavg[0], operatorshortnames[r->operator], r->limit);
-                        } else {
-                                snprintf(report, STRLEN, "loadavg(1min) check succeeded [current loadavg(1min) = %.1f]", systeminfo.loadavg[0]);
-                        }
+                        rv = _checkLoadAverage(r, systeminfo.loadavg[0], "loadavg (1min)", report);
                         break;
 
                 case Resource_LoadAverage5m:
-                        if (Util_evalDoubleQExpression(r->operator, systeminfo.loadavg[1], r->limit)) {
-                                rv = State_Failed;
-                                snprintf(report, STRLEN, "loadavg(5min) of %.1f matches resource limit [loadavg(5min) %s %.1f]", systeminfo.loadavg[1], operatorshortnames[r->operator], r->limit);
-                        } else {
-                                snprintf(report, STRLEN, "loadavg(5min) check succeeded [current loadavg(5min) = %.1f]", systeminfo.loadavg[1]);
-                        }
+                        rv = _checkLoadAverage(r, systeminfo.loadavg[1], "loadavg (5min)", report);
                         break;
 
                 case Resource_LoadAverage15m:
-                        if (Util_evalDoubleQExpression(r->operator, systeminfo.loadavg[2], r->limit)) {
-                                rv = State_Failed;
-                                snprintf(report, STRLEN, "loadavg(15min) of %.1f matches resource limit [loadavg(15min) %s %.1f]", systeminfo.loadavg[2], operatorshortnames[r->operator], r->limit);
-                        } else {
-                                snprintf(report, STRLEN, "loadavg(15min) check succeeded [current loadavg(15min) = %.1f]", systeminfo.loadavg[2]);
-                        }
+                        rv = _checkLoadAverage(r, systeminfo.loadavg[2], "loadavg (15min)", report);
+                        break;
+
+                case Resource_LoadAveragePerCore1m:
+                        rv = _checkLoadAverage(r, systeminfo.loadavg[0] / (double)systeminfo.cpu.count, "loadavg per core (1min)", report);
+                        break;
+
+                case Resource_LoadAveragePerCore5m:
+                        rv = _checkLoadAverage(r, systeminfo.loadavg[1] / (double)systeminfo.cpu.count, "loadavg per core (5min)", report);
+                        break;
+
+                case Resource_LoadAveragePerCore15m:
+                        rv = _checkLoadAverage(r, systeminfo.loadavg[2] / (double)systeminfo.cpu.count, "loadavg per core (15min)", report);
                         break;
 
                 default:
