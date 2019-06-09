@@ -2242,15 +2242,27 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                                 break;
 
                         case Resource_LoadAverage1m:
-                                StringBuffer_append(res->outputbuffer, "Load average (1min)");
+                                StringBuffer_append(res->outputbuffer, "Load average (1m)");
                                 break;
 
                         case Resource_LoadAverage5m:
-                                StringBuffer_append(res->outputbuffer, "Load average (5min)");
+                                StringBuffer_append(res->outputbuffer, "Load average (5m)");
                                 break;
 
                         case Resource_LoadAverage15m:
-                                StringBuffer_append(res->outputbuffer, "Load average (15min)");
+                                StringBuffer_append(res->outputbuffer, "Load average (15m)");
+                                break;
+
+                        case Resource_LoadAveragePerCore1m:
+                                StringBuffer_append(res->outputbuffer, "Load average per core (1m)");
+                                break;
+
+                        case Resource_LoadAveragePerCore5m:
+                                StringBuffer_append(res->outputbuffer, "Load average per core (5m)");
+                                break;
+
+                        case Resource_LoadAveragePerCore15m:
+                                StringBuffer_append(res->outputbuffer, "Load average per core (15m)");
                                 break;
 
                         case Resource_Threads:
@@ -2310,6 +2322,9 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         case Resource_LoadAverage1m:
                         case Resource_LoadAverage5m:
                         case Resource_LoadAverage15m:
+                        case Resource_LoadAveragePerCore1m:
+                        case Resource_LoadAveragePerCore5m:
+                        case Resource_LoadAveragePerCore15m:
                                 Util_printRule(res->outputbuffer, q->action, "If %s %.1f", operatornames[q->operator], q->limit);
                                 break;
 

@@ -1301,15 +1301,27 @@ void Util_printService(Service_T s) {
                                 break;
 
                         case Resource_LoadAverage1m:
-                                printf(" %-20s = ", "Load avg. (1min)");
+                                printf(" %-20s = ", "Load avg (1m)");
                                 break;
 
                         case Resource_LoadAverage5m:
-                                printf(" %-20s = ", "Load avg. (5min)");
+                                printf(" %-20s = ", "Load avg (5m)");
                                 break;
 
                         case Resource_LoadAverage15m:
-                                printf(" %-20s = ", "Load avg. (15min)");
+                                printf(" %-20s = ", "Load avg (15m)");
+                                break;
+
+                        case Resource_LoadAveragePerCore1m:
+                                printf(" %-20s = ", "Load avg/core (1m)");
+                                break;
+
+                        case Resource_LoadAveragePerCore5m:
+                                printf(" %-20s = ", "Load avg/core (5m)");
+                                break;
+
+                        case Resource_LoadAveragePerCore15m:
+                                printf(" %-20s = ", "Load avg/core (15m)");
                                 break;
 
                         case Resource_Threads:
@@ -1368,6 +1380,9 @@ void Util_printService(Service_T s) {
                         case Resource_LoadAverage1m:
                         case Resource_LoadAverage5m:
                         case Resource_LoadAverage15m:
+                        case Resource_LoadAveragePerCore1m:
+                        case Resource_LoadAveragePerCore5m:
+                        case Resource_LoadAveragePerCore15m:
                                 printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.1f", operatornames[o->operator], o->limit)));
                                 break;
 

@@ -335,7 +335,10 @@ typedef enum {
         Resource_ReadOperations,
         Resource_WriteBytes,
         Resource_WriteOperations,
-        Resource_ServiceTime
+        Resource_ServiceTime,
+        Resource_LoadAveragePerCore1m,
+        Resource_LoadAveragePerCore5m,
+        Resource_LoadAveragePerCore15m
 } __attribute__((__packed__)) Resource_Type;
 
 
