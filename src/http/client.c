@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -71,7 +71,7 @@
  */
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static void _argument(StringBuffer_T data, const char *name, const char *value) {
@@ -205,7 +205,7 @@ static bool _client(const char *request, StringBuffer_T data) {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 bool HttpClient_action(const char *action, List_T services) {

@@ -23,7 +23,7 @@
  */
 
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -87,7 +87,7 @@
  */
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 static struct {
@@ -125,7 +125,7 @@ static void __attribute__ ((constructor)) _constructor() {
 }
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 #define NSEC_PER_SEC    1000000000L
@@ -283,7 +283,7 @@ static double _usagePercent(uint64_t previous, uint64_t current, double total) {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 bool init_process_info_sysdep(void) {

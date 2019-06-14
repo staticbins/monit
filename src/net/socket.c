@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_POLL_H
 #include <poll.h>
@@ -93,7 +93,7 @@
  */
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 typedef enum {
@@ -126,7 +126,7 @@ struct T {
 };
 
 
-/* --------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 /*
@@ -314,7 +314,7 @@ struct addrinfo *_resolve(const char *hostname, int port, Socket_Type type, Sock
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 T Socket_new(const char *host, int port, Socket_Type type, Socket_Family family, Ssl_Flags flags, int timeout) {
@@ -472,7 +472,7 @@ void Socket_free(T *S) {
 }
 
 
-/* ------------------------------------------------------------ Properties */
+/* ------------------------------------------------------ MARK: - Properties */
 
 
 void Socket_setTimeout(T S, int timeout) {
@@ -629,7 +629,7 @@ static void _testIp(Port_T p) {
 }
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 void Socket_test(void *P) {

@@ -28,7 +28,7 @@
  *  @file
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -78,7 +78,7 @@
 #include "exceptions/AssertException.h"
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 #define MOUNTS   "/proc/self/mounts"
@@ -95,7 +95,7 @@ static struct {
 } _statistics = {};
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static bool _getDiskUsage(void *_inf) {
@@ -411,7 +411,7 @@ static void __attribute__ ((destructor)) _destructor() {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 bool Filesystem_getByMountpoint(Info_T inf, const char *path) {

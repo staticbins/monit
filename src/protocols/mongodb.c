@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -47,7 +47,7 @@
 #include "exceptions/ProtocolException.h"
 
 
-/* ----------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 typedef struct {
@@ -65,7 +65,7 @@ typedef struct {
 } op_reply_t; /* Keep position, don't memory pack! */
 
 
-/* --------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static unsigned int B4(unsigned char *b) {
@@ -135,7 +135,7 @@ static void _pong(Socket_T socket) {
 }
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 /**

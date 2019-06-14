@@ -25,7 +25,7 @@
 #ifndef CERVLET_H
 #define CERVLET_H
 
-#include "config.h"
+#include "xconfig.h"
 #include "monit.h"
 
 void init_service(void);

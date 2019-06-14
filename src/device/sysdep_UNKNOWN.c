@@ -28,12 +28,12 @@
  *  @file
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #include "monit.h"
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 bool Filesystem_getByMountpoint(Info_T inf, const char *path) {

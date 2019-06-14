@@ -23,7 +23,7 @@
  */
 
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -80,7 +80,7 @@
  */
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static int      pagesize;
@@ -91,7 +91,7 @@ static unsigned maxslp;
 
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 bool init_process_info_sysdep(void) {

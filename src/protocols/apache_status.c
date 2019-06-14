@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -42,7 +42,7 @@
  */
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static void parse_scoreboard(char *scoreboard, Port_T p) {
@@ -127,7 +127,7 @@ static void _parseResponseHeaders(Socket_T socket) {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 void check_apache_status(Socket_T socket) {

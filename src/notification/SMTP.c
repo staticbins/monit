@@ -23,7 +23,7 @@
  */
 
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -83,7 +83,7 @@
  */
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 typedef enum {
@@ -117,7 +117,7 @@ struct T {
 };
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 // Note: we parse currently only flags for which we have some use
@@ -161,7 +161,7 @@ static void _receive(T S, int code, void (*callback)(T S, const char *line)) {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 T SMTP_new(Socket_T socket) {

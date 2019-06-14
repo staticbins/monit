@@ -26,7 +26,7 @@
 #ifndef BASE64_H
 #define BASE64_H
 
-#include "config.h"
+#include "xconfig.h"
 
 size_t decode_base64(unsigned char *dest, const char *src);
 char  *encode_base64(size_t size, unsigned char *src);

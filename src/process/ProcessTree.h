@@ -25,7 +25,7 @@
 #ifndef MONIT_PROCESSTREE_H
 #define MONIT_PROCESSTREE_H
 
-#include "config.h"
+#include "xconfig.h"
 
 
 typedef struct ProcessTree_T {

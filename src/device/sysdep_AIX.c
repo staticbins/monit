@@ -28,7 +28,7 @@
  *  @file
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -77,7 +77,7 @@
 #include "monit.h"
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 static struct {
@@ -112,7 +112,7 @@ static void __attribute__ ((destructor)) _destructor() {
 }
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static bool _getDummyDiskActivity(void *_inf) {
@@ -237,7 +237,7 @@ static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char 
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 bool Filesystem_getByMountpoint(Info_T inf, const char *path) {

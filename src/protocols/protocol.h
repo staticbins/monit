@@ -26,7 +26,7 @@
 #ifndef MONIT_PROTOCOL_H
 #define MONIT_PROTOCOL_H
 
-#include "config.h"
+#include "xconfig.h"
 
 #include "monit.h"
 #include "socket.h"

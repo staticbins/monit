@@ -26,7 +26,7 @@
 #ifndef PROCESSOR_H
 #define PROCESSOR_H
 
-#include "config.h"
+#include "xconfig.h"
 #include <stdio.h>
 
 #include "monit.h"

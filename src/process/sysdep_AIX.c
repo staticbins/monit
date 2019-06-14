@@ -23,7 +23,7 @@
  */
 
 
-#include "config.h"
+#include "xconfig.h"
 
 #include "monit.h"
 

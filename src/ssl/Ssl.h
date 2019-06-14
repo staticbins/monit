@@ -26,7 +26,7 @@
 #define SSL_H
 
 
-#include "config.h"
+#include "xconfig.h"
 
 
 typedef enum {

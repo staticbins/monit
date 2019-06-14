@@ -28,7 +28,7 @@
  *  @file
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -81,7 +81,7 @@
 #include "io/File.h"
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 #define PATHTOINST "/etc/path_to_inst"
@@ -93,7 +93,7 @@ static struct {
 } _statistics = {};
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static bool _getDummyDiskActivity(void *_inf) {
@@ -297,7 +297,7 @@ static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char 
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 bool Filesystem_getByMountpoint(Info_T inf, const char *path) {
