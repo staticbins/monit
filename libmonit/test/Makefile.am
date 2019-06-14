@@ -8,6 +8,7 @@ noinst_PROGRAMS = StrTest \
                   SystemTest \
                   ListTest \
                   DirTest \
+                  DispatcherTest \
                   StringBufferTest \
                   InputStreamTest \
                   OutputStreamTest \
@@ -24,6 +25,7 @@ CommandTest_SOURCES = CommandTest.c
 SystemTest_SOURCES = SystemTest.c
 ListTest_SOURCES = ListTest.c
 DirTest_SOURCES = DirTest.c
+DispatcherTest_SOURCES = DispatcherTest.c
 StringBufferTest_SOURCES = StringBufferTest.c
 InputStreamTest_SOURCES = InputStreamTest.c
 OutputStreamTest_SOURCES = OutputStreamTest.c
