@@ -55,7 +55,7 @@
  */
 
 
-/* ----------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 #define T Scheduler_T
@@ -102,7 +102,7 @@ struct Task_T {
 };
 
 
-/* --------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static inline bool _available_task(void *e) {
@@ -207,10 +207,11 @@ static void _stop(T S) {
 }
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 T Scheduler_new(int workers) {
+        assert(workers > 0);
         T S;
         NEW(S);
         if (! (S->loop = ev_loop_new(EVFLAG_AUTO))) {
@@ -251,7 +252,6 @@ Task_T Scheduler_task(T S, const char *name) {
                         task = List_find(S->tasks, _available_task);
                         if (task == NULL) {
                                 NEW(task);
-                                assert(task);
                                 List_append(S->tasks, task);
                         } else {
                                 memset(task, 0, sizeof *(task));
@@ -265,7 +265,33 @@ Task_T Scheduler_task(T S, const char *name) {
 }
 
 
-/* ------------------------------------------------------------------ Task */
+void Scheduler_start(T S) {
+        assert(S);
+        for (list_t l = S->tasks->head; l; l = l->next) {
+                Task_T t = l->e;
+                if (t->isavailable == false) {
+                        if (t->state == Task_Initial) {
+                                Task_start(t);
+                        }
+                }
+        }
+}
+
+
+void Scheduler_stop(T S) {
+        assert(S);
+        for (list_t l = S->tasks->head; l; l = l->next) {
+                Task_T t = l->e;
+                if (t->isavailable == false) {
+                        if (t->state != Task_Canceled) {
+                                Task_cancel(t);
+                        }
+                }
+        }
+}
+
+
+/* ---------------------------------------------------------- MARK: - Task */
 
 
 void Task_once(Task_T t, double offset) {
@@ -330,7 +356,7 @@ bool Task_isStarted(Task_T t) {
 }
 
 
-void Task_setWorker(Task_T t, void (*worker)(Task_T t)) {
+void Task_setWorker(Task_T t, void worker(Task_T t)) {
         assert(t);
         assert(worker);
         t->worker = worker;
@@ -354,7 +380,7 @@ time_t Task_nextRun(Task_T t) {
 }
 
 
-/* ---------------------------------------------------------- Task Methods */
+/* -------------------------------------------------- MARK: - Task Methods */
 
 
 void Task_start(Task_T t) {
