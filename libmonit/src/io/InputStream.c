@@ -47,7 +47,7 @@
  */
 
 
-/* ----------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 // One TCP frame data size
@@ -64,7 +64,7 @@ struct T {
 };
 
 
-/* --------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 /* Fill the internal buffer. Only read once, since we may have read all and an
@@ -105,7 +105,7 @@ static inline int read_byte(T S) {
 }
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 T InputStream_new(int descriptor) {
@@ -123,7 +123,7 @@ void InputStream_free(T *S) {
 }
 
 
-/* ------------------------------------------------------------ Properties */
+/* ------------------------------------------------------ MARK: - Properties */
 
 
 int InputStream_getDescriptor(T S) {
@@ -157,7 +157,7 @@ int InputStream_buffered(T S) {
 }
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 int InputStream_read(T S) {

@@ -60,7 +60,7 @@
 
 
 
-/* ----------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 #define T Command_T
@@ -90,7 +90,7 @@ struct Process_T {
 };
 
 
-/* --------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 /* Search the env list and return the pointer to the name (in the list)
@@ -348,7 +348,7 @@ void Process_kill(Process_T P) {
 }
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 T Command_new(const char *path, const char *arg0, ...) {

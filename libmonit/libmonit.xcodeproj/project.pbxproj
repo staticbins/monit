@@ -14,8 +14,8 @@
 		521ECE3C21D85EC100F8045E /* FmtTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3B21D85EC100F8045E /* FmtTest.c */; };
 		522FF2FA192E702D00C62A13 /* TimeTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8613A5212700FC4089 /* TimeTest.c */; };
 		523FFE7C19AFE7B30018595D /* StrTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8313A5212700FC4089 /* StrTest.c */; };
-		52532AF7226DDFFA0021EAB6 /* libev.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5280A6D92266772F00A4C0B3 /* libev.4.dylib */; };
 		52532AF8226DE0210021EAB6 /* libev.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5280A6D92266772F00A4C0B3 /* libev.4.dylib */; };
+		5270B9F122B414A300156EE9 /* DispatcherTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 5270B9F022B414A300156EE9 /* DispatcherTest.c */; };
 		5280A6D3226674CD00A4C0B3 /* Dispatcher.c in Sources */ = {isa = PBXBuildFile; fileRef = 5280A6D1226674CD00A4C0B3 /* Dispatcher.c */; };
 		5280A6D4226674CD00A4C0B3 /* Dispatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 5280A6D2226674CD00A4C0B3 /* Dispatcher.h */; };
 		5280A6D7226674E000A4C0B3 /* Scheduler.c in Sources */ = {isa = PBXBuildFile; fileRef = 5280A6D5226674E000A4C0B3 /* Scheduler.c */; };
@@ -26,6 +26,7 @@
 		52A31C841A653235009D3D83 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
 		52A31C851A65323A009D3D83 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
 		52A31C861A653254009D3D83 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
+		52D084E82279ACD10065C307 /* libev.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52532AF5226DDE050021EAB6 /* libev.a */; };
 		52D7967E13A6CE560014CED2 /* Bootstrap.c in Sources */ = {isa = PBXBuildFile; fileRef = 52D7964A13A6CE560014CED2 /* Bootstrap.c */; };
 		52D7968113A6CE560014CED2 /* assert.c in Sources */ = {isa = PBXBuildFile; fileRef = 52D7964F13A6CE560014CED2 /* assert.c */; };
 		52D7968413A6CE560014CED2 /* Exception.c in Sources */ = {isa = PBXBuildFile; fileRef = 52D7965213A6CE560014CED2 /* Exception.c */; };
@@ -159,6 +160,7 @@
 		521ECE3B21D85EC100F8045E /* FmtTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FmtTest.c; sourceTree = "<group>"; };
 		522539AC18B91092003EB002 /* THIRDPARTY */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = THIRDPARTY; sourceTree = "<group>"; };
 		52532AF5226DDE050021EAB6 /* libev.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libev.a; path = ../../../../../opt/local/lib/libev.a; sourceTree = "<group>"; };
+		5270B9F022B414A300156EE9 /* DispatcherTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = DispatcherTest.c; sourceTree = "<group>"; };
 		5274580B13A1009C00C422FE /* bootstrap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = bootstrap; sourceTree = "<group>"; };
 		5274580C13A1009C00C422FE /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; lineEnding = 0; path = configure.ac; sourceTree = "<group>"; };
 		5274580D13A1009C00C422FE /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
@@ -274,7 +276,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				52532AF7226DDFFA0021EAB6 /* libev.4.dylib in Frameworks */,
+				52D084E82279ACD10065C307 /* libev.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -307,6 +309,7 @@
 				52936F7F13A5212700FC4089 /* Makefile.am */,
 				52936F7713A5212700FC4089 /* CommandTest.c */,
 				52936F7A13A5212700FC4089 /* DirTest.c */,
+				5270B9F022B414A300156EE9 /* DispatcherTest.c */,
 				52936F7B13A5212700FC4089 /* ExceptionTest.c */,
 				52936F7C13A5212700FC4089 /* FileTest.c */,
 				52936F7D13A5212700FC4089 /* InputStreamTest.c */,
@@ -681,6 +684,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5270B9F122B414A300156EE9 /* DispatcherTest.c in Sources */,
 				52D7967E13A6CE560014CED2 /* Bootstrap.c in Sources */,
 				52D7968113A6CE560014CED2 /* assert.c in Sources */,
 				52D7968413A6CE560014CED2 /* Exception.c in Sources */,
