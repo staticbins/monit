@@ -31,7 +31,7 @@
  *
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -125,6 +125,7 @@
 #include "ProcessTree.h"
 #include "device.h"
 #include "processor.h"
+#include "validate.h"
 
 // libmonit
 #include "io/File.h"
@@ -132,7 +133,7 @@
 #include "thread/Thread.h"
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 struct precedence_t {
@@ -2981,7 +2982,7 @@ bool parse(char *controlfile) {
 }
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 /**

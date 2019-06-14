@@ -30,7 +30,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
