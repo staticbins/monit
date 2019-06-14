@@ -50,7 +50,7 @@
  */
 
 
-/* ----------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 // One TCP frame data size
@@ -77,7 +77,7 @@ typedef struct va_list_box {
 typedef void (*fmt_t)(T S, int code, va_list_box *box, unsigned char flags[256], int width, int precision);
 
 
-/* --------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 /* Write the output buffer to the underlying file descriptor */
@@ -115,7 +115,7 @@ static inline int write_byte(T S, uchar_t byte) {
 }
 
 
-/* ------------------------------------------------------- Format handlers */
+/* ------------------------------------------------- MARK: - Format handlers */
 
 
 #define pad(n,c) do { int nn = (n); while (nn-- > 0) write_byte(S, (c)); } while (0)
@@ -337,7 +337,7 @@ static fmt_t cvt[256] = {
 };
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 T OutputStream_new(int descriptor) {
@@ -358,7 +358,7 @@ void OutputStream_free(T *S) {
 }
 
 
-/* ------------------------------------------------------------ Properties */
+/* ------------------------------------------------------ MARK: - Properties */
 
 
 int OutputStream_getDescriptor(T S) {
@@ -398,7 +398,7 @@ int64_t OutputStream_getBytesWritten(T S) {
 }
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 int OutputStream_print(T S, const char *s, ...) {

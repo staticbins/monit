@@ -42,7 +42,7 @@
  */
 
 
-/* ----------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 void(*_AbortHandler)(const char *error, va_list ap) = NULL;
@@ -50,7 +50,7 @@ void(*_ErrorHandler)(const char *error, va_list ap) = NULL;
 bool MonitDebug = false;
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 void Bootstrap(void) {

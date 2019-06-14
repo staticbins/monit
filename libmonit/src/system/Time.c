@@ -48,7 +48,7 @@
  */
 
 
-/* ----------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 #ifndef HAVE_TIMEGM
@@ -143,7 +143,7 @@ static const char days[] = "SunMonTueWedThuFriSat";
 static const char months[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
 
 
-/* --------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static inline int _a2i(const char *a, int l) {
@@ -154,7 +154,7 @@ static inline int _a2i(const char *a, int l) {
 }
 
 
-/* ----------------------------------------------------------------- Class */
+/* --------------------------------------------------------- MARK: - Class */
 
 
 time_t Time_toTimestamp(const char *s) {

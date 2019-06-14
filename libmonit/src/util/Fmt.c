@@ -31,7 +31,7 @@
 #include "Fmt.h"
 
 
-/* ----------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 static inline bool _isIntegral(double x, double precision) {

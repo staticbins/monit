@@ -44,7 +44,7 @@
  */
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 void *Mem_alloc(long nbytes, const char *func, const char *file, int line){

@@ -139,6 +139,13 @@
 			remoteGlobalIDString = 52AE7B921FEC8E0100B838B3;
 			remoteInfo = StringBufferTest;
 		};
+		52D084E522799ABB0065C307 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 528B66DD226DDA9200ABD494;
+			remoteInfo = SchedulerTest;
+		};
 		52DDC12913C59D46003AA75C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
@@ -207,6 +214,8 @@
 		52622FF8225A63B000DB7DFA /* Statistics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Statistics.h; sourceTree = "<group>"; };
 		52623016225A658300DB7DFA /* Link.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Link.c; sourceTree = "<group>"; };
 		52623017225A658300DB7DFA /* Link.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Link.h; sourceTree = "<group>"; };
+		527AE89B227DE6FE00936B34 /* validate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = validate.h; sourceTree = "<group>"; };
+		527AE8A2227DFE6D00936B34 /* spawn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spawn.h; sourceTree = "<group>"; };
 		528EA77213A74E05003DA4BE /* monit */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = monit; sourceTree = BUILT_PRODUCTS_DIR; };
 		528F7DB318BCABC9004BF9B5 /* CONTRIBUTORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CONTRIBUTORS; sourceTree = "<group>"; };
 		52A1310B13A7882A00583257 /* libmonit.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libmonit.xcodeproj; path = libmonit/libmonit.xcodeproj; sourceTree = "<group>"; };
@@ -215,6 +224,7 @@
 		52AE77CB14037DA300D2861D /* sha1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha1.h; sourceTree = "<group>"; };
 		52AE77CD14037E6A00D2861D /* md5_crypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = md5_crypt.c; sourceTree = "<group>"; };
 		52AE77CE14037E6A00D2861D /* md5_crypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = md5_crypt.h; sourceTree = "<group>"; };
+		52D084EC2279E0CC0065C307 /* log.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
 		52D25EDC17C0E8680039D3E4 /* bootstrap */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = bootstrap; sourceTree = "<group>"; };
 		52D25EDD17C0E8680039D3E4 /* CHANGES */ = {isa = PBXFileReference; lastKnownFileType = text; path = CHANGES; sourceTree = "<group>"; };
 		52D25EDE17C0E8680039D3E4 /* configure.ac */ = {isa = PBXFileReference; lastKnownFileType = text; path = configure.ac; sourceTree = "<group>"; };
@@ -576,6 +586,7 @@
 				52F675FD19B873A100E1FF1E /* StrTest */,
 				52AE7B981FEC8EBD00B838B3 /* StringBufferTest */,
 				52F74AD0225B91E4004FCCFB /* FmtTest */,
+				52D084E622799ABB0065C307 /* SchedulerTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -631,6 +642,7 @@
 				52F6E75D13A74F220023F87A /* gc.c */,
 				52F6E76913A74F220023F87A /* l.l */,
 				52F6E76B13A74F220023F87A /* log.c */,
+				52D084EC2279E0CC0065C307 /* log.h */,
 				52F6E76C13A74F220023F87A /* md5.c */,
 				52AE77CD14037E6A00D2861D /* md5_crypt.c */,
 				52AE77CE14037E6A00D2861D /* md5_crypt.h */,
@@ -641,11 +653,13 @@
 				52AE77CA14037DA300D2861D /* sha1.c */,
 				52AE77CB14037DA300D2861D /* sha1.h */,
 				52F6E7A313A74F220023F87A /* signal.c */,
+				527AE8A2227DFE6D00936B34 /* spawn.h */,
 				52F6E7A613A74F220023F87A /* spawn.c */,
 				52F6E7AA13A74F220023F87A /* state.c */,
 				52F6E7AB13A74F220023F87A /* state.h */,
 				52F6E7AD13A74F220023F87A /* util.c */,
 				52F6E7AE13A74F220023F87A /* util.h */,
+				527AE89B227DE6FE00936B34 /* validate.h */,
 				52F6E7AF13A74F220023F87A /* validate.c */,
 			);
 			path = src;
@@ -869,6 +883,13 @@
 			fileType = "compiled.mach-o.executable";
 			path = StringBufferTest;
 			remoteRef = 52AE7B971FEC8EBD00B838B3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		52D084E622799ABB0065C307 /* SchedulerTest */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = SchedulerTest;
+			remoteRef = 52D084E522799ABB0065C307 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		52DDC12A13C59D46003AA75C /* libmonit.a */ = {
@@ -1150,7 +1171,7 @@
 					"-DSYSCONFDIR=\"\\\"/etc\\\"\"",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "$SRCROOT/src/ $SRCROOT/libmonit/src/ $SRCROOT/libmonit/src/thread $SRCROOT/libmonit/src/io $SRCROOT/libmonit/src/net $SRCROOT/libmonit/src/util $SRCROOT/libmonit/src/exceptions";
+				USER_HEADER_SEARCH_PATHS = "$SRCROOT/src/ $SRCROOT/libmonit/src/";
 				VALID_ARCHS = x86_64;
 			};
 			name = Debug;
@@ -1186,7 +1207,7 @@
 					"-DSYSCONFDIR=\"\\\"/etc\\\"\"",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "$SRCROOT/src/ $SRCROOT/libmonit/src/ $SRCROOT/libmonit/src/thread $SRCROOT/libmonit/src/io $SRCROOT/libmonit/src/net $SRCROOT/libmonit/src/util $SRCROOT/libmonit/src/exceptions";
+				USER_HEADER_SEARCH_PATHS = "$SRCROOT/src/ $SRCROOT/libmonit/src/";
 				VALID_ARCHS = x86_64;
 			};
 			name = Release;

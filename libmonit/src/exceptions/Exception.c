@@ -53,7 +53,7 @@
  */
 
 
-/* ----------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 #define T Exception_T
@@ -69,13 +69,13 @@ T ProtocolException = {"ProtocolException"};
 static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 
 
-/* --------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static void init_once(void) { ThreadData_create(Exception_Stack); }
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 void Exception_init() { pthread_once(&once_control, init_once); }
