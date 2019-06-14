@@ -128,4 +128,10 @@ void *file_readQueue(FILE *file, size_t *size);
 bool file_readProc(char *buf, int buf_size, char *name, int pid, int *bytes_read);
 
 
+/*
+ * Close all filedescriptors except standard.
+ */
+void file_closefds(void);
+
+
 #endif

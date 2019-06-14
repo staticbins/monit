@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -69,6 +69,7 @@
 
 // libmonit
 #include "io/File.h"
+#include "system/System.h"
 
 /**
  *  Utilities for managing files used by monit.
@@ -77,7 +78,7 @@
  */
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 void file_init() {
@@ -298,4 +299,12 @@ bool file_readProc(char *buf, int buf_size, char *name, int pid, int *bytes_read
 
         return rv;
 }
+
+void file_closefds() {
+        for (int i = 3, descriptors = System_fds(); i < descriptors; i++) {
+                close(i);
+        }
+        errno = 0;
+}
+
 
