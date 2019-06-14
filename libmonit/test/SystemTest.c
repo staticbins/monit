@@ -53,7 +53,7 @@ int main(void) {
         {
                 srandom((unsigned)(Time_now() + getpid()));
                 //
-                printf("\tnumber:   %"PRIx64"\n", System_randomNumber());
+                printf("\tnumber:   %"PRIx64"\n", System_randomNumber(UINT64_MAX));
                 //
                 printf("\t1  byte:  ");
                 char buf0[1];
@@ -79,7 +79,7 @@ int main(void) {
                 }
                 printf("\n");
                 //
-                assert(System_randomNumber() != System_randomNumber());
+                assert(System_randomNumber(UINT_MAX) != System_randomNumber(UINT64_MAX));
         }
         printf("=> Test1: OK\n\n");
 
