@@ -35,7 +35,7 @@
 #include <ctype.h>
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 static bool _isSolarisX = false;
@@ -47,7 +47,7 @@ typedef struct Interface_T {
 } *Interface_T;
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 // Parse the interface name like e1000g1 into module:instance -> e1000g:1
