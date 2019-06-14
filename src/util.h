@@ -233,12 +233,6 @@ void Util_redirectStdFds(void);
 
 
 /*
- * Close all filedescriptors except standard.
- */
-void Util_closeFds(void);
-
-
-/*
  * Check if monit does have credentials for this user.  If successful
  * a pointer to the password is returned.
  */

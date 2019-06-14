@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -220,7 +220,7 @@ static const unsigned char b2x[][256] = {
  */
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 /**
@@ -439,7 +439,7 @@ static Auth_T PAMcheckUserGroup(const char *uname) {
 #endif
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 char *Util_replaceString(char **src, const char *old, const char *new) {
@@ -1629,14 +1629,6 @@ void Util_redirectStdFds() {
                         LogError("Cannot reopen standard file descriptor (%d) -- %s\n", i, STRERROR);
                 }
         }
-}
-
-
-void Util_closeFds() {
-        for (int i = 3, descriptors = System_fds(); i < descriptors; i++) {
-                close(i);
-        }
-        errno = 0;
 }
 
 
