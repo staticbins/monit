@@ -67,7 +67,67 @@ AC_CHECK_LIB([nsl],    [inet_addr])
 AC_CHECK_LIB([resolv], [inet_aton])
 AC_CHECK_LIB([c], [crypt], [:], [AC_CHECK_LIB([crypt], [crypt])])
 AC_CHECK_LIB([pthread], [pthread_create], [], [AC_MSG_ERROR([POSIX thread library is required])])
-
+AC_ARG_WITH([libev],
+        AS_HELP_STRING([--with-libev(=<path>)],
+                [Path is optional and if given should specify the full path to the libev
+                 installation. E.g. --with-libev=/usr/local/]),
+        [
+                if test "x$withval" = "xyes"; then
+                        AC_CHECK_LIB([ev], [ev_run], [], [AC_MSG_ERROR([libev not found])])
+                        AC_CHECK_HEADERS([ev.h], [], [AC_MSG_ERROR([ev.h not found])])
+                elif test "x$withval" != "xno"; then
+                        AC_MSG_CHECKING([for libev in $withval])
+                        LDFLAGS="-L$withval/lib -lev $LDFLAGS "
+                        CFLAGS="-I$withval/include $CFLAGS"
+                        if test -r "$withval/lib/libev.a" -a -r "$withval/include/ev.h"; then
+                                AC_DEFINE([HAVE_LIBEV], [1], [Define if you have libev library])
+                                AC_DEFINE([HAVE_LIBEV_H], [1], [Define if you have libev header])
+                                AC_MSG_RESULT([ok])
+                        else
+                                AC_MSG_ERROR([libev not found in $withval])
+                        fi
+                else
+                        AC_MSG_ERROR([libev is required])
+                fi
+        ],
+        [
+                AC_CHECK_LIB([ev], [ev_run], [], [AC_MSG_ERROR([libev not found])])
+                AC_CHECK_HEADERS([ev.h], [], [AC_MSG_ERROR([ev.h not found])])
+        ]
+)
+AC_ARG_WITH([zlib],
+        AS_HELP_STRING([--with-zlib(=<path>)],
+                [Link Monit with zlib. An optional path argument may
+                be given to specify the top-level directory to search for
+                zlib to link with]),
+     [
+        if test "x$withval" = "xyes"; then
+                AC_CHECK_LIB([z], [zlibVersion], [], [
+                        zlib="false"
+                        AC_MSG_ERROR([libz not found])
+                ])
+                AC_CHECK_HEADERS([zlib.h])
+        elif test "x$withval" != "xno"; then
+                AC_MSG_CHECKING([for zlib in $withval])
+                LDFLAGS="-L$withval/lib -lz $LDFLAGS "
+                CFLAGS="-I$withval/include $CFLAGS"
+                if test -r "$withval/lib/libz.a" -a -r "$withval/include/zlib.h"; then
+                        AC_DEFINE([HAVE_LIBZ], [1], [Define if you have zlib library])
+                        AC_DEFINE([HAVE_ZLIB_H], [1], [Define if you have zlib header])
+                        AC_MSG_RESULT([ok])
+                else
+                        zlib="false"
+                        AC_MSG_ERROR([zlib not found in $withval])
+                fi
+        fi
+     ],[
+        AC_CHECK_LIB([z], [zlibVersion], [], [
+                zlib="false"
+                AC_MSG_ERROR([libz not found])
+        ])
+        AC_CHECK_HEADERS([zlib.h])
+     ]
+)
 
 # ------------------------------------------------------------------------
 # Header files
@@ -690,45 +750,6 @@ if test "$use_largefiles" = 1; then
         AC_DEFINE([HAVE_LARGEFILES], 1, [Define to 1 if you have large files support])
 fi
 
-
-# ------------------------------------------------------------------------
-# zlib Code
-# ------------------------------------------------------------------------
-
-AC_ARG_WITH([zlib],
-        AS_HELP_STRING([--with-zlib(=<path>)],
-                [Link Monit with zlib. An optional path argument may
-                be given to specify the top-level directory to search for
-                zlib to link with]),
-     [
-        if test "x$withval" = "xyes"; then
-                AC_CHECK_LIB([z], [zlibVersion], [], [
-                        zlib="false"
-                        AC_MSG_ERROR([libz not found])
-                ])
-                AC_CHECK_HEADERS([zlib.h])
-        elif test "x$withval" != "xno"; then
-                AC_MSG_CHECKING([for zlib in $withval])
-                LDFLAGS="-L$withval/lib -lz $LDFLAGS "
-                CFLAGS="-I$withval/include $CFLAGS"
-                if test -r "$withval/lib/libz.a" -a -r "$withval/include/zlib.h"; then
-                        AC_DEFINE([HAVE_LIBZ], [1], [Define if you have zlib library])
-                        AC_DEFINE([HAVE_ZLIB_H], [1], [Define if you have zlib header])
-                        AC_MSG_RESULT([ok])
-                else
-                        zlib="false"
-                        AC_MSG_ERROR([zlib not found in $withval])
-                fi
-        fi
-     ],[
-        AC_CHECK_LIB([z], [zlibVersion], [], [
-                zlib="false"
-                AC_MSG_ERROR([libz not found])
-        ])
-        AC_CHECK_HEADERS([zlib.h])
-     ]
-)
-
 # ------------------------------------------------------------------------
 # PAM Code
 # ------------------------------------------------------------------------
@@ -1094,7 +1115,7 @@ AH_BOTTOM([
 #endif
 ])
 
-AC_CONFIG_HEADER([src/config.h])
+AC_CONFIG_HEADER([src/xconfig.h])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([system/startup/monit.upstart])
 AC_CONFIG_FILES([system/startup/monit.service])
