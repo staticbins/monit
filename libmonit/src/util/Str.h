@@ -237,7 +237,7 @@ int Str_has(const char *charset, const char *s);
  * @param set An array of C-strings. The last element in the array must be NULL
  * @return true if s is a member of the set, otherwise false
  */
-int Str_member(const char *s, const char **set);
+bool Str_member(const char *s, const char **set);
 
 
 /**

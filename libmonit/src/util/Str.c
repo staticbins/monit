@@ -232,7 +232,7 @@ int Str_has(const char *charset, const char *s) {
 }
 
 
-int Str_member(const char *s, const char **set) {
+bool Str_member(const char *s, const char **set) {
         if (s && set) {
                 for (int i = 0; set[i]; i++) {
                         if (Str_sub(set[i], s))
