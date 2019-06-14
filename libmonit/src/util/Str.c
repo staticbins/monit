@@ -232,6 +232,17 @@ int Str_has(const char *charset, const char *s) {
 }
 
 
+int Str_member(const char *s, const char **set) {
+        if (s && set) {
+                for (int i = 0; set[i]; i++) {
+                        if (Str_sub(set[i], s))
+                                return true;
+                }
+        }
+        return false;
+}
+
+
 char *Str_unescape(const char *charset, char *s) {
         if (charset && STR_DEF(s)) {
                 int x, y;

@@ -222,6 +222,25 @@ int Str_has(const char *charset, const char *s);
 
 
 /**
+ * Returns true if <i>s</i> is a sub-string in the <code>set</code> of strings.
+ * It is an unchecked runtime error for the last element of the set not to be NULL
+ * <pre>
+ * char *ext = "jpg";
+ * const char *set[] = {"gif", "png", "jpg,jpeg", "tiff", NULL};
+ * Str_member(ext, set) -> true
+ * Str_member("gif", (const char*[]){"foo", "bar", NULL}) -> false
+ * Str_member(ext, (const char*[]){"abcjpgdef", NULL}) -> true
+ * Str_member(ext, NULL) -> false
+ * Str_member(NULL, NULL) -> false
+ * </pre>
+ * @param s The string to test
+ * @param set An array of C-strings. The last element in the array must be NULL
+ * @return true if s is a member of the set, otherwise false
+ */
+int Str_member(const char *s, const char **set);
+
+
+/**
  * Unescape all characters in <code>s</code> which are in the 
  * <code>charset</code> and return <code>s</code> modified.
  * Example:

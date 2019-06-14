@@ -418,6 +418,13 @@ int main(void) {
         }
         printf("=> Test24: OK\n\n");
 
+        printf("=> Test25: Str_member\n");
+        {
+                assert(Str_member("abc", (const char*[]){"123", "bdf", "abc", 0}));
+                assert(!Str_member("abc", (const char*[]){"123", "bdf", "42", 0}));
+        }
+        printf("=> Test25: OK\n\n");
+
         printf("============> Str Tests: OK\n\n");
         return 0;
 }
