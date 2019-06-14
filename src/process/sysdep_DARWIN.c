@@ -23,7 +23,7 @@
  */
 
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
@@ -67,7 +67,7 @@
 #define ARGSSIZE 8192
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static int  pagesize;
@@ -76,7 +76,7 @@ static long cpu_user_old = 0;
 static long cpu_syst_old = 0;
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 bool init_process_info_sysdep(void) {

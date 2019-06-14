@@ -26,7 +26,7 @@
 #ifndef NET_H
 #define NET_H
 
-#include "config.h"
+#include "xconfig.h"
 #include "monit.h"
 
 

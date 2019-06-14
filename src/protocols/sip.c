@@ -25,7 +25,7 @@
  */
 
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -115,15 +115,15 @@ void check_sip(Socket_T socket) {
                          transport,                    // via transport udp|tcp
                          myip,                         // who its from
                          port,                         // our port
-                         System_randomNumber(),        // branch
+                         System_randomNumber(UINT64_MAX),        // branch
                          rport,                        // rport option
                          P->parameters.sip.maxforward ? (P->parameters.sip.maxforward == INT_MAX ? 0 : P->parameters.sip.maxforward) : 70, // maximum forwards
                          proto,                        // protocol
                          target,                       // to
                          proto,                        // protocol
                          myip,                         // from host
-                         System_randomNumber(),        // tag
-                         System_randomNumber(),        // call id
+                         System_randomNumber(UINT64_MAX),        // tag
+                         System_randomNumber(UINT64_MAX),        // call id
                          proto,                        // protocol
                          myip,                         // contact host
                          port,                         // contact port

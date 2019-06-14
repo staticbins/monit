@@ -23,7 +23,7 @@
  */
 
 
-#include "config.h"
+#include "xconfig.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -82,7 +82,7 @@
  */
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 #define T Link_T
@@ -124,7 +124,7 @@ struct T {
 };
 
 
-/* ----------------------------------------------------- Static destructor */
+/* --------------------------------------------- MARK: - Static destructor */
 
 
 static void __attribute__ ((destructor)) _destructor(void) {
@@ -135,7 +135,7 @@ static void __attribute__ ((destructor)) _destructor(void) {
 }
 
 
-/* --------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static void _updateValue(LinkData_T *data, uint64_t raw) {
@@ -304,7 +304,7 @@ static void _updateCache(void) {
 }
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 T Link_createForAddress(const char *address) {

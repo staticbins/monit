@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -82,14 +82,14 @@
  */
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 static int ptreesize = 0;
 static ProcessTree_T *ptree = NULL;
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static void _delete(ProcessTree_T **pt, int *size) {
@@ -198,7 +198,7 @@ static int _match(regex_t *regex) {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 /**

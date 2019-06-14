@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -34,7 +34,7 @@
 #include "exceptions/IOException.h"
 #include "exceptions/ProtocolException.h"
 
-/* --------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static void say(Socket_T socket, const char *msg) {
@@ -56,7 +56,7 @@ static void expect(Socket_T socket, int expect) {
 }
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 /**

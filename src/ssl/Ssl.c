@@ -23,7 +23,7 @@
  */
 
 
-#include "config.h"
+#include "xconfig.h"
 
 
 #ifdef HAVE_OPENSSL
@@ -97,7 +97,7 @@
 //FIXME: refactor Ssl_connect(), Ssl_write() and Ssl_read() + SslServer_accept (and the whole network layer) to be really non-blocking
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 /**
@@ -148,7 +148,7 @@ static Mutex_T *instanceMutexTable;
 static int session_id_context = 1;
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static Ssl_Version _optionsVersion(int version) {
@@ -484,7 +484,7 @@ static bool _setClientCertificate(T C, const char *file) {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 void Ssl_start() {

@@ -26,7 +26,7 @@
 #define SSLSERVER_H
 
 
-#include "config.h"
+#include "xconfig.h"
 
 
 #define T SslServer_T

@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -49,7 +49,7 @@
 #include "exceptions/ProtocolException.h"
 
 
-/* ----------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 #define MYSQL_OK    0x00
@@ -467,7 +467,7 @@ static void _requestQuery(mysql_t *mysql, const unsigned char *query) {
 */
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 /**

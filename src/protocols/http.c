@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -56,7 +56,7 @@
  */
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 #define BUFSIZE 4096
@@ -68,7 +68,7 @@ typedef union ChecksumContext_T {
 } *ChecksumContext_T;
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static void _contentVerify(Port_T P, const char *data) {
@@ -412,7 +412,7 @@ static void _sendRequest(Socket_T socket, Port_T P) {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 void check_http(Socket_T socket) {
