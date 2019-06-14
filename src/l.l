@@ -35,7 +35,7 @@
  *
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>

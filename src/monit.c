@@ -23,7 +23,7 @@
  */
 
 
-#include "config.h"
+#include "xconfig.h"
 #include <locale.h>
 
 #ifdef HAVE_STDIO_H
@@ -81,6 +81,7 @@
 #include "engine.h"
 #include "client.h"
 #include "MMonit.h"
+#include "validate.h"
 
 // libmonit
 #include "Bootstrap.h"
@@ -151,7 +152,7 @@ char *timestampnames[] = {"modify/change time", "access time", "change time", "m
 char *httpmethod[] = {"", "HEAD", "GET"};
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 /**
@@ -159,7 +160,7 @@ char *httpmethod[] = {"", "HEAD", "GET"};
  */
 int main(int argc, char **argv) {
         Bootstrap(); // Bootstrap libmonit
-        Bootstrap_setAbortHandler(vLogAbortHandler);  // Abort Monit on exceptions thrown by libmonit
+        Bootstrap_setAbortHandler(vLogAbort);  // Abort Monit on exceptions thrown by libmonit
         Bootstrap_setErrorHandler(vLogError);
         setlocale(LC_ALL, "C");
         prog = File_basename(argv[0]);
@@ -200,7 +201,7 @@ bool interrupt() {
 }
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static void _validateOnce(void) {

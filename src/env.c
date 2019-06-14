@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -76,14 +76,8 @@
 #include "exceptions/AssertException.h"
 
 
-/**
- * Initialize the program environment
- *
- * @see https://bitbucket.org/tildeslash/monit/commits/cd545838378517f84bdb0989cadf461a19d8ba11
- */
 void init_env() {
-        Util_closeFds();
-        // Ensure that std descriptors (0, 1 and 2) are open
+        file_closefds();
         int devnull = open("/dev/null", O_RDWR);
         if (devnull == -1) {
                 THROW(AssertException, "Cannot open /dev/null -- %s", STRERROR);
@@ -98,14 +92,12 @@ void init_env() {
                 }
         }
         close(devnull);
-        // Get password struct with user info
         char buf[4096];
         struct passwd pw, *result = NULL;
         if (getpwuid_r(geteuid(), &pw, buf, sizeof(buf), &result) != 0 || ! result)
                 THROW(AssertException, "getpwuid_r failed -- %s", STRERROR);
         Run.Env.home = Str_dup(pw.pw_dir);
         Run.Env.user = Str_dup(pw.pw_name);
-        // Get CWD
         char t[PATH_MAX];
         if (! Dir_cwd(t, PATH_MAX))
                 THROW(AssertException, "Monit: Cannot read current directory -- %s", STRERROR);

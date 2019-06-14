@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -95,7 +95,7 @@
  */
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 /* Do not exceed 8 bits here */
@@ -109,7 +109,7 @@ enum ExitStatus_E {
 } __attribute__((__packed__));
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 /*
@@ -141,7 +141,7 @@ static void _setMonitEnvironment(Service_T S, command_t C, Event_T E, const char
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 /**
@@ -212,7 +212,7 @@ void spawn(Service_T S, command_t C, Event_T E) {
                                         stat_loc |= redirect_ERROR;
                 }
 
-                Util_closeFds();
+                file_closefds();
 
                 setsid();
 

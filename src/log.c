@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -83,7 +83,7 @@
  */
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 static FILE *LOG = NULL;
@@ -106,7 +106,7 @@ static struct mylogpriority {
 };
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 /**
@@ -215,7 +215,7 @@ static void log_backtrace(void) {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 /**
@@ -320,11 +320,20 @@ void vLogCritical(const char *s, va_list ap) {
 }
 
 
+void LogAbort(const char *s, ...) {
+        ASSERT(s);
+        va_list ap;
+        va_start(ap, s);
+        vLogAbort(s, ap);
+        va_end(ap);
+}
+
+
 /*
  * Called by libmonit on Exception. Log
  * error and abort the application
  */
-void vLogAbortHandler(const char *s, va_list ap) {
+void vLogAbort(const char *s, va_list ap) {
         ASSERT(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);

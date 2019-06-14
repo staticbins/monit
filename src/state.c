@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
@@ -98,7 +98,7 @@
  */
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 /* Extended format version */
@@ -234,7 +234,7 @@ static uint64_t booted = 0ULL;
 static bool _stateDirty = false;
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static void _updateStart(Service_T S, int nstart, int ncycle) {
@@ -488,7 +488,7 @@ static void _restoreV0(int services) {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 bool State_open() {

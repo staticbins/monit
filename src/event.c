@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -61,6 +61,7 @@
 #include "alert.h"
 #include "event.h"
 #include "state.h"
+#include "spawn.h"
 #include "ProcessTree.h"
 #include "MMonit.h"
 
@@ -75,7 +76,7 @@
  */
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 EventTable_T Event_Table[] = {
         {Event_Action,     "Action done",               "Action done",                "Action done",              "Action done",                  State_None},
@@ -114,7 +115,7 @@ EventTable_T Event_Table[] = {
 };
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static void _saveState(long id, State_Type state) {
@@ -386,7 +387,7 @@ static void _handleEvent(Service_T S, Event_T E) {
 }
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 /**

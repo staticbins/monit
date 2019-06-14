@@ -22,7 +22,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -70,7 +70,7 @@
  */
 
 
-/* ------------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 typedef enum {
@@ -82,7 +82,7 @@ typedef enum {
 #define RETRY_INTERVAL 100000 // 100ms
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 static int _getOutput(InputStream_T in, char *buf, int buflen) {
@@ -418,7 +418,7 @@ static bool _doDepend(Service_T s, Action_Type action, bool unmonitor) {
 
 
 
-/* ------------------------------------------------------------------ Public */
+/* ---------------------------------------------------- MARK: - Public */
 
 
 /**

@@ -26,7 +26,8 @@
 #ifndef MONIT_H
 #define MONIT_H
 
-#include "config.h"
+#include "xconfig.h"
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -1261,7 +1262,7 @@ typedef struct ServiceGroup_T {
 
 
 /** Data for application runtime */
-struct Run_T {
+typedef struct Run_T {
         uint8_t debug;                                            /**< Debug level */
         volatile Run_Flags flags;
         Handler_Type handler_flag;                    /**< The handlers state flag */
@@ -1327,7 +1328,8 @@ struct Run_T {
         } MailFormat;
 
         Mutex_T mutex;            /**< Mutex used for service data synchronization */
-};
+} Run_T;
+
 
 
 /* -------------------------------------------------------- Global variables */
@@ -1358,6 +1360,7 @@ extern const char *httpmethod[];
 
 #include "util.h"
 #include "file.h"
+#include "log.h"
 
 // libmonit
 #include "system/Mem.h"
@@ -1368,32 +1371,6 @@ extern const char *httpmethod[];
 bool parse(char *);
 bool control_service(const char *, Action_Type);
 bool control_service_string(List_T, const char *);
-void  spawn(Service_T, command_t, Event_T);
-bool log_init(void);
-void  LogEmergency(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogAlert(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogCritical(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogError(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogWarning(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogNotice(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogInfo(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogDebug(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  vLogEmergency(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogAlert(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogCritical(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogError(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogWarning(const char *,va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogNotice(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogInfo(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogDebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogAbortHandler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
-void  log_close(void);
-#ifndef HAVE_VSYSLOG
-#ifdef HAVE_SYSLOG
-void vsyslog (int, const char *, va_list);
-#endif /* HAVE_SYSLOG */
-#endif /* HAVE_VSYSLOG */
-int   validate(void);
 void  daemonize(void);
 void  gc(void);
 void  gc_mail_list(Mail_T *);
@@ -1406,16 +1383,6 @@ void  init_env(void);
 void  monit_http(Httpd_Action);
 bool can_http(void);
 void set_signal_block(void);
-State_Type check_process(Service_T);
-State_Type check_filesystem(Service_T);
-State_Type check_file(Service_T);
-State_Type check_directory(Service_T);
-State_Type check_remote_host(Service_T);
-State_Type check_system(Service_T);
-State_Type check_fifo(Service_T);
-State_Type check_program(Service_T);
-State_Type check_net(Service_T);
-int  check_URL(Service_T s);
 void status_xml(StringBuffer_T, Event_T, int, const char *);
 bool  do_wakeupcall(void);
 bool interrupt(void);

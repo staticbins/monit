@@ -15,7 +15,9 @@ YACCFLAGS	= -dvt
 POD2MAN		= @POD2MAN@
 POD2MANFLAGS	= @POD2MANFLAGS@
 
-AM_CPPFLAGS	= $(CPPFLAGS) $(EXTCPPFLAGS) -D@ARCH@ -DSYSCONFDIR="\"@sysconfdir@\"" -I./src -I./src/device -I./src/http -I./src/notification -I./src/process -I./src/protocols -I./src/ssl -I./src/terminal -I./src/net -I./src/statistics -I./libmonit/src
+AM_CPPFLAGS	= $(CPPFLAGS) $(EXTCPPFLAGS) -D@ARCH@ -DSYSCONFDIR="\"@sysconfdir@\"" -I./src -I./src/device \
+                  -I./src/http -I./src/notification -I./src/process -I./src/protocols -I./src/ssl -I./src/terminal \
+                  -I./src/net -I./src/statistics -I./libmonit/src
 AM_LDFLAGS	= $(LDFLAGS) $(EXTLDFLAGS) -L./lib/
 
 bin_PROGRAMS	= monit
@@ -121,7 +123,7 @@ dist-hook::
 	-rm -rf $(distdir)/libmonit/config.log
 	-rm -rf $(distdir)/libmonit/config.status
 	-rm -rf $(distdir)/libmonit/autom4te.cache
-	-rm -f $(distdir)/src/config.h
+	-rm -f $(distdir)/src/xconfig.h
 	-rm -f $(distdir)/src/stamp-*
 	-rm -f $(distdir)/src/y.output
 	-rm -f $(distdir)/README.md
@@ -137,7 +139,10 @@ distclean-local:
 	-rm -f monit-[0-9].*tar.gz
 
 cleanall: clean distclean
-	git clean -fxd
+	-rm -f libmonit/Makefile.in libmonit/configure libmonit/aclocal.m4 libmonit/src/xconfig.h.in
+	-rm -f Makefile.in configure aclocal.m4 autom4te.cache src/xconfig.h.in monit.1
+	-rm -rf libmonit/m4 libmonit/config
+	-rm -rf m4 config
 
 monit.1: doc/monit.pod
 	$(POD2MAN) $(POD2MANFLAGS) $< > $@

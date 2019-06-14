@@ -23,7 +23,7 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
+#include "xconfig.h"
 
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
@@ -94,6 +94,7 @@
 #endif
 
 #include "monit.h"
+#include "validate.h"
 #include "alert.h"
 #include "event.h"
 #include "device.h"
@@ -115,7 +116,7 @@
  */
 
 
-/* ----------------------------------------------------------------- Private */
+/* --------------------------------------------------------- MARK: - Private */
 
 
 /**
@@ -1352,7 +1353,7 @@ static bool _doScheduledAction(Service_T s) {
 }
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 /**
