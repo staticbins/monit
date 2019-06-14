@@ -102,10 +102,16 @@ bool System_random(void *buf, size_t nbytes);
 
 
 /**
- * Get a random number
- * @return a random number
+ * Get a random number. The number is returned in the range
+ * 0..<limit. I.e. from 0 upto limit - 1. E.g. to return random
+ * 0 or 1 use; System_randomNumber(2). To return a random number
+ * between 0 and max, use System_randomNumber(UINT64_MAX). It is
+ * a checked runtime error for limit to be less than 2 and larger
+ * than UINT64_MAX.
+ * @param limit The upper boundary of the random number
+ * @return a random number between 0 and limit - 1.
  */
-uint64_t System_randomNumber(void);
+uint64_t System_randomNumber(uint64_t limit);
 
 
 #endif

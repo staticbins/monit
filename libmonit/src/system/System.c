@@ -54,7 +54,7 @@
  */
 
 
-/* ----------------------------------------------------------- Definitions */
+/* ----------------------------------------------------- MARK: - Definitions */
 
 
 extern bool MonitDebug;
@@ -62,7 +62,7 @@ extern void(*_AbortHandler)(const char *error, va_list ap);
 extern void(*_ErrorHandler)(const char *error, va_list ap);
 
 
-/* ---------------------------------------------------------------- Public */
+/* ---------------------------------------------------------- MARK: - Public */
 
 
 const char *System_getLastError(void) { 
@@ -158,9 +158,10 @@ bool System_random(void *buf, size_t nbytes) {
 }
 
 
-uint64_t System_randomNumber() {
+uint64_t System_randomNumber(uint64_t limit) {
+        assert(limit > 1 && limit <= UINT64_MAX);
         uint64_t random = 0;
         System_random(&random, sizeof(random));
-        return random;
+        return random % limit;
 }
 
