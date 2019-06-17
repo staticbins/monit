@@ -95,4 +95,11 @@ void State_save(void);
 void State_restore(void);
 
 
+/**
+  * Check if the system rebooted since last cycle.
+ * @return true if reboot occurred since last cycle, otherwise false
+  */
+boolean_t State_reboot(void);
+
+
 #endif

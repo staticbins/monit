@@ -661,3 +661,8 @@ void State_restore() {
         END_TRY;
 }
 
+
+boolean_t State_reboot() {
+        return systeminfo.booted == booted ? false : true;
+}
+

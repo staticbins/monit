@@ -541,9 +541,6 @@ static void do_default() {
                         LogInfo("Starting Monit %s daemon\n", VERSION);
                 }
 
-                if (Run.startdelay)
-                        LogInfo("Monit start delay set to %ds\n", Run.startdelay);
-
                 if (! (Run.flags & Run_Foreground))
                         daemonize();
 
@@ -558,9 +555,11 @@ static void do_default() {
 
                 atexit(file_finalize);
 
-                if (Run.startdelay) {
+                if (Run.startdelay && State_reboot()) {
                         time_t now = Time_now();
                         time_t delay = now + Run.startdelay;
+
+                        LogInfo("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
 
                         /* sleep can be interrupted by signal => make sure we paused long enough */
                         while (now < delay) {
