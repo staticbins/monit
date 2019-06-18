@@ -619,7 +619,7 @@ setterminal     : SET TERMINAL BATCH {
                 ;
 
 startdelay      : /* EMPTY */ {
-                        $<number>$ = START_DELAY;
+                        $<number>$ = 0;
                   }
                 | START DELAY NUMBER {
                         $<number>$ = $3;

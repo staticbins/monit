@@ -159,8 +159,6 @@ typedef enum {
 #define SSL_TIMEOUT        15000
 #define SMTP_TIMEOUT       30000
 
-#define START_DELAY        0
-
 
 //FIXME: refactor Run_Flags to bit field
 typedef enum {
@@ -1257,7 +1255,7 @@ struct Run_T {
         Limits_T limits;                                       /**< Default limits */
         struct SslOptions_T ssl;                          /**< Default SSL options */
         int  polltime;        /**< In deamon mode, the sleeptime (sec) between run */
-        int  startdelay;                    /**< the sleeptime (sec) after startup */
+        int  startdelay;  /**< the sleeptime [s] on first start after machine boot */
         int  facility;              /** The facility to use when running openlog() */
         int  eventlist_slots;          /**< The event queue size - number of slots */
         int mailserver_timeout; /**< Connect and read timeout ms for a SMTP server */

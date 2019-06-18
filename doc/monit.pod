@@ -518,9 +518,8 @@ immediately. Calling C<monit> with the quit argument will kill a
 running Monit daemon process instead of waking it up.
 
 The start delay option can be used to wait (once) before Monit starts
-checking services. This can be useful for example when the system
-boots. Monit will by default start checking services immediately at
-startup.
+checking services after system reboot. Monit will by default start
+checking services immediately at startup.
 
 
 =head1 INIT SUPPORT

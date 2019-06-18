@@ -19,6 +19,8 @@ New: Added the MQTT protocol test.
 
 Fixed: Filesystem with missing free inodes statistics (such as CEPH) shown wrong free value (-1).
 
+Fixed: Issue #829: The start delay is now in effect just on first monit start after machine reboot.
+
 
 Version 5.25.3
 
