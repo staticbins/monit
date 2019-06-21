@@ -332,7 +332,7 @@ static void _checkResponse(Socket_T socket, Port_T P) {
                         }
                         END_TRY;
                 } else {
-                        THROW(ProtocolException, "HTTP error: uknown transfer encoding");
+                        THROW(ProtocolException, "HTTP error: unknown transfer encoding");
                 }
         }
 }
