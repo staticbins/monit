@@ -352,7 +352,7 @@ StringBuffer_T Util_printEventratio(Action_T action, StringBuffer_T buf);
  * @param rule Rule description
  * @return StringBuffer reference
  */
-StringBuffer_T Util_printRule(StringBuffer_T buf, EventAction_T action, const char *rule, ...);
+StringBuffer_T Util_printRule(StringBuffer_T buf, EventAction_T action, const char *rule, ...) __attribute__((format (printf, 3, 4)));
 
 
 /**
