@@ -952,35 +952,9 @@ if test "$use_sslstatic" = "1" -o "$use_ssl" = "1"; then
                 AC_DEFINE([HAVE_SSLV2], 1, [Define to 1 if you have openssl with SSLv2])
         fi
 
-        AC_MSG_CHECKING([for TLSv1.1])
-        AC_LINK_IFELSE(
-                [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [TLSv1_1_method()])],
-                [tlsv11=yes],
-                [tlsv11=no])
-        AC_MSG_RESULT($tlsv11)
-        if test "$tlsv11" = "yes" ; then
-                AC_DEFINE([HAVE_TLSV1_1], 1, [Define to 1 if you have openssl with TLSv1.1])
-        fi
-
-        AC_MSG_CHECKING([for TLSv1.2])
-        AC_LINK_IFELSE(
-                [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [TLSv1_2_method()])],
-                [tlsv12=yes],
-                [tlsv12=no])
-        AC_MSG_RESULT($tlsv12)
-        if test "$tlsv12" = "yes" ; then
-                AC_DEFINE([HAVE_TLSV1_2], 1, [Define to 1 if you have openssl with TLSv1.2])
-        fi
-
-        AC_MSG_CHECKING([for TLSv1.3])
-        AC_LINK_IFELSE(
-                [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [TLSv1_3_method()])],
-                [tlsv13=yes],
-                [tlsv13=no])
-        AC_MSG_RESULT($tlsv13)
-        if test "$tlsv13" = "yes" ; then
-                AC_DEFINE([HAVE_TLSV1_3], 1, [Define to 1 if you have openssl with TLSv1.3])
-        fi
+        AC_CHECK_DECL([SSL_OP_NO_TLSv1_1], [AC_DEFINE([HAVE_TLSV1_1], 1, [Define to 1 if you have openssl with TLSv1.1])], [], [[#include <openssl/ssl.h>]])
+        AC_CHECK_DECL([SSL_OP_NO_TLSv1_2], [AC_DEFINE([HAVE_TLSV1_2], 1, [Define to 1 if you have openssl with TLSv1.2])], [], [[#include <openssl/ssl.h>]])
+        AC_CHECK_DECL([SSL_OP_NO_TLSv1_3], [AC_DEFINE([HAVE_TLSV1_3], 1, [Define to 1 if you have openssl with TLSv1.3])], [], [[#include <openssl/ssl.h>]])
 
         AC_MSG_CHECKING([for EC_KEY support])
         AC_LINK_IFELSE(

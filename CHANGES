@@ -25,6 +25,8 @@ Fixed: Filesystem with missing free inodes statistics (such as CEPH) shown wrong
 
 Fixed: Issue #829: The start delay is now in effect just on first monit start after machine reboot.
 
+Fixed: TLSv1.3 support detection during compile time
+
 
 Version 5.25.3
 
