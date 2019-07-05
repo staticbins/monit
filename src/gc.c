@@ -297,6 +297,7 @@ static void _gc_service(Service_T *s) {
                         break;
         }
         FREE((*s)->name);
+        FREE((*s)->name_escaped);
         FREE((*s)->path);
         (*s)->next = NULL;
         FREE(*s);
@@ -634,6 +635,7 @@ static void _gcpdl(Dependant_T *d) {
         if ((*d)->next)
                 _gcpdl(&(*d)->next);
         FREE((*d)->dependant);
+        FREE((*d)->dependant_escaped);
         FREE(*d);
 }
 

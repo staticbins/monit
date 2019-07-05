@@ -685,21 +685,21 @@ group[ \t]+       {
                     return SERVICENAME;
                   }
 
-  \"{str}\"       {
+  \"[^\000-\037\"\n]+\" {
                     yylval.string = handle_quoted_string(yytext);
                     BEGIN(INITIAL);
                     save_arg();
                     return SERVICENAME;
                   }
 
-  \'{str}\'       {
+  \'[^\000-\037\"\n]+\' {
                     yylval.string = handle_quoted_string(yytext);
                     BEGIN(INITIAL);
                     save_arg();
                     return SERVICENAME;
                   }
 
-  [\"\']          {
+  [\"]|[\']       {
                       yyerror("unbalanced quotes");
                   }
 
@@ -719,13 +719,13 @@ group[ \t]+       {
                     return SERVICENAME;
                   }
 
-  \"{str}\"       {
+  \"[^\000-\037\"\n]+\" {
                     yylval.string = handle_quoted_string(yytext);
                     save_arg();
                     return SERVICENAME;
                   }
 
-  \'{str}\'       {
+  \'[^\000-\037\"\n]+\' {
                     yylval.string = handle_quoted_string(yytext);
                     save_arg();
                     return SERVICENAME;

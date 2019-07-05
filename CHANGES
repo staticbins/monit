@@ -4,6 +4,10 @@
 
 Version 5.26.0
 
+New: Allow any characters including space in a service name if the name is
+     enclosed in quotes. Example:
+     check process "apache 😍" with pidfile /var/run/httpd.pid
+
 New: The load average test now allows to set the per-CPU-core limit, so it 
      allows for generic load average limit policy regardless of CPU count. Example:
         if loadavg(1m) per core > 2 then alert
