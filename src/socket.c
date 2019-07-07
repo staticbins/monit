@@ -338,6 +338,7 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
                         }
                         ELSE
                         {
+                                DEBUG("Info: Cannot create socket to [%s]:%d -- %s\n", host, port, Exception_frame.message);
                                 snprintf(error, sizeof(error), "%s", Exception_frame.message);
                         }
                         END_TRY;
