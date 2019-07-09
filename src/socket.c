@@ -329,7 +329,7 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
         volatile T S = NULL;
         struct addrinfo *result = _resolve(host, port, type, family);
         if (result) {
-                char error[512];
+                char error[512] = {};
                 // The host may resolve to multiple IPs and if at least one succeeded, we have no problem and don't have to flood the log with partial errors => log only the last error
                 for (struct addrinfo *r = result; r && S == NULL; r = r->ai_next) {
                         TRY
@@ -338,7 +338,7 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
                         }
                         ELSE
                         {
-                                DEBUG("Info: Cannot connect to [%s]:%d -- %s\n", host, port, Exception_frame.message);
+                                DEBUG("Info: Cannot connect to [%s]:%d -- %s\nTrying next address record\n", host, port, Exception_frame.message);
                                 snprintf(error, sizeof(error), "%s", Exception_frame.message);
                         }
                         END_TRY;
