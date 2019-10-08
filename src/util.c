@@ -1449,7 +1449,7 @@ void Util_printServiceList() {
 
 char *Util_getToken(MD_T token) {
         md5_context_t ctx;
-        char buf[32] = {};
+        char buf[STRLEN] = {};
         MD_T digest;
         System_random(buf, sizeof(buf));
         md5_init(&ctx);
