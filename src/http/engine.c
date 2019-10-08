@@ -525,7 +525,7 @@ void Engine_stop() {
 
 void Engine_cleanup() {
         myServerSocketsCount = 0;
-        if (Run.httpd.flags & Httpd_Unix)
+        if (Run.httpd.flags & Httpd_Unix && Run.httpd.socket.unix.path)
                 unlink(Run.httpd.socket.unix.path);
 }
 
