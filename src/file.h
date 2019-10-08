@@ -75,7 +75,7 @@ boolean_t file_createPidFile(char *pidfile);
  * @param permmask The permission mask for the file
  * @return true if the test succeeded otherwise false
  */
-boolean_t file_checkStat(char *filename, char *description, int permmask);
+boolean_t file_checkStat(char *filename, char *description, mode_t permmask);
 
 
 /**
