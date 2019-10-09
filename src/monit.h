@@ -462,7 +462,7 @@ typedef struct Limits_T {
  * array must be NULL terminated and the first entry is the program
  * itself. In addition, a user and group may be set for the Command
  * which means that the Command should run as a certain user and with
- * certain group. To avoid name collision with Command_T in libmonit 
+ * certain group. To avoid name collision with Command_T in libmonit
  * this structure uses lower case.
  */
 typedef struct command_t {
@@ -949,6 +949,15 @@ typedef struct SecurityAttribute_T {
         struct SecurityAttribute_T *next;
 } *SecurityAttribute_T;
 
+typedef struct OpenFiles_T {
+        boolean_t total;             /**<Whether to include open files of children */
+        uint64_t limit;                                      /**< Open files limit */
+        Operator_Type operator;                           /**< Comparison operator */
+        EventAction_T action;  /**< Description of the action upon event occurence */
+
+        /** For internal use */
+        struct OpenFiles_T *next;
+} *OpenFiles_T;
 
 /** Defines pid object */
 typedef struct Pid_T {
@@ -1104,6 +1113,8 @@ typedef struct ProcessInfo_T {
         struct IOStatistics_T read;                       /**< Read statistics */
         struct IOStatistics_T write;                     /**< Write statistics */
         char secattr[STRLEN];                         /**< Security attributes */
+        uint64_t open_files;                       /**< number of opened files */
+        uint64_t total_open_files;           /**< number of total opened files */
 } *ProcessInfo_T;
 
 
@@ -1174,6 +1185,7 @@ typedef struct Service_T {
         Uid_T       euid;                                 /**< Effective Uid check */
         Gid_T       gid;                                            /**< Gid check */
         SecurityAttribute_T secattrlist;             /**< Security attributes list */
+        OpenFiles_T openfileslist;                            /**< Open files list */
         LinkStatus_T linkstatuslist;                 /**< Network link status list */
         LinkSpeed_T linkspeedlist;                    /**< Network link speed list */
         LinkSaturation_T linksaturationlist;     /**< Network link saturation list */

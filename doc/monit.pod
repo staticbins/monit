@@ -2753,6 +2753,33 @@ Example for AppArmor:
     if failed security attribute "/usr/sbin/ntpd (enforce)" then alert
 
 
+=head2 PROCESS OPEN FILES TEST
+
+Monit can test the number of open files of a process.
+You can check the number of open files for a single process, or the
+accumulated number for the process and all its children.
+
+The syntax for the open-files statement is:
+
+ IF [TOTAL] OPEN-FILES <operator> <number> THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<number> is an integer.
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+ check process myproc with pidfile /var/run/myproc.pid
+    if open-files >= 100 then alert
+    if total open-files > 500 then restart
+
+
 =head2 PROGRAM STATUS TEST
 
 You can check the exit status of a program or a script. This test

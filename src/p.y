@@ -312,6 +312,7 @@ static void _setSSLVersion(short version);
 #endif
 static void _unsetSSLVersion(short version);
 static void addsecurityattribute(char *, Action_Type, Action_Type);
+static void addopenfiles(Operator_Type, boolean_t, uint64_t, Action_Type, Action_Type);
 
 %}
 
@@ -362,6 +363,7 @@ static void addsecurityattribute(char *, Action_Type, Action_Type);
 %token <number> MAXFORWARD
 %token FIPS
 %token SECURITY ATTRIBUTE
+%token OPENFILES
 
 %left GREATER GREATEROREQUAL LESS LESSOREQUAL EQUAL NOTEQUAL
 
@@ -417,6 +419,7 @@ optproc         : start
                 | uid
                 | euid
                 | secattr
+                | openfiles
                 | gid
                 | uptime
                 | connection
@@ -2809,6 +2812,14 @@ secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recover
                   }
                 ;
 
+openfiles       : IF OPENFILES operator NUMBER rate1 THEN action1 recovery {
+                        addopenfiles($<number>3, false, (uint64_t)$4, $<number>7, $<number>8);
+                  }
+                | IF TOTAL OPENFILES operator NUMBER rate1 THEN action1 recovery {
+                        addopenfiles($<number>4, true, (uint64_t)$5, $<number>8, $<number>9);
+                  }
+                ;
+
 gid             : IF FAILED GID STRING rate1 THEN action1 recovery {
                         gidset.gid = get_gid($4, 0);
                         addeventaction(&(gidset).action, $<number>7, $<number>8);
@@ -3800,44 +3811,44 @@ static void addperm(Perm_T ps) {
 
 static void addlinkstatus(Service_T s, LinkStatus_T L) {
         ASSERT(L);
-        
+
         LinkStatus_T l;
         NEW(l);
         l->action = L->action;
-        
+
         l->next = s->linkstatuslist;
         s->linkstatuslist = l;
-        
+
         reset_linkstatusset();
 }
 
 
 static void addlinkspeed(Service_T s, LinkSpeed_T L) {
         ASSERT(L);
-        
+
         LinkSpeed_T l;
         NEW(l);
         l->action = L->action;
-        
+
         l->next = s->linkspeedlist;
         s->linkspeedlist = l;
-        
+
         reset_linkspeedset();
 }
 
 
 static void addlinksaturation(Service_T s, LinkSaturation_T L) {
         ASSERT(L);
-        
+
         LinkSaturation_T l;
         NEW(l);
         l->operator = L->operator;
         l->limit = L->limit;
         l->action = L->action;
-        
+
         l->next = s->linksaturationlist;
         s->linksaturationlist = l;
-        
+
         reset_linksaturationset();
 }
 
@@ -3957,12 +3968,12 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
                                 command1 = copycommand(savecommand);
                         }
                 }
-                
+
                 addmatch(ms, actionnumber, linenumber);
         }
         if (actionnumber == Action_Exec && savecommand)
                 gccmd(&savecommand);
-        
+
         fclose(handle);
 }
 
@@ -4032,7 +4043,7 @@ static void addfilesystem(FileSystem_T ds) {
 
         dev->next               = current->filesystemlist;
         current->filesystemlist = dev;
-        
+
         reset_filesystemset();
 
 }
@@ -4148,7 +4159,7 @@ static void addcommand(int what, unsigned timeout) {
         }
 
         command->timeout = timeout;
-        
+
         command = NULL;
 
 }
@@ -5061,5 +5072,16 @@ static void addsecurityattribute(char *value, Action_Type failed, Action_Type su
         attr->attribute = value;
         attr->next = current->secattrlist;
         current->secattrlist = attr;
+}
+
+static void addopenfiles(Operator_Type operator, boolean_t total, uint64_t value, Action_Type failed, Action_Type succeeded) {
+        OpenFiles_T open_files;
+        NEW(open_files);
+        addeventaction(&(open_files->action), failed, succeeded);
+        open_files->total = total;
+        open_files->limit = value;
+        open_files->operator = operator;
+        open_files->next = current->openfileslist;
+        current->openfileslist = open_files;
 }
 

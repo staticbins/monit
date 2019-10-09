@@ -72,6 +72,10 @@ typedef struct ProcessTree_T {
         time_t uptime;
         char *cmdline;
         char *secattr;
+        struct {
+                uint64_t usage;
+                uint64_t usage_total;
+        } open_files;
 } ProcessTree_T;
 
 

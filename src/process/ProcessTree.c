@@ -137,6 +137,7 @@ static void _fillProcessTree(ProcessTree_T *pt, int index) {
                 pt[index].threads.children = 0;
                 pt[index].cpu.usage.children = 0.;
                 pt[index].memory.usage_total = pt[index].memory.usage;
+                pt[index].open_files.usage_total = pt[index].open_files.usage;
                 for (int i = 0; i < pt[index].children.count; i++) {
                         _fillProcessTree(pt, pt[index].children.list[i]);
                 }
@@ -150,7 +151,8 @@ static void _fillProcessTree(ProcessTree_T *pt, int index) {
                         if (pt[index].cpu.usage.children >= 0) {
                                 parent_pt->cpu.usage.children += pt[index].cpu.usage.children;
                         }
-                        parent_pt->memory.usage_total  += pt[index].memory.usage_total;
+                        parent_pt->memory.usage_total     += pt[index].memory.usage_total;
+                        parent_pt->open_files.usage_total += pt[index].open_files.usage_total;
                 }
         }
 }
@@ -318,6 +320,8 @@ boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid) {
                 }
                 s->inf.process->mem               = ptree[leaf].memory.usage;
                 s->inf.process->total_mem         = ptree[leaf].memory.usage_total;
+                s->inf.process->open_files        = ptree[leaf].open_files.usage;
+                s->inf.process->total_open_files  = ptree[leaf].open_files.usage_total;
                 if (systeminfo.memory.size > 0) {
                         s->inf.process->total_mem_percent = ptree[leaf].memory.usage_total >= systeminfo.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage_total / (double)systeminfo.memory.size);
                         s->inf.process->mem_percent       = ptree[leaf].memory.usage >= systeminfo.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage / (double)systeminfo.memory.size);

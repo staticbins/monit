@@ -148,6 +148,7 @@ month          ("month"|"months")
 atime          ("atime"|"access time"|"access timestamp")
 ctime          ("ctime"|"change time"|"change timestamp")
 mtime          ("mtime"|"modification time"|"modification timestamp"|"modify time"|"modify timestamp")
+openfiles      ("openfiles"|"open-files"|"open files")
 
 %x ARGUMENT_COND DEPEND_COND SERVICE_COND URL_COND ADDRESS_COND STRING_COND EVERY_COND HTTP_HEADER_COND INCLUDE
 
@@ -464,6 +465,7 @@ fips              { return FIPS; }
 {atime}           { return ATIME; }
 {ctime}           { return CTIME; }
 {mtime}           { return MTIME; }
+{openfiles}       { return OPENFILES; }
 
 include           { BEGIN(INCLUDE); }
 
