@@ -213,6 +213,25 @@ static void _closeStreams(Process_T P) {
 }
 
 
+// Verify and guard setuid
+static boolean_t _guardSetuid(T C) {
+        if (C->uid == 0) // setuid not requested
+                return true;
+        struct passwd *user = getpwuid(C->uid);
+        if (user) {
+                if (initgroups(user->pw_name, getgid()) == 0) {
+                        Command_setEnv(C, "HOME", user->pw_dir);
+                        return true;
+                } else {
+                        ERROR("Command: initgroups for user %s failed -- %s\n", user->pw_name, System_getLastError());
+                }
+        } else {
+                ERROR("Command: uid %d not found on the system -- %s\n", C->uid, System_getLastError());
+        }
+        return false;
+}
+
+
 /* -------------------------------------------------------------- Process_T */
 
 
@@ -230,6 +249,8 @@ static Process_T _Process_new(void) {
         Process_T P;
         NEW(P);
         P->status = -1;
+        P->uid = getuid();
+        P->gid = getgid();
         return P;
 }
 
@@ -494,6 +515,8 @@ Process_T Command_execute(T C) {
         assert(_env(C));
         assert(_args(C));
         volatile int exec_error = 0;
+        if (!_guardSetuid(C))
+                return NULL;
         Process_T P = _Process_new();
         int descriptors = System_getDescriptorsGuarded();
         _createPipes(P);
@@ -516,7 +539,6 @@ Process_T Command_execute(T C) {
                 for (int i = 3; i < descriptors; i++) {
                         close(i);
                 }
-                P->gid = getgid();
                 if (C->gid) {
                         if (setgid(C->gid) == 0) {
                                 P->gid = C->gid;
@@ -524,22 +546,11 @@ Process_T Command_execute(T C) {
                                 ERROR("Command: Cannot change process gid to '%d' -- %s\n", C->gid, System_getLastError());
                         }
                 }
-                P->uid = getuid();
                 if (C->uid) {
-                        struct passwd *user = getpwuid(C->uid);
-                        if (user) {
-                                Command_setEnv(C, "HOME", user->pw_dir);
-                                if (initgroups(user->pw_name, P->gid) == 0) {
-                                        if (setuid(C->uid) == 0) {
-                                                P->uid = C->uid;
-                                        } else {
-                                                ERROR("Command: Cannot change process uid to '%d' -- %s\n", C->uid, System_getLastError());
-                                        }
-                                } else {
-                                        ERROR("Command: initgroups for user %s failed -- %s\n", user->pw_name, System_getLastError());
-                                }
+                        if (setuid(C->uid) == 0) {
+                                P->uid = C->uid;
                         } else {
-                                ERROR("Command: uid %d not found on the system -- %s\n", C->uid, System_getLastError());
+                                ERROR("Command: Cannot change process uid to '%d' -- %s\n", C->uid, System_getLastError());
                         }
                 }
                 // Unblock any signals and reset signal handlers
@@ -557,7 +568,7 @@ Process_T Command_execute(T C) {
                 // Execute the program
                 execve(_args(C)[0], _args(C), _env(C));
                 // Won't print to error log as descriptor was closed above, but will
-                // print error to stderr Processor_T can be read
+                // print error to stderr which Processor_T can be read
                 ERROR("Command: '%s' failed to execute -- %s", _args(C)[0], System_getLastError());
                 exec_error = errno;
                 _exit(errno);
