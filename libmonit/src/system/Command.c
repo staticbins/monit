@@ -531,6 +531,7 @@ Process_T Command_execute(T C) {
                         } else {
                                 exec_error = errno;
                                 ERROR("Command: Cannot change process gid to '%d' -- %s\n", C->gid, System_getLastError());
+                                _exit(errno);
                         }
                 }
                 P->uid = getuid();
@@ -543,10 +544,12 @@ Process_T Command_execute(T C) {
                                 } else {
                                         exec_error = errno;
                                         ERROR("Command: Cannot change process uid to '%d' -- %s\n", C->uid, System_getLastError());
+                                        _exit(errno);
                                 }
                         } else {
                                 exec_error = errno;
                                 ERROR("Command: initgroups for user %s failed -- %s\n", user->pw_name, System_getLastError());
+                                _exit(errno);
                         }
                 }
                 // Unblock any signals and reset signal handlers
