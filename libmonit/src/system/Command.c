@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -213,25 +213,6 @@ static void _closeStreams(Process_T P) {
 }
 
 
-// Verify and guard setuid
-static boolean_t _guardSetuid(T C) {
-        if (C->uid == 0) // setuid not requested
-                return true;
-        struct passwd *user = getpwuid(C->uid);
-        if (user) {
-                if (initgroups(user->pw_name, getgid()) == 0) {
-                        Command_setEnv(C, "HOME", user->pw_dir);
-                        return true;
-                } else {
-                        ERROR("Command: initgroups for user %s failed -- %s\n", user->pw_name, System_getLastError());
-                }
-        } else {
-                ERROR("Command: uid %d not found on the system -- %s\n", C->uid, System_getLastError());
-        }
-        return false;
-}
-
-
 /* -------------------------------------------------------------- Process_T */
 
 
@@ -249,8 +230,6 @@ static Process_T _Process_new(void) {
         Process_T P;
         NEW(P);
         P->status = -1;
-        P->uid = getuid();
-        P->gid = getgid();
         return P;
 }
 
@@ -303,9 +282,9 @@ int Process_waitFor(Process_T P) {
                 do
                         r = waitpid(P->pid, &P->status, 0); // Wait blocking
                 while (r == -1 && errno == EINTR);
-                if (r != P->pid) 
+                if (r != P->pid)
                         P->status = -1;
-                else 
+                else
                         _setstatus(P);
         }
         return P->status;
@@ -318,10 +297,10 @@ int Process_exitStatus(Process_T P) {
                 int r;
                 do
                         r = waitpid(P->pid, &P->status, WNOHANG); // Wait non-blocking
-                while (r == -1 && errno == EINTR); 
+                while (r == -1 && errno == EINTR);
                 if (r == 0) // Process is still running
                         P->status = -1;
-                else 
+                else
                         _setstatus(P);
         }
         return P->status;
@@ -494,7 +473,7 @@ const char *Command_getEnv(T C, const char *name) {
         if (e) {
                 char *v = strchr(e, '=');
                 if (v)
-                        return ++v;   
+                        return ++v;
         }
         return NULL;
 }
@@ -515,8 +494,14 @@ Process_T Command_execute(T C) {
         assert(_env(C));
         assert(_args(C));
         volatile int exec_error = 0;
-        if (!_guardSetuid(C))
-                return NULL;
+        struct passwd *user = NULL;
+        if (C->uid) {
+                user = getpwuid(C->uid);
+                if (!user) {
+                        ERROR("Command: uid %d not found on the system -- %s\n", C->uid, System_getLastError());
+                        return NULL;
+                }
+        }
         Process_T P = _Process_new();
         int descriptors = System_getDescriptorsGuarded();
         _createPipes(P);
@@ -524,7 +509,7 @@ Process_T Command_execute(T C) {
                 ERROR("Command: fork failed -- %s\n", System_getLastError());
                 Process_free(&P);
                 return NULL;
-        } else if (P->pid == 0) { 
+        } else if (P->pid == 0) {
                 // Child
                 if (C->working_directory) {
                         if (! Dir_chdir(C->working_directory)) {
@@ -539,18 +524,29 @@ Process_T Command_execute(T C) {
                 for (int i = 3; i < descriptors; i++) {
                         close(i);
                 }
+                P->gid = getgid();
                 if (C->gid) {
                         if (setgid(C->gid) == 0) {
                                 P->gid = C->gid;
                         } else {
+                                exec_error = errno;
                                 ERROR("Command: Cannot change process gid to '%d' -- %s\n", C->gid, System_getLastError());
                         }
                 }
+                P->uid = getuid();
                 if (C->uid) {
-                        if (setuid(C->uid) == 0) {
-                                P->uid = C->uid;
+                        assert(user);
+                        if (initgroups(user->pw_name, P->gid) == 0) {
+                                Command_setEnv(C, "HOME", user->pw_dir);
+                                if (setuid(C->uid) == 0) {
+                                        P->uid = C->uid;
+                                } else {
+                                        exec_error = errno;
+                                        ERROR("Command: Cannot change process uid to '%d' -- %s\n", C->uid, System_getLastError());
+                                }
                         } else {
-                                ERROR("Command: Cannot change process uid to '%d' -- %s\n", C->uid, System_getLastError());
+                                exec_error = errno;
+                                ERROR("Command: initgroups for user %s failed -- %s\n", user->pw_name, System_getLastError());
                         }
                 }
                 // Unblock any signals and reset signal handlers
@@ -562,7 +558,7 @@ Process_T Command_execute(T C) {
                 signal(SIGABRT, SIG_DFL);
                 signal(SIGTERM, SIG_DFL);
                 signal(SIGPIPE, SIG_DFL);
-                signal(SIGCHLD, SIG_DFL); 
+                signal(SIGCHLD, SIG_DFL);
                 signal(SIGUSR1, SIG_DFL);
                 signal(SIGHUP, SIG_IGN);  // Ensure future opens won't allocate controlling TTYs
                 // Execute the program
