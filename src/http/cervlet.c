@@ -1025,14 +1025,17 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
         if (Run.httpd.flags & Httpd_Net) {
                 _displayTableRow(res, true,  NULL, "httpd bind address", "%s", Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "Any/All");
                 _displayTableRow(res, false, NULL, "httpd portnumber",   "%d", Run.httpd.socket.net.port);
+                _displayTableRow(res, false, NULL, "httpd net readonly", "%s", Run.httpd.socket.net.readonly ? "True" : "False");
 #ifdef HAVE_OPENSSL
                 const char *options = Ssl_printOptions(&(Run.httpd.socket.net.ssl), (char[STRLEN]){}, STRLEN);
                 if (options && *options)
                         _displayTableRow(res, false, NULL, "httpd encryption", "%s", options);
 #endif
         }
-        if (Run.httpd.flags & Httpd_Unix)
+        if (Run.httpd.flags & Httpd_Unix) {
                 _displayTableRow(res, true, NULL, "httpd unix socket", "%s", Run.httpd.socket.unix.path);
+                _displayTableRow(res, false, NULL, "httpd unix readonly", "%s", Run.httpd.socket.unix.readonly ? "True" : "False");
+        }
         _displayTableRow(res, false, NULL, "httpd signature",           "%s", Run.httpd.flags & Httpd_Signature ? "True" : "False");
         _displayTableRow(res, false, NULL, "httpd auth. style",         "%s", Run.httpd.credentials && Engine_hasAllow() ?
                                                                "Basic Authentication and Host/Net allow list" : Run.httpd.credentials ? "Basic Authentication" : Engine_hasAllow() ? "Host/Net allow list" : "No authentication");
@@ -2544,6 +2547,12 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
 
 
 static bool is_readonly(HttpRequest req) {
+        Socket_Family sfam = Socket_getFamily(req->S);
+        if ((Run.httpd.socket.net.readonly  && (sfam != Socket_Unix)) ||
+            (Run.httpd.socket.unix.readonly && (sfam == Socket_Unix))
+           ) {
+                return true;
+        }
         if (req->remote_user) {
                 Auth_T user_creds = Util_getUserCredentials(req->remote_user);
                 return (user_creds ? user_creds->is_readonly : true);

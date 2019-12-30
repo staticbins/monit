@@ -1114,9 +1114,10 @@ allowselfcert   : ALLOWSELFCERTIFICATION {
                   }
                 ;
 
-httpdport       : PORT NUMBER {
+httpdport       : PORT NUMBER readonly {
                         Run.httpd.flags |= Httpd_Net;
                         Run.httpd.socket.net.port = $2;
+                        Run.httpd.socket.net.readonly = $<number>3;
                   }
                 ;
 
@@ -1151,6 +1152,9 @@ httpdsocketoption : UID STRING {
                   | PERMISSION NUMBER {
                         Run.httpd.flags |= Httpd_UnixPermission;
                         Run.httpd.socket.unix.permission = check_perm($2);
+                    }
+                  | READONLY {
+                        Run.httpd.socket.unix.readonly = true;
                     }
                   ;
 
