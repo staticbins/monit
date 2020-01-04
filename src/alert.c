@@ -191,7 +191,7 @@ static MailServer_T _connectMTA() {
                 if (mta->ssl.flags == SSL_Enabled)
                         mta->socket = Socket_create(mta->host, mta->port, Socket_Tcp, Socket_Ip, &(mta->ssl), Run.mailserver_timeout);
                 else
-                        mta->socket = Socket_new(mta->host, mta->port, Socket_Tcp, Socket_Ip, false, Run.mailserver_timeout);
+                        mta->socket = Socket_new(mta->host, mta->port, Socket_Tcp, Socket_Ip, SSL_Disabled, Run.mailserver_timeout);
                 if (mta->socket)
                         break;
                 else
