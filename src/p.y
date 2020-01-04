@@ -1896,6 +1896,7 @@ uptime          : IF UPTIME operator NUMBER time rate1 THEN action1 recovery {
                         addeventaction(&(uptimeset).action, $<number>8, $<number>9);
                         adduptime(&uptimeset);
                   }
+                ;
 
 icmpcount       : COUNT NUMBER {
                         icmpset.count = $<number>2;
