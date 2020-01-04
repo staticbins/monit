@@ -55,6 +55,8 @@ typedef struct SslOptions_T {
         short checksumType;                                     /**< Checksum type */
         char *checksum;     /**< The expected checksum of the server's certificate */
         char *pemfile;                            /**< Optional server certificate */
+        char *pemchain;         /**< Optional alternative server certificate chain */
+        char *pemkey;                 /**< Optional alternative server private key */
         char *clientpemfile;                      /**< Optional client certificate */
         char *ciphers;                               /**< Allowed SSL ciphers list */
         char *CACertificateFile;             /**< Path to CA certificates PEM file */

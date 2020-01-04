@@ -163,6 +163,8 @@ void gc_event(Event_T *e) {
 static void _gcssloptions(SslOptions_T o) {
         FREE(o->checksum);
         FREE(o->pemfile);
+        FREE(o->pemchain);
+        FREE(o->pemkey);
         FREE(o->clientpemfile);
         FREE(o->ciphers);
         FREE(o->CACertificateFile);

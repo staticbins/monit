@@ -186,6 +186,16 @@ static const char *_optionsServerPEMFile(const char *pemfile) {
 }
 
 
+static const char *_optionsServerPEMChain(const char *pemchain) {
+        return pemchain ? pemchain : Run.ssl.pemchain ? Run.ssl.pemchain: NULL;
+}
+
+
+static const char *_optionsServerPEMKey(const char *pemkey) {
+        return pemkey ? pemkey : Run.ssl.pemkey ? Run.ssl.pemkey: NULL;
+}
+
+
 static const char *_optionsClientPEMFile(const char *clientpemfile) {
         return clientpemfile ? clientpemfile : Run.ssl.clientpemfile ? Run.ssl.clientpemfile: NULL;
 }
@@ -793,6 +803,10 @@ char *Ssl_printOptions(SslOptions_T options, char *b, int size) {
                         snprintf(b + strlen(b), size - strlen(b) - 1, "%sselfsigned: allow", count++ ? ", " : "");
                 if (options->pemfile)
                         snprintf(b + strlen(b), size - strlen(b) - 1, "%spemfile: %s", count ++ ? ", " : "", options->pemfile);
+                if (options->pemchain)
+                        snprintf(b + strlen(b), size - strlen(b) - 1, "%spemchain: %s", count ++ ? ", " : "", options->pemchain);
+                if (options->pemkey)
+                        snprintf(b + strlen(b), size - strlen(b) - 1, "%spemkey: %s", count ++ ? ", " : "", options->pemkey);
                 if (options->clientpemfile)
                         snprintf(b + strlen(b), size - strlen(b) - 1, "%sclientpemfile: %s", count ++ ? ", " : "", options->clientpemfile);
                 if (options->CACertificateFile)
@@ -864,12 +878,14 @@ SslServer_T SslServer_new(int socket, SslOptions_T options) {
         SSL_CTX_set_options(S->ctx, SSL_OP_NO_COMPRESSION);
 #endif
         SSL_CTX_set_session_cache_mode(S->ctx, SSL_SESS_CACHE_OFF);
+        const char *pemchain = _optionsServerPEMChain(options->pemchain);
+        const char *pemkey = _optionsServerPEMKey(options->pemkey);
         const char *pemfile = _optionsServerPEMFile(options->pemfile);
-        if (SSL_CTX_use_certificate_chain_file(S->ctx, pemfile) != 1) {
+        if (SSL_CTX_use_certificate_chain_file(S->ctx, pemchain ? pemchain : pemfile) != 1) {
                 LogError("SSL: server certificate chain loading failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
-        if (SSL_CTX_use_PrivateKey_file(S->ctx, pemfile, SSL_FILETYPE_PEM) != 1) {
+        if (SSL_CTX_use_PrivateKey_file(S->ctx, pemkey ? pemkey : pemfile, SSL_FILETYPE_PEM) != 1) {
                 LogError("SSL: server private key loading failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
