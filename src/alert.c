@@ -276,7 +276,7 @@ static boolean_t _send(List_T list) {
 }
 
 
-boolean_t _hasRecipient(Mail_T list, const char *recipient) {
+static boolean_t _hasRecipient(Mail_T list, const char *recipient) {
         for (Mail_T l = list; l; l = l->next)
                 if (IS(recipient, l->to))
                         return true;

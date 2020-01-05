@@ -158,7 +158,7 @@ static int _fill(T S, int timeout) {
 }
 
 
-int _getPort(const struct sockaddr *addr) {
+static int _getPort(const struct sockaddr *addr) {
         if (addr->sa_family == AF_INET)
                 return ntohs(((struct sockaddr_in *)addr)->sin_port);
 #ifdef HAVE_IPV6
@@ -225,7 +225,7 @@ static boolean_t _doConnect(int s, const struct sockaddr *addr, socklen_t addrle
 }
 
 
-T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrlen, const struct sockaddr *localaddr, socklen_t localaddrlen, int family, int type, int protocol, SslOptions_T options, int timeout) {
+static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrlen, const struct sockaddr *localaddr, socklen_t localaddrlen, int family, int type, int protocol, SslOptions_T options, int timeout) {
         ASSERT(host);
         char error[STRLEN];
         int s = socket(family, type, protocol);
@@ -278,7 +278,7 @@ error:
 }
 
 
-struct addrinfo *_resolve(const char *hostname, int port, Socket_Type type, Socket_Family family) {
+static struct addrinfo *_resolve(const char *hostname, int port, Socket_Type type, Socket_Family family) {
         ASSERT(hostname);
         struct addrinfo *result, hints = {
                 .ai_socktype = type,

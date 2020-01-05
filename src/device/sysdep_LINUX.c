@@ -71,6 +71,7 @@
 #endif
 
 #include "monit.h"
+#include "device.h"
 
 // libmonit
 #include "io/File.h"
