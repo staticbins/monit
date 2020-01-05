@@ -229,7 +229,7 @@ static Service_T createservice(Service_Type, char *, char *, State_Type (*)(Serv
 static void  addservice(Service_T);
 static void  adddependant(char *);
 static void  addservicegroup(char *);
-static void  addport(Port_T *, Port_T);
+static void  addport(Port_T *, Port_T, int);
 static void  addhttpheader(Port_T, const char *);
 static void  addresource(Resource_T);
 static void  addtimestamp(Timestamp_T);
@@ -1422,12 +1422,20 @@ hostname        : /* EMPTY */     {
                   }
                 ;
 
-connection      : IF FAILED host port connectionoptlist rate1 THEN action1 recovery {
+connection      : IF connection_clause host port connectionoptlist rate1 THEN action1 recovery {
                         /* This is a workaround to support content match without having to create an URL object. 'urloption' creates the Request_T object we need minus the URL object, but with enough information to perform content test.
                            TODO: Parser is in need of refactoring */
                         portset.url_request = urlrequest;
                         addeventaction(&(portset).action, $<number>8, $<number>9);
-                        addport(&(current->portlist), &portset);
+                        addport(&(current->portlist), &portset, $<number>2);
+                  }
+                ;
+
+connection_clause : FAILED {
+                        $<number>$ = 0;
+                  }
+                | SUCCEEDED {
+                        $<number>$ = 1;
                   }
                 ;
 
@@ -1451,7 +1459,7 @@ connectionopt   : ip
 connectionurl   : IF FAILED URL URLOBJECT connectionurloptlist rate1 THEN action1 recovery {
                         prepare_urlrequest($<url>4);
                         addeventaction(&(portset).action, $<number>8, $<number>9);
-                        addport(&(current->portlist), &portset);
+                        addport(&(current->portlist), &portset, 0);
                   }
                 ;
 
@@ -1469,7 +1477,7 @@ connectionurlopt : urloption
 
 connectionunix  : IF FAILED unixsocket connectionuxoptlist rate1 THEN action1 recovery {
                         addeventaction(&(portset).action, $<number>7, $<number>8);
-                        addport(&(current->socketlist), &portset);
+                        addport(&(current->socketlist), &portset, 0);
                   }
                 ;
 
@@ -3586,7 +3594,7 @@ static void addmail(char *mailto, Mail_T f, Mail_T *l) {
 /*
  * Add the given portset to the current service's portlist
  */
-static void addport(Port_T *list, Port_T port) {
+static void addport(Port_T *list, Port_T port, int check_invers) {
         ASSERT(port);
 
         if (port->protocol->check == check_radius && port->type != Socket_Udp)
@@ -3594,6 +3602,7 @@ static void addport(Port_T *list, Port_T port) {
 
         Port_T p;
         NEW(p);
+        p->check_invers       = !!check_invers;
         p->is_available       = Connection_Init;
         p->type               = port->type;
         p->socket             = port->socket;

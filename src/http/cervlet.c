@@ -1864,8 +1864,8 @@ static void print_service_rules_port(HttpResponse res, Service_T s) {
         for (Port_T p = s->portlist; p; p = p->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 StringBuffer_T buf = StringBuffer_create(64);
-                StringBuffer_append(buf, "If failed [%s]:%d%s",
-                        p->hostname, p->target.net.port, Util_portRequestDescription(p));
+                StringBuffer_append(buf, "If %s [%s]:%d%s",
+                        p->check_invers ? "succeeded" : "failed", p->hostname, p->target.net.port, Util_portRequestDescription(p));
                 if (p->outgoing.ip)
                         StringBuffer_append(buf, " via address %s", p->outgoing.ip);
                 StringBuffer_append(buf, " type %s/%s protocol %s with timeout %s",

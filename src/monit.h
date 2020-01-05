@@ -658,6 +658,7 @@ typedef struct Port_T {
                 } net;
         } target;
         Outgoing_T outgoing;                                 /**< Outgoing address */
+        bool check_invers;           /**< Whether to alert on a connection success */
         int timeout;      /**< The timeout in [ms] to wait for connect or read i/o */
         int retry;       /**< Number of connection retry before reporting an error */
         volatile int socket;                       /**< Socket used for connection */
