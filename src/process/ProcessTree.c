@@ -401,9 +401,9 @@ void ProcessTree_testMatch(char *pattern) {
                 StringBuffer_T output = StringBuffer_create(256);
                 Box_T t = Box_new(output, 4, (BoxColumn_T []){
                                 {.name = "",        .width = 1,  .wrap = false, .align = BoxAlign_Left},
-                                {.name = "PID",     .width = 5,  .wrap = false, .align = BoxAlign_Right},
-                                {.name = "PPID",    .width = 5,  .wrap = false, .align = BoxAlign_Right},
-                                {.name = "Command", .width = 56, .wrap = true,  .align = BoxAlign_Left}
+                                {.name = "PID",     .width = 8,  .wrap = false, .align = BoxAlign_Right},
+                                {.name = "PPID",    .width = 8,  .wrap = false, .align = BoxAlign_Right},
+                                {.name = "Command", .width = 50, .wrap = true,  .align = BoxAlign_Left}
                           }, true);
                 // Select the process matching the pattern
                 int pid = _match(regex_comp);
