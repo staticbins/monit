@@ -6,6 +6,9 @@ Version 5.27.0
 
 Fixed: Issue #872: Procmatch PID column show five digits only
 
+Fixed: MacOS: Only first 16 characters of the process name was displayed for privileged processes,
+so the pattern based process check and the procmatch CLI may miss some processes.
+
 
 Version 5.26.0
 

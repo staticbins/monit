@@ -184,8 +184,13 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                         pt[i].cmdline = Str_dup(StringBuffer_toString(StringBuffer_trim(cmdline)));
                         }
                         if (STR_UNDEF(pt[i].cmdline)) {
+                                char cmdpath[PROC_PIDPATHINFO_MAXSIZE] = {};
                                 FREE(pt[i].cmdline);
-                                pt[i].cmdline = Str_dup(pinfo[i].kp_proc.p_comm);
+                                if (proc_pidpath(pt[i].pid, cmdpath, sizeof(cmdpath)) > 0) {
+                                        pt[i].cmdline = Str_dup(cmdpath);
+                                } else {
+                                        pt[i].cmdline = Str_dup(pinfo[i].kp_proc.p_comm);
+                                }
                         }
                 }
                 if (! pt[i].zombie) {
