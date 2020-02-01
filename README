@@ -30,7 +30,8 @@ System requirements
 
   You will need an ANSI-C99 compiler installed to build Monit. The GNU C
   compiler (GCC) from the Free Software Foundation (FSF) is recommended. In
-  addition, your PATH must contain basic build tools such as make.
+  addition, your PATH must contain basic build tools such as make, automake
+  and autoconf.
 
 
 Installation
