@@ -10,7 +10,7 @@ SYSTEM REQUIREMENTS
 
 __Memory and Disk space__. A minimum of 1 megabytes RAM are required and around 500KB of free disk space. You may need more RAM depending on how many services Monit should monitor.
 
-__ANSI-C Compiler and Build System__. You will need an ANSI-C99 compiler installed to build Monit. The GNU C compiler (GCC) from the Free Software Foundation (FSF) is recommended. In addition, your PATH must contain basic build tools such as make, automake and autoconf.
+__ANSI-C Compiler and Build System__. You will need an ANSI-C99 compiler installed to build Monit. The GNU C compiler (GCC) from the Free Software Foundation (FSF) is recommended. In addition, your PATH must contain basic build tools such as make.
 
 GIT
 ===
@@ -21,7 +21,7 @@ To checkout Monit source code, use `git clone https://tildeslash@bitbucket.org/t
 BOOTSTRAPPING
 =============
 
-If you build Monit from the git repository you should call `./bootstrap` first, before continuing with the installation steps below.
+If you build Monit from the git repository you should call `./bootstrap` first, before continuing with the installation steps below. The `bootstrap` script requires that automake, autoconf and libtool are installed on your system.
 
 
 INSTALLATION
