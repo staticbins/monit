@@ -164,6 +164,7 @@ AC_CHECK_HEADERS([ \
 	sys/statfs.h \
 	sys/statvfs.h \
 	sys/sysinfo.h \
+	sys/sysmacros.h \
 	sys/systemcfg.h \
 	sys/time.h \
 	sys/tree.h \

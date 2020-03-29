@@ -70,6 +70,10 @@
 #include <fcntl.h>
 #endif
 
+#ifdef HAVE_SYS_SYSMACROS_H
+#include <sys/sysmacros.h>
+#endif
+
 #include "monit.h"
 
 // libmonit
@@ -271,8 +275,6 @@ static boolean_t _getVxfsDiskActivity(void *_inf) {
         // It should not used as main data collector, it support kernels >= 2.6.25 format only, too.
         f = fopen(DISKSTAT, "r");
         if (f) {
-                boolean_t found = false;
-
                 uint64_t now = Time_milli();
                 uint64_t readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
                 uint64_t writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
