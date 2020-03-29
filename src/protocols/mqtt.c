@@ -211,7 +211,7 @@ static const char *_describeConnectionCode(int code) {
 static void _payload(mqtt_connect_request_t *request, const char *data, MQTT_ConnectRequest_Flags flags) {
         size_t dataLength = strlen(data);
         mqtt_payload_t payload = (mqtt_payload_t)(request->data + request->header.messageLength);
-        strncpy(payload->data, data, dataLength);
+        snprintf(payload->data, dataLength, "%s", data);
         payload->length = htons(dataLength);
         request->header.messageLength += sizeof(payload->length) + dataLength;
         request->flags |= flags;
