@@ -1053,54 +1053,13 @@ echo "           pid file location: ${piddir}"
 echo "           Install directory: ${prefix}"
 echo
 
-cat <<EOT
-+------------------------------------------------------------+
-| License:                                                   |
-| This is Open Source Software and use is subject to the GNU |
-| AFFERO GENERAL PUBLIC LICENSE version 3, available in this |
-| distribution in the file COPYING.                          |
-|                                                            |
-| By continuing this installation process, you are bound by  |
-| the terms of this license agreement. If you do not agree   |
-| with the terms of this license, you must abort the         |
-| installation process at this point.                        |
-+------------------------------------------------------------+
-| Monit has been configured with the following options:      |
-|                                                            |
-EOT
-if test "xfalse" = "x$zlib"; then
-echo "|   Compression:                                  DISABLED   |"
-else
-echo "|   Compression:                                  ENABLED    |"
-fi
-if test "$use_pam" = "1"; then
-echo "|   PAM support:                                  ENABLED    |"
-else
-echo "|   PAM support:                                  DISABLED   |"
-fi
-if test "$use_sslstatic" = "1" -o "$use_ssl" = "1"; then
-echo "|   SSL support:                                  ENABLED    |"
-else
-echo "|   SSL support:                                  DISABLED   |"
-fi
-if test "$use_largefiles" = "1"; then
-echo "|   Large files support:                          ENABLED    |"
-else
-echo "|   Large files support:                          DISABLED   |"
-fi
-if test "$use_ipv6" = "1"; then
-echo "|   IPv6 support:                                 ENABLED    |"
-else
-echo "|   IPv6 support:                                 DISABLED   |"
-fi
-if test "x1" = "x$OPTIMIZED"; then
-echo "|   Optimized:                                    ENABLED    |"
-else
-echo "|   Optimized:                                    DISABLED   |"
-fi
-if test "xfalse" = "x$profile"; then
-echo "|   Profiling:                                    DISABLED   |"
-else
-echo "|   Profiling:                                    ENABLED    |"
-fi
-echo "+------------------------------------------------------------+"
+AX_INFO_AGPL()
+AX_INFO_TITLE([Monit has been configured with the following options:])
+AX_INFO_ENABLED([Compression:],           [test "xfalse" = "x$zlib"])
+AX_INFO_ENABLED([PAM support:],           [test "$use_pam" = "1"])
+AX_INFO_ENABLED([SSL support:],           [test "$use_sslstatic" = "1" -o "$use_ssl" = "1"])
+AX_INFO_ENABLED([Large files support:],   [test "$use_largefiles" = "1"])
+AX_INFO_ENABLED([IPv6 support:],          [test "$use_ipv6" = "1"])
+AX_INFO_ENABLED([Optimized:],             [test "x1" = "x$OPTIMIZED"])
+AX_INFO_ENABLED([Profiling:],             [test "xfalse" = "x$profile"])
+AX_INFO_BREAK()
