@@ -562,7 +562,7 @@ static State_Type _checkChecksum(Service_T s) {
                         Event_post(s, Event_Data, State_Succeeded, s->action_DATA, "checksum %s", s->inf.file->cs_sum);
                         if (! cs->initialized) {
                                 cs->initialized = true;
-                                strncpy(cs->hash, s->inf.file->cs_sum, sizeof(cs->hash) - 1);
+                                snprintf(cs->hash, sizeof(cs->hash), "%s", s->inf.file->cs_sum);
                         }
                         int changed;
                         switch (cs->type) {
@@ -581,7 +581,7 @@ static State_Type _checkChecksum(Service_T s) {
                                 if (cs->test_changes) {
                                         rv = State_Changed;
                                         /* reset expected value for next cycle */
-                                        strncpy(cs->hash, s->inf.file->cs_sum, sizeof(cs->hash) - 1);
+                                        snprintf(cs->hash, sizeof(cs->hash), "%s", s->inf.file->cs_sum);
                                         /* if we are testing for changes only, the value is variable */
                                         Event_post(s, Event_Checksum, State_Changed, cs->action, "checksum changed to %s", s->inf.file->cs_sum);
                                 } else {
