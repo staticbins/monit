@@ -23,11 +23,11 @@
  */
 
 
-#ifndef FMT_INCLUDED
-#define FMT_INCLUDED
+#ifndef CONVERT_INCLUDED
+#define CONVERT_INCLUDED
 
 /**
- * General purpose value units string <b>Format</b> <b>class methods</b>.
+ * General purpose value units string <b>Convert</b> <b>class methods</b>.
  *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
@@ -42,7 +42,7 @@
  * @param s A result buffer, must be large enough to hold 10 chars
  * @return A pointer to s
  */
-char *Fmt_bytes2str(double bytes, char s[static 10]);
+char *Convert_bytes2str(double bytes, char s[static 10]);
 
 
 /**
@@ -51,7 +51,7 @@ char *Fmt_bytes2str(double bytes, char s[static 10]);
  * @param s A result buffer, must be large enough to hold 11 chars
  * @return A pointer to s
  */
-char *Fmt_time2str(double milli, char s[static 11]);
+char *Convert_time2str(double milli, char s[static 11]);
 
 
 #endif

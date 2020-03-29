@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "Fmt.h"
+#include "Convert.h"
 
 
 /* ----------------------------------------------------------- Definitions */
@@ -44,7 +44,7 @@ static boolean_t _isInt(double x) {
 /* -------------------------------------------------------- Public Methods */
 
 
-char *Fmt_bytes2str(double bytes, char s[static 10]) {
+char *Convert_bytes2str(double bytes, char s[static 10]) {
     assert(s);
     static const char *kNotation[] = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", NULL};
     *s = 0;
@@ -63,7 +63,7 @@ char *Fmt_bytes2str(double bytes, char s[static 10]) {
 }
 
 
-char *Fmt_time2str(double milli, char s[static 11]) {
+char *Convert_time2str(double milli, char s[static 11]) {
     assert(s);
     struct conversion {
         double base;
