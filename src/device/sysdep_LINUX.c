@@ -252,8 +252,8 @@ static boolean_t _getVxfsDiskActivity(void *_inf) {
                 uint64_t readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
                 uint64_t writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
                 if (fscanf(f, "%"PRIu64" %*u %"PRIu64" %"PRIu64" %"PRIu64" %*u %"PRIu64" %"PRIu64" %*u %*u %*u", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
-                        fclose(f);
                         LogError("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
+                        fclose(f);
                         return false;
                 }
                 Statistics_update(&(inf->filesystem->time.read), now, readTime);
@@ -265,9 +265,7 @@ static boolean_t _getVxfsDiskActivity(void *_inf) {
                 fclose(f);
                 return true;
         }
-        LogError("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
-        // Always true to get the disk usage, at least.
-        // return true;
+        DEBUG("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
 
         // Use the procfs file for backup purpose only.
         // It should not used as main data collector, it support kernels >= 2.6.25 format only, too.
@@ -291,20 +289,15 @@ static boolean_t _getVxfsDiskActivity(void *_inf) {
                                 Statistics_update(&(inf->filesystem->time.write), now, writeTime);
                                 Statistics_update(&(inf->filesystem->write.bytes), now, writeSectors * 512);
                                 Statistics_update(&(inf->filesystem->write.operations), now, writeOperations);
-                                found = true;
-                                break;
+                                fclose(f);
+                                return true;
                         }
                 }
                 fclose(f);
-
-                if (found) {
-                        return true;
-                }
-                LogError("filesystem statistic error: cannot find device number %u %u for %s\n", st_major, st_minor, inf->filesystem->object.device);
-                // Always true to get the disk usage, at least.
-                return true;
+                DEBUG("filesystem statistic error: cannot find device number %u %u for %s\n", st_major, st_minor, inf->filesystem->object.device);
+        } else {
+                DEBUG("filesystem statistic error: cannot read %s -- %s\n", DISKSTAT, STRERROR);
         }
-        LogError("filesystem statistic error: cannot read %s -- %s\n", DISKSTAT, STRERROR);
         // Always true to get the disk usage, at least.
         return true;
 }
@@ -415,7 +408,6 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
                                 Str_replaceChar(inf->filesystem->object.key, '/', 0);
                         } else if (IS(mnt->mnt_type, "vxfs")) {
                                 // VXFS, Veritas FS
-                                // inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
                                 inf->filesystem->object.getDiskActivity = _getVxfsDiskActivity;
                                 // Use device major and minor number lookup in sysfs or procfs.
                                 snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s", inf->filesystem->object.device);
