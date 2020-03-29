@@ -341,7 +341,7 @@ static void addsecurityattribute(char *, Action_Type, Action_Type);
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
 %token UID EUID GID MMONIT INSTANCE USERNAME PASSWORD
 %token TIME ATIME CTIME MTIME CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH
-%token SSLAUTO SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 TLSV13 CERTMD5 AUTO
+%token SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 TLSV13 CERTMD5 AUTO
 %token BYTE KILOBYTE MEGABYTE GIGABYTE
 %token INODE SPACE TFREE PERMISSION SIZE MATCH NOT IGNORE ACTION UPTIME
 %token EXEC UNMONITOR PING PING4 PING6 ICMP ICMPECHO NONEXIST EXIST INVALID DATA RECOVERED PASSED SUCCEEDED
@@ -880,20 +880,29 @@ checksumoperator : /* EMPTY */
                  ;
 
 sslversion      : SSLV2 {
+#if defined OPENSSL_NO_SSL2 || ! defined HAVE_SSLV2
+                        yyerror("Your SSL Library does not support SSL version 2");
+#endif
                         sslset.flags = SSL_Enabled;
                         sslset.version = SSL_V2;
                   }
                 | SSLV3 {
+#if defined OPENSSL_NO_SSL3
+                        yyerror("Your SSL Library does not support SSL version 3");
+#endif
                         sslset.flags = SSL_Enabled;
                         sslset.version = SSL_V3;
                   }
                 | TLSV1 {
+#if defined OPENSSL_NO_TLS1_METHOD
+                        yyerror("Your SSL Library does not support TLS version 1.0");
+#endif
                         sslset.flags = SSL_Enabled;
                         sslset.version = SSL_TLSV1;
                   }
                 | TLSV11
                 {
-#ifndef HAVE_TLSV1_1
+#if defined OPENSSL_NO_TLS1_1_METHOD || ! defined HAVE_TLSV1_1
                         yyerror("Your SSL Library does not support TLS version 1.1");
 #endif
                         sslset.flags = SSL_Enabled;
@@ -901,7 +910,7 @@ sslversion      : SSLV2 {
                 }
                 | TLSV12
                 {
-#ifndef HAVE_TLSV1_2
+#if defined OPENSSL_NO_TLS1_2_METHOD || ! defined HAVE_TLSV1_2
                         yyerror("Your SSL Library does not support TLS version 1.2");
 #endif
                         sslset.flags = SSL_Enabled;
@@ -909,17 +918,12 @@ sslversion      : SSLV2 {
                 }
                 | TLSV13
                 {
-#ifndef HAVE_TLSV1_3
+#if defined OPENSSL_NO_TLS1_3_METHOD || ! defined HAVE_TLSV1_3
                         yyerror("Your SSL Library does not support TLS version 1.3");
 #endif
                         sslset.flags = SSL_Enabled;
                         sslset.version = SSL_TLSV13;
                 }
-
-                | SSLAUTO {
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_Auto;
-                  }
                 | AUTO {
                         sslset.flags = SSL_Enabled;
                         sslset.version = SSL_Auto;

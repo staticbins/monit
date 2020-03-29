@@ -367,7 +367,7 @@ tlsv12            { return TLSV12; }
 tlsv13            { return TLSV13; }
 cipher(s)?        { return CIPHER; }
 auto              { return AUTO; }
-sslauto           { return SSLAUTO; }
+sslauto           { return AUTO; }
 inode(s)?         { return INODE; }
 space             { return SPACE; }
 free              { return TFREE; }
