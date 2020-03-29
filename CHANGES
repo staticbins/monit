@@ -6,6 +6,8 @@ Version 5.27.0
 
 New: Issue #877: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
 
+New: Enable AddressSanitizer for compilation if libasan.so is found. Use --without-asan to disable.
+
 Fixed: Issue #872: Procmatch PID column show five digits only
 
 Fixed: MacOS: Only first 16 characters of the process name was displayed for privileged processes,

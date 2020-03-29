@@ -728,6 +728,45 @@ fi
 
 
 # ------------------------------------------------------------------------
+# AddressSanitizer
+# ------------------------------------------------------------------------
+
+AC_MSG_CHECKING([for AddressSanitizer support])
+AC_ARG_WITH(asan,
+    [  --without-asan          disable the use of AddressSanitizer (default: enabled)],
+    [
+        dnl Check the withvalue
+        if test "x$withval" = "xno" ; then
+            use_asan=0
+            AC_MSG_RESULT([disabled])
+        fi
+        if test "x$withval" = "xyes" ; then
+            use_asan=1
+            AC_MSG_RESULT([enabled])
+        fi
+    ],
+    [
+        if test "$use_asan" = "0"; then
+            AC_MSG_RESULT([disabled])
+        else
+            use_asan=1
+            AC_MSG_RESULT([enabled])
+        fi
+    ]
+)
+
+if test "$use_asan" = "1"; then
+        AC_CHECK_LIB([asan],
+                     [__asan_init],
+                     [CFLAGS="$CFLAGS -fsanitize=address -fno-omit-frame-pointer"],
+                     [
+                        use_asan=0
+                        AC_MSG_WARN([libasan.so enabled but headers or library not found])
+                     ])
+fi
+
+
+# ------------------------------------------------------------------------
 # SSL Code
 # ------------------------------------------------------------------------
 
@@ -991,6 +1030,8 @@ AC_ARG_ENABLE(optimized,
         if test "x$enableval" = "xyes" ; then
                 CFLAGS=`echo $CFLAGS|sed 's/-g[[^ ]]*//g'`
                 CFLAGS=`echo $CFLAGS|sed 's/-O.//g'`
+                CFLAGS=`echo $CFLAGS|sed 's/-fsanitize=address//g'`
+                CFLAGS=`echo $CFLAGS|sed 's/-fno-omit-frame-pointer//g'`
                 CFLAGS="$CFLAGS -O3 -DNDEBUG"
                 OPTIMIZED=1
         else
@@ -1060,6 +1101,7 @@ AX_INFO_ENABLED([Compression:],           [test "xfalse" != "x$zlib"])
 AX_INFO_ENABLED([PAM support:],           [test "$use_pam" = "1"])
 AX_INFO_ENABLED([SSL support:],           [test "$use_sslstatic" = "1" -o "$use_ssl" = "1"])
 AX_INFO_ENABLED([Large files support:],   [test "$use_largefiles" = "1"])
+AX_INFO_ENABLED([ASAN support:],          [test "$use_asan" = "1"])
 AX_INFO_ENABLED([IPv6 support:],          [test "$use_ipv6" = "1"])
 AX_INFO_ENABLED([Optimized:],             [test "x1" = "x$OPTIMIZED"])
 AX_INFO_ENABLED([Profiling:],             [test "xfalse" != "x$profile"])
