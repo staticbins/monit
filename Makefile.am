@@ -134,10 +134,7 @@ distclean-local:
 	-rm -f monit-[0-9].*tar.gz
 
 cleanall: clean distclean
-	-rm -f libmonit/Makefile.in libmonit/configure libmonit/aclocal.m4 libmonit/src/xconfig.h.in
-	-rm -f Makefile.in configure aclocal.m4 autom4te.cache src/config.h.in monit.1
-	-rm -rf libmonit/m4 libmonit/config
-	-rm -rf m4 config
+	git clean -fxd
 
 monit.1: doc/monit.pod
 	$(POD2MAN) $(POD2MANFLAGS) $< > $@

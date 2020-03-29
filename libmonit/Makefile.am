@@ -30,7 +30,7 @@ libmonit_la_SOURCES = \
                   src/system/Link.c \
                   src/util/List.c \
                   src/util/Str.c \
-                  src/util/Fmt.c \
+                  src/util/Convert.c \
                   src/util/StringBuffer.c \
                   src/thread/Thread.c
 
@@ -48,8 +48,7 @@ distclean-local:
 	-rm -rf autom4te.cache/ 
 
 cleanall: clean distclean
-	-rm -f Makefile.in test/Makefile.in src/Makefile.in configure aclocal.m4 src/xconfig.h.in
-	-rm -rf m4 config
+	git clean -fxd
 
 verify: libmonit.la
 	cd $(srcdir)/test && $(MAKE) verify	
