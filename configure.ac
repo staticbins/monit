@@ -1055,11 +1055,11 @@ echo
 
 AX_INFO_AGPL()
 AX_INFO_TITLE([Monit has been configured with the following options:])
-AX_INFO_ENABLED([Compression:],           [test "xfalse" = "x$zlib"])
+AX_INFO_ENABLED([Compression:],           [test "xfalse" != "x$zlib"])
 AX_INFO_ENABLED([PAM support:],           [test "$use_pam" = "1"])
 AX_INFO_ENABLED([SSL support:],           [test "$use_sslstatic" = "1" -o "$use_ssl" = "1"])
 AX_INFO_ENABLED([Large files support:],   [test "$use_largefiles" = "1"])
 AX_INFO_ENABLED([IPv6 support:],          [test "$use_ipv6" = "1"])
 AX_INFO_ENABLED([Optimized:],             [test "x1" = "x$OPTIMIZED"])
-AX_INFO_ENABLED([Profiling:],             [test "xfalse" = "x$profile"])
+AX_INFO_ENABLED([Profiling:],             [test "xfalse" != "x$profile"])
 AX_INFO_BREAK()
