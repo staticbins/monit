@@ -46,9 +46,6 @@
 #ifdef HAVE_KSTAT_H
 #include <kstat.h>
 #endif
-#ifdef HAVE_SYS_SYSCTL_H
-#include <sys/sysctl.h>
-#endif
 #ifdef HAVE_NET_ROUTE_H
 #include <net/route.h>
 #endif
