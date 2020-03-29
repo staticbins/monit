@@ -563,7 +563,7 @@ void State_save() {
                                         state.priv.file.ctime = (uint64_t)service->inf.file->timestamp.change;
                                         state.priv.file.mtime = (uint64_t)service->inf.file->timestamp.modify;
                                         state.priv.file.mode = service->inf.file->mode;
-                                        strncpy(state.priv.file.hash, service->inf.file->cs_sum, sizeof(state.priv.file.hash) - 1);
+                                        snprintf(state.priv.file.hash, sizeof(state.priv.file.hash), "%s", service->inf.file->cs_sum);
                                         break;
 
                                 case Service_Filesystem:
