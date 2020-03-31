@@ -644,8 +644,9 @@ static void handle_options(int argc, char **argv) {
                         case 'c':
                         {
                                 char *f = optarg;
+                                char realpath[PATH_MAX] = {};
                                 if (f[0] != SEPARATOR_CHAR)
-                                        f = File_getRealPath(optarg, (char[PATH_MAX]){});
+                                        f = File_getRealPath(optarg, realpath);
                                 if (! f)
                                         THROW(AssertException, "The control file '%s' does not exist at %s",
                                               Str_trunc(optarg, 80), Dir_cwd((char[STRLEN]){}, STRLEN));
