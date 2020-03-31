@@ -24,6 +24,8 @@ monit  may crash.
 Fixed: If monit is linked with AddresSanitizer and a pemfile option is used with a path that cannot be read,
 monit may crash.
 
+Fixed: If monit is linked with AddresSanitizer and custom "set mail-format" is set, memory leak may be reported.
+
 
 Version 5.26.0
 
