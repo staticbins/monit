@@ -485,7 +485,7 @@ error:
 
 void Engine_start() {
         Engine_cleanup();
-        stopped = Run.flags & Run_Stopped;
+        stopped = (Run.flags & Run_Stopped) != 0;
         init_service();
         char error[MAX_SERVER_SOCKETS][STRLEN] = {};
         if (Run.httpd.flags & Httpd_Net) {
