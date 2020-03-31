@@ -612,9 +612,9 @@ will apply to all SSL connections made through Monit:
   }
 
 I<VERSION> set the specific SSL/TLS version to use. By default Monit
-uses AUTO. In AUTO mode, only TLS is used, SSLv2 and SSLv3 is
-considered obsolete. If you have to use SSLv2 or SSLv3, you must
-explicitly set the version.
+uses AUTO. In AUTO mode, only TLS 1.2 and 1.3 is allowed, all other
+protocols are considered obsolete. If you have to use the obsolete
+protocol you must explicitly set the version.
 
 I<VERIFY> enable SSL server certificate verification. This will verify
 and report an error if the server certificate is not trusted, not valid

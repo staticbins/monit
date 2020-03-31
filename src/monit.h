@@ -1328,7 +1328,6 @@ extern char *operatorshortnames[];
 extern char *servicetypes[];
 extern char *pathnames[];
 extern char *icmpnames[];
-extern char *sslnames[];
 extern char *socketnames[];
 extern char *timestampnames[];
 extern char *httpmethod[];

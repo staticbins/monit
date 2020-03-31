@@ -202,89 +202,92 @@ static Hash_Type _optionsChecksumType(Hash_Type checksumType) {
 
 
 static boolean_t _setVersion(SSL_CTX *ctx, SslOptions_T options) {
-        long version = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1;
+        long versionMask = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1;
 #if defined HAVE_TLSV1_1
-        version |= SSL_OP_NO_TLSv1_1;
+        versionMask |= SSL_OP_NO_TLSv1_1;
 #endif
 #if defined HAVE_TLSV1_2
-        version |= SSL_OP_NO_TLSv1_2;
+        versionMask |= SSL_OP_NO_TLSv1_2;
 #endif
 #if defined HAVE_TLSV1_3
-        version |= SSL_OP_NO_TLSv1_3;
+        versionMask |= SSL_OP_NO_TLSv1_3;
 #endif
-        switch (_optionsVersion(options->version)) {
-                case SSL_V2:
+
+        short versionAllowed = _optionsVersion(options->version);
+
+        if (versionAllowed & SSL_V2) {
 #if defined OPENSSL_NO_SSL2 || ! defined HAVE_SSLV2
-                        LogError("SSL: SSLv2 not supported\n");
-                        return false;
+                LogError("SSL: SSLv2 not supported\n");
+                return false;
 #else
-                        if (Run.flags & Run_FipsEnabled) {
-                                LogError("SSL: SSLv2 is not allowed in FIPS mode -- use TLS\n");
-                                return false;
-                        }
-                        version &= ~SSL_OP_NO_SSLv2;
-#endif
-                        break;
-                case SSL_V3:
-#if defined OPENSSL_NO_SSL3
-                        LogError("SSL: SSLv3 not supported\n");
+                if (Run.flags & Run_FipsEnabled) {
+                        LogError("SSL: SSLv2 is not allowed in FIPS mode -- use TLS\n");
                         return false;
-#else
-                        if (Run.flags & Run_FipsEnabled) {
-                                LogError("SSL: SSLv3 is not allowed in FIPS mode -- use TLS\n");
-                                return false;
-                        }
-                        version &= ~SSL_OP_NO_SSLv3;
+                }
+                versionMask &= ~SSL_OP_NO_SSLv2;
 #endif
-                        break;
-                case SSL_TLSV1:
-#if defined OPENSSL_NO_TLS1_METHOD
-                        LogError("SSL: TLSv1.0 not supported\n");
-                        return false;
-#else
-                        version &= ~SSL_OP_NO_TLSv1;
-#endif
-                        break;
-                case SSL_TLSV11:
-#if defined OPENSSL_NO_TLS1_1_METHOD || ! defined HAVE_TLSV1_1
-                        LogError("SSL: TLSv1.1 not supported\n");
-                        return false;
-#else
-                        version &= ~SSL_OP_NO_TLSv1_1;
-#endif
-                        break;
-                case SSL_TLSV12:
-#if defined OPENSSL_NO_TLS1_2_METHOD || ! defined HAVE_TLSV1_2
-                        LogError("SSL: TLSv1.2 not supported\n");
-                        return false;
-#else
-                        version &= ~SSL_OP_NO_TLSv1_2;
-#endif
-                        break;
-                case SSL_TLSV13:
-#if defined OPENSSL_NO_TLS1_3_METHOD || ! defined HAVE_TLSV1_3
-                        LogError("SSL: TLSv1.3 not supported\n");
-                        return false;
-#else
-                        version &= ~SSL_OP_NO_TLSv1_3;
-#endif
-                        break;
-                case SSL_Auto:
-                default:
-                        // Enable TLS protocols by default
-                        version &= ~SSL_OP_NO_TLSv1;
-#if defined HAVE_TLSV1_1
-                        version &= ~SSL_OP_NO_TLSv1_1;
-#endif
-#if defined HAVE_TLSV1_2
-                        version &= ~SSL_OP_NO_TLSv1_2;
-#endif
-#if defined HAVE_TLSV1_3
-                        version &= ~SSL_OP_NO_TLSv1_3;
-#endif
-                        break;
         }
-        SSL_CTX_set_options(ctx, version);
+
+        if (versionAllowed & SSL_V3) {
+#if defined OPENSSL_NO_SSL3
+                LogError("SSL: SSLv3 not supported\n");
+                return false;
+#else
+                if (Run.flags & Run_FipsEnabled) {
+                        LogError("SSL: SSLv3 is not allowed in FIPS mode -- use TLS\n");
+                        return false;
+                }
+                versionMask &= ~SSL_OP_NO_SSLv3;
+#endif
+        }
+
+        if (versionAllowed & SSL_TLSV1) {
+#if defined OPENSSL_NO_TLS1_METHOD
+                LogError("SSL: TLSv1.0 not supported\n");
+                return false;
+#else
+                versionMask &= ~SSL_OP_NO_TLSv1;
+#endif
+        }
+
+        if (versionAllowed & SSL_TLSV11) {
+#if defined OPENSSL_NO_TLS1_1_METHOD || ! defined HAVE_TLSV1_1
+                LogError("SSL: TLSv1.1 not supported\n");
+                return false;
+#else
+                versionMask &= ~SSL_OP_NO_TLSv1_1;
+#endif
+        }
+
+        if (versionAllowed & SSL_TLSV12) {
+#if defined OPENSSL_NO_TLS1_2_METHOD || ! defined HAVE_TLSV1_2
+                LogError("SSL: TLSv1.2 not supported\n");
+                return false;
+#else
+                versionMask &= ~SSL_OP_NO_TLSv1_2;
+#endif
+        }
+
+        if (versionAllowed & SSL_TLSV13) {
+#if defined OPENSSL_NO_TLS1_3_METHOD || ! defined HAVE_TLSV1_3
+                LogError("SSL: TLSv1.3 not supported\n");
+                return false;
+#else
+                versionMask &= ~SSL_OP_NO_TLSv1_3;
+#endif
+        }
+
+        if (versionAllowed == SSL_Auto) {
+                // Enable TLS 1.2 and 1.3 protocols by default
+#if ! defined OPENSSL_NO_TLS1_2_METHOD && defined HAVE_TLSV1_2
+                versionMask &= ~SSL_OP_NO_TLSv1_2;
+#endif
+#if ! defined OPENSSL_NO_TLS1_3_METHOD && defined HAVE_TLSV1_3
+                versionMask &= ~SSL_OP_NO_TLSv1_3;
+#endif
+        }
+
+        SSL_CTX_set_options(ctx, versionMask);
         return true;
 }
 
@@ -784,7 +787,20 @@ char *Ssl_printOptions(SslOptions_T options, char *b, int size) {
         if (options->flags) {
                 int count = 0;
                 if (options->version != -1) {
-                        snprintf(b + strlen(b), size - strlen(b) - 1, "version: %s", sslnames[options->version]);
+                        int versions = 0;
+                        snprintf(b + strlen(b), size - strlen(b) - 1, "version: ");
+                        if (options->version & SSL_V2)
+                                snprintf(b + strlen(b), size - strlen(b) - 1, "%sSSLv2", versions++ ? " " : "");
+                        if (options->version & SSL_V3)
+                                snprintf(b + strlen(b), size - strlen(b) - 1, "%sSSLv3", versions++ ? " " : "");
+                        if (options->version & SSL_TLSV1)
+                                snprintf(b + strlen(b), size - strlen(b) - 1, "%sTLSv1.0", versions++ ? " " : "");
+                        if (options->version & SSL_TLSV11)
+                                snprintf(b + strlen(b), size - strlen(b) - 1, "%sTLSv1.1", versions++ ? " " : "");
+                        if (options->version & SSL_TLSV12)
+                                snprintf(b + strlen(b), size - strlen(b) - 1, "%sTLSv1.2", versions++ ? " " : "");
+                        if (options->version & SSL_TLSV13)
+                                snprintf(b + strlen(b), size - strlen(b) - 1, "%sTLSv1.3", versions++ ? " " : "");
                         count++;
                 }
                 if (options->verify == true)

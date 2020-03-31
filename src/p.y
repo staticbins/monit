@@ -884,49 +884,52 @@ sslversion      : SSLV2 {
                         yyerror("Your SSL Library does not support SSL version 2");
 #endif
                         sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_V2;
+                        sslset.version |= SSL_V2;
                   }
                 | SSLV3 {
 #if defined OPENSSL_NO_SSL3
                         yyerror("Your SSL Library does not support SSL version 3");
 #endif
                         sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_V3;
+                        sslset.version |= SSL_V3;
                   }
                 | TLSV1 {
 #if defined OPENSSL_NO_TLS1_METHOD
                         yyerror("Your SSL Library does not support TLS version 1.0");
 #endif
                         sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV1;
+                        sslset.version |= SSL_TLSV1;
                   }
-                | TLSV11
-                {
+                | TLSV11 {
 #if defined OPENSSL_NO_TLS1_1_METHOD || ! defined HAVE_TLSV1_1
                         yyerror("Your SSL Library does not support TLS version 1.1");
 #endif
                         sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV11;
+                        sslset.version |= SSL_TLSV11;
                 }
-                | TLSV12
-                {
+                | TLSV12 {
 #if defined OPENSSL_NO_TLS1_2_METHOD || ! defined HAVE_TLSV1_2
                         yyerror("Your SSL Library does not support TLS version 1.2");
 #endif
                         sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV12;
+                        sslset.version |= SSL_TLSV12;
                 }
-                | TLSV13
-                {
+                | TLSV13 {
 #if defined OPENSSL_NO_TLS1_3_METHOD || ! defined HAVE_TLSV1_3
                         yyerror("Your SSL Library does not support TLS version 1.3");
 #endif
                         sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV13;
+                        sslset.version |= SSL_TLSV13;
                 }
                 | AUTO {
+                        // Enable just TLS 1.2 and 1.3 by default
                         sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_Auto;
+#if ! defined OPENSSL_NO_TLS1_2_METHOD && defined HAVE_TLSV1_2
+                        sslset.version |= SSL_TLSV12;
+#endif
+#if ! defined OPENSSL_NO_TLS1_3_METHOD && defined HAVE_TLSV1_3
+                        sslset.version |= SSL_TLSV13;
+#endif
                   }
                 ;
 
