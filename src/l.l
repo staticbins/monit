@@ -844,8 +844,13 @@ group[ \t]+       {
 
   {addrname}    {
                         char *name = Str_unquote(Str_dup(yytext));
-                        if (name && *name)
-                                yylval.address->name = name;
+                        if (name) {
+                                if (*name)
+                                        yylval.address->name = name;
+                                else
+                                        // Empty quoted string
+                                        FREE(name);
+                        }
                 }
 
   [<>:\[\]]     {
