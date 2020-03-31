@@ -11,6 +11,8 @@ New: Enable AddressSanitizer for compilation if libasan.so is found. Use --witho
 New: Disable support for TLS 1.0 and 1.1 when protocol is set to 'auto' (default). You can still enable
 these protocols by setting the TLS {VERSION: <string>} statement.
 
+Fixed: Issue #880: If monit is linked with AddresSanitizer, it may crash. Thanks to Lutz Mader for patch.
+
 Fixed: Issue #872: Procmatch PID column show five digits only
 
 Fixed: MacOS: Only first 16 characters of the process name was displayed for privileged processes,
