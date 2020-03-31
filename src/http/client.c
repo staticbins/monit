@@ -59,6 +59,7 @@
 #include "device.h"
 #include "Color.h"
 #include "Box.h"
+#include "client.h"
 
 // libmonit
 #include "exceptions/AssertException.h"
