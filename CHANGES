@@ -18,6 +18,12 @@ Fixed: Issue #872: Procmatch PID column show five digits only
 Fixed: MacOS: Only first 16 characters of the process name was displayed for privileged processes,
 so the pattern based process check and the procmatch CLI may miss some processes.
 
+Fixed: If monit is linked with AddresSanitizer and a custom configuration file is passed via the -c option,
+monit  may crash.
+
+Fixed: If monit is linked with AddresSanitizer and a pemfile option is used with a path that cannot be read,
+monit may crash.
+
 
 Version 5.26.0
 
