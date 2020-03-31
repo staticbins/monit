@@ -4951,12 +4951,16 @@ static command_t copycommand(command_t source) {
 static void _setPEM(char **store, char *path, const char *description, boolean_t isFile) {
         if (*store) {
                 yyerror2("Duplicate %s", description);
+                FREE(path);
         } else if (! File_exist(path)) {
                 yyerror2("%s doesn't exist", description);
+                FREE(path);
         } else if (! (isFile ? File_isFile(path) : File_isDirectory(path))) {
                 yyerror2("%s is not a %s", description, isFile ? "file" : "directory");
+                FREE(path);
         } else if (! File_isReadable(path)) {
                 yyerror2("Cannot read %s", description);
+                FREE(path);
         } else {
                 sslset.flags = SSL_Enabled;
                 *store = path;
