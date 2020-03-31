@@ -11,7 +11,8 @@ New: Enable AddressSanitizer for compilation if libasan.so is found. Use --witho
 New: Disable support for TLS 1.0 and 1.1 when protocol is set to 'auto' (default). You can still enable
 these protocols by setting the TLS {VERSION: <string>} statement.
 
-Fixed: Issue #880: If monit is linked with AddresSanitizer, it may crash. Thanks to Lutz Mader for patch.
+Fixed: Issue #880: If monit is linked with AddresSanitizer, it may crash when it generates an MD5 hash.
+Thanks to Lutz Mader for patch.
 
 Fixed: Issue #872: Procmatch PID column show five digits only
 
@@ -21,10 +22,11 @@ so the pattern based process check and the procmatch CLI may miss some processes
 Fixed: If monit is linked with AddresSanitizer and a custom configuration file is passed via the -c option,
 monit  may crash.
 
-Fixed: If monit is linked with AddresSanitizer and a pemfile option is used with a path that cannot be read,
-monit may crash.
+Fixed: Fix memory leak if a pemfile option is used with a path that cannot be read.
 
-Fixed: If monit is linked with AddresSanitizer and custom "set mail-format" is set, memory leak may be reported.
+Fixed: Fix memory leak if custom "set mail-format" is set.
+
+Fixed: Fix memory leak when no explicit "check system" service entry is present in monit configuration.
 
 
 Version 5.26.0

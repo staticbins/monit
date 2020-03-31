@@ -3094,8 +3094,10 @@ static void postparse() {
                 return;
 
         /* If defined - add the last service to the service list */
-        if (current)
+        if (current) {
                 addservice(current);
+                current = NULL;
+        }
 
         /* Check that we do not start monit in daemon mode without having a poll time */
         if (! Run.polltime && ((Run.flags & Run_Daemon) || (Run.flags & Run_Foreground))) {
