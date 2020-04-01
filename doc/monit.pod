@@ -601,7 +601,7 @@ Common SSL/TLS options can be set using the following statement and
 will apply to all SSL connections made through Monit:
 
   SET <SSL | TLS> [OPTIONS] {
-      VERSION: <AUTO | SSLV2 | SSLV3 | TLSV1 | TLSV11 | TLSV12 | TLSV13>
+      VERSION: <AUTO | [-]SSLV2 | [-]SSLV3 | [-]TLSV1 | [-]TLSV11 | [-]TLSV12 | [-]TLSV13>, ...
       VERIFY: <ENABLE | DISABLE>
       SELFSIGNED: <ALLOW | REJECT>
       CIPHERS: <string>
@@ -612,9 +612,18 @@ will apply to all SSL connections made through Monit:
   }
 
 I<VERSION> set the specific SSL/TLS version to use. By default Monit
-uses AUTO. In AUTO mode, only TLS 1.2 and 1.3 is allowed, all other
-protocols are considered obsolete. If you have to use the obsolete
-protocol you must explicitly set the version.
+uses AUTO. In AUTO mode, only TLS 1.2 and 1.3 are allowed, all other
+protocols are considered obsolete. If you want to use the obsolete
+protocol you must explicitly set the version. You can exclude the protocol
+using the "-" prefix.
+Exclude list example:
+  set ssl {
+      version: auto -sslv2 -sslv3 -tlsv1 -tlsv11
+  }
+Example of allowed protocols list:
+  set ssl {
+      version: tlsv12 tlsv13
+  }
 
 I<VERIFY> enable SSL server certificate verification. This will verify
 and report an error if the server certificate is not trusted, not valid

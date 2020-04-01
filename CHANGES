@@ -11,6 +11,17 @@ New: Enable AddressSanitizer for compilation if libasan.so is found. Use --witho
 New: Disable support for TLS 1.0 and 1.1 when protocol is set to 'auto' (default). You can still enable
 these protocols by setting the TLS {VERSION: <string>} statement.
 
+New: Allow to set a list of allowed TLS protocols (originally only one was allowed). Also add support for
+protocol exclude list (put "-" in front of the protocol name to disable it).
+Exclude list example:
+     set ssl {
+        version: auto -sslv2 -sslv3 -tlsv1 -tlsv11
+     }
+Example of allowed protocols list:
+     set ssl {
+        version: tlsv12 tlsv13
+     }
+
 Fixed: Issue #880: If monit is linked with AddresSanitizer, it may crash when it generates an MD5 hash.
 Thanks to Lutz Mader for patch.
 

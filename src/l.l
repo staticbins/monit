@@ -359,6 +359,12 @@ child(ren)?       { return CHILDREN; }
 thread(s)?        { return THREADS; }
 time(stamp)?      { return TIME; }
 changed           { return CHANGED; }
+-sslv2            { return NOSSLV2; }
+-sslv3            { return NOSSLV3; }
+-tlsv1            { return NOTLSV1; }
+-tlsv11           { return NOTLSV11; }
+-tlsv12           { return NOTLSV12; }
+-tlsv13           { return NOTLSV13; }
 sslv2             { return SSLV2; }
 sslv3             { return SSLV3; }
 tlsv1             { return TLSV1; }
