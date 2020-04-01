@@ -205,10 +205,10 @@ disable[ \t]+ssl  {/* EMPTY */}
 if                { return IF; }
 then              { return THEN; }
 failed            { return FAILED; }
-tls               { return SSL; }
-ssl               { return SSL; }
-ssl[ \t]+enable   { return SSL; }
-enable[ ]+ssl     { return SSL; }
+tls               { return SSLTOKEN; }
+ssl               { return SSLTOKEN; }
+ssl[ \t]+enable   { return SSLTOKEN; }
+enable[ ]+ssl     { return SSLTOKEN; }
 enable            { return ENABLE; }
 disable           { return DISABLE; }
 verify            { return VERIFY; }

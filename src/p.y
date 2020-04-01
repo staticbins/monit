@@ -117,6 +117,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef HAVE_OPENSSL
+#include <openssl/ssl.h>
+#endif
+
 #include "net.h"
 #include "monit.h"
 #include "protocol.h"
@@ -303,7 +307,9 @@ static command_t copycommand(command_t);
 static int verifyMaxForward(int);
 static void _setPEM(char **store, char *path, const char *description, boolean_t isFile);
 static void _setSSLOptions(SslOptions_T options);
+#ifdef HAVE_OPENSSL
 static void _setSSLVersion(short version);
+#endif
 static void _unsetSSLVersion(short version);
 static void addsecurityattribute(char *, Action_Type, Action_Type);
 
@@ -320,7 +326,7 @@ static void addsecurityattribute(char *, Action_Type, Action_Type);
 %token IF ELSE THEN FAILED
 %token SET LOGFILE FACILITY DAEMON SYSLOG MAILSERVER HTTPD ALLOW REJECTOPT ADDRESS INIT TERMINAL BATCH
 %token READONLY CLEARTEXT MD5HASH SHA1HASH CRYPT DELAY
-%token PEMFILE ENABLE DISABLE SSL CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
+%token PEMFILE ENABLE DISABLE SSLTOKEN CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
 %token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL
 %token IDFILE STATEFILE SEND EXPECT CYCLE COUNT REMINDER REPEAT
 %token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT PROGRAMTIMEOUT STARTTIMEOUT STOPTIMEOUT RESTARTTIMEOUT
@@ -786,15 +792,15 @@ credentials     : /* EMPTY */
                   }
                 ;
 
-setssl          : SET SSL '{' ssloptionlist '}' {
+setssl          : SET SSLTOKEN '{' ssloptionlist '}' {
                         _setSSLOptions(&(Run.ssl));
                   }
                 ;
 
-ssl             : SSL {
+ssl             : SSLTOKEN {
                         sslset.flags = SSL_Enabled;
                   }
-                | SSL '{' ssloptionlist '}'
+                | SSLTOKEN '{' ssloptionlist '}'
                 ;
 
 ssloptionlist   : /* EMPTY */
@@ -887,65 +893,71 @@ sslversionlist  : /* EMPTY */
                 ;
 
 sslversion      : SSLV2 {
-#if defined OPENSSL_NO_SSL2 || ! defined HAVE_SSLV2
+#if defined OPENSSL_NO_SSL2 || ! defined HAVE_SSLV2 || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support SSL version 2");
-#endif
+#else
                         _setSSLVersion(SSL_V2);
+#endif
                   }
                 | NOSSLV2 {
                         _unsetSSLVersion(SSL_V2);
                   }
                 | SSLV3 {
-#if defined OPENSSL_NO_SSL3
+#if defined OPENSSL_NO_SSL3 || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support SSL version 3");
-#endif
+#else
                         _setSSLVersion(SSL_V3);
+#endif
                   }
                 | NOSSLV3 {
                         _unsetSSLVersion(SSL_V3);
                   }
                 | TLSV1 {
-#if defined OPENSSL_NO_TLS1_METHOD
+#if defined OPENSSL_NO_TLS1_METHOD || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support TLS version 1.0");
-#endif
+#else
                         _setSSLVersion(SSL_TLSV1);
+#endif
                   }
                 | NOTLSV1 {
                         _unsetSSLVersion(SSL_TLSV1);
                   }
                 | TLSV11 {
-#if defined OPENSSL_NO_TLS1_1_METHOD || ! defined HAVE_TLSV1_1
+#if defined OPENSSL_NO_TLS1_1_METHOD || ! defined HAVE_TLSV1_1 || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support TLS version 1.1");
-#endif
+#else
                         _setSSLVersion(SSL_TLSV11);
+#endif
                 }
                 | NOTLSV11 {
                         _unsetSSLVersion(SSL_TLSV11);
                   }
                 | TLSV12 {
-#if defined OPENSSL_NO_TLS1_2_METHOD || ! defined HAVE_TLSV1_2
+#if defined OPENSSL_NO_TLS1_2_METHOD || ! defined HAVE_TLSV1_2 || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support TLS version 1.2");
-#endif
+#else
                         _setSSLVersion(SSL_TLSV12);
+#endif
                 }
                 | NOTLSV12 {
                         _unsetSSLVersion(SSL_TLSV12);
                   }
                 | TLSV13 {
-#if defined OPENSSL_NO_TLS1_3_METHOD || ! defined HAVE_TLSV1_3
+#if defined OPENSSL_NO_TLS1_3_METHOD || ! defined HAVE_TLSV1_3 || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support TLS version 1.3");
-#endif
+#else
                         _setSSLVersion(SSL_TLSV13);
+#endif
                 }
                 | NOTLSV13 {
                         _unsetSSLVersion(SSL_TLSV13);
                   }
                 | AUTO {
                         // Enable just TLS 1.2 and 1.3 by default
-#if ! defined OPENSSL_NO_TLS1_2_METHOD && defined HAVE_TLSV1_2
+#if ! defined OPENSSL_NO_TLS1_2_METHOD && defined HAVE_TLSV1_2 && defined HAVE_OPENSSL
                         _setSSLVersion(SSL_TLSV12);
 #endif
-#if ! defined OPENSSL_NO_TLS1_3_METHOD && defined HAVE_TLSV1_3
+#if ! defined OPENSSL_NO_TLS1_3_METHOD && defined HAVE_TLSV1_3 && defined HAVE_OPENSSL
                         _setSSLVersion(SSL_TLSV13);
 #endif
                   }
@@ -5005,6 +5017,7 @@ static void _setSSLOptions(SslOptions_T options) {
 }
 
 
+#ifdef HAVE_OPENSSL
 static void _setSSLVersion(short version) {
         sslset.flags = SSL_Enabled;
         if (sslset.version == -1)
@@ -5012,6 +5025,7 @@ static void _setSSLVersion(short version) {
         else
                 sslset.version |= version;
 }
+#endif
 
 
 static void _unsetSSLVersion(short version) {
