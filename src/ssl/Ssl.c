@@ -202,7 +202,7 @@ static Hash_Type _optionsChecksumType(Hash_Type checksumType) {
 
 
 static boolean_t _setVersion(SSL_CTX *ctx, SslOptions_T options) {
-        long versionMask = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1;
+        unsigned long versionMask = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1;
 #if defined HAVE_TLSV1_1
         versionMask |= SSL_OP_NO_TLSv1_1;
 #endif
