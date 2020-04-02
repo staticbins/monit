@@ -232,7 +232,7 @@ static char *_getUptime(time_t delta, char s[256]) {
 }
 
 
-static void __attribute__((format (printf, 7, 8))) _formatStatus(const char *name, Event_Type errorType, Output_Type type, HttpResponse res, Service_T s, boolean_t validValue, const char *value, ...) {
+__attribute__((format (printf, 7, 8))) static void _formatStatus(const char *name, Event_Type errorType, Output_Type type, HttpResponse res, Service_T s, boolean_t validValue, const char *value, ...) {
         if (type == HTML) {
                 StringBuffer_append(res->outputbuffer, "<tr><td>%c%s</td>", toupper(name[0]), name + 1);
         } else {
@@ -474,7 +474,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 }
 
 
-static void __attribute__((format (printf, 5, 6))) _displayTableRow(HttpResponse res, boolean_t escape, const char *class, const char *key, const char *value, ...) {
+__attribute__((format (printf, 5, 6))) static void _displayTableRow(HttpResponse res, boolean_t escape, const char *class, const char *key, const char *value, ...) {
         va_list ap;
         va_start(ap, value);
         char *_value = Str_vcat(value, ap);

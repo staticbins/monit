@@ -133,7 +133,7 @@ static void _parseFlags(T S, const char *line) {
 }
 
 
-static void __attribute__((format (printf, 2, 3))) _send(T S, const char *data, ...) {
+__attribute__((format (printf, 2, 3))) static void _send(T S, const char *data, ...) {
         va_list ap;
         va_start(ap, data);
         char *msg = Str_vcat(data, ap);

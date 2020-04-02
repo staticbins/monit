@@ -178,7 +178,7 @@ static unsigned short _checksum(unsigned char *_addr, int count) {
 }
 
 
-static void __attribute__((format (printf, 3, 4))) _LogWarningOrError(int attempt, int maxAttempts, const char *s, ...) {
+__attribute__((format (printf, 3, 4))) static void _LogWarningOrError(int attempt, int maxAttempts, const char *s, ...) {
         ASSERT(s);
         va_list ap;
         va_start(ap, s);
