@@ -232,7 +232,7 @@ static char *_getUptime(time_t delta, char s[256]) {
 }
 
 
-static void _formatStatus(const char *name, Event_Type errorType, Output_Type type, HttpResponse res, Service_T s, boolean_t validValue, const char *value, ...) {
+static void __attribute__((format (printf, 7, 8))) _formatStatus(const char *name, Event_Type errorType, Output_Type type, HttpResponse res, Service_T s, boolean_t validValue, const char *value, ...) {
         if (type == HTML) {
                 StringBuffer_append(res->outputbuffer, "<tr><td>%c%s</td>", toupper(name[0]), name + 1);
         } else {
@@ -355,7 +355,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         long long speed = Link_getSpeed(s->inf.net->stats);
                                         long long ibytes = Link_getBytesInPerSecond(s->inf.net->stats);
                                         long long obytes = Link_getBytesOutPerSecond(s->inf.net->stats);
-                                        _formatStatus("link", Event_Link, type, res, s, Link_getState(s->inf.net->stats) == 1, "%d errors", Link_getErrorsInPerSecond(s->inf.net->stats) + Link_getErrorsOutPerSecond(s->inf.net->stats));
+                                        _formatStatus("link", Event_Link, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld errors", Link_getErrorsInPerSecond(s->inf.net->stats) + Link_getErrorsOutPerSecond(s->inf.net->stats));
                                         if (speed > 0) {
                                                 _formatStatus("capacity", Event_Speed, type, res, s, Link_getState(s->inf.net->stats) == 1, "%.0lf Mb/s %s-duplex", (double)speed / 1000000., Link_getDuplex(s->inf.net->stats) == 1 ? "full" : "half");
                                                 _formatStatus("download bytes", Event_ByteIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s (%.1f%% link saturation)", Convert_bytes2str(ibytes, (char[10]){}), 100. * ibytes * 8 / (double)speed);
@@ -474,6 +474,51 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 }
 
 
+static void __attribute__((format (printf, 5, 6))) _displayTableRow(HttpResponse res, boolean_t escape, const char *class, const char *key, const char *value, ...) {
+        va_list ap;
+        va_start(ap, value);
+        char *_value = Str_vcat(value, ap);
+
+        if (STR_DEF(class))
+                StringBuffer_append(res->outputbuffer, "<tr class='%s'><td>%s</td><td>", class, key);
+        else
+                StringBuffer_append(res->outputbuffer, "<tr><td>%s</td><td>", key);
+        if (escape)
+                escapeHTML(res->outputbuffer, _value);
+        else
+                StringBuffer_append(res->outputbuffer, "%s", _value);
+        StringBuffer_append(res->outputbuffer, "</td></tr>");
+        FREE(_value);
+}
+
+
+static void _formatAction(HttpResponse res, const char *type, command_t cmd) {
+        StringBuffer_append(res->outputbuffer, "<tr><td>%s program</td><td>'", type);
+        escapeHTML(res->outputbuffer, Util_commandDescription(cmd, (char[STRLEN]){}));
+        StringBuffer_append(res->outputbuffer, "'");
+        if (cmd->has_uid)
+                StringBuffer_append(res->outputbuffer, " as uid %d", cmd->uid);
+        if (cmd->has_gid)
+                StringBuffer_append(res->outputbuffer, " as gid %d", cmd->gid);
+        StringBuffer_append(res->outputbuffer, " timeout %s", Convert_time2str(cmd->timeout, (char[11]){}));
+        StringBuffer_append(res->outputbuffer, "</td></tr>");
+}
+
+
+static void _formatAddress(HttpResponse res, const char *type, Address_T addr) {
+        StringBuffer_append(res->outputbuffer, "<tr><td>Default mail %s</td><td>", type);
+        if (addr->name) {
+                escapeHTML(res->outputbuffer, addr->name);
+                StringBuffer_append(res->outputbuffer, " &lt;");
+                escapeHTML(res->outputbuffer, addr->address);
+                StringBuffer_append(res->outputbuffer, "&gt;");
+        } else {
+                escapeHTML(res->outputbuffer, addr->address);
+        }
+        StringBuffer_append(res->outputbuffer, "</td></tr>");
+}
+
+
 /**
  * Called by the Processor (via the service method)
  * to handle a POST request.
@@ -566,6 +611,7 @@ static void printFavicon(HttpResponse res) {
 
 
 static void do_head(HttpResponse res, const char *path, const char *name, int refresh) {
+        StringBuffer_T system_htmlescaped = escapeHTML(StringBuffer_create(16), Run.system->name);
         StringBuffer_append(res->outputbuffer,
                             "<!DOCTYPE html>"\
                             "<html>"\
@@ -627,7 +673,8 @@ static void do_head(HttpResponse res, const char *path, const char *name, int re
                             "  </tr>"\
                             "</table>"\
                             "<center>",
-                            Run.system->name, refresh, path, name, VERSION);
+                            StringBuffer_toString(system_htmlescaped), refresh, path, name, VERSION);
+        StringBuffer_free(&system_htmlescaped);
 }
 
 
@@ -646,6 +693,7 @@ static void do_foot(HttpResponse res) {
 
 static void do_home(HttpResponse res) {
         do_head(res, "", "", Run.polltime);
+        StringBuffer_T system_htmlescaped = escapeHTML(StringBuffer_create(16), Run.system->name);
         StringBuffer_append(res->outputbuffer,
                             "<table id='header' width='100%%'>"
                             " <tr>"
@@ -654,7 +702,9 @@ static void do_home(HttpResponse res) {
                             "  <p class='center'>Monit is <a href='_runtime'>running</a> on %s and monitoring:</p><br>"
                             "  </td>"
                             " </tr>"
-                            "</table>", Run.system->name);
+                            "</table>",
+                            StringBuffer_toString(system_htmlescaped));
+        StringBuffer_free(&system_htmlescaped);
 
         do_home_system(res);
         do_home_process(res);
@@ -700,8 +750,9 @@ static void do_ping(HttpResponse res) {
 
 
 static void do_getid(HttpResponse res) {
-        StringBuffer_append(res->outputbuffer, "%s", Run.id);
+        escapeHTML(res->outputbuffer, Run.id);
 }
+
 
 static void do_runtime(HttpRequest req, HttpResponse res) {
         int pid = exist_daemon();
@@ -713,61 +764,50 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
         StringBuffer_append(res->outputbuffer, "<table id='status-table'><tr>"
                             "<th width='40%%'>Parameter</th>"
                             "<th width='60%%'>Value</th></tr>");
-        StringBuffer_append(res->outputbuffer, "<tr><td>Monit ID</td><td>%s</td></tr>", Run.id);
-        StringBuffer_append(res->outputbuffer, "<tr><td>Host</td><td>%s</td></tr>",  Run.system->name);
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>Process id</td><td>%d</td></tr>", pid);
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>Effective user running Monit</td>"
-                            "<td>%s</td></tr>", Run.Env.user);
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>Controlfile</td><td>%s</td></tr>", Run.files.control);
+        _displayTableRow(res, true,  NULL, "Monit ID",                     "%s", Run.id);
+        _displayTableRow(res, true,  NULL, "Host",                         "%s", Run.system->name);
+        _displayTableRow(res, false, NULL, "Process id",                   "%d", pid);
+        _displayTableRow(res, true,  NULL, "Effective user running Monit", "%s", Run.Env.user);
+        _displayTableRow(res, true,  NULL, "Controlfile",                  "%s", Run.files.control);
         if (Run.files.log)
-                StringBuffer_append(res->outputbuffer,
-                                    "<tr><td>Logfile</td><td>%s</td></tr>", Run.files.log);
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>Pidfile</td><td>%s</td></tr>", Run.files.pid);
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>State file</td><td>%s</td></tr>", Run.files.state);
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>Debug</td><td>%s</td></tr>",
-                            Run.debug ? "True" : "False");
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>Log</td><td>%s</td></tr>", (Run.flags & Run_Log) ? "True" : "False");
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>Use syslog</td><td>%s</td></tr>",
-                            (Run.flags & Run_UseSyslog) ? "True" : "False");
+                _displayTableRow(res, true, NULL, "Logfile", "%s", Run.files.log);
+        _displayTableRow(res, true, NULL, "Pidfile",    "%s", Run.files.pid);
+        _displayTableRow(res, true, NULL, "State file", "%s", Run.files.state);
+        _displayTableRow(res, true, NULL, "Debug",      "%s", Run.debug ? "True" : "False");
+        _displayTableRow(res, true, NULL, "Log",        "%s", (Run.flags & Run_Log) ? "True" : "False");
+        _displayTableRow(res, true, NULL, "Use syslog", "%s", (Run.flags & Run_UseSyslog) ? "True" : "False");
+
         if (Run.eventlist_dir) {
                 if (Run.eventlist_slots < 0)
-                        snprintf(buf, STRLEN, "unlimited");
+                        _displayTableRow(res, true, NULL, "Event queue", "base directory %s with unlimited slots", Run.eventlist_dir);
                 else
-                        snprintf(buf, STRLEN, "%d", Run.eventlist_slots);
-                StringBuffer_append(res->outputbuffer,
-                                    "<tr><td>Event queue</td>"
-                                    "<td>base directory %s with %d slots</td></tr>",
-                                    Run.eventlist_dir, Run.eventlist_slots);
+                        _displayTableRow(res, true, NULL, "Event queue", "base directory %s with %d slots", Run.eventlist_dir, Run.eventlist_slots);
         }
 #ifdef HAVE_OPENSSL
         {
-                const char *options = Ssl_printOptions(&(Run.ssl), (char[STRLEN]){}, STRLEN);
+                char opt[STRLEN] = {};
+                const char *options = Ssl_printOptions(&(Run.ssl), opt, STRLEN);
                 if (options && *options)
-                        StringBuffer_append(res->outputbuffer,
-                                    "<tr><td>SSL options</td><td>%s</td></tr>", options);
+                        _displayTableRow(res, true, NULL, "SSL options", "%s", options);
         }
 #endif
         if (Run.mmonits) {
                 StringBuffer_append(res->outputbuffer, "<tr><td>M/Monit server(s)</td><td>");
                 for (Mmonit_T c = Run.mmonits; c; c = c->next)
                 {
-                        StringBuffer_append(res->outputbuffer, "%s with timeout %s", c->url->url, Convert_time2str(c->timeout, (char[11]){}));
+                        escapeHTML(res->outputbuffer, c->url->url);
+                        StringBuffer_append(res->outputbuffer, " with timeout %s", Convert_time2str(c->timeout, (char[11]){}));
 #ifdef HAVE_OPENSSL
                         if (c->ssl.flags) {
                                 StringBuffer_append(res->outputbuffer, " using TLS");
                                 const char *options = Ssl_printOptions(&c->ssl, (char[STRLEN]){}, STRLEN);
                                 if (options && *options)
                                         StringBuffer_append(res->outputbuffer, " with options {%s}", options);
-                                if (c->ssl.checksum)
-                                        StringBuffer_append(res->outputbuffer, " and certificate checksum %s equal to '%s'", checksumnames[c->ssl.checksumType], c->ssl.checksum);
+                                if (c->ssl.checksum) {
+                                        StringBuffer_append(res->outputbuffer, " and certificate checksum %s equal to '", checksumnames[c->ssl.checksumType]);
+                                        escapeHTML(res->outputbuffer, c->ssl.checksum);
+                                        StringBuffer_append(res->outputbuffer, "'");
+                                }
                         }
 #endif
                         if (Run.flags & Run_MmonitCredentials && c->url->user)
@@ -780,15 +820,20 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
         if (Run.mailservers) {
                 StringBuffer_append(res->outputbuffer, "<tr><td>Mail server(s)</td><td>");
                 for (MailServer_T mta = Run.mailservers; mta; mta = mta->next) {
-                        StringBuffer_append(res->outputbuffer, "%s:%d", mta->host, mta->port);
+                        escapeHTML(res->outputbuffer, mta->host);
+                        StringBuffer_append(res->outputbuffer, ":%d", mta->port);
 #ifdef HAVE_OPENSSL
                         if (mta->ssl.flags) {
                                 StringBuffer_append(res->outputbuffer, " using TLS");
-                                const char *options = Ssl_printOptions(&mta->ssl, (char[STRLEN]){}, STRLEN);
+                                char opt[STRLEN] = {};
+                                const char *options = Ssl_printOptions(&mta->ssl, opt, STRLEN);
                                 if (options && *options)
                                         StringBuffer_append(res->outputbuffer, " with options {%s}", options);
-                                if (mta->ssl.checksum)
-                                        StringBuffer_append(res->outputbuffer, " and certificate checksum %s equal to '%s'", checksumnames[mta->ssl.checksumType], mta->ssl.checksum);
+                                if (mta->ssl.checksum) {
+                                        StringBuffer_append(res->outputbuffer, " and certificate checksum %s equal to '", checksumnames[mta->ssl.checksumType]);
+                                        escapeHTML(res->outputbuffer, mta->ssl.checksum);
+                                        StringBuffer_append(res->outputbuffer, "'");
+                                }
                         }
 #endif
                         if (mta->next)
@@ -796,63 +841,39 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                 }
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
         }
-        if (Run.MailFormat.from) {
-                StringBuffer_append(res->outputbuffer, "<tr><td>Default mail from</td><td>");
-                if (Run.MailFormat.from->name)
-                        StringBuffer_append(res->outputbuffer, "%s &lt;%s&gt;", Run.MailFormat.from->name, Run.MailFormat.from->address);
-                else
-                        StringBuffer_append(res->outputbuffer, "%s", Run.MailFormat.from->address);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
-        }
-        if (Run.MailFormat.replyto) {
-                StringBuffer_append(res->outputbuffer, "<tr><td>Default mail reply to</td><td>");
-                if (Run.MailFormat.replyto->name)
-                        StringBuffer_append(res->outputbuffer, "%s &lt;%s&gt;", Run.MailFormat.replyto->name, Run.MailFormat.replyto->address);
-                else
-                        StringBuffer_append(res->outputbuffer, "%s", Run.MailFormat.replyto->address);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
-        }
+        if (Run.MailFormat.from)
+                _formatAddress(res, "from", Run.MailFormat.from);
+        if (Run.MailFormat.replyto)
+                _formatAddress(res, "reply to", Run.MailFormat.replyto);
         if (Run.MailFormat.subject)
-                StringBuffer_append(res->outputbuffer, "<tr><td>Default mail subject</td><td>%s</td></tr>", Run.MailFormat.subject);
+                _displayTableRow(res, true, NULL, "Default mail subject", "%s", Run.MailFormat.subject);
         if (Run.MailFormat.message)
-                StringBuffer_append(res->outputbuffer, "<tr><td>Default mail message</td><td>%s</td></tr>", Run.MailFormat.message);
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for Send/Expect buffer</td><td>%s</td></tr>", Convert_bytes2str(Run.limits.sendExpectBuffer, buf));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for file content buffer</td><td>%s</td></tr>", Convert_bytes2str(Run.limits.fileContentBuffer, buf));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for HTTP content buffer</td><td>%s</td></tr>", Convert_bytes2str(Run.limits.httpContentBuffer, buf));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for program output</td><td>%s</td></tr>", Convert_bytes2str(Run.limits.programOutput, buf));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for network timeout</td><td>%s</td></tr>", Convert_time2str(Run.limits.networkTimeout, (char[11]){}));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for check program timeout</td><td>%s</td></tr>", Convert_time2str(Run.limits.programTimeout, (char[11]){}));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service stop timeout</td><td>%s</td></tr>", Convert_time2str(Run.limits.stopTimeout, (char[11]){}));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service start timeout</td><td>%s</td></tr>", Convert_time2str(Run.limits.startTimeout, (char[11]){}));
-        StringBuffer_append(res->outputbuffer, "<tr><td>Limit for service restart timeout</td><td>%s</td></tr>", Convert_time2str(Run.limits.restartTimeout, (char[11]){}));
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>On reboot</td><td>%s</td></tr>", onrebootnames[Run.onreboot]);
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>Poll time</td><td>%d seconds with start delay %d seconds</td></tr>",
-                            Run.polltime, Run.startdelay);
+                _displayTableRow(res, true, NULL, "Default mail message", "%s", Run.MailFormat.message);
+        _displayTableRow(res, false, NULL, "Limit for Send/Expect buffer",      "%s", Convert_bytes2str(Run.limits.sendExpectBuffer, buf));
+        _displayTableRow(res, false, NULL, "Limit for file content buffer",     "%s", Convert_bytes2str(Run.limits.fileContentBuffer, buf));
+        _displayTableRow(res, false, NULL, "Limit for HTTP content buffer",     "%s", Convert_bytes2str(Run.limits.httpContentBuffer, buf));
+        _displayTableRow(res, false, NULL, "Limit for program output",          "%s", Convert_bytes2str(Run.limits.programOutput, buf));
+        _displayTableRow(res, false, NULL, "Limit for network timeout",         "%s", Convert_time2str(Run.limits.networkTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "Limit for check program timeout",   "%s", Convert_time2str(Run.limits.programTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "Limit for service stop timeout",    "%s", Convert_time2str(Run.limits.stopTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "Limit for service start timeout",   "%s", Convert_time2str(Run.limits.startTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "Limit for service restart timeout", "%s", Convert_time2str(Run.limits.restartTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "On reboot",                         "%s", onrebootnames[Run.onreboot]);
+        _displayTableRow(res, false, NULL, "Poll time",                         "%d seconds with start delay %d seconds", Run.polltime, Run.startdelay);
         if (Run.httpd.flags & Httpd_Net) {
-                StringBuffer_append(res->outputbuffer,
-                                    "<tr><td>httpd bind address</td><td>%s</td></tr>",
-                                    Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "Any/All");
-                StringBuffer_append(res->outputbuffer,
-                                    "<tr><td>httpd portnumber</td><td>%d</td></tr>", Run.httpd.socket.net.port);
+                _displayTableRow(res, true,  NULL, "httpd bind address", "%s", Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "Any/All");
+                _displayTableRow(res, false, NULL, "httpd portnumber",   "%d", Run.httpd.socket.net.port);
 #ifdef HAVE_OPENSSL
                 const char *options = Ssl_printOptions(&(Run.httpd.socket.net.ssl), (char[STRLEN]){}, STRLEN);
                 if (options && *options)
-                        StringBuffer_append(res->outputbuffer,
-                                    "<tr><td>httpd encryption</td><td>%s</td></tr>", options);
+                        _displayTableRow(res, false, NULL, "httpd encryption", "%s", options);
 #endif
         }
         if (Run.httpd.flags & Httpd_Unix)
-                StringBuffer_append(res->outputbuffer,
-                                    "<tr><td>httpd unix socket</td><td>%s</td></tr>",
-                                    Run.httpd.socket.unix.path);
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>httpd signature</td><td>%s</td></tr>",
-                            Run.httpd.flags & Httpd_Signature ? "True" : "False");
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>httpd auth. style</td><td>%s</td></tr>",
-                            Run.httpd.credentials && Engine_hasAllow() ? "Basic Authentication and Host/Net allow list" : Run.httpd.credentials ? "Basic Authentication" : Engine_hasAllow() ? "Host/Net allow list" : "No authentication");
+                _displayTableRow(res, true, NULL, "httpd unix socket", "%s", Run.httpd.socket.unix.path);
+        _displayTableRow(res, false, NULL, "httpd signature",           "%s", Run.httpd.flags & Httpd_Signature ? "True" : "False");
+        _displayTableRow(res, false, NULL, "httpd auth. style",         "%s", Run.httpd.credentials && Engine_hasAllow() ?
+                                                               "Basic Authentication and Host/Net allow list" : Run.httpd.credentials ? "Basic Authentication" : Engine_hasAllow() ? "Host/Net allow list" : "No authentication");
         print_alerts(res, Run.maillist);
         StringBuffer_append(res->outputbuffer, "</table>");
         if (! is_readonly(req)) {
@@ -1049,86 +1070,53 @@ static void handle_runtime_action(HttpRequest req, HttpResponse res) {
 
 
 static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
-        char buf[STRLEN];
-
         ASSERT(s);
+        char buf[STRLEN] = {};
 
-        do_head(res, s->name_escaped, s->name, Run.polltime);
+        do_head(res, s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped), Run.polltime);
         StringBuffer_append(res->outputbuffer,
                             "<h2>%s status</h2>"
                             "<table id='status-table'>"
                             "<tr>"
                             "<th width='30%%'>Parameter</th>"
                             "<th width='70%%'>Value</th>"
-                            "</tr>"
-                            "<tr>"
-                            "<td>Name</td>"
-                            "<td>%s</td>"
                             "</tr>",
-                            servicetypes[s->type],
-                            s->name);
+                            servicetypes[s->type]);
+        _displayTableRow(res, true, NULL, "Name", "%s", s->name);
         if (s->type == Service_Process)
-                StringBuffer_append(res->outputbuffer, "<tr><td>%s</td><td>%s</td></tr>", s->matchlist ? "Match" : "Pid file", s->path);
+                _displayTableRow(res, true, NULL, s->matchlist ? "Match" : "Pid file", "%s", s->path);
         else if (s->type == Service_Host)
-                StringBuffer_append(res->outputbuffer, "<tr><td>Address</td><td>%s</td></tr>", s->path);
+                _displayTableRow(res, true, NULL, "Address", "%s", s->path);
         else if (s->type == Service_Net)
-                StringBuffer_append(res->outputbuffer, "<tr><td>Interface</td><td>%s</td></tr>", s->path);
+                _displayTableRow(res, true, NULL, "Interface", "%s", s->path);
         else if (s->type != Service_System)
-                StringBuffer_append(res->outputbuffer, "<tr><td>Path</td><td>%s</td></tr>", s->path);
-        StringBuffer_append(res->outputbuffer, "<tr><td>Status</td><td>%s</td></tr>", get_service_status(HTML, s, buf, sizeof(buf)));
-        for (ServiceGroup_T sg = servicegrouplist; sg; sg = sg->next)
+                _displayTableRow(res, true, NULL, "Path", "%s", s->path);
+        _displayTableRow(res, false, NULL, "Status", "%s", get_service_status(HTML, s, buf, sizeof(buf)));
+        for (ServiceGroup_T sg = servicegrouplist; sg; sg = sg->next) {
                 for (list_t m = sg->members->head; m; m = m->next)
                         if (m->e == s)
-                                StringBuffer_append(res->outputbuffer, "<tr><td>Group</td><td class='blue-text'>%s</td></tr>", sg->name);
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>Monitoring status</td><td>%s</td></tr>", get_monitoring_status(HTML, s, buf, sizeof(buf)));
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>Monitoring mode</td><td>%s</td></tr>", modenames[s->mode]);
-        StringBuffer_append(res->outputbuffer,
-                            "<tr><td>On reboot</td><td>%s</td></tr>", onrebootnames[s->onreboot]);
+                                _displayTableRow(res, false, NULL, "Group", "%s",  sg->name);
+        }
+        _displayTableRow(res, false, NULL, "Monitoring status", "%s", get_monitoring_status(HTML, s, buf, sizeof(buf)));
+        _displayTableRow(res, false, NULL, "Monitoring mode",   "%s", modenames[s->mode]);
+        _displayTableRow(res, false, NULL, "On reboot",         "%s", onrebootnames[s->onreboot]);
         for (Dependant_T d = s->dependantlist; d; d = d->next) {
-                if (d->dependant != NULL) {
-                        StringBuffer_append(res->outputbuffer,
-                                            "<tr><td>Depends on service </td><td> <a href=%s> %s </a></td></tr>",
-                                            d->dependant_escaped, d->dependant);
-                }
+                if (d->dependant != NULL)
+                        _displayTableRow(res, false, NULL, "Depends on service", "<a href='%s'>%s</a>", d->dependant_urlescaped, StringBuffer_toString(d->dependant_htmlescaped));
         }
-        if (s->start) {
-                StringBuffer_append(res->outputbuffer, "<tr><td>Start program</td><td>'%s'", Util_commandDescription(s->start, (char[STRLEN]){}));
-                if (s->start->has_uid)
-                        StringBuffer_append(res->outputbuffer, " as uid %d", s->start->uid);
-                if (s->start->has_gid)
-                        StringBuffer_append(res->outputbuffer, " as gid %d", s->start->gid);
-                StringBuffer_append(res->outputbuffer, " timeout %s", Convert_time2str(s->start->timeout, (char[11]){}));
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
-        }
-        if (s->stop) {
-                StringBuffer_append(res->outputbuffer, "<tr><td>Stop program</td><td>'%s'", Util_commandDescription(s->stop, (char[STRLEN]){}));
-                if (s->stop->has_uid)
-                        StringBuffer_append(res->outputbuffer, " as uid %d", s->stop->uid);
-                if (s->stop->has_gid)
-                        StringBuffer_append(res->outputbuffer, " as gid %d", s->stop->gid);
-                StringBuffer_append(res->outputbuffer, " timeout %s", Convert_time2str(s->stop->timeout, (char[11]){}));
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
-        }
-        if (s->restart) {
-                StringBuffer_append(res->outputbuffer, "<tr><td>Restart program</td><td>'%s'", Util_commandDescription(s->restart, (char[STRLEN]){}));
-                if (s->restart->has_uid)
-                        StringBuffer_append(res->outputbuffer, " as uid %d", s->restart->uid);
-                if (s->restart->has_gid)
-                        StringBuffer_append(res->outputbuffer, " as gid %d", s->restart->gid);
-                StringBuffer_append(res->outputbuffer, " timeout %s", Convert_time2str(s->restart->timeout, (char[11]){}));
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
-        }
+        if (s->start)
+                _formatAction(res, "Start", s->start);
+        if (s->stop)
+                _formatAction(res, "Stop", s->stop);
+        if (s->restart)
+                _formatAction(res, "Restart", s->restart);
         if (s->every.type != Every_Cycle) {
-                StringBuffer_append(res->outputbuffer, "<tr><td>Check service</td><td>");
                 if (s->every.type == Every_SkipCycles)
-                        StringBuffer_append(res->outputbuffer, "every %d cycle", s->every.spec.cycle.number);
+                        _displayTableRow(res, false, NULL, "Check service", "every %d cycle", s->every.spec.cycle.number);
                 else if (s->every.type == Every_Cron)
-                        StringBuffer_append(res->outputbuffer, "every <code>\"%s\"</code>", s->every.spec.cron);
+                        _displayTableRow(res, false, NULL, "Check service", "every <code>\"%s\"</code>", s->every.spec.cron);
                 else if (s->every.type == Every_NotInCron)
-                        StringBuffer_append(res->outputbuffer, "not every <code>\"%s\"</code>", s->every.spec.cron);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                        _displayTableRow(res, false, NULL, "Check service", "not every <code>\"%s\"</code>", s->every.spec.cron);
         }
         _printStatus(HTML, res, s);
         // Rules
@@ -1192,7 +1180,7 @@ static void do_home_system(HttpResponse res) {
                             ",&nbsp;%.1f%%wa"
 #endif
                             "</td>",
-                            s->name_escaped, s->name,
+                            s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                             get_service_status(HTML, s, buf, sizeof(buf)),
                             systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2],
                             systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.,
@@ -1240,7 +1228,7 @@ static void do_home_process(HttpResponse res) {
                                     "<td class='left'><a href='%s'>%s</a></td>"
                                     "<td class='left'>%s</td>",
                                     on ? " class='stripe'" : "",
-                                    s->name_escaped, s->name,
+                                    s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || s->inf.process->uptime < 0) {
                         StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
@@ -1308,7 +1296,7 @@ static void do_home_program(HttpResponse res) {
                                     "<td class='left'><a href='%s'>%s</a></td>"
                                     "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
-                                    s->name_escaped, s->name,
+                                    s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s)) {
                         StringBuffer_append(res->outputbuffer, "<td class='left'>-</td>");
@@ -1377,7 +1365,7 @@ static void do_home_net(HttpResponse res) {
                                     "<td class='left'><a href='%s'>%s</a></td>"
                                     "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
-                                    s->name_escaped, s->name,
+                                    s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s) || Link_getState(s->inf.net->stats) != 1) {
                         StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
@@ -1420,7 +1408,7 @@ static void do_home_filesystem(HttpResponse res) {
                                     "<td class='left'><a href='%s'>%s</a></td>"
                                     "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
-                                    s->name_escaped, s->name,
+                                    s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s)) {
                         StringBuffer_append(res->outputbuffer,
@@ -1487,7 +1475,7 @@ static void do_home_file(HttpResponse res) {
                                     "<td class='left'><a href='%s'>%s</a></td>"
                                     "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
-                                    s->name_escaped, s->name,
+                                    s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s) || s->inf.file->size < 0)
                         StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
@@ -1538,7 +1526,7 @@ static void do_home_fifo(HttpResponse res) {
                                     "<td class='left'><a href='%s'>%s</a></td>"
                                     "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
-                                    s->name_escaped, s->name,
+                                    s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s) || s->inf.fifo->mode < 0)
                         StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
@@ -1585,7 +1573,7 @@ static void do_home_directory(HttpResponse res) {
                                     "<td class='left'><a href='%s'>%s</a></td>"
                                     "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
-                                    s->name_escaped, s->name,
+                                    s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s) || s->inf.directory->mode < 0)
                         StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
@@ -1630,7 +1618,7 @@ static void do_home_host(HttpResponse res) {
                                     "<td class='left'><a href='%s'>%s</a></td>"
                                     "<td class='left'>%s</td>",
                                     on ? "class='stripe'" : "",
-                                    s->name_escaped, s->name,
+                                    s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                                     get_service_status(HTML, s, buf, sizeof(buf)));
                 if (! Util_hasServiceStatus(s)) {
                         StringBuffer_append(res->outputbuffer,
@@ -1688,9 +1676,7 @@ static void do_home_host(HttpResponse res) {
 
 static void print_alerts(HttpResponse res, Mail_T s) {
         for (Mail_T r = s; r; r = r->next) {
-                StringBuffer_append(res->outputbuffer,
-                                    "<tr class='stripe'><td>Alert mail to</td>"
-                                    "<td>%s</td></tr>", r->to ? r->to : "");
+                _displayTableRow(res, true, NULL, "Alert mail to", "%s", r->to ? r->to : "");
                 StringBuffer_append(res->outputbuffer, "<tr><td>Alert on</td><td>");
                 if (r->events == Event_Null) {
                         StringBuffer_append(res->outputbuffer, "No events");
@@ -1759,11 +1745,8 @@ static void print_alerts(HttpResponse res, Mail_T s) {
                                 StringBuffer_append(res->outputbuffer, "Uptime ");
                 }
                 StringBuffer_append(res->outputbuffer, "</td></tr>");
-                if (r->reminder) {
-                        StringBuffer_append(res->outputbuffer,
-                                            "<tr><td>Alert reminder</td><td>%u cycles</td></tr>",
-                                            r->reminder);
-                }
+                if (r->reminder)
+                        _displayTableRow(res, false, NULL, "Alert reminder", "%u cycles", r->reminder);
         }
 }
 
@@ -1783,7 +1766,7 @@ static void print_buttons(HttpRequest req, HttpResponse res, Service_T s) {
                                     "<input type=hidden value='start' name=action>"
                                     "<input type=submit value='Start service'>"
                                     "</form>"
-                                    "</td>", s->name_escaped, res->token);
+                                    "</td>", s->name_urlescaped, res->token);
         /* Stop program */
         if (s->stop)
                 StringBuffer_append(res->outputbuffer,
@@ -1793,7 +1776,7 @@ static void print_buttons(HttpRequest req, HttpResponse res, Service_T s) {
                                     "<input type=hidden value='stop' name=action>"
                                     "<input type=submit value='Stop service'>"
                                     "</form>"
-                                    "</td>", s->name_escaped, res->token);
+                                    "</td>", s->name_urlescaped, res->token);
         /* Restart program */
         if ((s->start && s->stop) || s->restart)
                 StringBuffer_append(res->outputbuffer,
@@ -1803,7 +1786,7 @@ static void print_buttons(HttpRequest req, HttpResponse res, Service_T s) {
                                     "<input type=hidden value='restart' name=action>"
                                     "<input type=submit value='Restart service'>"
                                     "</form>"
-                                    "</td>", s->name_escaped, res->token);
+                                    "</td>", s->name_urlescaped, res->token);
         /* (un)monitor */
         StringBuffer_append(res->outputbuffer,
                                     "<td>"
@@ -1813,7 +1796,7 @@ static void print_buttons(HttpRequest req, HttpResponse res, Service_T s) {
                                     "<input type=submit value='%s'>"
                                     "</form>"
                                     "</td>",
-                                    s->name_escaped,
+                                    s->name_urlescaped,
                                     res->token,
                                     s->monitor ? "unmonitor" : "monitor",
                                     s->monitor ? "Disable monitoring" : "Enable monitoring");
@@ -1823,34 +1806,34 @@ static void print_buttons(HttpRequest req, HttpResponse res, Service_T s) {
 
 static void print_service_rules_timeout(HttpResponse res, Service_T s) {
         for (ActionRate_T ar = s->actionratelist; ar; ar = ar->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Timeout</td><td>If restarted %d times within %d cycle(s) then ", ar->count, ar->cycle);
-                Util_printAction(ar->action->failed, res->outputbuffer);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "Timeout", "If restarted %d times within %d cycle(s) then %s", ar->count, ar->cycle, StringBuffer_toString(Util_printAction(ar->action->failed, sb)));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_nonexistence(HttpResponse res, Service_T s) {
         for (NonExist_T l = s->nonexistlist; l; l = l->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Existence</td><td>");
-                Util_printRule(res->outputbuffer, l->action, "If doesn't exist");
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "Existence", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If doesn't exist")));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_existence(HttpResponse res, Service_T s) {
         for (Exist_T l = s->existlist; l; l = l->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Non-Existence</td><td>");
-                Util_printRule(res->outputbuffer, l->action, "If exist");
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "Non-Existence", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If exist")));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_port(HttpResponse res, Service_T s) {
         for (Port_T p = s->portlist; p; p = p->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Port</td><td>");
+                StringBuffer_T sb = StringBuffer_create(256);
                 StringBuffer_T buf = StringBuffer_create(64);
                 StringBuffer_append(buf, "If failed [%s]:%d%s",
                         p->hostname, p->target.net.port, Util_portRequestDescription(p));
@@ -1872,284 +1855,282 @@ static void print_service_rules_port(HttpResponse res, Service_T s) {
                                 StringBuffer_append(buf, " and certificate checksum %s equal to '%s'", checksumnames[p->target.net.ssl.options.checksumType], p->target.net.ssl.options.checksum);
                 }
 #endif
-                Util_printRule(res->outputbuffer, p->action, "%s", StringBuffer_toString(buf));
+                _displayTableRow(res, true, "rule", "Port", "%s", StringBuffer_toString(Util_printRule(sb, p->action, "%s", StringBuffer_toString(buf))));
                 StringBuffer_free(&buf);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_socket(HttpResponse res, Service_T s) {
         for (Port_T p = s->socketlist; p; p = p->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Unix Socket</td><td>");
+                StringBuffer_T sb = StringBuffer_create(256);
                 if (p->retry > 1)
-                        Util_printRule(res->outputbuffer, p->action, "If failed %s type %s protocol %s with timeout %s and retry %d time(s)", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}), p->retry);
+                        Util_printRule(sb, p->action, "If failed %s type %s protocol %s with timeout %s and retry %d time(s)", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}), p->retry);
                 else
-                        Util_printRule(res->outputbuffer, p->action, "If failed %s type %s protocol %s with timeout %s", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}));
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                        Util_printRule(sb, p->action, "If failed %s type %s protocol %s with timeout %s", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}));
+                _displayTableRow(res, true, "rule", "Unix Socket", "%s", StringBuffer_toString(sb));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_icmp(HttpResponse res, Service_T s) {
         for (Icmp_T i = s->icmplist; i; i = i->next) {
+                const char *key;
+                StringBuffer_T sb = StringBuffer_create(256);
                 switch (i->family) {
                         case Socket_Ip4:
-                                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Ping4</td><td>");
+                                key = "Ping4";
                                 break;
                         case Socket_Ip6:
-                                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Ping6</td><td>");
+                                key = "Ping6";
                                 break;
                         default:
-                                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Ping</td><td>");
+                                key = "Ping";
                                 break;
                 }
-                Util_printRule(res->outputbuffer, i->action, "If failed [count %d size %d with timeout %s%s%s]", i->count, i->size, Convert_time2str(i->timeout, (char[11]){}), i->outgoing.ip ? " via address " : "", i->outgoing.ip ? i->outgoing.ip : "");
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(Util_printRule(sb, i->action, "If failed [count %d size %d with timeout %s%s%s]", i->count, i->size, Convert_time2str(i->timeout, (char[11]){}), i->outgoing.ip ? " via address " : "", i->outgoing.ip ? i->outgoing.ip : "")));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_perm(HttpResponse res, Service_T s) {
         if (s->perm) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Permissions</td><td>");
+                StringBuffer_T sb = StringBuffer_create(256);
                 if (s->perm->test_changes)
-                        Util_printRule(res->outputbuffer, s->perm->action, "If changed");
+                        Util_printRule(sb, s->perm->action, "If changed");
                 else
-                        Util_printRule(res->outputbuffer, s->perm->action, "If failed %o", s->perm->perm);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                        Util_printRule(sb, s->perm->action, "If failed %o", s->perm->perm);
+                _displayTableRow(res, true, "rule", "Permissions", "%s", StringBuffer_toString(sb));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_uid(HttpResponse res, Service_T s) {
         if (s->uid) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>UID</td><td>");
-                Util_printRule(res->outputbuffer, s->uid->action, "If failed %d", s->uid->uid);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "UID", "%s", StringBuffer_toString(Util_printRule(sb, s->uid->action, "If failed %d", s->uid->uid)));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_euid(HttpResponse res, Service_T s) {
         if (s->euid) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>EUID</td><td>");
-                Util_printRule(res->outputbuffer, s->euid->action, "If failed %d", s->euid->uid);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "EUID", "%s", StringBuffer_toString(Util_printRule(sb, s->euid->action, "If failed %d", s->euid->uid)));
+                StringBuffer_free(&sb);
+        }
+}
+
+
+static void print_service_rules_gid(HttpResponse res, Service_T s) {
+        if (s->gid) {
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "GID", "%s", StringBuffer_toString(Util_printRule(sb, s->gid->action, "If failed %d", s->gid->gid)));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_secattr(HttpResponse res, Service_T s) {
         for (SecurityAttribute_T a = s->secattrlist; a; a = a->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Security attribute</td><td>");
-                Util_printRule(res->outputbuffer, a->action, "If failed %s", a->attribute);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "Security attribute", "%s", StringBuffer_toString(Util_printRule(sb, a->action, "If failed %s", a->attribute)));
+                StringBuffer_free(&sb);
          }
-}
-
-
-static void print_service_rules_gid(HttpResponse res, Service_T s) {
-        if (s->gid) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>GID</td><td>");
-                Util_printRule(res->outputbuffer, s->gid->action, "If failed %d", s->gid->gid);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
-        }
 }
 
 
 static void print_service_rules_timestamp(HttpResponse res, Service_T s) {
         for (Timestamp_T t = s->timestamplist; t; t = t->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>%c%s</td><td>", toupper(timestampnames[t->type][0]), timestampnames[t->type] + 1);
+                char key[STRLEN];
+                snprintf(key, sizeof(key), "%c%s", toupper(timestampnames[t->type][0]), timestampnames[t->type] + 1);
+                StringBuffer_T sb = StringBuffer_create(256);
                 if (t->test_changes)
-                        Util_printRule(res->outputbuffer, t->action, "If changed");
+                        Util_printRule(sb, t->action, "If changed");
                 else
-                        Util_printRule(res->outputbuffer, t->action, "If %s %s", operatornames[t->operator], Convert_time2str(t->time * 1000., (char[11]){}));
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                        Util_printRule(sb, t->action, "If %s %s", operatornames[t->operator], Convert_time2str(t->time * 1000., (char[11]){}));
+                _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(sb));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_fsflags(HttpResponse res, Service_T s) {
         for (FsFlag_T l = s->fsflaglist; l; l = l->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Filesystem flags</td><td>");
-                Util_printRule(res->outputbuffer, l->action, "If changed");
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "Filesystem flags", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If changed")));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_filesystem(HttpResponse res, Service_T s) {
         for (FileSystem_T dl = s->filesystemlist; dl; dl = dl->next) {
-                if (dl->resource == Resource_Inode) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Inodes usage limit</td><td>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                switch (dl->resource) {
+                case Resource_Inode:
                         if (dl->limit_absolute > -1)
-                                Util_printRule(res->outputbuffer, dl->action, "If %s %lld", operatornames[dl->operator], dl->limit_absolute);
+                                Util_printRule(sb, dl->action, "If %s %lld", operatornames[dl->operator], dl->limit_absolute);
                         else
-                                Util_printRule(res->outputbuffer, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
-                } else if (dl->resource == Resource_InodeFree) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Inodes free limit</td><td>");
+                                Util_printRule(sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
+                        _displayTableRow(res, true, "rule", "Inodes usage limit", "%s", StringBuffer_toString(sb));
+                        break;
+                case Resource_InodeFree:
                         if (dl->limit_absolute > -1)
-                                Util_printRule(res->outputbuffer, dl->action, "If %s %lld", operatornames[dl->operator], dl->limit_absolute);
+                                Util_printRule(sb, dl->action, "If %s %lld", operatornames[dl->operator], dl->limit_absolute);
                         else
-                                Util_printRule(res->outputbuffer, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
-                } else if (dl->resource == Resource_Space) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Space usage limit</td><td>");
-                        if (dl->limit_absolute > -1) {
-                                Util_printRule(res->outputbuffer, dl->action, "If %s %s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
-                        } else {
-                                Util_printRule(res->outputbuffer, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
-                        }
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
-                } else if (dl->resource == Resource_SpaceFree) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Space free limit</td><td>");
-                        if (dl->limit_absolute > -1) {
-                                Util_printRule(res->outputbuffer, dl->action, "If %s %s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
-                        } else {
-                                Util_printRule(res->outputbuffer, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
-                        }
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
-                } else if (dl->resource == Resource_ReadBytes) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Read limit</td><td>");
-                        Util_printRule(res->outputbuffer, dl->action, "If read %s %s/s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
-                } else if (dl->resource == Resource_ReadOperations) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Read limit</td><td>");
-                        Util_printRule(res->outputbuffer, dl->action, "If read %s %llu operations/s", operatornames[dl->operator], dl->limit_absolute);
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
-                } else if (dl->resource == Resource_WriteBytes) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Write limit</td><td>");
-                        Util_printRule(res->outputbuffer, dl->action, "If write %s %s/s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
-                } else if (dl->resource == Resource_WriteOperations) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Write limit</td><td>");
-                        Util_printRule(res->outputbuffer, dl->action, "If write %s %llu operations/s", operatornames[dl->operator], dl->limit_absolute);
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
-                } else if (dl->resource == Resource_ServiceTime) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Service time limit</td><td>");
-                        Util_printRule(res->outputbuffer, dl->action, "If service time %s %s/operation", operatornames[dl->operator], Convert_time2str(dl->limit_absolute, (char[11]){}));
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
+                                Util_printRule(sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
+                        _displayTableRow(res, true, "rule", "Inodes free limit", "%s", StringBuffer_toString(sb));
+                        break;
+                case Resource_Space:
+                        if (dl->limit_absolute > -1)
+                                Util_printRule(sb, dl->action, "If %s %s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
+                        else
+                                Util_printRule(sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
+                        _displayTableRow(res, true, "rule", "Space usage limit", "%s", StringBuffer_toString(sb));
+                        break;
+                case Resource_SpaceFree:
+                        if (dl->limit_absolute > -1)
+                                Util_printRule(sb, dl->action, "If %s %s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
+                        else
+                                Util_printRule(sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
+                        _displayTableRow(res, true, "rule", "Space free limit", "%s", StringBuffer_toString(sb));
+                        break;
+                case Resource_ReadBytes:
+                        _displayTableRow(res, true, "rule", "Read limit", "%s", StringBuffer_toString(Util_printRule(sb, dl->action, "If read %s %s/s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}))));
+                        break;
+                case Resource_ReadOperations:
+                        _displayTableRow(res, true, "rule", "Read limit", "%s", StringBuffer_toString(Util_printRule(sb, dl->action, "If read %s %llu operations/s", operatornames[dl->operator], dl->limit_absolute)));
+                        break;
+                case Resource_WriteBytes:
+                        _displayTableRow(res, true, "rule", "Write limit", "%s", StringBuffer_toString(Util_printRule(sb, dl->action, "If write %s %s/s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}))));
+                        break;
+                case Resource_WriteOperations:
+                        _displayTableRow(res, true, "rule", "Write limit", "%s", StringBuffer_toString(Util_printRule(sb, dl->action, "If write %s %llu operations/s", operatornames[dl->operator], dl->limit_absolute)));
+                        break;
+                case Resource_ServiceTime:
+                        _displayTableRow(res, true, "rule", "Service time limit", "%s", StringBuffer_toString(Util_printRule(sb, dl->action, "If service time %s %s/operation", operatornames[dl->operator], Convert_time2str(dl->limit_absolute, (char[11]){}))));
+                        break;
+                default:
+                        break;
                 }
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_size(HttpResponse res, Service_T s) {
         for (Size_T sl = s->sizelist; sl; sl = sl->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Size</td><td>");
+                StringBuffer_T sb = StringBuffer_create(256);
                 if (sl->test_changes)
-                        Util_printRule(res->outputbuffer, sl->action, "If changed");
+                        Util_printRule(sb, sl->action, "If changed");
                 else
-                        Util_printRule(res->outputbuffer, sl->action, "If %s %llu byte(s)", operatornames[sl->operator], sl->size);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                        Util_printRule(sb, sl->action, "If %s %llu byte(s)", operatornames[sl->operator], sl->size);
+                _displayTableRow(res, true, "rule", "Size", "%s", StringBuffer_toString(sb));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_linkstatus(HttpResponse res, Service_T s) {
         for (LinkStatus_T l = s->linkstatuslist; l; l = l->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Link status</td><td>");
-                Util_printRule(res->outputbuffer, l->action, "If failed");
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "Link status", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If failed")));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_linkspeed(HttpResponse res, Service_T s) {
         for (LinkSpeed_T l = s->linkspeedlist; l; l = l->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Link capacity</td><td>");
-                Util_printRule(res->outputbuffer, l->action, "If changed");
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "Link capacity", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If changed")));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_linksaturation(HttpResponse res, Service_T s) {
         for (LinkSaturation_T l = s->linksaturationlist; l; l = l->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Link saturation</td><td>");
-                Util_printRule(res->outputbuffer, l->action, "If %s %.1f%%", operatornames[l->operator], l->limit);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "Link saturation", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If %s %.1f%%", operatornames[l->operator], l->limit)));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_uploadbytes(HttpResponse res, Service_T s) {
         for (Bandwidth_T bl = s->uploadbyteslist; bl; bl = bl->next) {
-                if (bl->range == Time_Second) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Upload bytes</td><td>");
-                        Util_printRule(res->outputbuffer, bl->action, "If %s %s/s", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}));
-                } else {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Total upload bytes</td><td>");
-                        Util_printRule(res->outputbuffer, bl->action, "If %s %s in last %d %s(s)", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range));
-                }
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                if (bl->range == Time_Second)
+                        _displayTableRow(res, true, "rule", "Upload bytes", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %s/s", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}))));
+                else
+                        _displayTableRow(res, true, "rule", "Total upload bytes", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %s in last %d %s(s)", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range))));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_uploadpackets(HttpResponse res, Service_T s) {
         for (Bandwidth_T bl = s->uploadpacketslist; bl; bl = bl->next) {
-                if (bl->range == Time_Second) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Upload packets</td><td>");
-                        Util_printRule(res->outputbuffer, bl->action, "If %s %lld packets/s", operatornames[bl->operator], bl->limit);
-                } else {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Total upload packets</td><td>");
-                        Util_printRule(res->outputbuffer, bl->action, "If %s %lld packets in last %d %s(s)", operatornames[bl->operator], bl->limit, bl->rangecount, Util_timestr(bl->range));
-                }
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                if (bl->range == Time_Second)
+                        _displayTableRow(res, true, "rule", "Upload packets", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %lld packets/s", operatornames[bl->operator], bl->limit)));
+                else
+                        _displayTableRow(res, true, "rule", "Total upload packets", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %lld packets in last %d %s(s)", operatornames[bl->operator], bl->limit, bl->rangecount, Util_timestr(bl->range))));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_downloadbytes(HttpResponse res, Service_T s) {
         for (Bandwidth_T bl = s->downloadbyteslist; bl; bl = bl->next) {
-                if (bl->range == Time_Second) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Download bytes</td><td>");
-                        Util_printRule(res->outputbuffer, bl->action, "If %s %s/s", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}));
-                } else {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Total download bytes</td><td>");
-                        Util_printRule(res->outputbuffer, bl->action, "If %s %s in last %d %s(s)", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range));
-                }
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                if (bl->range == Time_Second)
+                        _displayTableRow(res, true, "rule", "Download bytes", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %s/s", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}))));
+                else
+                        _displayTableRow(res, true, "rule", "Total download bytes", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %s in last %d %s(s)", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range))));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_downloadpackets(HttpResponse res, Service_T s) {
         for (Bandwidth_T bl = s->downloadpacketslist; bl; bl = bl->next) {
-                if (bl->range == Time_Second) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Download packets</td><td>");
-                        Util_printRule(res->outputbuffer, bl->action, "If %s %lld packets/s", operatornames[bl->operator], bl->limit);
-                } else {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Total download packets</td><td>");
-                        Util_printRule(res->outputbuffer, bl->action, "If %s %lld packets in last %d %s(s)", operatornames[bl->operator], bl->limit, bl->rangecount, Util_timestr(bl->range));
-                }
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                if (bl->range == Time_Second)
+                        _displayTableRow(res, true, "rule", "Download packets", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %lld packets/s", operatornames[bl->operator], bl->limit)));
+                else
+                        _displayTableRow(res, true, "rule", "Total download packets", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %lld packets in last %d %s(s)", operatornames[bl->operator], bl->limit, bl->rangecount, Util_timestr(bl->range))));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_uptime(HttpResponse res, Service_T s) {
         for (Uptime_T ul = s->uptimelist; ul; ul = ul->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Uptime</td><td>");
-                Util_printRule(res->outputbuffer, ul->action, "If %s %s", operatornames[ul->operator], _getUptime(ul->uptime, (char[256]){}));
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "Uptime", "%s", StringBuffer_toString(Util_printRule(sb, ul->action, "If %s %s", operatornames[ul->operator], _getUptime(ul->uptime, (char[256]){}))));
+                StringBuffer_free(&sb);
         }
 }
 
 static void print_service_rules_content(HttpResponse res, Service_T s) {
         if (s->type != Service_Process) {
                 for (Match_T ml = s->matchignorelist; ml; ml = ml->next) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Ignore content</td><td>");
-                        Util_printRule(res->outputbuffer, ml->action, "If content %s \"%s\"", ml->not ? "!=" : "=", ml->match_string);
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
+                        StringBuffer_T sb = StringBuffer_create(256);
+                        _displayTableRow(res, true, "rule", "Ignore content", "%s", StringBuffer_toString(Util_printRule(sb, ml->action, "If content %s \"%s\"", ml->not ? "!=" : "=", ml->match_string)));
+                        StringBuffer_free(&sb);
                 }
                 for (Match_T ml = s->matchlist; ml; ml = ml->next) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Content match</td><td>");
-                        Util_printRule(res->outputbuffer, ml->action, "If content %s \"%s\"", ml->not ? "!=" : "=", ml->match_string);
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
+                        StringBuffer_T sb = StringBuffer_create(256);
+                        _displayTableRow(res, true, "rule", "Content match", "%s", StringBuffer_toString(Util_printRule(sb, ml->action, "If content %s \"%s\"", ml->not ? "!=" : "=", ml->match_string)));
+                        StringBuffer_free(&sb);
                 }
         }
 }
@@ -2157,44 +2138,46 @@ static void print_service_rules_content(HttpResponse res, Service_T s) {
 
 static void print_service_rules_checksum(HttpResponse res, Service_T s) {
         if (s->checksum) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Checksum</td><td>");
+                StringBuffer_T sb = StringBuffer_create(256);
                 if (s->checksum->test_changes)
-                        Util_printRule(res->outputbuffer, s->checksum->action, "If changed %s", checksumnames[s->checksum->type]);
+                        Util_printRule(sb, s->checksum->action, "If changed %s", checksumnames[s->checksum->type]);
                 else
-                        Util_printRule(res->outputbuffer, s->checksum->action, "If failed %s(%s)", s->checksum->hash, checksumnames[s->checksum->type]);
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                        Util_printRule(sb, s->checksum->action, "If failed %s(%s)", s->checksum->hash, checksumnames[s->checksum->type]);
+                _displayTableRow(res, true, "rule", "Checksum", "%s", StringBuffer_toString(sb));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_pid(HttpResponse res, Service_T s) {
         for (Pid_T l = s->pidlist; l; l = l->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>PID</td><td>");
-                Util_printRule(res->outputbuffer, l->action, "If changed");
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "PID", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If changed")));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_ppid(HttpResponse res, Service_T s) {
         for (Pid_T l = s->ppidlist; l; l = l->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>PPID</td><td>");
-                Util_printRule(res->outputbuffer, l->action, "If changed");
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_T sb = StringBuffer_create(256);
+                _displayTableRow(res, true, "rule", "PPID", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If changed")));
+                StringBuffer_free(&sb);
         }
 }
 
 
 static void print_service_rules_program(HttpResponse res, Service_T s) {
         if (s->type == Service_Program) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Program timeout</td><td>Terminate the program if not finished within %s</td></tr>", Convert_time2str(s->program->timeout, (char[11]){}));
+                _displayTableRow(res, false, "rule", "Program timeout", "Terminate the program if not finished within %s", Convert_time2str(s->program->timeout, (char[11]){}));
                 for (Status_T status = s->statuslist; status; status = status->next) {
-                        StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>Test Exit value</td><td>");
+                        StringBuffer_T sb = StringBuffer_create(256);
                         if (status->operator == Operator_Changed)
-                                Util_printRule(res->outputbuffer, status->action, "If exit value changed");
+                                Util_printRule(sb, status->action, "If exit value changed");
                         else
-                                Util_printRule(res->outputbuffer, status->action, "If exit value %s %d", operatorshortnames[status->operator], status->return_value);
-                        StringBuffer_append(res->outputbuffer, "</td></tr>");
+                                Util_printRule(sb, status->action, "If exit value %s %d", operatorshortnames[status->operator], status->return_value);
+                        _displayTableRow(res, true, "rule", "Test Exit value", "%s", StringBuffer_toString(sb));
+                        StringBuffer_free(&sb);
                 }
         }
 }
@@ -2203,98 +2186,99 @@ static void print_service_rules_program(HttpResponse res, Service_T s) {
 static void print_service_rules_resource(HttpResponse res, Service_T s) {
         char buf[STRLEN];
         for (Resource_T q = s->resourcelist; q; q = q->next) {
-                StringBuffer_append(res->outputbuffer, "<tr class='rule'><td>");
+                char *key;
+                StringBuffer_T sb = StringBuffer_create(256);
                 switch (q->resource_id) {
                         case Resource_CpuPercent:
-                                StringBuffer_append(res->outputbuffer, "CPU usage limit");
+                                key = "CPU usage limit";
                                 break;
 
                         case Resource_CpuPercentTotal:
-                                StringBuffer_append(res->outputbuffer, "CPU usage limit (incl. children)");
+                                key = "CPU usage limit (incl. children)";
                                 break;
 
                         case Resource_CpuUser:
-                                StringBuffer_append(res->outputbuffer, "CPU user limit");
+                                key = "CPU user limit";
                                 break;
 
                         case Resource_CpuSystem:
-                                StringBuffer_append(res->outputbuffer, "CPU system limit");
+                                key = "CPU system limit";
                                 break;
 
                         case Resource_CpuWait:
-                                StringBuffer_append(res->outputbuffer, "CPU wait limit");
+                                key = "CPU wait limit";
                                 break;
 
                         case Resource_MemoryPercent:
-                                StringBuffer_append(res->outputbuffer, "Memory usage limit");
+                                key = "Memory usage limit";
                                 break;
 
                         case Resource_MemoryKbyte:
-                                StringBuffer_append(res->outputbuffer, "Memory amount limit");
+                                key = "Memory amount limit";
                                 break;
 
                         case Resource_SwapPercent:
-                                StringBuffer_append(res->outputbuffer, "Swap usage limit");
+                                key = "Swap usage limit";
                                 break;
 
                         case Resource_SwapKbyte:
-                                StringBuffer_append(res->outputbuffer, "Swap amount limit");
+                                key = "Swap amount limit";
                                 break;
 
                         case Resource_LoadAverage1m:
-                                StringBuffer_append(res->outputbuffer, "Load average (1m)");
+                                key = "Load average (1m)";
                                 break;
 
                         case Resource_LoadAverage5m:
-                                StringBuffer_append(res->outputbuffer, "Load average (5m)");
+                                key = "Load average (5m)";
                                 break;
 
                         case Resource_LoadAverage15m:
-                                StringBuffer_append(res->outputbuffer, "Load average (15m)");
+                                key = "Load average (15m)";
                                 break;
 
                         case Resource_LoadAveragePerCore1m:
-                                StringBuffer_append(res->outputbuffer, "Load average per core (1m)");
+                                key = "Load average per core (1m)";
                                 break;
 
                         case Resource_LoadAveragePerCore5m:
-                                StringBuffer_append(res->outputbuffer, "Load average per core (5m)");
+                                key = "Load average per core (5m)";
                                 break;
 
                         case Resource_LoadAveragePerCore15m:
-                                StringBuffer_append(res->outputbuffer, "Load average per core (15m)");
+                                key = "Load average per core (15m)";
                                 break;
 
                         case Resource_Threads:
-                                StringBuffer_append(res->outputbuffer, "Threads");
+                                key = "Threads";
                                 break;
 
                         case Resource_Children:
-                                StringBuffer_append(res->outputbuffer, "Children");
+                                key = "Children";
                                 break;
 
                         case Resource_MemoryKbyteTotal:
-                                StringBuffer_append(res->outputbuffer, "Memory amount limit (incl. children)");
+                                key = "Memory amount limit (incl. children)";
                                 break;
 
                         case Resource_MemoryPercentTotal:
-                                StringBuffer_append(res->outputbuffer, "Memory usage limit (incl. children)");
+                                key = "Memory usage limit (incl. children)";
                                 break;
 
                         case Resource_ReadBytes:
-                                StringBuffer_append(res->outputbuffer, "Disk read limit");
+                                key = "Disk read limit";
                                 break;
 
                         case Resource_ReadOperations:
-                                StringBuffer_append(res->outputbuffer, "Disk read limit");
+                                key = "Disk read limit";
                                 break;
 
                         case Resource_WriteBytes:
-                                StringBuffer_append(res->outputbuffer, "Disk write limit");
+                                key = "Disk write limit";
                                 break;
 
                         case Resource_WriteOperations:
-                                StringBuffer_append(res->outputbuffer, "Disk write limit");
+                                key = "Disk write limit";
                                 break;
 
                         default:
@@ -2310,13 +2294,13 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         case Resource_CpuWait:
                         case Resource_MemoryPercent:
                         case Resource_SwapPercent:
-                                Util_printRule(res->outputbuffer, q->action, "If %s %.1f%%", operatornames[q->operator], q->limit);
+                                Util_printRule(sb, q->action, "If %s %.1f%%", operatornames[q->operator], q->limit);
                                 break;
 
                         case Resource_MemoryKbyte:
                         case Resource_SwapKbyte:
                         case Resource_MemoryKbyteTotal:
-                                Util_printRule(res->outputbuffer, q->action, "If %s %s", operatornames[q->operator], Convert_bytes2str(q->limit, buf));
+                                Util_printRule(sb, q->action, "If %s %s", operatornames[q->operator], Convert_bytes2str(q->limit, buf));
                                 break;
 
                         case Resource_LoadAverage1m:
@@ -2325,28 +2309,29 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         case Resource_LoadAveragePerCore1m:
                         case Resource_LoadAveragePerCore5m:
                         case Resource_LoadAveragePerCore15m:
-                                Util_printRule(res->outputbuffer, q->action, "If %s %.1f", operatornames[q->operator], q->limit);
+                                Util_printRule(sb, q->action, "If %s %.1f", operatornames[q->operator], q->limit);
                                 break;
 
                         case Resource_Threads:
                         case Resource_Children:
-                                Util_printRule(res->outputbuffer, q->action, "If %s %.0f", operatornames[q->operator], q->limit);
+                                Util_printRule(sb, q->action, "If %s %.0f", operatornames[q->operator], q->limit);
                                 break;
 
                         case Resource_ReadBytes:
                         case Resource_WriteBytes:
-                                Util_printRule(res->outputbuffer, q->action, "if %s %s", operatornames[q->operator], Convert_bytes2str(q->limit, (char[10]){}));
+                                Util_printRule(sb, q->action, "if %s %s", operatornames[q->operator], Convert_bytes2str(q->limit, (char[10]){}));
                                 break;
 
                         case Resource_ReadOperations:
                         case Resource_WriteOperations:
-                                Util_printRule(res->outputbuffer, q->action, "if %s %.0f operations/s", operatornames[q->operator], q->limit);
+                                Util_printRule(sb, q->action, "if %s %.0f operations/s", operatornames[q->operator], q->limit);
                                 break;
 
                         default:
                                 break;
                 }
-                StringBuffer_append(res->outputbuffer, "</td></tr>");
+                _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(sb));
+                StringBuffer_free(&sb);
         }
 }
 

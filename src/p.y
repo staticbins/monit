@@ -3258,7 +3258,8 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
         current->monitor  = Monitor_Init;
         current->onreboot = Run.onreboot;
         current->name     = name;
-        current->name_escaped = Util_urlEncode(name, false);
+        current->name_urlescaped = Util_urlEncode(name, false);
+        current->name_htmlescaped = escapeHTML(StringBuffer_create(16), name);
         current->check    = check;
         current->path     = value;
 
@@ -3397,7 +3398,8 @@ static void adddependant(char *dependant) {
                 d->next = current->dependantlist;
 
         d->dependant = dependant;
-        d->dependant_escaped = Util_urlEncode(dependant, false);
+        d->dependant_urlescaped = Util_urlEncode(dependant, false);
+        d->dependant_htmlescaped = escapeHTML(StringBuffer_create(16), dependant);
         current->dependantlist = d;
 
 }

@@ -296,8 +296,9 @@ static void _gc_service(Service_T *s) {
                 default:
                         break;
         }
+        StringBuffer_free(&((*s)->name_htmlescaped));
+        FREE((*s)->name_urlescaped);
         FREE((*s)->name);
-        FREE((*s)->name_escaped);
         FREE((*s)->path);
         (*s)->next = NULL;
         FREE(*s);
@@ -634,8 +635,9 @@ static void _gcpdl(Dependant_T *d) {
         ASSERT(d);
         if ((*d)->next)
                 _gcpdl(&(*d)->next);
+        StringBuffer_free(&((*d)->dependant_htmlescaped));
+        FREE((*d)->dependant_urlescaped);
         FREE((*d)->dependant);
-        FREE((*d)->dependant_escaped);
         FREE(*d);
 }
 
