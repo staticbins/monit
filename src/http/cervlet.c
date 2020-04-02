@@ -493,29 +493,27 @@ static void __attribute__((format (printf, 5, 6))) _displayTableRow(HttpResponse
 
 
 static void _formatAction(HttpResponse res, const char *type, command_t cmd) {
-        StringBuffer_append(res->outputbuffer, "<tr><td>%s program</td><td>'", type);
-        escapeHTML(res->outputbuffer, Util_commandDescription(cmd, (char[STRLEN]){}));
-        StringBuffer_append(res->outputbuffer, "'");
+        char key[STRLEN] = {};
+        snprintf(key, sizeof(key), "%s program", type);
+        StringBuffer_T sb = StringBuffer_create(256);
+        StringBuffer_append(sb, "'%s'", Util_commandDescription(cmd, (char[STRLEN]){}));
         if (cmd->has_uid)
-                StringBuffer_append(res->outputbuffer, " as uid %d", cmd->uid);
+                StringBuffer_append(sb, " as uid %d", cmd->uid);
         if (cmd->has_gid)
-                StringBuffer_append(res->outputbuffer, " as gid %d", cmd->gid);
-        StringBuffer_append(res->outputbuffer, " timeout %s", Convert_time2str(cmd->timeout, (char[11]){}));
-        StringBuffer_append(res->outputbuffer, "</td></tr>");
+                StringBuffer_append(sb, " as gid %d", cmd->gid);
+        StringBuffer_append(sb, " timeout %s", Convert_time2str(cmd->timeout, (char[11]){}));
+        _displayTableRow(res, true, NULL, key, "%s", StringBuffer_toString(sb));
+        StringBuffer_free(&sb);
 }
 
 
 static void _formatAddress(HttpResponse res, const char *type, Address_T addr) {
-        StringBuffer_append(res->outputbuffer, "<tr><td>Default mail %s</td><td>", type);
-        if (addr->name) {
-                escapeHTML(res->outputbuffer, addr->name);
-                StringBuffer_append(res->outputbuffer, " &lt;");
-                escapeHTML(res->outputbuffer, addr->address);
-                StringBuffer_append(res->outputbuffer, "&gt;");
-        } else {
-                escapeHTML(res->outputbuffer, addr->address);
-        }
-        StringBuffer_append(res->outputbuffer, "</td></tr>");
+        char key[STRLEN] = {};
+        snprintf(key, sizeof(key), "Default mail %s", type);
+        if (addr->name)
+                _displayTableRow(res, true, NULL, key, "%s <%s>", addr->name, addr->address);
+        else
+                _displayTableRow(res, true, NULL, key, "%s", addr->address);
 }
 
 
