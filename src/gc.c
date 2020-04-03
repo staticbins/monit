@@ -259,6 +259,8 @@ static void _gc_service(Service_T *s) {
                 gccmd(&(*s)->start);
         if ((*s)->stop)
                 gccmd(&(*s)->stop);
+        if ((*s)->restart)
+                gccmd(&(*s)->restart);
         if ((*s)->action_DATA)
                 _gc_eventaction(&(*s)->action_DATA);
         if ((*s)->action_EXEC)

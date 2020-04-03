@@ -51,7 +51,10 @@ Fixed: Fix memory leak if a pemfile option is used with a path that cannot be re
 
 Fixed: Fix memory leak if custom "set mail-format" is set.
 
-Fixed: Fix memory leak when no explicit "check system" service entry is present in monit configuration.
+Fixed: Fix memory leak when no explicit "check system" service entry is present in monit configuration and
+monit is reloaded.
+
+Fixed: Fix memory leak if "restart program" is defined for a service and monit is reloaded.
 
 
 Version 5.26.0
