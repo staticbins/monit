@@ -2282,7 +2282,6 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         default:
                                 break;
                 }
-                StringBuffer_append(res->outputbuffer, "</td><td>");
                 switch (q->resource_id) {
                         case Resource_CpuPercent:
                         case Resource_CpuPercentTotal:
