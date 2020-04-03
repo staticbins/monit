@@ -27,5 +27,28 @@ libmonit/config/
 system/startup/monit.service
 system/startup/monit.upstart
 
+libmonit/test/CommandTest
+libmonit/test/ConvertTest
+libmonit/test/DirTest
+libmonit/test/ExceptionTest
+libmonit/test/FileTest
+libmonit/test/InputStreamTest
+libmonit/test/LinkTest
+libmonit/test/ListTest
+libmonit/test/NetTest
+libmonit/test/OutputStreamTest
+libmonit/test/StrTest
+libmonit/test/StringBufferTest
+libmonit/test/SystemTest
+libmonit/test/TimeTest
+
+monit
+monit.1
+
+src/lex.yy.c
+src/tokens.h
+src/y.output
+src/y.tab.c
+
 # Except
 !config/ax_info.m4
