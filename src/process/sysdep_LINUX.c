@@ -428,6 +428,7 @@ int getloadavg_sysdep(double *loadv, int nelem) {
 boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         char          *ptr;
         char           buf[2048];
+        unsigned long  mem_available = 0UL;
         unsigned long  mem_free = 0UL;
         unsigned long  buffers = 0UL;
         unsigned long  cached = 0UL;
@@ -437,32 +438,42 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         uint64_t       zfsarcsize = 0ULL;
 
         if (! file_readProc(buf, sizeof(buf), "meminfo", -1, NULL)) {
-                LogError("system statistic error -- cannot get real memory free amount\n");
+                LogError("system statistic error -- cannot get system memory info\n");
                 goto error;
         }
 
-        /* Memory */
-        if (! (ptr = strstr(buf, "MemFree:")) || sscanf(ptr + 8, "%ld", &mem_free) != 1) {
-                LogError("system statistic error -- cannot get real memory free amount\n");
-                goto error;
-        }
-        if (! (ptr = strstr(buf, "Buffers:")) || sscanf(ptr + 8, "%ld", &buffers) != 1)
-                DEBUG("system statistic error -- cannot get real memory buffers amount\n");
-        if (! (ptr = strstr(buf, "Cached:")) || sscanf(ptr + 7, "%ld", &cached) != 1)
-                DEBUG("system statistic error -- cannot get real memory cache amount\n");
-        if (! (ptr = strstr(buf, "SReclaimable:")) || sscanf(ptr + 13, "%ld", &slabreclaimable) != 1)
-                DEBUG("system statistic error -- cannot get slab reclaimable memory amount\n");
-        FILE *f = fopen("/proc/spl/kstat/zfs/arcstats", "r");
-        if (f) {
-                char line[STRLEN];
-                while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "size %*d %"PRIu64, &zfsarcsize) == 1) {
-                                break;
-                        }
+        /*
+         * Memory
+         *
+         * First, check if the "MemAvailable" value is available on this system. If it is, we will
+         * use it. Otherwise we will attempt to calculate the amount of available memory ourself.
+         */
+        if ((ptr = strstr(buf, "MemAvailable:")) && sscanf(ptr + 13, "%ld", &mem_available) == 1) {
+                si->memory.usage.bytes = systeminfo.memory.size - (uint64_t)mem_available * 1024;
+        } else {
+                DEBUG("'MemAvailable' value not available on this system. Attempting to calculate available memory manually...\n");
+                if (! (ptr = strstr(buf, "MemFree:")) || sscanf(ptr + 8, "%ld", &mem_free) != 1) {
+                        LogError("system statistic error -- cannot get real memory free amount\n");
+                        goto error;
                 }
-                fclose(f);
+                if (! (ptr = strstr(buf, "Buffers:")) || sscanf(ptr + 8, "%ld", &buffers) != 1)
+                        DEBUG("system statistic error -- cannot get real memory buffers amount\n");
+                if (! (ptr = strstr(buf, "Cached:")) || sscanf(ptr + 7, "%ld", &cached) != 1)
+                        DEBUG("system statistic error -- cannot get real memory cache amount\n");
+                if (! (ptr = strstr(buf, "SReclaimable:")) || sscanf(ptr + 13, "%ld", &slabreclaimable) != 1)
+                        DEBUG("system statistic error -- cannot get slab reclaimable memory amount\n");
+                FILE *f = fopen("/proc/spl/kstat/zfs/arcstats", "r");
+                if (f) {
+                        char line[STRLEN];
+                        while (fgets(line, sizeof(line), f)) {
+                                if (sscanf(line, "size %*d %"PRIu64, &zfsarcsize) == 1) {
+                                        break;
+                                }
+                        }
+                        fclose(f);
+                }
+                si->memory.usage.bytes = systeminfo.memory.size - zfsarcsize - (uint64_t)(mem_free + buffers + cached + slabreclaimable) * 1024;
         }
-        si->memory.usage.bytes = systeminfo.memory.size - zfsarcsize - (uint64_t)(mem_free + buffers + cached + slabreclaimable) * 1024;
 
         /* Swap */
         if (! (ptr = strstr(buf, "SwapTotal:")) || sscanf(ptr + 10, "%ld", &swap_total) != 1) {
