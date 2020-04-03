@@ -244,6 +244,8 @@ allowselfcertification  { return ALLOWSELFCERTIFICATION; }
 selfsigned        { return SELFSIGNED; }
 certmd5           { return CERTMD5; }
 pemfile           { return PEMFILE; }
+pemchain          { return PEMCHAIN; }
+pemkey            { return PEMKEY; }
 init              { return INIT; }
 allow             { return ALLOW; }
 reject            { return REJECTOPT; }

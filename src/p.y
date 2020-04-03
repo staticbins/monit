@@ -326,7 +326,7 @@ static void addsecurityattribute(char *, Action_Type, Action_Type);
 %token IF ELSE THEN FAILED
 %token SET LOGFILE FACILITY DAEMON SYSLOG MAILSERVER HTTPD ALLOW REJECTOPT ADDRESS INIT TERMINAL BATCH
 %token READONLY CLEARTEXT MD5HASH SHA1HASH CRYPT DELAY
-%token PEMFILE ENABLE DISABLE SSLTOKEN CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
+%token PEMFILE PEMKEY PEMCHAIN ENABLE DISABLE SSLTOKEN CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
 %token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL
 %token IDFILE STATEFILE SEND EXPECT CYCLE COUNT REMINDER REPEAT
 %token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT PROGRAMTIMEOUT STARTTIMEOUT STOPTIMEOUT RESTARTTIMEOUT
@@ -833,6 +833,12 @@ ssloption       : VERIFY ':' ENABLE {
                 | PEMFILE ':' PATH {
                         _setPEM(&(sslset.pemfile), $3, "SSL server PEM file", true);
                   }
+                | PEMCHAIN ':' PATH {
+                        _setPEM(&(sslset.pemchain), $3, "SSL certificate chain PEM file", true);
+                  }
+                | PEMKEY ':' PATH {
+                        _setPEM(&(sslset.pemkey), $3, "SSL server private key PEM file", true);
+                  }
                 | CLIENTPEMFILE ':' PATH {
                         _setPEM(&(sslset.clientpemfile), $3, "SSL client PEM file", true);
                   }
@@ -1037,12 +1043,22 @@ mailserveropt   : username {
 sethttpd        : SET HTTPD httpdlist {
                         if (sslset.flags & SSL_Enabled) {
 #ifdef HAVE_OPENSSL
-                                if (! sslset.pemfile) {
+                                if (sslset.pemfile) {
+                                        if (sslset.pemchain || sslset.pemkey) {
+                                                yyerror("SSL server option pemfile and pemchain|pemkey are mutually exclusive");
+                                        } else if (! file_checkStat(sslset.pemfile, "SSL server PEM file", S_IRWXU)) {
+                                                yyerror("SSL server PEM file permissions check failed");
+                                        } else {
+                                                _setSSLOptions(&(Run.httpd.socket.net.ssl));
+                                        }
+                                } else if (sslset.pemchain && sslset.pemkey) {
+                                        if (! file_checkStat(sslset.pemkey, "SSL server private key PEM file", S_IRWXU)) {
+                                                yyerror("SSL server private key PEM file permissions check failed");
+                                        } else {
+                                                _setSSLOptions(&(Run.httpd.socket.net.ssl));
+                                        }
+                                } else {
                                         yyerror("SSL server PEM file is required (please use ssl pemfile option)");
-                                } else if (! file_checkStat(sslset.pemfile, "SSL server PEM file", S_IRWXU)) {
-                                        yyerror("SSL server PEM file permissions check failed");
-                                } else  {
-                                        _setSSLOptions(&(Run.httpd.socket.net.ssl));
                                 }
 #else
                                 yyerror("SSL is not supported");
@@ -5013,6 +5029,8 @@ static void _setSSLOptions(SslOptions_T options) {
         options->clientpemfile = sslset.clientpemfile;
         options->flags = sslset.flags;
         options->pemfile = sslset.pemfile;
+        options->pemchain = sslset.pemchain;
+        options->pemkey = sslset.pemkey;
         options->verify = sslset.verify;
         options->version = sslset.version;
         reset_sslset();

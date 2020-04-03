@@ -606,6 +606,8 @@ will apply to all SSL connections made through Monit:
       SELFSIGNED: <ALLOW | REJECT>
       CIPHERS: <string>
       PEMFILE: <path>
+      PEMCHAIN: <path>
+      PEMKEY: <path>
       CLIENTPEMFILE: <path>
       CACERTIFICATEFILE: <path>
       CACERTIFICATEPATH: <path>
@@ -641,6 +643,11 @@ I<CIPHERS> override default SSL/TLS ciphers.
 
 I<PEMFILE> set the path to the SSL server certificate
 "database-file" in PEM format. This options has effect only for the
+monit HTTP interface.
+
+As an alternative to setting I<PEMFILE> with a combined chain-key file,
+I<PEMCHAIN> and I<PEMKEY> set the path to the SSL certificate chain respectively
+the server private key file in PEM format. This options has effect only for the
 monit HTTP interface.
 
 I<CLIENTPEMFILE> set the path to the PEM encoded SSL client certificates
@@ -805,8 +812,13 @@ over IP version 4, specify an IPv4 address:
 B<SSL> enable SSL/TLS for Monit's web interface.  See L<options|"SSL OPTIONS">
 for full list of SSL options.
 
-I<PEMFILE> set the path to the PEM encoded file, which contains the
+I<PEMFILE> sets the path to the PEM encoded file, which contains the
 server's private key and certificate. This file should be stored in a
+safe place on the filesystem and should have strict permissions, no
+more than 0700.
+
+As an alternative I<PEMCHAIN> and I<PEMKEY> sets the path to separate PEM encoded
+certificate chain and private key file. The key file should be stored in a
 safe place on the filesystem and should have strict permissions, no
 more than 0700.
 
@@ -816,6 +828,14 @@ Example:
      port 2812
      with ssl {
         pemfile: /etc/ssl/certs/monit.pem
+     }
+     allow myuser:mypassword
+
+ set httpd
+     port 2812
+     with ssl {
+        pemchain: /etc/ssl/certs/monit.chain.pem
+        pemkey: /etc/ssl/certs/monit.key.pem
      }
      allow myuser:mypassword
 
