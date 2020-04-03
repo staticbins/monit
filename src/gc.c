@@ -78,6 +78,7 @@ static void _gc_url(URL_T *);
 static void _gc_request(Request_T *);
 static void _gcssloptions(SslOptions_T o);
 static void _gcsecattr(SecurityAttribute_T *);
+static void _gcopenfiles(OpenFiles_T *);
 
 
 /**
@@ -277,6 +278,8 @@ static void _gc_service(Service_T *s) {
                 gc_event(&(*s)->eventlist);
         if ((*s)->secattrlist)
                 _gcsecattr(&(*s)->secattrlist);
+        if ((*s)->openfileslist)
+                _gcopenfiles(&(*s)->openfileslist);
         switch ((*s)->type) {
                 case Service_Directory:
                         FREE((*s)->inf.directory);
@@ -688,5 +691,15 @@ static void _gcsecattr(SecurityAttribute_T *s) {
                 _gc_eventaction(&(*s)->action);
         FREE((*s)->attribute);
         FREE(*s);
+}
+
+
+static void _gcopenfiles(OpenFiles_T *o) {
+        ASSERT(o && *o);
+        if ((*o)->next)
+                _gcopenfiles(&(*o)->next);
+        if ((*o)->action)
+                _gc_eventaction(&(*o)->action);
+        FREE(*o);
 }
 

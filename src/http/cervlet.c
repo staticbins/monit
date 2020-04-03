@@ -172,6 +172,7 @@ static void print_service_rules_ppid(HttpResponse, Service_T);
 static void print_service_rules_program(HttpResponse, Service_T);
 static void print_service_rules_resource(HttpResponse, Service_T);
 static void print_service_rules_secattr(HttpResponse, Service_T);
+static void print_service_rules_openfiles(HttpResponse, Service_T);
 static void print_status(HttpRequest, HttpResponse, int);
 static void print_summary(HttpRequest, HttpResponse);
 static void _printReport(HttpRequest req, HttpResponse res);
@@ -430,6 +431,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("memory total", Event_Resource, type, res, s, s->inf.process->total_mem_percent >= 0, "%.1f%% [%s]", s->inf.process->total_mem_percent, Convert_bytes2str(s->inf.process->total_mem, (char[10]){}));
 #ifdef LINUX
                                         _formatStatus("security attribute", Event_Invalid, type, res, s, *(s->inf.process->secattr), "%s", s->inf.process->secattr);
+                                        _formatStatus("open files", Event_Resource, type, res, s, s->inf.process->open_files != (uint64_t) -1, "%lu", s->inf.process->open_files);
+                                        _formatStatus("total open files", Event_Resource, type, res, s, s->inf.process->total_open_files != (uint64_t) -1, "%lu", s->inf.process->total_open_files);
 #endif
                                 }
                                 _printIOStatistics(type, res, s, &(s->inf.process->read), "disk read", "read");
@@ -1128,6 +1131,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
         print_service_rules_uid(res, s);
         print_service_rules_euid(res, s);
         print_service_rules_secattr(res, s);
+        print_service_rules_openfiles(res, s);
         print_service_rules_gid(res, s);
         print_service_rules_timestamp(res, s);
         print_service_rules_fsflags(res, s);
@@ -1920,6 +1924,19 @@ static void print_service_rules_euid(HttpResponse res, Service_T s) {
         if (s->euid) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 _displayTableRow(res, true, "rule", "EUID", "%s", StringBuffer_toString(Util_printRule(sb, s->euid->action, "If failed %d", s->euid->uid)));
+                StringBuffer_free(&sb);
+        }
+}
+
+
+static void print_service_rules_openfiles(HttpResponse res, Service_T s) {
+        for (OpenFiles_T o = s->openfileslist; o; o = o->next) {
+                StringBuffer_T sb = StringBuffer_create(256);
+                if (o->total) {
+                        _displayTableRow(res, true, "rule", "Total open files", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %lu", operatornames[o->operator], o->limit)));
+                } else {
+                        _displayTableRow(res, true, "rule", "Open files", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %lu", operatornames[o->operator], o->limit)));
+                }
                 StringBuffer_free(&sb);
         }
 }

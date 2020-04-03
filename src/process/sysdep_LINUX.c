@@ -73,6 +73,10 @@
 #include <sys/sysinfo.h>
 #endif
 
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif
+
 #include "monit.h"
 #include "ProcessTree.h"
 #include "process_sysdep.h"
@@ -113,6 +117,7 @@ typedef struct Proc_T {
         uint64_t            write_bytes;
         char                name[4096];
         char                secattr[STRLEN];
+        uint64_t            open_files;
 } *Proc_T;
 
 
@@ -153,7 +158,7 @@ static time_t _getStartTime() {
 }
 
 
-// parse /proc/PID/stat 
+// parse /proc/PID/stat
 static boolean_t _parseProcPidStat(Proc_T proc) {
         char buf[4096];
         char *tmp = NULL;
@@ -239,6 +244,9 @@ static boolean_t _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot get process write bytes\n");
                                 return false;
                         }
+                } else {
+                        // file_readProc() already printed a DEBUG() message
+                        return false;
                 }
         }
         return true;
@@ -273,6 +281,45 @@ static boolean_t _parseProcPidAttrCurrent(Proc_T proc) {
         return false;
 }
 
+// count entries in /proc/PID/fd
+static boolean_t _parseProcFdCount(Proc_T proc) {
+        uint64_t file_count = 0;
+        DIR *dirp;
+        char fd_path[32];
+
+        snprintf(fd_path, sizeof(fd_path), "/proc/%d/fd", proc->pid);
+
+        if (!(dirp = opendir(fd_path))) {
+                DEBUG("system statistic error -- cannot opendir /proc/%d/fd: %s\n", proc->pid, STRERROR);
+                return false;
+        }
+
+        errno = 0;
+        while (readdir(dirp) != NULL) {
+                // count everything
+                file_count++;
+        }
+
+        // do not closedir() unitl readdir errno has been evaluated
+
+        if (errno) {
+                DEBUG("system statistic error -- cannot iterate /proc/%d/fd: %s\n", proc->pid, STRERROR);
+                closedir(dirp);
+                return false;
+        }
+
+        closedir(dirp);
+
+        // assert at least '.' and '..' have been found
+        if (file_count < 2) {
+                DEBUG("system statistic error -- cannot find basic entries in /proc/%d/fd\n", proc->pid);
+                return false;
+        }
+
+        // subtract entries '.' and '..'
+        proc->open_files = file_count - 2;
+        return true;
+}
 
 static double _usagePercent(unsigned long long previous, unsigned long long current, double total) {
         if (current < previous) {
@@ -365,7 +412,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         time_t starttime = _getStartTime();
         for (int i = 0; i < globbuf.gl_pathc; i++) {
                 proc.pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
-                if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags)) {
+                if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags) && _parseProcFdCount(&proc)) {
                         // Non-mandatory statistics (may not exist)
                         _parseProcPidAttrCurrent(&proc);
                         // Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting)
@@ -383,6 +430,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].zombie = proc.item_state == 'Z' ? true : false;
                         pt[count].cmdline = Str_dup(proc.name);
                         pt[count].secattr = Str_dup(proc.secattr);
+                        pt[count].open_files.usage = proc.open_files;
                         count++;
                         memset(&proc, 0, sizeof(struct Proc_T));
                 }

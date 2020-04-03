@@ -695,6 +695,32 @@ static State_Type _checkSecurityAttribute(Service_T s, char *attribute) {
 }
 
 
+static State_Type _checkOpenFiles(Service_T s) {
+        ASSERT(s);
+        State_Type rv = State_Succeeded;
+        for (OpenFiles_T o = s->openfileslist; o; o = o->next) {
+                if (o->total) {
+                        uint64_t total_open_files = s->inf.process->total_open_files;
+                        if (Util_evalQExpression(o->operator, total_open_files, o->limit)) {
+                                rv = State_Failed;
+                                Event_post(s, Event_Resource, State_Failed, o->action, "total open files of %lu matches resource limit [open files %s %lu]", total_open_files, operatorshortnames[o->operator], o->limit);
+                        } else {
+                                Event_post(s, Event_Resource, State_Succeeded, o->action, "total open files test succeeded [current open files = %lu]", total_open_files);
+                        }
+                } else {
+                        uint64_t open_files = s->inf.process->open_files;
+                        if (Util_evalQExpression(o->operator, open_files, o->limit)) {
+                                rv = State_Failed;
+                                Event_post(s, Event_Resource, State_Failed, o->action, "open files of %lu matches resource limit [open files %s %lu]", open_files, operatorshortnames[o->operator], o->limit);
+                        } else {
+                                Event_post(s, Event_Resource, State_Succeeded, o->action, "open files test succeeded [current open files = %lu]", open_files);
+                        }
+                }
+        }
+        return rv;
+}
+
+
 /**
  * Test GID of file or process
  */
@@ -1364,6 +1390,8 @@ State_Type check_process(Service_T s) {
                 if (_checkUptime(s, s->inf.process->uptime) == State_Failed)
                         rv = State_Failed;
                 if (_checkSecurityAttribute(s, s->inf.process->secattr) == State_Failed)
+                        rv = State_Failed;
+                if (_checkOpenFiles(s) == State_Failed)
                         rv = State_Failed;
                 for (Resource_T pr = s->resourcelist; pr; pr = pr->next)
                         if (_checkProcessResources(s, pr) == State_Failed)
