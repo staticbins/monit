@@ -46,9 +46,9 @@ monit
 monit.1
 
 src/lex.yy.c
-src/tokens.h
 src/y.output
 src/y.tab.c
+src/y.tab.h
 
 # Except
 !config/ax_info.m4

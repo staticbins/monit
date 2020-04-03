@@ -98,7 +98,7 @@ monit_LDFLAGS 	= -static $(EXTLDFLAGS)
 
 man_MANS 	= monit.1
 
-BUILT_SOURCES   = src/lex.yy.c src/y.tab.c src/tokens.h
+BUILT_SOURCES   = src/lex.yy.c src/y.tab.c src/y.tab.h
 
 CLEANFILES	= src/y.output
 DISTCLEANFILES	= *~ $(BUILT_SOURCES)
@@ -145,11 +145,11 @@ monit.1: doc/monit.pod
 # Grammar rules
 # -------------
 
-src/y.tab.c src/tokens.h: src/p.y
+src/y.tab.c src/y.tab.h: run-yacc
+	
+.INTERMEDIATE: run-yacc
+run-yacc: src/p.y
 	$(YACC) $(YACCFLAGS) -o src/y.tab.c $<
-	-mv src/y.tab.h src/tokens.h
-
-src/tokens.h: src/y.tab.c
 
 src/lex.yy.c: src/l.l
 	$(FLEX) $(FLEXFLAGS) -o$@ $<
