@@ -5,7 +5,7 @@
 Version 5.27.0
 
 Important: The SSL "version: auto" now defaults to TLSv1.2 and TLSv1.3 only. If you need to enable TLSv1.0 or
-TLSv1.1 (regardless of how insecure it is), you have to allow it explicitly enable it via the SSL option, example:
+TLSv1.1 (regardless of how insecure it is), you have to explicitly enable it via the SSL option, example:
      set ssl {
         version: tlsv11
      }
