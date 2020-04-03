@@ -35,9 +35,6 @@ TimeTest_SOURCES = TimeTest.c
 
 DISTCLEANFILES = *~ 
 
-distclean-local: 
-	-rm -f Makefile.in
-
 verify:
 	@/bin/sh ./test.sh
 
