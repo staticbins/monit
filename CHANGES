@@ -4,12 +4,11 @@
 
 Version 5.27.0
 
-New: Issue #877: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
-
-New: Enable AddressSanitizer for compilation if libasan.so is found. Use --without-asan to disable.
-
-New: Disable support for TLS 1.0 and 1.1 when protocol is set to 'auto' (default). You can still enable
-these protocols by setting the TLS {VERSION: <string>} statement.
+Important: The SSL "version: auto" now defaults to TLSv1.2 and TLSv1.3 only. If you need to enable TLSv1.0 or
+TLSv1.1 (regardless of how insecure it is), you have to allow it explicitly enable it via the SSL option, example:
+     set ssl {
+        version: tlsv11
+     }
 
 New: Allow to set a list of allowed TLS protocols (originally only one was allowed). Also add support for
 protocol exclude list (put "-" in front of the protocol name to disable it).
@@ -17,13 +16,22 @@ Exclude list example:
      set ssl {
         version: auto -sslv2 -sslv3 -tlsv1 -tlsv11
      }
-Example of allowed protocols list:
-     set ssl {
-        version: tlsv12 tlsv13
+
+New: Add support for split certificate chain and key for the monit HTTP interface. Thanks to Lutz Mader for patch. Example:
+ set httpd
+     port 2812
+     with ssl {
+        pemchain: /etc/ssl/certs/monit.chain.pem
+        pemkey: /etc/ssl/certs/monit.key.pem
      }
+     allow myuser:mypassword
+
+New: Issue #877: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
 
 New: Monit now uses MemAvailable on Linux when calculating the memory usage, so it will provide more accurate
 statistics. Thanks to Joe LeVeque for patch.
+
+New: Enable AddressSanitizer for compilation if libasan.so is found. Use --without-asan to disable.
 
 Fixed: Issue #880: If monit is linked with AddresSanitizer, it may crash when it generates an MD5 hash.
 Thanks to Lutz Mader for patch.
