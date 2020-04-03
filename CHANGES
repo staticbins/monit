@@ -31,7 +31,7 @@ New: Issue #877: Add support for VxFS filesystem statistics. Thanks to Lutz Made
 New: Monit now uses MemAvailable on Linux when calculating the memory usage, so it will provide more accurate
 statistics. Thanks to Joe LeVeque for patch.
 
-New: Enable AddressSanitizer for compilation if libasan.so is found. Use --without-asan to disable.
+New: Enable support for compilation with AddressSanitizer. Use "configure --with-asan" to enable.
 
 Fixed: Issue #880: If monit is linked with AddresSanitizer, it may crash when it generates an MD5 hash.
 Thanks to Lutz Mader for patch.
