@@ -300,7 +300,7 @@ static boolean_t _parseProcFdCount(Proc_T proc) {
                 file_count++;
         }
 
-        // do not closedir() unitl readdir errno has been evaluated
+        // do not closedir() until readdir errno has been evaluated
 
         if (errno) {
                 DEBUG("system statistic error -- cannot iterate /proc/%d/fd: %s\n", proc->pid, STRERROR);
