@@ -733,7 +733,7 @@ fi
 
 AC_MSG_CHECKING([for AddressSanitizer support])
 AC_ARG_WITH(asan,
-    [  --without-asan          disable the use of AddressSanitizer (default: enabled)],
+    [  --with-asan             enable the use of AddressSanitizer (default: disabled)],
     [
         dnl Check the withvalue
         if test "x$withval" = "xno" ; then
@@ -746,12 +746,8 @@ AC_ARG_WITH(asan,
         fi
     ],
     [
-        if test "$use_asan" = "0"; then
-            AC_MSG_RESULT([disabled])
-        else
-            use_asan=1
-            AC_MSG_RESULT([enabled])
-        fi
+        use_asan=0
+        AC_MSG_RESULT([disabled])
     ]
 )
 
