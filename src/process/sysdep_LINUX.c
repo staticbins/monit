@@ -329,10 +329,10 @@ static boolean_t _parseProcFdCount(Proc_T proc) {
         // subtract entries '.' and '..'
         proc->filedescriptors.open = file_count - 2;
 
-        // get current per-process limits
+        // get process' limits
         struct rlimit limits;
-        if (getrlimit(RLIMIT_NOFILE, &limits) != 0) {
-                DEBUG("getrlimit failed: %s\n", STRERROR);
+        if (prlimit(proc->pid, RLIMIT_NOFILE, NULL, &limits) != 0) {
+                DEBUG("prlimit failed: %s\n", STRERROR);
                 return false;
         }
         proc->filedescriptors.limit.soft = limits.rlim_cur;
