@@ -591,6 +591,11 @@ typedef struct SystemInfo_T {
                         uint64_t bytes;        /**< Total swap in use in the system */
                 } usage;
         } swap;
+        struct {
+                long long allocated;        /**< Number of allocated filedescriptors */
+                long long unused;              /**< Number of unused filedescriptors */
+                long long maximum;                        /**< Filedescriptors limit */
+        } filedescriptors;
         size_t argmax;                                                   /**< Program arguments maximum [B] */
         double loadavg[3];                                                         /**< Load average triple */
         struct utsname uname;                                 /**< Platform information provided by uname() */

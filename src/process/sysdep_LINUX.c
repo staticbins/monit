@@ -633,3 +633,24 @@ error:
 }
 
 
+/**
+ * This routine returns filedescriptors statistics
+ * @return: true if successful, false if failed (or not available)
+ */
+boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+        boolean_t rv = false;
+        FILE *f = fopen("/proc/sys/fs/file-nr", "r");
+        if (f) {
+                char line[STRLEN];
+                if (fgets(line, sizeof(line), f)) {
+                        if (sscanf(line, "%lld %lld %lld\n", &(systeminfo.filedescriptors.allocated), &(systeminfo.filedescriptors.unused), &(systeminfo.filedescriptors.maximum)) == 3) {
+                                rv = true;
+                        }
+                }
+                fclose(f);
+        } else {
+                DEBUG("system statistic error -- cannot open /proc/sys/fs/file-nr\n");
+        }
+        return rv;
+}
+

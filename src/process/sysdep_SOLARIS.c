@@ -398,3 +398,9 @@ error:
         return false;
 }
 
+
+boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+        // Not implemented
+        return true;
+}
+

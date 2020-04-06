@@ -508,6 +508,11 @@ boolean_t update_system_info() {
                 goto error3;
         }
 
+        if (! used_system_filedescriptors_sysdep(&systeminfo)) {
+                LogError("'%s' statistic error -- filedescriptors usage data collection failed\n", Run.system->name);
+                goto error4;
+        }
+
         return true;
 
 error1:
@@ -523,6 +528,10 @@ error3:
         systeminfo.cpu.usage.user = 0.;
         systeminfo.cpu.usage.system = 0.;
         systeminfo.cpu.usage.wait = 0.;
+error4:
+        systeminfo.filedescriptors.allocated = 0LL;
+        systeminfo.filedescriptors.unused = 0LL;
+        systeminfo.filedescriptors.maximum = 0LL;
 
         return false;
 }

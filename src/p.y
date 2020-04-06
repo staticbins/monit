@@ -420,6 +420,7 @@ optproc         : start
                 | euid
                 | secattr
                 | filedescriptors
+                | filedescriptorstotal
                 | gid
                 | uptime
                 | connection
@@ -562,6 +563,7 @@ optsystem       : start
                 | depend
                 | resourcesystem
                 | uptime
+                | filedescriptors
                 ;
 
 optfifolist     : /* EMPTY */
@@ -2818,7 +2820,9 @@ filedescriptors : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery
                 | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
                         addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
                   }
-                | IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                ;
+
+filedescriptorstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
                         addfiledescriptors($<number>4, true, (int64_t)$5, -1., $<number>8, $<number>9);
                   }
                 ;

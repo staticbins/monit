@@ -695,7 +695,32 @@ static State_Type _checkSecurityAttribute(Service_T s, char *attribute) {
 }
 
 
-static State_Type _checkFiledescriptors(Service_T s) {
+static State_Type _checkSystemFiledescriptors(Service_T s) {
+        ASSERT(s);
+        State_Type rv = State_Succeeded;
+        for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
+                if (o->limit_absolute > -1LL) {
+                        if (Util_evalQExpression(o->operator, systeminfo.filedescriptors.allocated, o->limit_absolute)) {
+                                rv = State_Failed;
+                                Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %lld matches limit [filedescriptors %s %"PRId64"]", systeminfo.filedescriptors.allocated, operatorshortnames[o->operator], o->limit_absolute);
+                        } else {
+                                Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %lld]", systeminfo.filedescriptors.allocated);
+                        }
+                } else {
+                        float usage = systeminfo.filedescriptors.maximum > 0 ? ((float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum) : 0;
+                        if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
+                                rv = State_Failed;
+                                Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %.1f%% matches limit [filedescriptors %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
+                        } else {
+                                Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors usage test succeeded [current filedescriptors usage = %.1f%%]", usage);
+                        }
+                }
+        }
+        return rv;
+}
+
+
+static State_Type _checkProcessFiledescriptors(Service_T s) {
         ASSERT(s);
         State_Type rv = State_Succeeded;
         for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
@@ -716,7 +741,7 @@ static State_Type _checkFiledescriptors(Service_T s) {
                                         Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %"PRId64"]", s->inf.process->filedescriptors.open);
                                 }
                         } else {
-                                float usage = (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit;
+                                float usage = limit > 0 ? (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit : 0;
                                 if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
                                         rv = State_Failed;
                                         Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %.1f%% matches limit [filedescriptors %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
@@ -1400,7 +1425,7 @@ State_Type check_process(Service_T s) {
                         rv = State_Failed;
                 if (_checkSecurityAttribute(s, s->inf.process->secattr) == State_Failed)
                         rv = State_Failed;
-                if (_checkFiledescriptors(s) == State_Failed)
+                if (_checkProcessFiledescriptors(s) == State_Failed)
                         rv = State_Failed;
                 for (Resource_T pr = s->resourcelist; pr; pr = pr->next)
                         if (_checkProcessResources(s, pr) == State_Failed)
@@ -1778,6 +1803,8 @@ State_Type check_system(Service_T s) {
                 if (_checkSystemResources(s, r) == State_Failed)
                         rv = State_Failed;
         if (_checkUptime(s, Time_now() - systeminfo.booted) == State_Failed)
+                rv = State_Failed;
+        if (_checkSystemFiledescriptors(s) == State_Failed)
                 rv = State_Failed;
         return rv;
 }

@@ -217,6 +217,18 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
         }
         if (Util_hasServiceStatus(S)) {
                 switch (S->type) {
+                        case Service_System:
+                                StringBuffer_append(B,
+                                        "<filedescriptors>"
+                                        "<allocated>%lld</allocatedopen>"
+                                        "<unused>%lld</unused>"
+                                        "<maximum>%lld</maximum>"
+                                        "</filedescriptors>",
+                                        systeminfo.filedescriptors.allocated,
+                                        systeminfo.filedescriptors.unused,
+                                        systeminfo.filedescriptors.maximum);
+                                break;
+
                         case Service_File:
                                 StringBuffer_append(B,
                                         "<mode>%o</mode>"

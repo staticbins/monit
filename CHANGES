@@ -16,6 +16,10 @@ New: Add support for monitoring of filedescriptors usage of a process on Linux. 
         if filedescriptors >= 99% then restart
         if total filedescriptors > 5000 then alert
 
+New: Add support for monitoring of system-wide filedescriptors usage on Linux. Example:
+    check system $HOST
+        if filedescriptors >= 90% then alert
+
 New: Allow to set a list of allowed TLS protocols (originally only one was allowed). Also add support for
 protocol exclude list (put "-" in front of the protocol name to disable it).
 Exclude list example:
