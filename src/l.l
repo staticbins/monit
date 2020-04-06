@@ -50,7 +50,7 @@
 #endif
 
 #include "monit.h"
-#include "tokens.h"
+#include "y.tab.h"
 
 // libmonit
 #include "util/Str.h"
