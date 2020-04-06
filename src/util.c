@@ -1072,15 +1072,15 @@ void Util_printService(Service_T s) {
                 printf(" %-20s = %s\n", "Security attribute", StringBuffer_toString(Util_printRule(buf, o->action, "if failed %s", o->attribute)));
         }
 
-        for (OpenFiles_T o = s->openfileslist; o; o = o->next) {
+        for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->total) {
-                        printf(" %-20s = %s\n", "Total open files", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %lu", operatornames[o->operator], o->limit_absolute)));
+                        printf(" %-20s = %s\n", "Total filedescriptors", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %"PRId64, operatornames[o->operator], o->limit_absolute)));
                 } else {
                         if (o->limit_absolute > -1)
-                                printf(" %-20s = %s\n", "Open files", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %lu", operatornames[o->operator], o->limit_absolute)));
+                                printf(" %-20s = %s\n", "Filedescriptors", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %"PRId64, operatornames[o->operator], o->limit_absolute)));
                         else
-                                printf(" %-20s = %s\n", "Open files", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent)));
+                                printf(" %-20s = %s\n", "Filedescriptors", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent)));
                 }
         }
 
@@ -1789,8 +1789,8 @@ void Util_resetInfo(Service_T s) {
                         s->inf.process->cpu_percent = -1.;
                         s->inf.process->total_cpu_percent = -1.;
                         s->inf.process->uptime = -1;
-                        s->inf.process->files.open = -1LL;
-                        s->inf.process->files.openTotal = -1LL;
+                        s->inf.process->filedescriptors.open = -1LL;
+                        s->inf.process->filedescriptors.openTotal = -1LL;
                         *(s->inf.process->secattr) = 0;
                         _resetIOStatistics(&(s->inf.process->read));
                         _resetIOStatistics(&(s->inf.process->write));

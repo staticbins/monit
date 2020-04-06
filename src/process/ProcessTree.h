@@ -79,7 +79,7 @@ typedef struct ProcessTree_T {
                         int64_t soft;
                         int64_t hard;
                 } limit;
-        } files;
+        } filedescriptors;
 } ProcessTree_T;
 
 

@@ -125,7 +125,7 @@ typedef struct Proc_T {
                         int64_t soft;
                         int64_t hard;
                 } limit;
-        } files;
+        } filedescriptors;
         char                name[4096];
         char                secattr[STRLEN];
 } *Proc_T;
@@ -327,7 +327,7 @@ static boolean_t _parseProcFdCount(Proc_T proc) {
         }
 
         // subtract entries '.' and '..'
-        proc->files.open = file_count - 2;
+        proc->filedescriptors.open = file_count - 2;
 
         // get current per-process limits
         struct rlimit limits;
@@ -335,8 +335,8 @@ static boolean_t _parseProcFdCount(Proc_T proc) {
                 DEBUG("getrlimit failed: %s\n", STRERROR);
                 return false;
         }
-        proc->files.limit.soft = limits.rlim_cur;
-        proc->files.limit.hard = limits.rlim_max;
+        proc->filedescriptors.limit.soft = limits.rlim_cur;
+        proc->filedescriptors.limit.hard = limits.rlim_max;
 
         return true;
 }
@@ -450,9 +450,9 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].zombie = proc.item_state == 'Z' ? true : false;
                         pt[count].cmdline = Str_dup(proc.name);
                         pt[count].secattr = Str_dup(proc.secattr);
-                        pt[count].files.usage = proc.files.open;
-                        pt[count].files.limit.soft = proc.files.limit.soft;
-                        pt[count].files.limit.hard = proc.files.limit.hard;
+                        pt[count].filedescriptors.usage = proc.filedescriptors.open;
+                        pt[count].filedescriptors.limit.soft = proc.filedescriptors.limit.soft;
+                        pt[count].filedescriptors.limit.hard = proc.filedescriptors.limit.hard;
                         count++;
                         memset(&proc, 0, sizeof(struct Proc_T));
                 }

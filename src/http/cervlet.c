@@ -172,7 +172,7 @@ static void print_service_rules_ppid(HttpResponse, Service_T);
 static void print_service_rules_program(HttpResponse, Service_T);
 static void print_service_rules_resource(HttpResponse, Service_T);
 static void print_service_rules_secattr(HttpResponse, Service_T);
-static void print_service_rules_openfiles(HttpResponse, Service_T);
+static void print_service_rules_filedescriptors(HttpResponse, Service_T);
 static void print_status(HttpRequest, HttpResponse, int);
 static void print_summary(HttpRequest, HttpResponse);
 static void _printReport(HttpRequest req, HttpResponse res);
@@ -431,9 +431,9 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("memory total", Event_Resource, type, res, s, s->inf.process->total_mem_percent >= 0, "%.1f%% [%s]", s->inf.process->total_mem_percent, Convert_bytes2str(s->inf.process->total_mem, (char[10]){}));
 #ifdef LINUX
                                         _formatStatus("security attribute", Event_Invalid, type, res, s, *(s->inf.process->secattr), "%s", s->inf.process->secattr);
-                                        int64_t limit = s->inf.process->files.limit.soft < s->inf.process->files.limit.hard ? s->inf.process->files.limit.soft : s->inf.process->files.limit.hard;
-                                        _formatStatus("open files", Event_Resource, type, res, s, s->inf.process->files.open != -1LL, "%ld [%.1f%% of %ld limit]", s->inf.process->files.open, (float)100 * (float)s->inf.process->files.open / (float)limit, limit);
-                                        _formatStatus("total open files", Event_Resource, type, res, s, s->inf.process->files.openTotal != -1LL, "%ld", s->inf.process->files.openTotal);
+                                        int64_t limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
+                                        _formatStatus("filedescriptors usage", Event_Resource, type, res, s, s->inf.process->filedescriptors.open != -1LL, "%ld [%.1f%% of %ld limit]", s->inf.process->filedescriptors.open, (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit, limit);
+                                        _formatStatus("total filedescriptors usage", Event_Resource, type, res, s, s->inf.process->filedescriptors.openTotal != -1LL, "%ld", s->inf.process->filedescriptors.openTotal);
 #endif
                                 }
                                 _printIOStatistics(type, res, s, &(s->inf.process->read), "disk read", "read");
@@ -1132,7 +1132,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
         print_service_rules_uid(res, s);
         print_service_rules_euid(res, s);
         print_service_rules_secattr(res, s);
-        print_service_rules_openfiles(res, s);
+        print_service_rules_filedescriptors(res, s);
         print_service_rules_gid(res, s);
         print_service_rules_timestamp(res, s);
         print_service_rules_fsflags(res, s);
@@ -1930,16 +1930,16 @@ static void print_service_rules_euid(HttpResponse res, Service_T s) {
 }
 
 
-static void print_service_rules_openfiles(HttpResponse res, Service_T s) {
-        for (OpenFiles_T o = s->openfileslist; o; o = o->next) {
+static void print_service_rules_filedescriptors(HttpResponse res, Service_T s) {
+        for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (o->total) {
-                        _displayTableRow(res, true, "rule", "Total open files", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %lu", operatornames[o->operator], o->limit_absolute)));
+                        _displayTableRow(res, true, "rule", "Total filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %"PRId64, operatornames[o->operator], o->limit_absolute)));
                 } else {
                         if (o->limit_absolute > -1LL)
-                                _displayTableRow(res, true, "rule", "Open files", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %lu", operatornames[o->operator], o->limit_absolute)));
+                                _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %"PRId64, operatornames[o->operator], o->limit_absolute)));
                         else
-                                _displayTableRow(res, true, "rule", "Open files", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %.1f%%", operatornames[o->operator], o->limit_percent)));
+                                _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %.1f%%", operatornames[o->operator], o->limit_percent)));
                 }
                 StringBuffer_free(&sb);
         }

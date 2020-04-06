@@ -2753,21 +2753,22 @@ Example for AppArmor:
     if failed security attribute "/usr/sbin/ntpd (enforce)" then alert
 
 
-=head2 PROCESS OPEN FILES TEST
+=head2 PROCESS FILEDESCRIPTORS TEST
 
-Monit can test the number of open files of a process. You can check either
+Monit can test the number of open filedescriptors of a process. You can check either
 an absolute value or percent of the system soft/hard limit which is set for the
 process (ulimit -n)
 
 Syntax:
 
- IF OPEN-FILES <operator> <number> [%] THEN action
+ IF FILEDESCRIPTORS <operator> <number> [%] THEN action
 
-You can also check accumulated number for the process and all its children.
-Note: The total open files test doesn't allow to set the limit as percent.
+You can also check accumulated number for the process and all its children (absolute
+value only).
+
 Syntax:
 
- IF TOTAL OPEN-FILES <operator> <number> THEN action
+ IF TOTAL FILEDESCRIPTORS <operator> <number> THEN action
 
 I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
 "lt", "eq", "ne" in shell sh notation and "greater", "less",
@@ -2783,9 +2784,9 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check process myproc with pidfile /var/run/myproc.pid
-    if open-files >= 90% then alert
-    if open-files >= 99% then restart
-    if total open-files > 5000 then alert
+    if filedescriptors >= 90% then alert
+    if filedescriptors >= 99% then restart
+    if total filedescriptors > 5000 then alert
 
 
 =head2 PROGRAM STATUS TEST

@@ -422,10 +422,10 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 (unsigned long long)((double)S->inf.process->total_mem / 1024.), // Send as kB for backward compatibility
                                                 S->inf.process->cpu_percent,
                                                 S->inf.process->total_cpu_percent,
-                                                S->inf.process->files.open,
-                                                S->inf.process->files.openTotal,
-                                                S->inf.process->files.limit.soft,
-                                                S->inf.process->files.limit.hard);
+                                                S->inf.process->filedescriptors.open,
+                                                S->inf.process->filedescriptors.openTotal,
+                                                S->inf.process->filedescriptors.limit.soft,
+                                                S->inf.process->filedescriptors.limit.hard);
                                 }
                                 _ioStatistics(B, "read", &(S->inf.process->read));
                                 _ioStatistics(B, "write", &(S->inf.process->write));

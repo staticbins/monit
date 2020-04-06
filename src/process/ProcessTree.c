@@ -137,7 +137,7 @@ static void _fillProcessTree(ProcessTree_T *pt, int index) {
                 pt[index].threads.children = 0;
                 pt[index].cpu.usage.children = 0.;
                 pt[index].memory.usage_total = pt[index].memory.usage;
-                pt[index].files.usage_total = pt[index].files.usage;
+                pt[index].filedescriptors.usage_total = pt[index].filedescriptors.usage;
                 for (int i = 0; i < pt[index].children.count; i++) {
                         _fillProcessTree(pt, pt[index].children.list[i]);
                 }
@@ -152,7 +152,7 @@ static void _fillProcessTree(ProcessTree_T *pt, int index) {
                                 parent_pt->cpu.usage.children += pt[index].cpu.usage.children;
                         }
                         parent_pt->memory.usage_total     += pt[index].memory.usage_total;
-                        parent_pt->files.usage_total += pt[index].files.usage_total;
+                        parent_pt->filedescriptors.usage_total += pt[index].filedescriptors.usage_total;
                 }
         }
 }
@@ -320,10 +320,10 @@ boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid) {
                 }
                 s->inf.process->mem               = ptree[leaf].memory.usage;
                 s->inf.process->total_mem         = ptree[leaf].memory.usage_total;
-                s->inf.process->files.open        = ptree[leaf].files.usage;
-                s->inf.process->files.openTotal   = ptree[leaf].files.usage_total;
-                s->inf.process->files.limit.soft  = ptree[leaf].files.limit.soft;
-                s->inf.process->files.limit.hard  = ptree[leaf].files.limit.hard;
+                s->inf.process->filedescriptors.open        = ptree[leaf].filedescriptors.usage;
+                s->inf.process->filedescriptors.openTotal   = ptree[leaf].filedescriptors.usage_total;
+                s->inf.process->filedescriptors.limit.soft  = ptree[leaf].filedescriptors.limit.soft;
+                s->inf.process->filedescriptors.limit.hard  = ptree[leaf].filedescriptors.limit.hard;
                 if (systeminfo.memory.size > 0) {
                         s->inf.process->total_mem_percent = ptree[leaf].memory.usage_total >= systeminfo.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage_total / (double)systeminfo.memory.size);
                         s->inf.process->mem_percent       = ptree[leaf].memory.usage >= systeminfo.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage / (double)systeminfo.memory.size);

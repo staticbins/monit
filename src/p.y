@@ -312,7 +312,7 @@ static void _setSSLVersion(short version);
 #endif
 static void _unsetSSLVersion(short version);
 static void addsecurityattribute(char *, Action_Type, Action_Type);
-static void addopenfiles(Operator_Type, boolean_t, int64_t, float, Action_Type, Action_Type);
+static void addfiledescriptors(Operator_Type, boolean_t, int64_t, float, Action_Type, Action_Type);
 
 %}
 
@@ -363,7 +363,7 @@ static void addopenfiles(Operator_Type, boolean_t, int64_t, float, Action_Type, 
 %token <number> MAXFORWARD
 %token FIPS
 %token SECURITY ATTRIBUTE
-%token OPENFILES
+%token FILEDESCRIPTORS
 
 %left GREATER GREATEROREQUAL LESS LESSOREQUAL EQUAL NOTEQUAL
 
@@ -419,7 +419,7 @@ optproc         : start
                 | uid
                 | euid
                 | secattr
-                | openfiles
+                | filedescriptors
                 | gid
                 | uptime
                 | connection
@@ -2812,14 +2812,14 @@ secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recover
                   }
                 ;
 
-openfiles       : IF OPENFILES operator NUMBER rate1 THEN action1 recovery {
-                        addopenfiles($<number>3, false, (int64_t)$4, -1., $<number>7, $<number>8);
+filedescriptors : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        addfiledescriptors($<number>3, false, (int64_t)$4, -1., $<number>7, $<number>8);
                   }
-                | IF OPENFILES operator value PERCENT rate1 THEN action1 recovery {
-                        addopenfiles($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
+                | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
+                        addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
                   }
-                | IF TOTAL OPENFILES operator NUMBER rate1 THEN action1 recovery {
-                        addopenfiles($<number>4, true, (int64_t)$5, -1., $<number>8, $<number>9);
+                | IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        addfiledescriptors($<number>4, true, (int64_t)$5, -1., $<number>8, $<number>9);
                   }
                 ;
 
@@ -5077,15 +5077,15 @@ static void addsecurityattribute(char *value, Action_Type failed, Action_Type su
         current->secattrlist = attr;
 }
 
-static void addopenfiles(Operator_Type operator, boolean_t total, int64_t value_absolute, float value_percent, Action_Type failed, Action_Type succeeded) {
-        OpenFiles_T open_files;
-        NEW(open_files);
-        addeventaction(&(open_files->action), failed, succeeded);
-        open_files->total = total;
-        open_files->limit_absolute = value_absolute;
-        open_files->limit_percent = value_percent;
-        open_files->operator = operator;
-        open_files->next = current->openfileslist;
-        current->openfileslist = open_files;
+static void addfiledescriptors(Operator_Type operator, boolean_t total, int64_t value_absolute, float value_percent, Action_Type failed, Action_Type succeeded) {
+        Filedescriptors_T fds;
+        NEW(fds);
+        addeventaction(&(fds->action), failed, succeeded);
+        fds->total = total;
+        fds->limit_absolute = value_absolute;
+        fds->limit_percent = value_percent;
+        fds->operator = operator;
+        fds->next = current->filedescriptorslist;
+        current->filedescriptorslist = fds;
 }
 

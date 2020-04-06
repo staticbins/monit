@@ -695,33 +695,33 @@ static State_Type _checkSecurityAttribute(Service_T s, char *attribute) {
 }
 
 
-static State_Type _checkOpenFiles(Service_T s) {
+static State_Type _checkFiledescriptors(Service_T s) {
         ASSERT(s);
         State_Type rv = State_Succeeded;
-        for (OpenFiles_T o = s->openfileslist; o; o = o->next) {
+        for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
                 if (o->total) {
-                        if (Util_evalQExpression(o->operator, s->inf.process->files.openTotal, o->limit_absolute)) {
+                        if (Util_evalQExpression(o->operator, s->inf.process->filedescriptors.openTotal, o->limit_absolute)) {
                                 rv = State_Failed;
-                                Event_post(s, Event_Resource, State_Failed, o->action, "total open files of %ld matches limit [open files %s %ld]", s->inf.process->files.openTotal, operatorshortnames[o->operator], o->limit_absolute);
+                                Event_post(s, Event_Resource, State_Failed, o->action, "total  filedescriptors usage of %"PRId64" matches limit [filedescriptors %s %"PRId64"]", s->inf.process->filedescriptors.openTotal, operatorshortnames[o->operator], o->limit_absolute);
                         } else {
-                                Event_post(s, Event_Resource, State_Succeeded, o->action, "total open files test succeeded [current open files = %ld]", s->inf.process->files.openTotal);
+                                Event_post(s, Event_Resource, State_Succeeded, o->action, "total filedescriptors usage test succeeded [current filedescriptors usage = %"PRId64"]", s->inf.process->filedescriptors.openTotal);
                         }
                 } else {
-                        int64_t limit = s->inf.process->files.limit.soft < s->inf.process->files.limit.hard ? s->inf.process->files.limit.soft : s->inf.process->files.limit.hard;
+                        int64_t limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
                         if (o->limit_absolute > -1LL) {
-                                if (Util_evalQExpression(o->operator, s->inf.process->files.open, o->limit_absolute)) {
+                                if (Util_evalQExpression(o->operator, s->inf.process->filedescriptors.open, o->limit_absolute)) {
                                         rv = State_Failed;
-                                        Event_post(s, Event_Resource, State_Failed, o->action, "open files of %ld matches limit [open files %s %ld]", s->inf.process->files.open, operatorshortnames[o->operator], o->limit_absolute);
+                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %"PRId64" matches limit [filedescriptors %s %"PRId64"]", s->inf.process->filedescriptors.open, operatorshortnames[o->operator], o->limit_absolute);
                                 } else {
-                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "open files test succeeded [current open files = %lu]", s->inf.process->files.open);
+                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %"PRId64"]", s->inf.process->filedescriptors.open);
                                 }
                         } else {
-                                float usage = (float)100 * (float)s->inf.process->files.open / (float)limit;
+                                float usage = (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit;
                                 if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
                                         rv = State_Failed;
-                                        Event_post(s, Event_Resource, State_Failed, o->action, "open files of %.1f%% matches limit [open files %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
+                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %.1f%% matches limit [filedescriptors %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
                                 } else {
-                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "open files test succeeded [current open files usage = %.1f%%]", usage);
+                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors usage test succeeded [current filedescriptors usage = %.1f%%]", usage);
                                 }
                         }
                 }
@@ -1400,7 +1400,7 @@ State_Type check_process(Service_T s) {
                         rv = State_Failed;
                 if (_checkSecurityAttribute(s, s->inf.process->secattr) == State_Failed)
                         rv = State_Failed;
-                if (_checkOpenFiles(s) == State_Failed)
+                if (_checkFiledescriptors(s) == State_Failed)
                         rv = State_Failed;
                 for (Resource_T pr = s->resourcelist; pr; pr = pr->next)
                         if (_checkProcessResources(s, pr) == State_Failed)

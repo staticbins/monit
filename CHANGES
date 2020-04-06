@@ -10,11 +10,11 @@ TLSv1.1 (regardless of how insecure it is), you have to explicitly enable it via
         version: tlsv11
      }
 
-New: Add support for monitoring of open files of a process on Linux. Thanks to Marcel Baur and Lutz Mader. Example:
+New: Add support for monitoring of filedescriptors usage of a process on Linux. Thanks to Marcel Baur and Lutz Mader. Example:
     check process myproc with pidfile /var/run/myproc.pid
-        if open-files >= 90% then alert
-        if open-files >= 99% then restart
-        if total open-files > 5000 then alert
+        if filedescriptors >= 90% then alert
+        if filedescriptors >= 99% then restart
+        if total filedescriptors > 5000 then alert
 
 New: Allow to set a list of allowed TLS protocols (originally only one was allowed). Also add support for
 protocol exclude list (put "-" in front of the protocol name to disable it).

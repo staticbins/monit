@@ -949,16 +949,16 @@ typedef struct SecurityAttribute_T {
         struct SecurityAttribute_T *next;
 } *SecurityAttribute_T;
 
-typedef struct OpenFiles_T {
-        boolean_t total;             /**<Whether to include open files of children */
-        int64_t limit_absolute;                              /**< Open files limit */
-        float limit_percent;                                 /**< Open files limit */
+typedef struct Filedescriptors_T {
+        boolean_t total;             /**<Whether to include filedescriptors of children */
+        int64_t limit_absolute;                              /**<  Filedescriptors limit */
+        float limit_percent;                                 /**< Filedescriptors limit */
         Operator_Type operator;                           /**< Comparison operator */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
-        struct OpenFiles_T *next;
-} *OpenFiles_T;
+        struct Filedescriptors_T *next;
+} *Filedescriptors_T;
 
 /** Defines pid object */
 typedef struct Pid_T {
@@ -1118,10 +1118,10 @@ typedef struct ProcessInfo_T {
                 int64_t open;                        /**< number of opened files */
                 int64_t openTotal;             /**< number of total opened files */
                 struct {
-                        int64_t soft;                 /**< Open files soft limit */
-                        int64_t hard;                 /**< Open files hard limit */
+                        int64_t soft;                 /**< Filedescriptors soft limit */
+                        int64_t hard;                 /**< Filedescriptors hard limit */
                 } limit;
-        } files;
+        } filedescriptors;
 } *ProcessInfo_T;
 
 
@@ -1192,7 +1192,7 @@ typedef struct Service_T {
         Uid_T       euid;                                 /**< Effective Uid check */
         Gid_T       gid;                                            /**< Gid check */
         SecurityAttribute_T secattrlist;             /**< Security attributes list */
-        OpenFiles_T openfileslist;                            /**< Open files list */
+        Filedescriptors_T filedescriptorslist;                   /**< Filedescriptors list */
         LinkStatus_T linkstatuslist;                 /**< Network link status list */
         LinkSpeed_T linkspeedlist;                    /**< Network link speed list */
         LinkSaturation_T linksaturationlist;     /**< Network link saturation list */
