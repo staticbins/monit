@@ -700,20 +700,29 @@ static State_Type _checkOpenFiles(Service_T s) {
         State_Type rv = State_Succeeded;
         for (OpenFiles_T o = s->openfileslist; o; o = o->next) {
                 if (o->total) {
-                        uint64_t total_open_files = s->inf.process->total_open_files;
-                        if (Util_evalQExpression(o->operator, total_open_files, o->limit)) {
+                        if (Util_evalQExpression(o->operator, s->inf.process->files.openTotal, o->limit_absolute)) {
                                 rv = State_Failed;
-                                Event_post(s, Event_Resource, State_Failed, o->action, "total open files of %lu matches resource limit [open files %s %lu]", total_open_files, operatorshortnames[o->operator], o->limit);
+                                Event_post(s, Event_Resource, State_Failed, o->action, "total open files of %ld matches limit [open files %s %ld]", s->inf.process->files.openTotal, operatorshortnames[o->operator], o->limit_absolute);
                         } else {
-                                Event_post(s, Event_Resource, State_Succeeded, o->action, "total open files test succeeded [current open files = %lu]", total_open_files);
+                                Event_post(s, Event_Resource, State_Succeeded, o->action, "total open files test succeeded [current open files = %ld]", s->inf.process->files.openTotal);
                         }
                 } else {
-                        uint64_t open_files = s->inf.process->open_files;
-                        if (Util_evalQExpression(o->operator, open_files, o->limit)) {
-                                rv = State_Failed;
-                                Event_post(s, Event_Resource, State_Failed, o->action, "open files of %lu matches resource limit [open files %s %lu]", open_files, operatorshortnames[o->operator], o->limit);
+                        int64_t limit = s->inf.process->files.limit.soft < s->inf.process->files.limit.hard ? s->inf.process->files.limit.soft : s->inf.process->files.limit.hard;
+                        if (o->limit_absolute > -1LL) {
+                                if (Util_evalQExpression(o->operator, s->inf.process->files.open, o->limit_absolute)) {
+                                        rv = State_Failed;
+                                        Event_post(s, Event_Resource, State_Failed, o->action, "open files of %ld matches limit [open files %s %ld]", s->inf.process->files.open, operatorshortnames[o->operator], o->limit_absolute);
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "open files test succeeded [current open files = %lu]", s->inf.process->files.open);
+                                }
                         } else {
-                                Event_post(s, Event_Resource, State_Succeeded, o->action, "open files test succeeded [current open files = %lu]", open_files);
+                                float usage = (float)100 * (float)s->inf.process->files.open / (float)limit;
+                                if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
+                                        rv = State_Failed;
+                                        Event_post(s, Event_Resource, State_Failed, o->action, "open files of %.1f%% matches limit [open files %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "open files test succeeded [current open files usage = %.1f%%]", usage);
+                                }
                         }
                 }
         }

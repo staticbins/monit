@@ -77,6 +77,10 @@
 #include <dirent.h>
 #endif
 
+#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
+
 #include "monit.h"
 #include "ProcessTree.h"
 #include "process_sysdep.h"
@@ -115,9 +119,15 @@ typedef struct Proc_T {
         unsigned long long  item_starttime;
         uint64_t            read_bytes;
         uint64_t            write_bytes;
+        struct {
+                int64_t     open;
+                struct {
+                        int64_t soft;
+                        int64_t hard;
+                } limit;
+        } files;
         char                name[4096];
         char                secattr[STRLEN];
-        uint64_t            open_files;
 } *Proc_T;
 
 
@@ -290,7 +300,7 @@ static boolean_t _parseProcFdCount(Proc_T proc) {
         snprintf(fd_path, sizeof(fd_path), "/proc/%d/fd", proc->pid);
 
         if (!(dirp = opendir(fd_path))) {
-                DEBUG("system statistic error -- cannot opendir /proc/%d/fd: %s\n", proc->pid, STRERROR);
+                DEBUG("system statistic error -- opendir /proc/%d/fd: %s\n", proc->pid, STRERROR);
                 return false;
         }
 
@@ -317,7 +327,17 @@ static boolean_t _parseProcFdCount(Proc_T proc) {
         }
 
         // subtract entries '.' and '..'
-        proc->open_files = file_count - 2;
+        proc->files.open = file_count - 2;
+
+        // get current per-process limits
+        struct rlimit limits;
+        if (getrlimit(RLIMIT_NOFILE, &limits) != 0) {
+                DEBUG("getrlimit failed: %s\n", STRERROR);
+                return false;
+        }
+        proc->files.limit.soft = limits.rlim_cur;
+        proc->files.limit.hard = limits.rlim_max;
+
         return true;
 }
 
@@ -430,7 +450,9 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].zombie = proc.item_state == 'Z' ? true : false;
                         pt[count].cmdline = Str_dup(proc.name);
                         pt[count].secattr = Str_dup(proc.secattr);
-                        pt[count].open_files.usage = proc.open_files;
+                        pt[count].files.usage = proc.files.open;
+                        pt[count].files.limit.soft = proc.files.limit.soft;
+                        pt[count].files.limit.hard = proc.files.limit.hard;
                         count++;
                         memset(&proc, 0, sizeof(struct Proc_T));
                 }

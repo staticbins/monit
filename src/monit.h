@@ -951,7 +951,8 @@ typedef struct SecurityAttribute_T {
 
 typedef struct OpenFiles_T {
         boolean_t total;             /**<Whether to include open files of children */
-        uint64_t limit;                                      /**< Open files limit */
+        int64_t limit_absolute;                              /**< Open files limit */
+        float limit_percent;                                 /**< Open files limit */
         Operator_Type operator;                           /**< Comparison operator */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
@@ -1113,8 +1114,14 @@ typedef struct ProcessInfo_T {
         struct IOStatistics_T read;                       /**< Read statistics */
         struct IOStatistics_T write;                     /**< Write statistics */
         char secattr[STRLEN];                         /**< Security attributes */
-        uint64_t open_files;                       /**< number of opened files */
-        uint64_t total_open_files;           /**< number of total opened files */
+        struct {
+                int64_t open;                        /**< number of opened files */
+                int64_t openTotal;             /**< number of total opened files */
+                struct {
+                        int64_t soft;                 /**< Open files soft limit */
+                        int64_t hard;                 /**< Open files hard limit */
+                } limit;
+        } files;
 } *ProcessInfo_T;
 
 

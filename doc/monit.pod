@@ -2755,20 +2755,27 @@ Example for AppArmor:
 
 =head2 PROCESS OPEN FILES TEST
 
-Monit can test the number of open files of a process.
-You can check the number of open files for a single process, or the
-accumulated number for the process and all its children.
+Monit can test the number of open files of a process. You can check either
+an absolute value or percent of the soft/hard limit which is set for the
+process.
 
-The syntax for the open-files statement is:
+Syntax:
 
- IF [TOTAL] OPEN-FILES <operator> <number> THEN action
+ IF OPEN-FILES <operator> <number> [%] THEN action
+
+You can also check accumulated number for the process and all its children.
+Note: The total open files test doesn't allow to set the limit as percent.
+Syntax:
+
+ IF TOTAL OPEN-FILES <operator> <number> THEN action
 
 I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
 "lt", "eq", "ne" in shell sh notation and "greater", "less",
 "equal", "notequal" in human readable form (if not specified,
 default is EQUAL).
 
-I<number> is an integer.
+I<number> limit.
+
 
 I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 "EXEC" or "UNMONITOR".
@@ -2776,8 +2783,9 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check process myproc with pidfile /var/run/myproc.pid
-    if open-files >= 100 then alert
-    if total open-files > 500 then restart
+    if open-files >= 90% then alert
+    if open-files >= 99% then restart
+    if total open-files > 5000 then alert
 
 
 =head2 PROGRAM STATUS TEST

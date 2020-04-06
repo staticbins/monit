@@ -73,9 +73,13 @@ typedef struct ProcessTree_T {
         char *cmdline;
         char *secattr;
         struct {
-                uint64_t usage;
-                uint64_t usage_total;
-        } open_files;
+                int64_t usage;
+                int64_t usage_total;
+                struct {
+                        int64_t soft;
+                        int64_t hard;
+                } limit;
+        } files;
 } ProcessTree_T;
 
 

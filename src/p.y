@@ -312,7 +312,7 @@ static void _setSSLVersion(short version);
 #endif
 static void _unsetSSLVersion(short version);
 static void addsecurityattribute(char *, Action_Type, Action_Type);
-static void addopenfiles(Operator_Type, boolean_t, uint64_t, Action_Type, Action_Type);
+static void addopenfiles(Operator_Type, boolean_t, int64_t, float, Action_Type, Action_Type);
 
 %}
 
@@ -2813,10 +2813,13 @@ secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recover
                 ;
 
 openfiles       : IF OPENFILES operator NUMBER rate1 THEN action1 recovery {
-                        addopenfiles($<number>3, false, (uint64_t)$4, $<number>7, $<number>8);
+                        addopenfiles($<number>3, false, (int64_t)$4, -1., $<number>7, $<number>8);
+                  }
+                | IF OPENFILES operator value PERCENT rate1 THEN action1 recovery {
+                        addopenfiles($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
                   }
                 | IF TOTAL OPENFILES operator NUMBER rate1 THEN action1 recovery {
-                        addopenfiles($<number>4, true, (uint64_t)$5, $<number>8, $<number>9);
+                        addopenfiles($<number>4, true, (int64_t)$5, -1., $<number>8, $<number>9);
                   }
                 ;
 
@@ -5074,12 +5077,13 @@ static void addsecurityattribute(char *value, Action_Type failed, Action_Type su
         current->secattrlist = attr;
 }
 
-static void addopenfiles(Operator_Type operator, boolean_t total, uint64_t value, Action_Type failed, Action_Type succeeded) {
+static void addopenfiles(Operator_Type operator, boolean_t total, int64_t value_absolute, float value_percent, Action_Type failed, Action_Type succeeded) {
         OpenFiles_T open_files;
         NEW(open_files);
         addeventaction(&(open_files->action), failed, succeeded);
         open_files->total = total;
-        open_files->limit = value;
+        open_files->limit_absolute = value_absolute;
+        open_files->limit_percent = value_percent;
         open_files->operator = operator;
         open_files->next = current->openfileslist;
         current->openfileslist = open_files;
