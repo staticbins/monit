@@ -432,8 +432,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 #ifdef LINUX
                                         _formatStatus("security attribute", Event_Invalid, type, res, s, *(s->inf.process->secattr), "%s", s->inf.process->secattr);
                                         int64_t limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
-                                        _formatStatus("filedescriptors usage", Event_Resource, type, res, s, s->inf.process->filedescriptors.open != -1LL, "%ld [%.1f%% of %ld limit]", s->inf.process->filedescriptors.open, (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit, limit);
-                                        _formatStatus("total filedescriptors usage", Event_Resource, type, res, s, s->inf.process->filedescriptors.openTotal != -1LL, "%ld", s->inf.process->filedescriptors.openTotal);
+                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.open != -1LL, "%ld [%.1f%% of %ld limit]", s->inf.process->filedescriptors.open, (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit, limit);
+                                        _formatStatus("total filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.openTotal != -1LL, "%ld", s->inf.process->filedescriptors.openTotal);
 #endif
                                 }
                                 _printIOStatistics(type, res, s, &(s->inf.process->read), "disk read", "read");

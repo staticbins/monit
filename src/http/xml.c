@@ -406,14 +406,14 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 "<percent>%.1f</percent>"
                                                 "<percenttotal>%.1f</percenttotal>"
                                                 "</cpu>"
-                                                "<files>"
+                                                "<filedescriptors>"
                                                 "<open>%"PRId64"</open>"
                                                 "<opentotal>%"PRId64"</opentotal>"
                                                 "<limit>"
                                                 "<soft>%"PRId64"</soft>"
                                                 "<hard>%"PRId64"</hard>"
                                                 "</limit>"
-                                                "</files>",
+                                                "</filedescriptors>",
                                                 S->inf.process->threads,
                                                 S->inf.process->children,
                                                 S->inf.process->mem_percent,
