@@ -126,8 +126,8 @@ typedef struct Proc_T {
                         int64_t hard;
                 } limit;
         } filedescriptors;
-        char                name[4096];
         char                secattr[STRLEN];
+        StringBuffer_T      name;
 } *Proc_T;
 
 
@@ -181,10 +181,6 @@ static boolean_t _parseProcPidStat(Proc_T proc) {
                 return false;
         }
         *tmp = 0;
-        if (sscanf(buf, "%*d (%255s", proc->name) != 1) {
-                DEBUG("system statistic error -- file /proc/%d/stat process name parse error\n", proc->pid);
-                return false;
-        }
         tmp += 2;
         if (sscanf(tmp,
                    "%c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %ld %ld %*d %*d %d %*u %llu %*u %ld %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d\n",
@@ -266,17 +262,25 @@ static boolean_t _parseProcPidIO(Proc_T proc) {
 // parse /proc/PID/cmdline
 static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
         if (pflags & ProcessEngine_CollectCommandLine) {
-                int bytes = 0;
-                char buf[4096];
-                if (! file_readProc(buf, sizeof(buf), "cmdline", proc->pid, &bytes)) {
-                        DEBUG("system statistic error -- cannot read /proc/%d/cmdline\n", proc->pid);
+                char filename[STRLEN];
+                snprintf(filename, sizeof(filename), "/proc/%d/cmdline", proc->pid);
+                FILE *f = fopen(filename, "r");
+                if (! f) {
+                        DEBUG("system statistic error -- cannot open /proc/%d/cmdline: %s\n", proc->pid, STRERROR);
                         return false;
                 }
-                for (int j = 0; j < (bytes - 1); j++) // The cmdline file contains argv elements/strings terminated separated by '\0' => join the string
-                        if (buf[j] == 0)
-                                buf[j] = ' ';
-                if (*buf)
-                        snprintf(proc->name, sizeof(proc->name), "%s", buf);
+                size_t n;
+                char buf[STRLEN] = {};
+                while ((n = fread(buf, 1, sizeof(buf) - 1, f)) > 0) {
+                        // The cmdline file contains argv elements/strings terminated separated by '\0' => join the string
+                        for (int i = 0; i < n; i++) {
+                                if (buf[i] == 0)
+                                        StringBuffer_append(proc->name, " ");
+                                else
+                                        StringBuffer_append(proc->name, "%c", buf[i]);
+                        }
+                }
+                fclose(f);
         }
         return true;
 }
@@ -429,6 +433,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
 
         int count = 0;
         struct Proc_T proc = {};
+        proc.name = StringBuffer_create(64);
         time_t starttime = _getStartTime();
         for (int i = 0; i < globbuf.gl_pathc; i++) {
                 proc.pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
@@ -448,15 +453,18 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].read.bytes = proc.read_bytes;
                         pt[count].write.bytes = proc.write_bytes;
                         pt[count].zombie = proc.item_state == 'Z' ? true : false;
-                        pt[count].cmdline = Str_dup(proc.name);
+                        pt[count].cmdline = Str_dup(StringBuffer_toString(proc.name));
                         pt[count].secattr = Str_dup(proc.secattr);
                         pt[count].filedescriptors.usage = proc.filedescriptors.open;
                         pt[count].filedescriptors.limit.soft = proc.filedescriptors.limit.soft;
                         pt[count].filedescriptors.limit.hard = proc.filedescriptors.limit.hard;
                         count++;
-                        memset(&proc, 0, sizeof(struct Proc_T));
+                        // Clear
+                        memset(&proc, 0, sizeof(struct Proc_T) - sizeof(proc.name));
+                        StringBuffer_clear(proc.name);
                 }
         }
+        StringBuffer_free(&(proc.name));
 
         *reference = pt;
         globfree(&globbuf);
