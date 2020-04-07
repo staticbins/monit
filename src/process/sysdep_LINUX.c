@@ -272,7 +272,7 @@ static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
                 size_t n;
                 char buf[STRLEN] = {};
                 while ((n = fread(buf, 1, sizeof(buf) - 1, f)) > 0) {
-                        // The cmdline file contains argv elements/strings terminated separated by '\0' => join the string
+                        // The cmdline file contains argv elements/strings separated by '\0' => join the string
                         for (int i = 0; i < n; i++) {
                                 if (buf[i] == 0)
                                         StringBuffer_append(proc->name, " ");
