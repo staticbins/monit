@@ -108,10 +108,10 @@
 
 static void  do_init(void);                   /* Initialize this application */
 static void  do_reinit(void);       /* Re-initialize the runtime application */
-static void  do_action(int, char **);    /* Dispatch to the submitted action */
+static void  do_action(List_T);          /* Dispatch to the submitted action */
 static void  do_exit(boolean_t);                           /* Finalize monit */
 static void  do_default(void);                          /* Do default action */
-static void  handle_options(int, char **);         /* Handle program options */
+static void  handle_options(int, char **, List_T); /* Handle program options */
 static void  help(void);             /* Print program help message to stdout */
 static void  version(void);                     /* Print version information */
 static void *heartbeat(void *args);              /* M/Monit heartbeat thread */
@@ -158,6 +158,7 @@ char *httpmethod[] = {"", "HEAD", "GET"};
  * The Prime mover
  */
 int main(int argc, char **argv) {
+        List_T arguments = List_new();
         Bootstrap(); // Bootstrap libmonit
         Bootstrap_setAbortHandler(vLogAbortHandler);  // Abort Monit on exceptions thrown by libmonit
         Bootstrap_setErrorHandler(vLogError);
@@ -167,9 +168,10 @@ int main(int argc, char **argv) {
         Ssl_start();
 #endif
         init_env();
-        handle_options(argc, argv);
+        handle_options(argc, argv, arguments);
         do_init();
-        do_action(argc, argv);
+        do_action(arguments);
+        List_free(&arguments);
         do_exit(false);
         return 0;
 }
@@ -404,8 +406,8 @@ static void do_reinit() {
 /**
  * Dispatch to the submitted action - actions are program arguments
  */
-static void do_action(int argc, char **args) {
-        char *action = args[optind];
+static void do_action(List_T arguments) {
+        char *action = List_pop(arguments);
 
         Run.flags |= Run_Once;
 
@@ -416,7 +418,7 @@ static void do_action(int argc, char **args) {
                    IS(action, "monitor")   ||
                    IS(action, "unmonitor") ||
                    IS(action, "restart")) {
-                char *service = args[++optind];
+                char *service = List_pop(arguments);
                 if (Run.mygroup || service) {
                         int errors = 0;
                         List_T services = List_new();
@@ -453,19 +455,19 @@ static void do_action(int argc, char **args) {
                 LogInfo("Reinitializing %s daemon\n", prog);
                 kill_daemon(SIGHUP);
         } else if (IS(action, "status")) {
-                char *service = args[++optind];
+                char *service = List_pop(arguments);
                 if (! HttpClient_status(Run.mygroup, service))
                         exit(1);
         } else if (IS(action, "summary")) {
-                char *service = args[++optind];
+                char *service = List_pop(arguments);
                 if (! HttpClient_summary(Run.mygroup, service))
                         exit(1);
         } else if (IS(action, "report")) {
-                char *type = args[++optind];
+                char *type = List_pop(arguments);
                 if (! HttpClient_report(type))
                         exit(1);
         } else if (IS(action, "procmatch")) {
-                char *pattern = args[++optind];
+                char *pattern = List_pop(arguments);
                 if (! pattern) {
                         printf("Invalid syntax - usage: procmatch \"<pattern>\"\n");
                         exit(1);
@@ -475,7 +477,7 @@ static void do_action(int argc, char **args) {
                 kill_daemon(SIGTERM);
         } else if (IS(action, "validate")) {
                 if (do_wakeupcall()) {
-                        char *service = args[++optind];
+                        char *service = List_pop(arguments);
                         HttpClient_status(Run.mygroup, service);
                 } else {
                         _validateOnce();
@@ -610,156 +612,160 @@ static void do_default() {
  * Handle program options - Options set from the commandline
  * takes precedence over those found in the control file
  */
-static void handle_options(int argc, char **argv) {
+static void handle_options(int argc, char **argv, List_T arguments) {
         int opt;
         int deferred_opt = 0;
         opterr = 0;
         Run.mygroup = NULL;
         const char *shortopts = "c:d:g:l:p:s:HIirtvVhB";
+        while (optind < argc) {
 #ifdef HAVE_GETOPT_LONG
-        struct option longopts[] = {
-                {"conf",        required_argument,      NULL,   'c'},
-                {"daemon",      required_argument,      NULL,   'd'},
-                {"group",       required_argument,      NULL,   'g'},
-                {"logfile",     required_argument,      NULL,   'l'},
-                {"pidfile",     required_argument,      NULL,   'p'},
-                {"statefile",   required_argument,      NULL,   's'},
-                {"hash",        optional_argument,      NULL,   'H'},
-                {"id",          no_argument,            NULL,   'i'},
-                {"help",        no_argument,            NULL,   'h'},
-                {"resetid",     no_argument,            NULL,   'r'},
-                {"test",        no_argument,            NULL,   't'},
-                {"verbose",     no_argument,            NULL,   'v'},
-                {"batch",       no_argument,            NULL,   'B'},
-                {"interactive", no_argument,            NULL,   'I'},
-                {"version",     no_argument,            NULL,   'V'},
-                {0}
-        };
-        while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1)
+                struct option longopts[] = {
+                        {"conf",        required_argument,      NULL,   'c'},
+                        {"daemon",      required_argument,      NULL,   'd'},
+                        {"group",       required_argument,      NULL,   'g'},
+                        {"logfile",     required_argument,      NULL,   'l'},
+                        {"pidfile",     required_argument,      NULL,   'p'},
+                        {"statefile",   required_argument,      NULL,   's'},
+                        {"hash",        optional_argument,      NULL,   'H'},
+                        {"id",          no_argument,            NULL,   'i'},
+                        {"help",        no_argument,            NULL,   'h'},
+                        {"resetid",     no_argument,            NULL,   'r'},
+                        {"test",        no_argument,            NULL,   't'},
+                        {"verbose",     no_argument,            NULL,   'v'},
+                        {"batch",       no_argument,            NULL,   'B'},
+                        {"interactive", no_argument,            NULL,   'I'},
+                        {"version",     no_argument,            NULL,   'V'},
+                        {0}
+                };
+                if ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1)
 #else
-        while ((opt = getopt(argc, argv, shortopts)) != -1)
+                if ((opt = getopt(argc, argv, shortopts)) != -1)
 #endif
-        {
-                switch (opt) {
-                        case 'c':
-                        {
-                                char *f = optarg;
-                                char realpath[PATH_MAX] = {};
-                                if (f[0] != SEPARATOR_CHAR)
-                                        f = File_getRealPath(optarg, realpath);
-                                if (! f)
-                                        THROW(AssertException, "The control file '%s' does not exist at %s",
-                                              Str_trunc(optarg, 80), Dir_cwd((char[STRLEN]){}, STRLEN));
-                                if (! File_isFile(f))
-                                        THROW(AssertException, "The control file '%s' is not a file", Str_trunc(f, 80));
-                                if (! File_isReadable(f))
-                                        THROW(AssertException, "The control file '%s' is not readable", Str_trunc(f, 80));
-                                Run.files.control = Str_dup(f);
-                                break;
-                        }
-                        case 'd':
-                        {
-                                Run.flags |= Run_Daemon;
-                                if (sscanf(optarg, "%d", &Run.polltime) != 1 || Run.polltime < 1) {
-                                        LogError("Option -%c requires a natural number\n", opt);
+                {
+                        switch (opt) {
+                                case 'c':
+                                {
+                                        char *f = optarg;
+                                        char realpath[PATH_MAX] = {};
+                                        if (f[0] != SEPARATOR_CHAR)
+                                                f = File_getRealPath(optarg, realpath);
+                                        if (! f)
+                                                THROW(AssertException, "The control file '%s' does not exist at %s",
+                                                      Str_trunc(optarg, 80), Dir_cwd((char[STRLEN]){}, STRLEN));
+                                        if (! File_isFile(f))
+                                                THROW(AssertException, "The control file '%s' is not a file", Str_trunc(f, 80));
+                                        if (! File_isReadable(f))
+                                                THROW(AssertException, "The control file '%s' is not readable", Str_trunc(f, 80));
+                                        Run.files.control = Str_dup(f);
+                                        break;
+                                }
+                                case 'd':
+                                {
+                                        Run.flags |= Run_Daemon;
+                                        if (sscanf(optarg, "%d", &Run.polltime) != 1 || Run.polltime < 1) {
+                                                LogError("Option -%c requires a natural number\n", opt);
+                                                exit(1);
+                                        }
+                                        break;
+                                }
+                                case 'g':
+                                {
+                                        Run.mygroup = Str_dup(optarg);
+                                        break;
+                                }
+                                case 'l':
+                                {
+                                        Run.files.log = Str_dup(optarg);
+                                        if (IS(Run.files.log, "syslog"))
+                                                Run.flags |= Run_UseSyslog;
+                                        Run.flags |= Run_Log;
+                                        break;
+                                }
+                                case 'p':
+                                {
+                                        Run.files.pid = Str_dup(optarg);
+                                        break;
+                                }
+                                case 's':
+                                {
+                                        Run.files.state = Str_dup(optarg);
+                                        break;
+                                }
+                                case 'I':
+                                {
+                                        Run.flags |= Run_Foreground;
+                                        break;
+                                }
+                                case 'i':
+                                {
+                                        deferred_opt = 'i';
+                                        break;
+                                }
+                                case 'r':
+                                {
+                                        deferred_opt = 'r';
+                                        break;
+                                }
+                                case 't':
+                                {
+                                        deferred_opt = 't';
+                                        break;
+                                }
+                                case 'v':
+                                {
+                                        Run.debug++;
+                                        break;
+                                }
+                                case 'H':
+                                {
+                                        if (argc > optind)
+                                                Util_printHash(argv[optind]);
+                                        else
+                                                Util_printHash(NULL);
+                                        exit(0);
+                                        break;
+                                }
+                                case 'V':
+                                {
+                                        version();
+                                        exit(0);
+                                        break;
+                                }
+                                case 'h':
+                                {
+                                        help();
+                                        exit(0);
+                                        break;
+                                }
+                                case 'B':
+                                {
+                                        Run.flags |= Run_Batch;
+                                        break;
+                                }
+                                case '?':
+                                {
+                                        switch (optopt) {
+                                                case 'c':
+                                                case 'd':
+                                                case 'g':
+                                                case 'l':
+                                                case 'p':
+                                                case 's':
+                                                {
+                                                        LogError("Option -- %c requires an argument\n", optopt);
+                                                        break;
+                                                }
+                                                default:
+                                                {
+                                                        LogError("Invalid option -- %c  (-h will show valid options)\n", optopt);
+                                                }
+                                        }
                                         exit(1);
                                 }
-                                break;
                         }
-                        case 'g':
-                        {
-                                Run.mygroup = Str_dup(optarg);
-                                break;
-                        }
-                        case 'l':
-                        {
-                                Run.files.log = Str_dup(optarg);
-                                if (IS(Run.files.log, "syslog"))
-                                        Run.flags |= Run_UseSyslog;
-                                Run.flags |= Run_Log;
-                                break;
-                        }
-                        case 'p':
-                        {
-                                Run.files.pid = Str_dup(optarg);
-                                break;
-                        }
-                        case 's':
-                        {
-                                Run.files.state = Str_dup(optarg);
-                                break;
-                        }
-                        case 'I':
-                        {
-                                Run.flags |= Run_Foreground;
-                                break;
-                        }
-                        case 'i':
-                        {
-                                deferred_opt = 'i';
-                                break;
-                        }
-                        case 'r':
-                        {
-                                deferred_opt = 'r';
-                                break;
-                        }
-                        case 't':
-                        {
-                                deferred_opt = 't';
-                                break;
-                        }
-                        case 'v':
-                        {
-                                Run.debug++;
-                                break;
-                        }
-                        case 'H':
-                        {
-                                if (argc > optind)
-                                        Util_printHash(argv[optind]);
-                                else
-                                        Util_printHash(NULL);
-                                exit(0);
-                                break;
-                        }
-                        case 'V':
-                        {
-                                version();
-                                exit(0);
-                                break;
-                        }
-                        case 'h':
-                        {
-                                help();
-                                exit(0);
-                                break;
-                        }
-                        case 'B':
-                        {
-                                Run.flags |= Run_Batch;
-                                break;
-                        }
-                        case '?':
-                        {
-                                switch (optopt) {
-                                        case 'c':
-                                        case 'd':
-                                        case 'g':
-                                        case 'l':
-                                        case 'p':
-                                        case 's':
-                                        {
-                                                LogError("Option -- %c requires an argument\n", optopt);
-                                                break;
-                                        }
-                                        default:
-                                        {
-                                                LogError("Invalid option -- %c  (-h will show valid options)\n", optopt);
-                                        }
-                                }
-                                exit(1);
-                        }
+                } else {
+                        List_append(arguments, argv[optind++]);
                 }
         }
         /* Handle deferred options to make arguments to the program positional

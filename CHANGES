@@ -63,6 +63,9 @@ was removed on Linux. On AIX the limit was rised to 8kB.
 Fixed: MacOS: Only first 16 characters of the process name was displayed for privileged processes,
 so the pattern based process check and the procmatch CLI may miss some processes.
 
+Fixed: Issue #886: The command-line options on some platforms (such as AIX) cannot be used past the non-option
+argument.
+
 Fixed: If monit is linked with AddresSanitizer and a custom configuration file is passed via the -c option,
 monit  may crash.
 
