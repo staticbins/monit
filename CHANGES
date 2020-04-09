@@ -45,6 +45,9 @@ Fixed: Issue #843: Linux: Wrong memory usage reported in LXC container when ZFS 
 now uses MemAvailable on Linux when calculating the memory usage, so it will provide more accurate statistics.
 Thanks to Joe LeVeque for patch.
 
+Fixed: Issue #831: The HTTP protocol test returned "unknown transfer encoding HTTP error" in the case that
+the HTTP server didn't set the Content-Length nor used a chunked encoding for response.
+
 Fixed: Issue #880: If monit is linked with AddresSanitizer, it may crash when it generates an MD5 hash.
 Thanks to Lutz Mader for patch.
 

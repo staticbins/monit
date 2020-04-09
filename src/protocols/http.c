@@ -264,6 +264,29 @@ static void _processBodyContentLength(Socket_T socket, Port_T P, volatile char *
 }
 
 
+static void _processBodyUntilEOF(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context) {
+        int readBytes = 0;
+        if (P->url_request && P->url_request->regex) {
+                // The content test is required => cache the whole body
+                int haveBytes = 0;
+                while ((readBytes = Socket_read(socket, (void *)(*data + haveBytes), BUFSIZE)) > 0)  {
+                        _checksumAppend(P, context, (const char *)(*data + haveBytes), readBytes);
+                        haveBytes += readBytes;
+                        *data = realloc((void *)*data, haveBytes + BUFSIZE);
+                }
+                *(*data + haveBytes) = 0;
+        } else {
+                // No content check is required => use small buffer and compute the checksum on the fly
+                while ((readBytes = Socket_read(socket, (void *)(*data), BUFSIZE)) > 0) {
+                        _checksumAppend(P, context, (const char *)*data, readBytes);
+                }
+        }
+        if (readBytes < 0) {
+                THROW(ProtocolException, "HTTP error: Receiving data -- %s", STRERROR);
+        }
+}
+
+
 static void _processStatus(Socket_T socket, Port_T P) {
         int status;
         char buf[512] = {};
@@ -280,6 +303,7 @@ static void _processStatus(Socket_T socket, Port_T P) {
 
 static void _processHeaders(Socket_T socket, Port_T P, void (**processBody)(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context), int *contentLength) {
         char buf[512] = {};
+        *processBody = _processBodyUntilEOF;
 
         while (Socket_readLine(socket, buf, sizeof(buf))) {
                 if ((buf[0] == '\r' && buf[1] == '\n') || (buf[0] == '\n'))
