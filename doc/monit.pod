@@ -601,20 +601,31 @@ Common SSL/TLS options can be set using the following statement and
 will apply to all SSL connections made through Monit:
 
   SET <SSL | TLS> [OPTIONS] {
-      VERSION: <AUTO | SSLV2 | SSLV3 | TLSV1 | TLSV11 | TLSV12 | TLSV13>
+      VERSION: <AUTO | [-]SSLV2 | [-]SSLV3 | [-]TLSV1 | [-]TLSV11 | [-]TLSV12 | [-]TLSV13>, ...
       VERIFY: <ENABLE | DISABLE>
       SELFSIGNED: <ALLOW | REJECT>
       CIPHERS: <string>
       PEMFILE: <path>
+      PEMCHAIN: <path>
+      PEMKEY: <path>
       CLIENTPEMFILE: <path>
       CACERTIFICATEFILE: <path>
       CACERTIFICATEPATH: <path>
   }
 
 I<VERSION> set the specific SSL/TLS version to use. By default Monit
-uses AUTO. In AUTO mode, only TLS is used, SSLv2 and SSLv3 is
-considered obsolete. If you have to use SSLv2 or SSLv3, you must
-explicitly set the version.
+uses AUTO. In AUTO mode, only TLS 1.2 and 1.3 are allowed, all other
+protocols are considered obsolete. If you want to use the obsolete
+protocol you must explicitly set the version. You can exclude the protocol
+using the "-" prefix.
+Exclude list example:
+  set ssl {
+      version: auto -sslv2 -sslv3 -tlsv1 -tlsv11
+  }
+Example of allowed protocols list:
+  set ssl {
+      version: tlsv12 tlsv13
+  }
 
 I<VERIFY> enable SSL server certificate verification. This will verify
 and report an error if the server certificate is not trusted, not valid
@@ -632,6 +643,11 @@ I<CIPHERS> override default SSL/TLS ciphers.
 
 I<PEMFILE> set the path to the SSL server certificate
 "database-file" in PEM format. This options has effect only for the
+monit HTTP interface.
+
+As an alternative to setting I<PEMFILE> with a combined chain-key file,
+I<PEMCHAIN> and I<PEMKEY> set the path to the SSL certificate chain respectively
+the server private key file in PEM format. This options has effect only for the
 monit HTTP interface.
 
 I<CLIENTPEMFILE> set the path to the PEM encoded SSL client certificates
@@ -796,17 +812,32 @@ over IP version 4, specify an IPv4 address:
 B<SSL> enable SSL/TLS for Monit's web interface.  See L<options|"SSL OPTIONS">
 for full list of SSL options.
 
-I<PEMFILE> set the path to the PEM encoded file, which contains the
+I<PEMFILE> sets the path to the PEM encoded file, which contains the
 server's private key and certificate. This file should be stored in a
 safe place on the filesystem and should have strict permissions, no
 more than 0700.
 
-Example:
+As an alternative I<PEMCHAIN> and I<PEMKEY> sets the path to separate PEM encoded
+certificate chain and private key file. The key file should be stored in a
+safe place on the filesystem and should have strict permissions, no
+more than 0700.
+
+Example for using pemfile:
 
  set httpd
      port 2812
      with ssl {
         pemfile: /etc/ssl/certs/monit.pem
+     }
+     allow myuser:mypassword
+
+Example for using separate certificate chain and key:
+
+ set httpd
+     port 2812
+     with ssl {
+        pemchain: /etc/ssl/certs/monit.chain.pem
+        pemkey: /etc/ssl/certs/monit.key.pem
      }
      allow myuser:mypassword
 
@@ -2722,6 +2753,44 @@ Example for AppArmor:
     if failed security attribute "/usr/sbin/ntpd (enforce)" then alert
 
 
+=head2 SYSTEM AND PER-PROCESS FILEDESCRIPTORS TEST
+
+Monit can test the filedescriptors usage on the system and process level. You can check either
+an absolute value or percent of the system soft/hard limit which is set for the system
+(/proc/sys/fs/file-max) or process (ulimit -n).
+
+Syntax:
+
+ IF FILEDESCRIPTORS <operator> <number> [%] THEN action
+
+For process only, you can also check accumulated number for the process and all its children.
+
+Syntax:
+
+ IF TOTAL FILEDESCRIPTORS <operator> <number> THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<number> limit.
+
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Examples:
+
+ check system $HOST
+    if filedescriptors >= 90% then alert
+
+ check process myproc with pidfile /var/run/myproc.pid
+    if filedescriptors >= 90% then alert
+    if filedescriptors >= 99% then restart
+    if total filedescriptors > 5000 then alert
+
+
 =head2 PROGRAM STATUS TEST
 
 You can check the exit status of a program or a script. This test
@@ -4127,7 +4196,7 @@ of this man page also receive inspiration from the same authors.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2001-2019 by Tildeslash Ltd. All Rights Reserved.
+Copyright (C) 2001-2020 by Tildeslash Ltd. All Rights Reserved.
 This product is distributed in the hope that it will be useful,
 but WITHOUT any warranty; without even the implied warranty of
 MERCHANTABILITY or FITNESS for a particular purpose.

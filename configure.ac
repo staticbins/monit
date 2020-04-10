@@ -164,6 +164,7 @@ AC_CHECK_HEADERS([ \
 	sys/statfs.h \
 	sys/statvfs.h \
 	sys/sysinfo.h \
+	sys/sysmacros.h \
 	sys/systemcfg.h \
 	sys/time.h \
 	sys/tree.h \
@@ -727,6 +728,41 @@ fi
 
 
 # ------------------------------------------------------------------------
+# AddressSanitizer
+# ------------------------------------------------------------------------
+
+AC_MSG_CHECKING([for AddressSanitizer support])
+AC_ARG_WITH(asan,
+    [  --with-asan             enable the use of AddressSanitizer (default: disabled)],
+    [
+        dnl Check the withvalue
+        if test "x$withval" = "xno" ; then
+            use_asan=0
+            AC_MSG_RESULT([disabled])
+        fi
+        if test "x$withval" = "xyes" ; then
+            use_asan=1
+            AC_MSG_RESULT([enabled])
+        fi
+    ],
+    [
+        use_asan=0
+        AC_MSG_RESULT([disabled])
+    ]
+)
+
+if test "$use_asan" = "1"; then
+        AC_CHECK_LIB([asan],
+                     [__asan_init],
+                     [CFLAGS="$CFLAGS -fsanitize=address -fno-omit-frame-pointer"],
+                     [
+                        use_asan=0
+                        AC_MSG_WARN([libasan.so enabled but headers or library not found])
+                     ])
+fi
+
+
+# ------------------------------------------------------------------------
 # SSL Code
 # ------------------------------------------------------------------------
 
@@ -990,6 +1026,8 @@ AC_ARG_ENABLE(optimized,
         if test "x$enableval" = "xyes" ; then
                 CFLAGS=`echo $CFLAGS|sed 's/-g[[^ ]]*//g'`
                 CFLAGS=`echo $CFLAGS|sed 's/-O.//g'`
+                CFLAGS=`echo $CFLAGS|sed 's/-fsanitize=address//g'`
+                CFLAGS=`echo $CFLAGS|sed 's/-fno-omit-frame-pointer//g'`
                 CFLAGS="$CFLAGS -O3 -DNDEBUG"
                 OPTIMIZED=1
         else
@@ -1053,54 +1091,14 @@ echo "           pid file location: ${piddir}"
 echo "           Install directory: ${prefix}"
 echo
 
-cat <<EOT
-+------------------------------------------------------------+
-| License:                                                   |
-| This is Open Source Software and use is subject to the GNU |
-| AFFERO GENERAL PUBLIC LICENSE version 3, available in this |
-| distribution in the file COPYING.                          |
-|                                                            |
-| By continuing this installation process, you are bound by  |
-| the terms of this license agreement. If you do not agree   |
-| with the terms of this license, you must abort the         |
-| installation process at this point.                        |
-+------------------------------------------------------------+
-| Monit has been configured with the following options:      |
-|                                                            |
-EOT
-if test "xfalse" = "x$zlib"; then
-echo "|   Compression:                                  DISABLED   |"
-else
-echo "|   Compression:                                  ENABLED    |"
-fi
-if test "$use_pam" = "1"; then
-echo "|   PAM support:                                  ENABLED    |"
-else
-echo "|   PAM support:                                  DISABLED   |"
-fi
-if test "$use_sslstatic" = "1" -o "$use_ssl" = "1"; then
-echo "|   SSL support:                                  ENABLED    |"
-else
-echo "|   SSL support:                                  DISABLED   |"
-fi
-if test "$use_largefiles" = "1"; then
-echo "|   Large files support:                          ENABLED    |"
-else
-echo "|   Large files support:                          DISABLED   |"
-fi
-if test "$use_ipv6" = "1"; then
-echo "|   IPv6 support:                                 ENABLED    |"
-else
-echo "|   IPv6 support:                                 DISABLED   |"
-fi
-if test "x1" = "x$OPTIMIZED"; then
-echo "|   Optimized:                                    ENABLED    |"
-else
-echo "|   Optimized:                                    DISABLED   |"
-fi
-if test "xfalse" = "x$profile"; then
-echo "|   Profiling:                                    DISABLED   |"
-else
-echo "|   Profiling:                                    ENABLED    |"
-fi
-echo "+------------------------------------------------------------+"
+AX_INFO_AGPL()
+AX_INFO_TITLE([Monit has been configured with the following options:])
+AX_INFO_ENABLED([Compression:],           [test "xfalse" != "x$zlib"])
+AX_INFO_ENABLED([PAM support:],           [test "$use_pam" = "1"])
+AX_INFO_ENABLED([SSL support:],           [test "$use_sslstatic" = "1" -o "$use_ssl" = "1"])
+AX_INFO_ENABLED([Large files support:],   [test "$use_largefiles" = "1"])
+AX_INFO_ENABLED([ASAN support:],          [test "$use_asan" = "1"])
+AX_INFO_ENABLED([IPv6 support:],          [test "$use_ipv6" = "1"])
+AX_INFO_ENABLED([Optimized:],             [test "x1" = "x$OPTIMIZED"])
+AX_INFO_ENABLED([Profiling:],             [test "xfalse" != "x$profile"])
+AX_INFO_BREAK()

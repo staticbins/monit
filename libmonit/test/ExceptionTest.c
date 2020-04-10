@@ -25,30 +25,30 @@ Exception_T B = {"BException"};
 Exception_T C = {"CException"};
 Exception_T D = {"DException"};
 
-void throwA() {
+static void throwA() {
         THROW(A, NULL);
 }
 
-void throwB() {
+static void throwB() {
         THROW(B, NULL);
 }
 
-void throwC() {
+static void throwC() {
         THROW(C, "A cause");
 }
 
-void throwD() {
+static void throwD() {
         THROW(D, "A cause");
 }
 
-void indirectA() {
+static void indirectA() {
         throwA();
 }
 
-/* Throw and catch exceptions and check that we got the expected exception. 
+/* Throw and catch exceptions and check that we got the expected exception.
  * If the exception stack is corrupt somehow this should be detected
  */
-void *thread(void *args) {
+static void *thread(void *args) {
         TRY
                 THROW(A, "A cause");
                 assert(false); // Should not be reached
@@ -172,7 +172,7 @@ void *thread(void *args) {
         CATCH(A)
                 assert(false); // Should not be reached
         END_TRY;
-        return NULL; 
+        return NULL;
 }
 
 
@@ -268,7 +268,7 @@ int main(void) {
         {
                 TRY
                         assert(false); // Throws AssertException
-                        printf("Test8 failed\n"); 
+                        printf("Test8 failed\n");
                         exit(1);
                 CATCH(AssertException)
                         printf("\tResult: ok got AssertException\n");

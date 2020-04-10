@@ -462,7 +462,7 @@ typedef struct Limits_T {
  * array must be NULL terminated and the first entry is the program
  * itself. In addition, a user and group may be set for the Command
  * which means that the Command should run as a certain user and with
- * certain group. To avoid name collision with Command_T in libmonit 
+ * certain group. To avoid name collision with Command_T in libmonit
  * this structure uses lower case.
  */
 typedef struct command_t {
@@ -591,6 +591,11 @@ typedef struct SystemInfo_T {
                         uint64_t bytes;        /**< Total swap in use in the system */
                 } usage;
         } swap;
+        struct {
+                long long allocated;        /**< Number of allocated filedescriptors */
+                long long unused;              /**< Number of unused filedescriptors */
+                long long maximum;                        /**< Filedescriptors limit */
+        } filedescriptors;
         size_t argmax;                                                   /**< Program arguments maximum [B] */
         double loadavg[3];                                                         /**< Load average triple */
         struct utsname uname;                                 /**< Platform information provided by uname() */
@@ -746,7 +751,8 @@ typedef struct Icmp_T {
 
 typedef struct Dependant_T {
         char *dependant;                            /**< name of dependant service */
-        char *dependant_escaped;        /**< URL escaped name of dependant service */
+        char *dependant_urlescaped;     /**< URL escaped name of dependant service */
+        StringBuffer_T dependant_htmlescaped; /**< HTML escaped name of dependant service */
 
         /** For internal use */
         struct Dependant_T *next;             /**< next dependant service in chain */
@@ -948,6 +954,16 @@ typedef struct SecurityAttribute_T {
         struct SecurityAttribute_T *next;
 } *SecurityAttribute_T;
 
+typedef struct Filedescriptors_T {
+        boolean_t total;             /**<Whether to include filedescriptors of children */
+        int64_t limit_absolute;                              /**<  Filedescriptors limit */
+        float limit_percent;                                 /**< Filedescriptors limit */
+        Operator_Type operator;                           /**< Comparison operator */
+        EventAction_T action;  /**< Description of the action upon event occurence */
+
+        /** For internal use */
+        struct Filedescriptors_T *next;
+} *Filedescriptors_T;
 
 /** Defines pid object */
 typedef struct Pid_T {
@@ -1103,6 +1119,14 @@ typedef struct ProcessInfo_T {
         struct IOStatistics_T read;                       /**< Read statistics */
         struct IOStatistics_T write;                     /**< Write statistics */
         char secattr[STRLEN];                         /**< Security attributes */
+        struct {
+                int64_t open;                        /**< number of opened files */
+                int64_t openTotal;             /**< number of total opened files */
+                struct {
+                        int64_t soft;                 /**< Filedescriptors soft limit */
+                        int64_t hard;                 /**< Filedescriptors hard limit */
+                } limit;
+        } filedescriptors;
 } *ProcessInfo_T;
 
 
@@ -1129,7 +1153,8 @@ typedef struct Service_T {
 
         /** Common parameters */
         char *name;                                  /**< Service descriptive name */
-        char *name_escaped;                          /**< Service name URL escaped */
+        char *name_urlescaped;                       /**< Service name URL escaped */
+        StringBuffer_T name_htmlescaped;            /**< Service name HTML escaped */
         State_Type (*check)(struct Service_T *);/**< Service verification function */
         boolean_t visited; /**< Service visited flag, set if dependencies are used */
         Service_Type type;                             /**< Monitored service type */
@@ -1172,6 +1197,7 @@ typedef struct Service_T {
         Uid_T       euid;                                 /**< Effective Uid check */
         Gid_T       gid;                                            /**< Gid check */
         SecurityAttribute_T secattrlist;             /**< Security attributes list */
+        Filedescriptors_T filedescriptorslist;                   /**< Filedescriptors list */
         LinkStatus_T linkstatuslist;                 /**< Network link status list */
         LinkSpeed_T linkspeedlist;                    /**< Network link speed list */
         LinkSaturation_T linksaturationlist;     /**< Network link saturation list */
@@ -1328,7 +1354,6 @@ extern char *operatorshortnames[];
 extern char *servicetypes[];
 extern char *pathnames[];
 extern char *icmpnames[];
-extern char *sslnames[];
 extern char *socketnames[];
 extern char *timestampnames[];
 extern char *httpmethod[];

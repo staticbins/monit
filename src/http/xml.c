@@ -217,6 +217,18 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
         }
         if (Util_hasServiceStatus(S)) {
                 switch (S->type) {
+                        case Service_System:
+                                StringBuffer_append(B,
+                                        "<filedescriptors>"
+                                        "<allocated>%lld</allocatedopen>"
+                                        "<unused>%lld</unused>"
+                                        "<maximum>%lld</maximum>"
+                                        "</filedescriptors>",
+                                        systeminfo.filedescriptors.allocated,
+                                        systeminfo.filedescriptors.unused,
+                                        systeminfo.filedescriptors.maximum);
+                                break;
+
                         case Service_File:
                                 StringBuffer_append(B,
                                         "<mode>%o</mode>"
@@ -405,7 +417,15 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 "<cpu>"
                                                 "<percent>%.1f</percent>"
                                                 "<percenttotal>%.1f</percenttotal>"
-                                                "</cpu>",
+                                                "</cpu>"
+                                                "<filedescriptors>"
+                                                "<open>%"PRId64"</open>"
+                                                "<opentotal>%"PRId64"</opentotal>"
+                                                "<limit>"
+                                                "<soft>%"PRId64"</soft>"
+                                                "<hard>%"PRId64"</hard>"
+                                                "</limit>"
+                                                "</filedescriptors>",
                                                 S->inf.process->threads,
                                                 S->inf.process->children,
                                                 S->inf.process->mem_percent,
@@ -413,7 +433,11 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 (unsigned long long)((double)S->inf.process->mem / 1024.),       // Send as kB for backward compatibility
                                                 (unsigned long long)((double)S->inf.process->total_mem / 1024.), // Send as kB for backward compatibility
                                                 S->inf.process->cpu_percent,
-                                                S->inf.process->total_cpu_percent);
+                                                S->inf.process->total_cpu_percent,
+                                                S->inf.process->filedescriptors.open,
+                                                S->inf.process->filedescriptors.openTotal,
+                                                S->inf.process->filedescriptors.limit.soft,
+                                                S->inf.process->filedescriptors.limit.hard);
                                 }
                                 _ioStatistics(B, "read", &(S->inf.process->read));
                                 _ioStatistics(B, "write", &(S->inf.process->write));

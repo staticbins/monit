@@ -117,6 +117,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef HAVE_OPENSSL
+#include <openssl/ssl.h>
+#endif
+
 #include "net.h"
 #include "monit.h"
 #include "protocol.h"
@@ -303,7 +307,12 @@ static command_t copycommand(command_t);
 static int verifyMaxForward(int);
 static void _setPEM(char **store, char *path, const char *description, boolean_t isFile);
 static void _setSSLOptions(SslOptions_T options);
+#ifdef HAVE_OPENSSL
+static void _setSSLVersion(short version);
+#endif
+static void _unsetSSLVersion(short version);
 static void addsecurityattribute(char *, Action_Type, Action_Type);
+static void addfiledescriptors(Operator_Type, boolean_t, int64_t, float, Action_Type, Action_Type);
 
 %}
 
@@ -318,7 +327,7 @@ static void addsecurityattribute(char *, Action_Type, Action_Type);
 %token IF ELSE THEN FAILED
 %token SET LOGFILE FACILITY DAEMON SYSLOG MAILSERVER HTTPD ALLOW REJECTOPT ADDRESS INIT TERMINAL BATCH
 %token READONLY CLEARTEXT MD5HASH SHA1HASH CRYPT DELAY
-%token PEMFILE ENABLE DISABLE SSL CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
+%token PEMFILE PEMKEY PEMCHAIN ENABLE DISABLE SSLTOKEN CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
 %token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL
 %token IDFILE STATEFILE SEND EXPECT CYCLE COUNT REMINDER REPEAT
 %token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT PROGRAMTIMEOUT STARTTIMEOUT STOPTIMEOUT RESTARTTIMEOUT
@@ -340,8 +349,9 @@ static void addsecurityattribute(char *, Action_Type, Action_Type);
 %token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CORE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
 %token UID EUID GID MMONIT INSTANCE USERNAME PASSWORD
-%token TIME ATIME CTIME MTIME CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH
-%token SSLAUTO SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 TLSV13 CERTMD5 AUTO
+%token TIME ATIME CTIME MTIME CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH 
+%token SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 TLSV13 CERTMD5 AUTO
+%token NOSSLV2 NOSSLV3 NOTLSV1 NOTLSV11 NOTLSV12 NOTLSV13
 %token BYTE KILOBYTE MEGABYTE GIGABYTE
 %token INODE SPACE TFREE PERMISSION SIZE MATCH NOT IGNORE ACTION UPTIME
 %token EXEC UNMONITOR PING PING4 PING6 ICMP ICMPECHO NONEXIST EXIST INVALID DATA RECOVERED PASSED SUCCEEDED
@@ -353,6 +363,7 @@ static void addsecurityattribute(char *, Action_Type, Action_Type);
 %token <number> MAXFORWARD
 %token FIPS
 %token SECURITY ATTRIBUTE
+%token FILEDESCRIPTORS
 
 %left GREATER GREATEROREQUAL LESS LESSOREQUAL EQUAL NOTEQUAL
 
@@ -408,6 +419,8 @@ optproc         : start
                 | uid
                 | euid
                 | secattr
+                | filedescriptors
+                | filedescriptorstotal
                 | gid
                 | uptime
                 | connection
@@ -550,6 +563,7 @@ optsystem       : start
                 | depend
                 | resourcesystem
                 | uptime
+                | filedescriptors
                 ;
 
 optfifolist     : /* EMPTY */
@@ -783,15 +797,15 @@ credentials     : /* EMPTY */
                   }
                 ;
 
-setssl          : SET SSL '{' ssloptionlist '}' {
+setssl          : SET SSLTOKEN '{' ssloptionlist '}' {
                         _setSSLOptions(&(Run.ssl));
                   }
                 ;
 
-ssl             : SSL {
+ssl             : SSLTOKEN {
                         sslset.flags = SSL_Enabled;
                   }
-                | SSL '{' ssloptionlist '}'
+                | SSLTOKEN '{' ssloptionlist '}'
                 ;
 
 ssloptionlist   : /* EMPTY */
@@ -814,7 +828,7 @@ ssloption       : VERIFY ':' ENABLE {
                         sslset.flags = SSL_Enabled;
                         sslset.allowSelfSigned = false;
                   }
-                | VERSIONOPT ':' sslversion {
+                | VERSIONOPT ':' sslversionlist {
                         sslset.flags = SSL_Enabled;
                   }
                 | CIPHER ':' STRING {
@@ -823,6 +837,12 @@ ssloption       : VERIFY ':' ENABLE {
                   }
                 | PEMFILE ':' PATH {
                         _setPEM(&(sslset.pemfile), $3, "SSL server PEM file", true);
+                  }
+                | PEMCHAIN ':' PATH {
+                        _setPEM(&(sslset.pemchain), $3, "SSL certificate chain PEM file", true);
+                  }
+                | PEMKEY ':' PATH {
+                        _setPEM(&(sslset.pemkey), $3, "SSL server private key PEM file", true);
                   }
                 | CLIENTPEMFILE ':' PATH {
                         _setPEM(&(sslset.clientpemfile), $3, "SSL client PEM file", true);
@@ -879,50 +899,78 @@ checksumoperator : /* EMPTY */
                  | EQUAL
                  ;
 
+sslversionlist  : /* EMPTY */
+                | sslversionlist sslversion
+                ;
+
 sslversion      : SSLV2 {
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_V2;
+#if defined OPENSSL_NO_SSL2 || ! defined HAVE_SSLV2 || ! defined HAVE_OPENSSL
+                        yyerror("Your SSL Library does not support SSL version 2");
+#else
+                        _setSSLVersion(SSL_V2);
+#endif
+                  }
+                | NOSSLV2 {
+                        _unsetSSLVersion(SSL_V2);
                   }
                 | SSLV3 {
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_V3;
+#if defined OPENSSL_NO_SSL3 || ! defined HAVE_OPENSSL
+                        yyerror("Your SSL Library does not support SSL version 3");
+#else
+                        _setSSLVersion(SSL_V3);
+#endif
+                  }
+                | NOSSLV3 {
+                        _unsetSSLVersion(SSL_V3);
                   }
                 | TLSV1 {
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV1;
+#if defined OPENSSL_NO_TLS1_METHOD || ! defined HAVE_OPENSSL
+                        yyerror("Your SSL Library does not support TLS version 1.0");
+#else
+                        _setSSLVersion(SSL_TLSV1);
+#endif
                   }
-                | TLSV11
-                {
-#ifndef HAVE_TLSV1_1
+                | NOTLSV1 {
+                        _unsetSSLVersion(SSL_TLSV1);
+                  }
+                | TLSV11 {
+#if defined OPENSSL_NO_TLS1_1_METHOD || ! defined HAVE_TLSV1_1 || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support TLS version 1.1");
+#else
+                        _setSSLVersion(SSL_TLSV11);
 #endif
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV11;
                 }
-                | TLSV12
-                {
-#ifndef HAVE_TLSV1_2
+                | NOTLSV11 {
+                        _unsetSSLVersion(SSL_TLSV11);
+                  }
+                | TLSV12 {
+#if defined OPENSSL_NO_TLS1_2_METHOD || ! defined HAVE_TLSV1_2 || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support TLS version 1.2");
+#else
+                        _setSSLVersion(SSL_TLSV12);
 #endif
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV12;
                 }
-                | TLSV13
-                {
-#ifndef HAVE_TLSV1_3
+                | NOTLSV12 {
+                        _unsetSSLVersion(SSL_TLSV12);
+                  }
+                | TLSV13 {
+#if defined OPENSSL_NO_TLS1_3_METHOD || ! defined HAVE_TLSV1_3 || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support TLS version 1.3");
+#else
+                        _setSSLVersion(SSL_TLSV13);
 #endif
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV13;
                 }
-
-                | SSLAUTO {
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_Auto;
+                | NOTLSV13 {
+                        _unsetSSLVersion(SSL_TLSV13);
                   }
                 | AUTO {
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_Auto;
+                        // Enable just TLS 1.2 and 1.3 by default
+#if ! defined OPENSSL_NO_TLS1_2_METHOD && defined HAVE_TLSV1_2 && defined HAVE_OPENSSL
+                        _setSSLVersion(SSL_TLSV12);
+#endif
+#if ! defined OPENSSL_NO_TLS1_3_METHOD && defined HAVE_TLSV1_3 && defined HAVE_OPENSSL
+                        _setSSLVersion(SSL_TLSV13);
+#endif
                   }
                 ;
 
@@ -1000,12 +1048,22 @@ mailserveropt   : username {
 sethttpd        : SET HTTPD httpdlist {
                         if (sslset.flags & SSL_Enabled) {
 #ifdef HAVE_OPENSSL
-                                if (! sslset.pemfile) {
+                                if (sslset.pemfile) {
+                                        if (sslset.pemchain || sslset.pemkey) {
+                                                yyerror("SSL server option pemfile and pemchain|pemkey are mutually exclusive");
+                                        } else if (! file_checkStat(sslset.pemfile, "SSL server PEM file", S_IRWXU)) {
+                                                yyerror("SSL server PEM file permissions check failed");
+                                        } else {
+                                                _setSSLOptions(&(Run.httpd.socket.net.ssl));
+                                        }
+                                } else if (sslset.pemchain && sslset.pemkey) {
+                                        if (! file_checkStat(sslset.pemkey, "SSL server private key PEM file", S_IRWXU)) {
+                                                yyerror("SSL server private key PEM file permissions check failed");
+                                        } else {
+                                                _setSSLOptions(&(Run.httpd.socket.net.ssl));
+                                        }
+                                } else {
                                         yyerror("SSL server PEM file is required (please use ssl pemfile option)");
-                                } else if (! file_checkStat(sslset.pemfile, "SSL server PEM file", S_IRWXU)) {
-                                        yyerror("SSL server PEM file permissions check failed");
-                                } else  {
-                                        _setSSLOptions(&(Run.httpd.socket.net.ssl));
                                 }
 #else
                                 yyerror("SSL is not supported");
@@ -1896,6 +1954,7 @@ uptime          : IF UPTIME operator NUMBER time rate1 THEN action1 recovery {
                         addeventaction(&(uptimeset).action, $<number>8, $<number>9);
                         adduptime(&uptimeset);
                   }
+                ;
 
 icmpcount       : COUNT NUMBER {
                         icmpset.count = $<number>2;
@@ -2755,6 +2814,19 @@ secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recover
                   }
                 ;
 
+filedescriptors : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        addfiledescriptors($<number>3, false, (int64_t)$4, -1., $<number>7, $<number>8);
+                  }
+                | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
+                        addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
+                  }
+                ;
+
+filedescriptorstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        addfiledescriptors($<number>4, true, (int64_t)$5, -1., $<number>8, $<number>9);
+                  }
+                ;
+
 gid             : IF FAILED GID STRING rate1 THEN action1 recovery {
                         gidset.gid = get_gid($4, 0);
                         addeventaction(&(gidset).action, $<number>7, $<number>8);
@@ -3092,8 +3164,10 @@ static void postparse() {
                 return;
 
         /* If defined - add the last service to the service list */
-        if (current)
+        if (current) {
                 addservice(current);
+                current = NULL;
+        }
 
         /* Check that we do not start monit in daemon mode without having a poll time */
         if (! Run.polltime && ((Run.flags & Run_Daemon) || (Run.flags & Run_Foreground))) {
@@ -3218,7 +3292,8 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
         current->monitor  = Monitor_Init;
         current->onreboot = Run.onreboot;
         current->name     = name;
-        current->name_escaped = Util_urlEncode(name, false);
+        current->name_urlescaped = Util_urlEncode(name, false);
+        current->name_htmlescaped = escapeHTML(StringBuffer_create(16), name);
         current->check    = check;
         current->path     = value;
 
@@ -3357,7 +3432,8 @@ static void adddependant(char *dependant) {
                 d->next = current->dependantlist;
 
         d->dependant = dependant;
-        d->dependant_escaped = Util_urlEncode(dependant, false);
+        d->dependant_urlescaped = Util_urlEncode(dependant, false);
+        d->dependant_htmlescaped = escapeHTML(StringBuffer_create(16), dependant);
         current->dependantlist = d;
 
 }
@@ -3742,44 +3818,44 @@ static void addperm(Perm_T ps) {
 
 static void addlinkstatus(Service_T s, LinkStatus_T L) {
         ASSERT(L);
-        
+
         LinkStatus_T l;
         NEW(l);
         l->action = L->action;
-        
+
         l->next = s->linkstatuslist;
         s->linkstatuslist = l;
-        
+
         reset_linkstatusset();
 }
 
 
 static void addlinkspeed(Service_T s, LinkSpeed_T L) {
         ASSERT(L);
-        
+
         LinkSpeed_T l;
         NEW(l);
         l->action = L->action;
-        
+
         l->next = s->linkspeedlist;
         s->linkspeedlist = l;
-        
+
         reset_linkspeedset();
 }
 
 
 static void addlinksaturation(Service_T s, LinkSaturation_T L) {
         ASSERT(L);
-        
+
         LinkSaturation_T l;
         NEW(l);
         l->operator = L->operator;
         l->limit = L->limit;
         l->action = L->action;
-        
+
         l->next = s->linksaturationlist;
         s->linksaturationlist = l;
-        
+
         reset_linksaturationset();
 }
 
@@ -3899,12 +3975,12 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
                                 command1 = copycommand(savecommand);
                         }
                 }
-                
+
                 addmatch(ms, actionnumber, linenumber);
         }
         if (actionnumber == Action_Exec && savecommand)
                 gccmd(&savecommand);
-        
+
         fclose(handle);
 }
 
@@ -3974,7 +4050,7 @@ static void addfilesystem(FileSystem_T ds) {
 
         dev->next               = current->filesystemlist;
         current->filesystemlist = dev;
-        
+
         reset_filesystemset();
 
 }
@@ -4090,7 +4166,7 @@ static void addcommand(int what, unsigned timeout) {
         }
 
         command->timeout = timeout;
-        
+
         command = NULL;
 
 }
@@ -4944,12 +5020,16 @@ static command_t copycommand(command_t source) {
 static void _setPEM(char **store, char *path, const char *description, boolean_t isFile) {
         if (*store) {
                 yyerror2("Duplicate %s", description);
+                FREE(path);
         } else if (! File_exist(path)) {
                 yyerror2("%s doesn't exist", description);
+                FREE(path);
         } else if (! (isFile ? File_isFile(path) : File_isDirectory(path))) {
                 yyerror2("%s is not a %s", description, isFile ? "file" : "directory");
+                FREE(path);
         } else if (! File_isReadable(path)) {
                 yyerror2("Cannot read %s", description);
+                FREE(path);
         } else {
                 sslset.flags = SSL_Enabled;
                 *store = path;
@@ -4967,10 +5047,30 @@ static void _setSSLOptions(SslOptions_T options) {
         options->clientpemfile = sslset.clientpemfile;
         options->flags = sslset.flags;
         options->pemfile = sslset.pemfile;
+        options->pemchain = sslset.pemchain;
+        options->pemkey = sslset.pemkey;
         options->verify = sslset.verify;
         options->version = sslset.version;
         reset_sslset();
 }
+
+
+#ifdef HAVE_OPENSSL
+static void _setSSLVersion(short version) {
+        sslset.flags = SSL_Enabled;
+        if (sslset.version == -1)
+                sslset.version = version;
+        else
+                sslset.version |= version;
+}
+#endif
+
+
+static void _unsetSSLVersion(short version) {
+        if (sslset.version != -1)
+                sslset.version &= ~version;
+}
+
 
 static void addsecurityattribute(char *value, Action_Type failed, Action_Type succeeded) {
         SecurityAttribute_T attr;
@@ -4979,5 +5079,17 @@ static void addsecurityattribute(char *value, Action_Type failed, Action_Type su
         attr->attribute = value;
         attr->next = current->secattrlist;
         current->secattrlist = attr;
+}
+
+static void addfiledescriptors(Operator_Type operator, boolean_t total, int64_t value_absolute, float value_percent, Action_Type failed, Action_Type succeeded) {
+        Filedescriptors_T fds;
+        NEW(fds);
+        addeventaction(&(fds->action), failed, succeeded);
+        fds->total = total;
+        fds->limit_absolute = value_absolute;
+        fds->limit_percent = value_percent;
+        fds->operator = operator;
+        fds->next = current->filedescriptorslist;
+        current->filedescriptorslist = fds;
 }
 

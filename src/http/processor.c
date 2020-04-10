@@ -176,7 +176,7 @@ void Processor_setHttpPostLimit() {
 }
 
 
-void escapeHTML(StringBuffer_T sb, const char *s) {
+StringBuffer_T escapeHTML(StringBuffer_T sb, const char *s) {
         for (int i = 0; s[i]; i++) {
                 if (s[i] == '<')
                         StringBuffer_append(sb, "&lt;");
@@ -187,6 +187,7 @@ void escapeHTML(StringBuffer_T sb, const char *s) {
                 else
                         StringBuffer_append(sb, "%c", s[i]);
         }
+        return sb;
 }
 
 

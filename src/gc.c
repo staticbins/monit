@@ -78,6 +78,7 @@ static void _gc_url(URL_T *);
 static void _gc_request(Request_T *);
 static void _gcssloptions(SslOptions_T o);
 static void _gcsecattr(SecurityAttribute_T *);
+static void _gcfiledescriptors(Filedescriptors_T *);
 
 
 /**
@@ -163,6 +164,8 @@ void gc_event(Event_T *e) {
 static void _gcssloptions(SslOptions_T o) {
         FREE(o->checksum);
         FREE(o->pemfile);
+        FREE(o->pemchain);
+        FREE(o->pemkey);
         FREE(o->clientpemfile);
         FREE(o->ciphers);
         FREE(o->CACertificateFile);
@@ -257,6 +260,8 @@ static void _gc_service(Service_T *s) {
                 gccmd(&(*s)->start);
         if ((*s)->stop)
                 gccmd(&(*s)->stop);
+        if ((*s)->restart)
+                gccmd(&(*s)->restart);
         if ((*s)->action_DATA)
                 _gc_eventaction(&(*s)->action_DATA);
         if ((*s)->action_EXEC)
@@ -273,6 +278,8 @@ static void _gc_service(Service_T *s) {
                 gc_event(&(*s)->eventlist);
         if ((*s)->secattrlist)
                 _gcsecattr(&(*s)->secattrlist);
+        if ((*s)->filedescriptorslist)
+                _gcfiledescriptors(&(*s)->filedescriptorslist);
         switch ((*s)->type) {
                 case Service_Directory:
                         FREE((*s)->inf.directory);
@@ -296,8 +303,9 @@ static void _gc_service(Service_T *s) {
                 default:
                         break;
         }
+        StringBuffer_free(&((*s)->name_htmlescaped));
+        FREE((*s)->name_urlescaped);
         FREE((*s)->name);
-        FREE((*s)->name_escaped);
         FREE((*s)->path);
         (*s)->next = NULL;
         FREE(*s);
@@ -634,8 +642,9 @@ static void _gcpdl(Dependant_T *d) {
         ASSERT(d);
         if ((*d)->next)
                 _gcpdl(&(*d)->next);
+        StringBuffer_free(&((*d)->dependant_htmlescaped));
+        FREE((*d)->dependant_urlescaped);
         FREE((*d)->dependant);
-        FREE((*d)->dependant_escaped);
         FREE(*d);
 }
 
@@ -682,5 +691,15 @@ static void _gcsecattr(SecurityAttribute_T *s) {
                 _gc_eventaction(&(*s)->action);
         FREE((*s)->attribute);
         FREE(*s);
+}
+
+
+static void _gcfiledescriptors(Filedescriptors_T *o) {
+        ASSERT(o && *o);
+        if ((*o)->next)
+                _gcfiledescriptors(&(*o)->next);
+        if ((*o)->action)
+                _gc_eventaction(&(*o)->action);
+        FREE(*o);
 }
 

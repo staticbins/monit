@@ -485,7 +485,7 @@ error:
 
 void Engine_start() {
         Engine_cleanup();
-        stopped = Run.flags & Run_Stopped;
+        stopped = (Run.flags & Run_Stopped) != 0;
         init_service();
         char error[MAX_SERVER_SOCKETS][STRLEN] = {};
         if (Run.httpd.flags & Httpd_Net) {
@@ -525,7 +525,7 @@ void Engine_stop() {
 
 void Engine_cleanup() {
         myServerSocketsCount = 0;
-        if (Run.httpd.flags & Httpd_Unix)
+        if (Run.httpd.flags & Httpd_Unix && Run.httpd.socket.unix.path)
                 unlink(Run.httpd.socket.unix.path);
 }
 

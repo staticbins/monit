@@ -235,7 +235,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         if (ps.pr_argc == 0) {
                                 pt[i].cmdline = Str_dup(procs[i].pi_comm); // Kernel thread
                         } else {
-                                char command[4096];
+                                char command[8192];
                                 if (! getargs(&procs[i], sizeof(struct procentry64), command, sizeof(command))) {
                                         // The arguments are separated with '\0' with the last one terminated by '\0\0' -> merge arguments into one string
                                         for (int i = 0; i < sizeof(command) - 1; i++) {
@@ -324,6 +324,12 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 
         cpu_initialized = 1;
 
+        return true;
+}
+
+
+boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+        // Not implemented
         return true;
 }
 

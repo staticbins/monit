@@ -73,6 +73,14 @@
 #include <sys/sysinfo.h>
 #endif
 
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif
+
+#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
+
 #include "monit.h"
 #include "ProcessTree.h"
 #include "process_sysdep.h"
@@ -111,8 +119,15 @@ typedef struct Proc_T {
         unsigned long long  item_starttime;
         uint64_t            read_bytes;
         uint64_t            write_bytes;
-        char                name[4096];
+        struct {
+                int64_t     open;
+                struct {
+                        int64_t soft;
+                        int64_t hard;
+                } limit;
+        } filedescriptors;
         char                secattr[STRLEN];
+        StringBuffer_T      name;
 } *Proc_T;
 
 
@@ -153,7 +168,7 @@ static time_t _getStartTime() {
 }
 
 
-// parse /proc/PID/stat 
+// parse /proc/PID/stat
 static boolean_t _parseProcPidStat(Proc_T proc) {
         char buf[4096];
         char *tmp = NULL;
@@ -166,10 +181,6 @@ static boolean_t _parseProcPidStat(Proc_T proc) {
                 return false;
         }
         *tmp = 0;
-        if (sscanf(buf, "%*d (%255s", proc->name) != 1) {
-                DEBUG("system statistic error -- file /proc/%d/stat process name parse error\n", proc->pid);
-                return false;
-        }
         tmp += 2;
         if (sscanf(tmp,
                    "%c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %ld %ld %*d %*d %d %*u %llu %*u %ld %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d\n",
@@ -239,6 +250,9 @@ static boolean_t _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot get process write bytes\n");
                                 return false;
                         }
+                } else {
+                        // file_readProc() already printed a DEBUG() message
+                        return false;
                 }
         }
         return true;
@@ -248,17 +262,25 @@ static boolean_t _parseProcPidIO(Proc_T proc) {
 // parse /proc/PID/cmdline
 static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
         if (pflags & ProcessEngine_CollectCommandLine) {
-                int bytes = 0;
-                char buf[4096];
-                if (! file_readProc(buf, sizeof(buf), "cmdline", proc->pid, &bytes)) {
-                        DEBUG("system statistic error -- cannot read /proc/%d/cmdline\n", proc->pid);
+                char filename[STRLEN];
+                snprintf(filename, sizeof(filename), "/proc/%d/cmdline", proc->pid);
+                FILE *f = fopen(filename, "r");
+                if (! f) {
+                        DEBUG("system statistic error -- cannot open /proc/%d/cmdline: %s\n", proc->pid, STRERROR);
                         return false;
                 }
-                for (int j = 0; j < (bytes - 1); j++) // The cmdline file contains argv elements/strings terminated separated by '\0' => join the string
-                        if (buf[j] == 0)
-                                buf[j] = ' ';
-                if (*buf)
-                        snprintf(proc->name, sizeof(proc->name), "%s", buf);
+                size_t n;
+                char buf[STRLEN] = {};
+                while ((n = fread(buf, 1, sizeof(buf) - 1, f)) > 0) {
+                        // The cmdline file contains argv elements/strings separated by '\0' => join the string
+                        for (int i = 0; i < n; i++) {
+                                if (buf[i] == 0)
+                                        StringBuffer_append(proc->name, " ");
+                                else
+                                        StringBuffer_append(proc->name, "%c", buf[i]);
+                        }
+                }
+                fclose(f);
         }
         return true;
 }
@@ -273,6 +295,55 @@ static boolean_t _parseProcPidAttrCurrent(Proc_T proc) {
         return false;
 }
 
+// count entries in /proc/PID/fd
+static boolean_t _parseProcFdCount(Proc_T proc) {
+        uint64_t file_count = 0;
+        DIR *dirp;
+        char fd_path[32];
+
+        snprintf(fd_path, sizeof(fd_path), "/proc/%d/fd", proc->pid);
+
+        if (!(dirp = opendir(fd_path))) {
+                DEBUG("system statistic error -- opendir /proc/%d/fd: %s\n", proc->pid, STRERROR);
+                return false;
+        }
+
+        errno = 0;
+        while (readdir(dirp) != NULL) {
+                // count everything
+                file_count++;
+        }
+
+        // do not closedir() until readdir errno has been evaluated
+
+        if (errno) {
+                DEBUG("system statistic error -- cannot iterate /proc/%d/fd: %s\n", proc->pid, STRERROR);
+                closedir(dirp);
+                return false;
+        }
+
+        closedir(dirp);
+
+        // assert at least '.' and '..' have been found
+        if (file_count < 2) {
+                DEBUG("system statistic error -- cannot find basic entries in /proc/%d/fd\n", proc->pid);
+                return false;
+        }
+
+        // subtract entries '.' and '..'
+        proc->filedescriptors.open = file_count - 2;
+
+        // get process' limits
+        struct rlimit limits;
+        if (prlimit(proc->pid, RLIMIT_NOFILE, NULL, &limits) != 0) {
+                DEBUG("prlimit failed: %s\n", STRERROR);
+                return false;
+        }
+        proc->filedescriptors.limit.soft = limits.rlim_cur;
+        proc->filedescriptors.limit.hard = limits.rlim_max;
+
+        return true;
+}
 
 static double _usagePercent(unsigned long long previous, unsigned long long current, double total) {
         if (current < previous) {
@@ -362,10 +433,11 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
 
         int count = 0;
         struct Proc_T proc = {};
+        proc.name = StringBuffer_create(64);
         time_t starttime = _getStartTime();
         for (int i = 0; i < globbuf.gl_pathc; i++) {
                 proc.pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
-                if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags)) {
+                if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags) && _parseProcFdCount(&proc)) {
                         // Non-mandatory statistics (may not exist)
                         _parseProcPidAttrCurrent(&proc);
                         // Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting)
@@ -381,12 +453,18 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].read.bytes = proc.read_bytes;
                         pt[count].write.bytes = proc.write_bytes;
                         pt[count].zombie = proc.item_state == 'Z' ? true : false;
-                        pt[count].cmdline = Str_dup(proc.name);
+                        pt[count].cmdline = Str_dup(StringBuffer_toString(proc.name));
                         pt[count].secattr = Str_dup(proc.secattr);
+                        pt[count].filedescriptors.usage = proc.filedescriptors.open;
+                        pt[count].filedescriptors.limit.soft = proc.filedescriptors.limit.soft;
+                        pt[count].filedescriptors.limit.hard = proc.filedescriptors.limit.hard;
                         count++;
-                        memset(&proc, 0, sizeof(struct Proc_T));
+                        // Clear
+                        memset(&proc, 0, sizeof(struct Proc_T) - sizeof(proc.name));
+                        StringBuffer_clear(proc.name);
                 }
         }
+        StringBuffer_free(&(proc.name));
 
         *reference = pt;
         globfree(&globbuf);
@@ -428,6 +506,7 @@ int getloadavg_sysdep(double *loadv, int nelem) {
 boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         char          *ptr;
         char           buf[2048];
+        unsigned long  mem_available = 0UL;
         unsigned long  mem_free = 0UL;
         unsigned long  buffers = 0UL;
         unsigned long  cached = 0UL;
@@ -437,32 +516,42 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         uint64_t       zfsarcsize = 0ULL;
 
         if (! file_readProc(buf, sizeof(buf), "meminfo", -1, NULL)) {
-                LogError("system statistic error -- cannot get real memory free amount\n");
+                LogError("system statistic error -- cannot get system memory info\n");
                 goto error;
         }
 
-        /* Memory */
-        if (! (ptr = strstr(buf, "MemFree:")) || sscanf(ptr + 8, "%ld", &mem_free) != 1) {
-                LogError("system statistic error -- cannot get real memory free amount\n");
-                goto error;
-        }
-        if (! (ptr = strstr(buf, "Buffers:")) || sscanf(ptr + 8, "%ld", &buffers) != 1)
-                DEBUG("system statistic error -- cannot get real memory buffers amount\n");
-        if (! (ptr = strstr(buf, "Cached:")) || sscanf(ptr + 7, "%ld", &cached) != 1)
-                DEBUG("system statistic error -- cannot get real memory cache amount\n");
-        if (! (ptr = strstr(buf, "SReclaimable:")) || sscanf(ptr + 13, "%ld", &slabreclaimable) != 1)
-                DEBUG("system statistic error -- cannot get slab reclaimable memory amount\n");
-        FILE *f = fopen("/proc/spl/kstat/zfs/arcstats", "r");
-        if (f) {
-                char line[STRLEN];
-                while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "size %*d %"PRIu64, &zfsarcsize) == 1) {
-                                break;
-                        }
+        /*
+         * Memory
+         *
+         * First, check if the "MemAvailable" value is available on this system. If it is, we will
+         * use it. Otherwise we will attempt to calculate the amount of available memory ourself.
+         */
+        if ((ptr = strstr(buf, "MemAvailable:")) && sscanf(ptr + 13, "%ld", &mem_available) == 1) {
+                si->memory.usage.bytes = systeminfo.memory.size - (uint64_t)mem_available * 1024;
+        } else {
+                DEBUG("'MemAvailable' value not available on this system. Attempting to calculate available memory manually...\n");
+                if (! (ptr = strstr(buf, "MemFree:")) || sscanf(ptr + 8, "%ld", &mem_free) != 1) {
+                        LogError("system statistic error -- cannot get real memory free amount\n");
+                        goto error;
                 }
-                fclose(f);
+                if (! (ptr = strstr(buf, "Buffers:")) || sscanf(ptr + 8, "%ld", &buffers) != 1)
+                        DEBUG("system statistic error -- cannot get real memory buffers amount\n");
+                if (! (ptr = strstr(buf, "Cached:")) || sscanf(ptr + 7, "%ld", &cached) != 1)
+                        DEBUG("system statistic error -- cannot get real memory cache amount\n");
+                if (! (ptr = strstr(buf, "SReclaimable:")) || sscanf(ptr + 13, "%ld", &slabreclaimable) != 1)
+                        DEBUG("system statistic error -- cannot get slab reclaimable memory amount\n");
+                FILE *f = fopen("/proc/spl/kstat/zfs/arcstats", "r");
+                if (f) {
+                        char line[STRLEN];
+                        while (fgets(line, sizeof(line), f)) {
+                                if (sscanf(line, "size %*d %"PRIu64, &zfsarcsize) == 1) {
+                                        break;
+                                }
+                        }
+                        fclose(f);
+                }
+                si->memory.usage.bytes = systeminfo.memory.size - zfsarcsize - (uint64_t)(mem_free + buffers + cached + slabreclaimable) * 1024;
         }
-        si->memory.usage.bytes = systeminfo.memory.size - zfsarcsize - (uint64_t)(mem_free + buffers + cached + slabreclaimable) * 1024;
 
         /* Swap */
         if (! (ptr = strstr(buf, "SwapTotal:")) || sscanf(ptr + 10, "%ld", &swap_total) != 1) {
@@ -551,4 +640,25 @@ error:
         return false;
 }
 
+
+/**
+ * This routine returns filedescriptors statistics
+ * @return: true if successful, false if failed (or not available)
+ */
+boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+        boolean_t rv = false;
+        FILE *f = fopen("/proc/sys/fs/file-nr", "r");
+        if (f) {
+                char line[STRLEN];
+                if (fgets(line, sizeof(line), f)) {
+                        if (sscanf(line, "%lld %lld %lld\n", &(systeminfo.filedescriptors.allocated), &(systeminfo.filedescriptors.unused), &(systeminfo.filedescriptors.maximum)) == 3) {
+                                rv = true;
+                        }
+                }
+                fclose(f);
+        } else {
+                DEBUG("system statistic error -- cannot open /proc/sys/fs/file-nr\n");
+        }
+        return rv;
+}
 

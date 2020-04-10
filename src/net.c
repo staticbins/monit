@@ -140,7 +140,7 @@
 #include "net.h"
 
 // libmonit
-#include "util/Fmt.h"
+#include "util/Convert.h"
 #include "system/Net.h"
 #include "system/Time.h"
 #include "exceptions/AssertException.h"
@@ -178,7 +178,7 @@ static unsigned short _checksum(unsigned char *_addr, int count) {
 }
 
 
-static void __attribute__((format (printf, 3, 4))) _LogWarningOrError(int attempt, int maxAttempts, const char *s, ...) {
+__attribute__((format (printf, 3, 4))) static void _LogWarningOrError(int attempt, int maxAttempts, const char *s, ...) {
         ASSERT(s);
         va_list ap;
         va_start(ap, s);
@@ -456,11 +456,11 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                 } else {
                         memcpy(&started, data, sizeof(int64_t));
                         double response = (double)(stopped - started) / 1000.; // Convert microseconds to milliseconds
-                        DEBUG("Ping response for %s %d/%d succeeded -- received id=%d sequence=%d response_time=%s\n", hostname, retry, maxretries, in_id, in_seq, Fmt_time2str(response, (char[11]){}));
+                        DEBUG("Ping response for %s %d/%d succeeded -- received id=%d sequence=%d response_time=%s\n", hostname, retry, maxretries, in_id, in_seq, Convert_time2str(response, (char[11]){}));
                         return response; // Wait for one response only
                 }
         }
-        _LogWarningOrError(retry, maxretries, "Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Fmt_time2str(timeout, (char[11]){}));
+        _LogWarningOrError(retry, maxretries, "Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Convert_time2str(timeout, (char[11]){}));
         return -1.;
 }
 

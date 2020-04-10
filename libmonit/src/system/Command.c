@@ -537,7 +537,7 @@ Process_T Command_execute(T C) {
                 P->uid = getuid();
                 if (C->uid) {
                         assert(user);
-                    // Ref: https://bitbucket.org/tildeslash/monit/issues/278/monit-should-drop-supplementary-groups
+                        // TODO: https://bitbucket.org/tildeslash/monit/issues/278/monit-should-drop-supplementary-groups
                         if (initgroups(user->pw_name, P->gid) == 0) {
                                 Command_setEnv(C, "HOME", user->pw_dir);
                                 if (setuid(C->uid) == 0) {

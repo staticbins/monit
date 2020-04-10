@@ -298,3 +298,10 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 
         return true;
 }
+
+
+boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+        // Not implemented
+        return true;
+}
+

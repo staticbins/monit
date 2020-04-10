@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -34,6 +34,7 @@
 #endif
 
 #include "monit.h"
+#include "Color.h"
 
 // libmonit
 #include "util/Str.h"

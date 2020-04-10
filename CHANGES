@@ -4,10 +4,80 @@
 
 Version 5.27.0
 
+Important: (Backward compatibility impact) The SSL "version: auto" now defaults to TLSv1.2 and TLSv1.3 only.
+If you need to enable TLSv1.0 or TLSv1.1 (regardless of how insecure it is), you have to explicitly enable it
+via the SSL option, example:
+     set ssl {
+        version: tlsv11
+     }
+
+New: Add support for monitoring of filedescriptors usage of a process on Linux. Thanks to Marcel Baur and Lutz Mader. Example:
+    check process myproc with pidfile /var/run/myproc.pid
+        if filedescriptors >= 90% then alert
+        if filedescriptors >= 99% then restart
+        if total filedescriptors > 5000 then alert
+
+New: Add support for monitoring of system-wide filedescriptors usage on Linux. Example:
+    check system $HOST
+        if filedescriptors >= 90% then alert
+
+New: Allow to set a list of allowed TLS protocols (originally only one was allowed). Also add support for
+protocol exclude list (put "-" in front of the protocol name to disable it).
+Exclude list example:
+     set ssl {
+        version: auto -sslv2 -sslv3 -tlsv1 -tlsv11
+     }
+
+New: Add support for split certificate chain and key for the monit HTTP interface. Thanks to Lutz Mader for patch. Example:
+ set httpd
+     port 2812
+     with ssl {
+        pemchain: /etc/ssl/certs/monit.chain.pem
+        pemkey: /etc/ssl/certs/monit.key.pem
+     }
+     allow myuser:mypassword
+
+New: Issue #877: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
+
+New: Enable support for compilation with AddressSanitizer. Use "configure --with-asan" to enable.
+
+Fixed: Issue #843: Linux: Wrong memory usage reported in LXC container when ZFS filesystem is used. Monit
+now uses MemAvailable on Linux when calculating the memory usage, so it will provide more accurate statistics.
+Thanks to Joe LeVeque for patch.
+
+Fixed: Issue #831: The HTTP protocol test returned "unknown transfer encoding HTTP error" in the case that
+the response content or checksum test was used and the HTTP server didn't set the Content-Length nor used a
+chunked encoding for response.
+
+Fixed: Issue #880: If monit is linked with AddresSanitizer, it may crash when it generates an MD5 hash.
+Thanks to Lutz Mader for patch.
+
+Fixed: Issue #879: The HTML interface didn't escape strings that are part of monit configuration file.
+Thanks to Hanno Boeck for report.
+
 Fixed: Issue #872: Procmatch PID column show five digits only
+
+Fixed: Issue #851: Linux and AIX: The length of the string that describes the process name and its arguments
+was limited to 4kB, so the "procmatch" may not find the process if the pattern is past this limit. The limit
+was removed on Linux. On AIX the limit was rised to 8kB.
 
 Fixed: MacOS: Only first 16 characters of the process name was displayed for privileged processes,
 so the pattern based process check and the procmatch CLI may miss some processes.
+
+Fixed: Issue #886: The command-line options on some platforms (such as AIX) cannot be used past the non-option
+argument.
+
+Fixed: If monit is linked with AddresSanitizer and a custom configuration file is passed via the -c option,
+monit  may crash.
+
+Fixed: Fix memory leak if a pemfile option is used with a path that cannot be read.
+
+Fixed: Fix memory leak if custom "set mail-format" is set.
+
+Fixed: Fix memory leak when no explicit "check system" service entry is present in monit configuration and
+monit is reloaded.
+
+Fixed: Fix memory leak if "restart program" is defined for a service and monit is reloaded.
 
 
 Version 5.26.0

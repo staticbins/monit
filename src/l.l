@@ -50,7 +50,7 @@
 #endif
 
 #include "monit.h"
-#include "tokens.h"
+#include "y.tab.h"
 
 // libmonit
 #include "util/Str.h"
@@ -205,10 +205,10 @@ disable[ \t]+ssl  {/* EMPTY */}
 if                { return IF; }
 then              { return THEN; }
 failed            { return FAILED; }
-tls               { return SSL; }
-ssl               { return SSL; }
-ssl[ \t]+enable   { return SSL; }
-enable[ ]+ssl     { return SSL; }
+tls               { return SSLTOKEN; }
+ssl               { return SSLTOKEN; }
+ssl[ \t]+enable   { return SSLTOKEN; }
+enable[ ]+ssl     { return SSLTOKEN; }
 enable            { return ENABLE; }
 disable           { return DISABLE; }
 verify            { return VERIFY; }
@@ -244,6 +244,8 @@ allowselfcertification  { return ALLOWSELFCERTIFICATION; }
 selfsigned        { return SELFSIGNED; }
 certmd5           { return CERTMD5; }
 pemfile           { return PEMFILE; }
+pemchain          { return PEMCHAIN; }
+pemkey            { return PEMKEY; }
 init              { return INIT; }
 allow             { return ALLOW; }
 reject            { return REJECTOPT; }
@@ -359,6 +361,12 @@ child(ren)?       { return CHILDREN; }
 thread(s)?        { return THREADS; }
 time(stamp)?      { return TIME; }
 changed           { return CHANGED; }
+-sslv2            { return NOSSLV2; }
+-sslv3            { return NOSSLV3; }
+-tlsv1            { return NOTLSV1; }
+-tlsv11           { return NOTLSV11; }
+-tlsv12           { return NOTLSV12; }
+-tlsv13           { return NOTLSV13; }
 sslv2             { return SSLV2; }
 sslv3             { return SSLV3; }
 tlsv1             { return TLSV1; }
@@ -367,7 +375,7 @@ tlsv12            { return TLSV12; }
 tlsv13            { return TLSV13; }
 cipher(s)?        { return CIPHER; }
 auto              { return AUTO; }
-sslauto           { return SSLAUTO; }
+sslauto           { return AUTO; }
 inode(s)?         { return INODE; }
 space             { return SPACE; }
 free              { return TFREE; }
@@ -431,6 +439,7 @@ credentials       { return CREDENTIALS; }
 register          { return REGISTER; }
 fsflag(s)?        { return FSFLAG; }
 fips              { return FIPS; }
+filedescriptors   { return FILEDESCRIPTORS; }
 {byte}            { return BYTE; }
 {kilobyte}        { return KILOBYTE; }
 {megabyte}        { return MEGABYTE; }
@@ -844,8 +853,13 @@ group[ \t]+       {
 
   {addrname}    {
                         char *name = Str_unquote(Str_dup(yytext));
-                        if (name && *name)
-                                yylval.address->name = Str_unquote(Str_dup(yytext));
+                        if (name) {
+                                if (*name)
+                                        yylval.address->name = name;
+                                else
+                                        // Empty quoted string
+                                        FREE(name);
+                        }
                 }
 
   [<>:\[\]]     {
