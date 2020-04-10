@@ -158,7 +158,6 @@ char *httpmethod[] = {"", "HEAD", "GET"};
  * The Prime mover
  */
 int main(int argc, char **argv) {
-        List_T arguments = List_new();
         Bootstrap(); // Bootstrap libmonit
         Bootstrap_setAbortHandler(vLogAbortHandler);  // Abort Monit on exceptions thrown by libmonit
         Bootstrap_setErrorHandler(vLogError);
@@ -168,6 +167,7 @@ int main(int argc, char **argv) {
         Ssl_start();
 #endif
         init_env();
+        List_T arguments = List_new();
         handle_options(argc, argv, arguments);
         do_init();
         do_action(arguments);
