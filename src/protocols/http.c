@@ -269,10 +269,13 @@ static void _processBodyUntilEOF(Socket_T socket, Port_T P, volatile char **data
         if (P->url_request && P->url_request->regex) {
                 // The content test is required => cache the whole body
                 int haveBytes = 0;
-                while ((readBytes = Socket_read(socket, (void *)(*data + haveBytes), BUFSIZE)) > 0)  {
+                int wantBytes = STRLEN;
+                while (haveBytes < Run.limits.httpContentBuffer && (readBytes = Socket_read(socket, (void *)(*data + haveBytes), wantBytes)) > 0)  {
                         _checksumAppend(P, context, (const char *)(*data + haveBytes), readBytes);
                         haveBytes += readBytes;
-                        *data = realloc((void *)*data, haveBytes + BUFSIZE);
+                        if (haveBytes + wantBytes > Run.limits.httpContentBuffer)
+                                wantBytes = Run.limits.httpContentBuffer - haveBytes;
+                        *data = realloc((void *)*data, haveBytes + wantBytes + 1);
                 }
                 *(*data + haveBytes) = 0;
         } else {
