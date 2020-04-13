@@ -48,9 +48,9 @@ AC_DEFUN([AX_INFO_TITLE],
 AC_DEFUN([AX_INFO_ENABLED],
 [
     if $($2); then
-        printf "|  %-47.47s %-24s  |\n" "$1" "$(tput bold)$(tput setaf 2)ENABLED$(tput sgr 0)"
+        printf "|  %-47.47s %-20s  |\n" "$1" "$(tput setaf 2)ENABLED$(tput sgr 0)"
     else
-        printf "|  %-47.47s %-24s  |\n" "$1" "$(tput bold)$(tput setaf 3)DISABLED$(tput sgr 0)"
+        printf "|  %-47.47s %-20s  |\n" "$1" "$(tput setaf 8)DISABLED$(tput sgr 0)"
     fi
 ])
 
