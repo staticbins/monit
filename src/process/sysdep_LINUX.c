@@ -170,19 +170,18 @@ static time_t _getStartTime() {
 
 // parse /proc/PID/stat
 static boolean_t _parseProcPidStat(Proc_T proc) {
-        char buf[4096];
+        char buf[8192];
         char *tmp = NULL;
         if (! file_readProc(buf, sizeof(buf), "stat", proc->pid, NULL)) {
                 DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->pid);
                 return false;
         }
+        // Skip the process name (can have multiple words)
         if (! (tmp = strrchr(buf, ')'))) {
                 DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
                 return false;
         }
-        *tmp = 0;
-        tmp += 2;
-        if (sscanf(tmp,
+        if (sscanf(tmp + 2,
                    "%c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %ld %ld %*d %*d %d %*u %llu %*u %ld %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d\n",
                    &(proc->item_state),
                    &(proc->ppid),
@@ -263,6 +262,7 @@ static boolean_t _parseProcPidIO(Proc_T proc) {
 static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
         if (pflags & ProcessEngine_CollectCommandLine) {
                 char filename[STRLEN];
+                // Try to collect the command-line from the procfs cmdline (user-space processes)
                 snprintf(filename, sizeof(filename), "/proc/%d/cmdline", proc->pid);
                 FILE *f = fopen(filename, "r");
                 if (! f) {
@@ -281,6 +281,26 @@ static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
                         }
                 }
                 fclose(f);
+                // Fallback to procfs stat process name if cmdline was empty (even kernel-space processes have informations here)
+                if (! StringBuffer_length(proc->name)) {
+                        char buf[8192];
+                        char *tmp = NULL;
+                        char *procname = NULL;
+                        if (! file_readProc(buf, sizeof(buf), "stat", proc->pid, NULL)) {
+                                DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->pid);
+                                return false;
+                        }
+                        if (! (tmp = strrchr(buf, ')'))) {
+                                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
+                                return false;
+                        }
+                        *tmp = 0;
+                        if (! (procname = strchr(buf, '('))) {
+                                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
+                                return false;
+                        }
+                        StringBuffer_append(proc->name, "%s", procname + 1);
+                }
         }
         return true;
 }
