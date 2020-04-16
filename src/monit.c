@@ -617,7 +617,7 @@ static void handle_options(int argc, char **argv, List_T arguments) {
         int deferred_opt = 0;
         opterr = 0;
         Run.mygroup = NULL;
-        const char *shortopts = "c:d:g:l:p:s:HIirtvVhB";
+        const char *shortopts = "+c:d:g:l:p:s:HIirtvVhB";
         while (optind < argc) {
 #ifdef HAVE_GETOPT_LONG
                 struct option longopts[] = {
