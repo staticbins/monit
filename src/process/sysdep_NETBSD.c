@@ -165,6 +165,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 return 0;
         }
 
+        uint64_t now = Time_milli();
         StringBuffer_T cmdline = NULL;
         if (pflags & ProcessEngine_CollectCommandLine)
                 cmdline = StringBuffer_create(64);
@@ -182,9 +183,11 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].read.bytes          = -1;
                 pt[i].read.bytesPhysical  = -1;
                 pt[i].read.operations     = pinfo[i].p_uru_inblock;
+                pt[i].read.time           = now;
                 pt[i].write.bytes         = -1;
                 pt[i].write.bytesPhysical = -1;
                 pt[i].write.operations    = pinfo[i].p_uru_oublock;
+                pt[i].write.time          = now;
                 if (pflags & ProcessEngine_CollectCommandLine) {
                         char **args = kvm_getargv2(kvm_handle, &pinfo[i], 0);
                         if (args) {

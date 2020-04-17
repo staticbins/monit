@@ -199,6 +199,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 return 0;
         }
 
+        uint64_t now = Time_milli();
         ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
         for (int i = 0; i < treesize; i++) {
@@ -212,9 +213,11 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].read.bytes          = -1;
                 pt[i].read.bytesPhysical  = -1;
                 pt[i].read.operations     = procs[i].pi_ru.ru_inblock;
+                pt[i].read.time           = now;
                 pt[i].write.bytes         = -1;
                 pt[i].write.bytesPhysical = -1;
                 pt[i].write.operations    = procs[i].pi_ru.ru_oublock;
+                pt[i].write.time          = now;
                 pt[i].zombie              = procs[i].pi_state == SZOMB ? true: false;
 
                 char filename[STRLEN];

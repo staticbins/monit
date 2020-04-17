@@ -497,6 +497,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         }
         ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), globbuf.gl_pathc);
 
+
         int count = 0;
         struct Proc_T proc = {};
         proc.name = StringBuffer_create(64);
@@ -522,6 +523,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].write.bytes = proc.write.bytes;
                         pt[count].write.bytesPhysical = proc.write.bytesPhysical;
                         pt[count].write.operations = proc.write.operations;
+                        pt[count].read.time = pt[count].write.time = Time_milli();
                         pt[count].zombie = proc.item_state == 'Z' ? true : false;
                         pt[count].cmdline = Str_dup(StringBuffer_toString(proc.name));
                         pt[count].secattr = Str_dup(proc.secattr);

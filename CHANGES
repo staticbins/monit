@@ -54,6 +54,8 @@ New: Issue #877: Add support for VxFS filesystem statistics. Thanks to Lutz Made
 
 New: Enable support for compilation with AddressSanitizer. Use "configure --with-asan" to enable.
 
+Fixed: The per-process I/O statistics on Linux, AIX, DragonflyBSD, NetBSD, Solaris (displayed always 0 activity).
+
 Fixed: Issue #843: Linux: Wrong memory usage reported in LXC container when ZFS filesystem is used. Monit
 now uses MemAvailable on Linux when calculating the memory usage, so it will provide more accurate statistics.
 Thanks to Joe LeVeque for patch.

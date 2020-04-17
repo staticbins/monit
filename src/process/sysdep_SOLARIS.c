@@ -186,6 +186,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                 pt[i].write.bytes         = -1;
                                 pt[i].write.bytesPhysical = -1;
                                 pt[i].write.operations    = usage->pr_oublk;
+                                pt[i].read.time = pt[i].write.time = Time_milli();
                         }
                 }
         }
