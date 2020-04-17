@@ -37,6 +37,8 @@ New: Add support for split certificate chain and key for the monit HTTP interfac
      }
      allow myuser:mypassword
 
+New: Enable monitoring of per-process read and write operations count on Linux.
+
 New: Issue #877: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
 
 New: Enable support for compilation with AddressSanitizer. Use "configure --with-asan" to enable.

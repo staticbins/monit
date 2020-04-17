@@ -2074,7 +2074,7 @@ Per-process I/O activity statistics by platform:
  | AIX          |     x     |      |
  | DragonFlyBSD |     x     |      |
  | FreeBSD      |     x     |      |
- | Linux        |           |  x   |
+ | Linux        |     x     |  x   |
  | MacOS        |           |  x   |
  | NetBSD       |     x     |      |
  | OpenBSD      |     x     |      |
