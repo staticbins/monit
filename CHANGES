@@ -37,7 +37,16 @@ New: Add support for split certificate chain and key for the monit HTTP interfac
      }
      allow myuser:mypassword
 
-New: Enable monitoring of per-process read and write operations count on Linux.
+New: Enable monitoring of per-process read and write I/O operations count on Linux. Example:
+    check process foobar matching "myprocess"
+       if disk read activity > 500 operations/s then alert
+       if disk write activity > 500 operations/s then alert
+
+New: The per-process I/O activity on Linux now includes all read/write operations, including those that didn't require
+physical storage access and were satisfied by cache. A new check was added to allow to differentiate the physical I/O,
+a new test was added:
+       if disk physical read activity > 1 mb/s then alert
+       if disk physical write activity > 1 mb/s then alert
 
 New: Issue #877: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
 

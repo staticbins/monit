@@ -283,18 +283,21 @@ __attribute__((format (printf, 7, 8))) static void _formatStatus(const char *nam
 
 
 static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *header, const char *name) {
-        boolean_t hasOps = Statistics_initialized(&(io->operations));
-        boolean_t hasBytes = Statistics_initialized(&(io->bytes));
-        if (hasOps && hasBytes) {
+        char _header[STRLEN] = {};
+        if (Statistics_initialized(&(io->bytes))) {
+                snprintf(_header, sizeof(_header), "%s bytes", header);
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
+                _formatStatus(_header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytes)), (char[10]){}));
+        }
+        if (Statistics_initialized(&(io->bytesPhysical))) {
+                snprintf(_header, sizeof(_header), "%s bytes (physical)", header);
+                double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytesPhysical));
+                _formatStatus(_header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytesPhysical)), (char[10]){}));
+        }
+        if (Statistics_initialized(&(io->operations))) {
+                snprintf(_header, sizeof(_header), "%s operations", header);
                 double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
-                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total], %.1f %ss/s [%"PRIu64" %ss total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytes)), (char[10]){}), deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
-        } else if (hasOps) {
-                double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
-                _formatStatus(header, Event_Resource, type, res, s, true, "%.1f %ss/s [%"PRIu64" %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
-        } else if (hasBytes) {
-                double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
-                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytes)), (char[10]){}));
+                _formatStatus(_header, Event_Resource, type, res, s, true, "%.1f %ss/s [%"PRIu64" %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
         }
 }
 
@@ -2340,7 +2343,9 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                                 break;
 
                         case Resource_ReadBytes:
+                        case Resource_ReadBytesPhysical:
                         case Resource_WriteBytes:
+                        case Resource_WriteBytesPhysical:
                                 Util_printRule(sb, q->action, "if %s %s", operatornames[q->operator], Convert_bytes2str(q->limit, (char[10]){}));
                                 break;
 

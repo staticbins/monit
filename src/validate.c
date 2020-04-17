@@ -352,6 +352,21 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
                         }
                         break;
 
+                case Resource_ReadBytesPhysical:
+                        if (Statistics_initialized(&(s->inf.process->read.bytesPhysical))) {
+                                double value = Statistics_deltaNormalize(&(s->inf.process->read.bytesPhysical));
+                                if (Util_evalDoubleQExpression(r->operator, value, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "physical read activity %s/s matches resource limit [read %s %s/s]", Convert_bytes2str(value, (char[10]){}), operatorshortnames[r->operator], Convert_bytes2str(r->limit, (char[10]){}));
+                                } else {
+                                        snprintf(report, STRLEN, "physical read activity test succeeded [current read = %s/s]", Convert_bytes2str(value, (char[10]){}));
+                                }
+                        } else {
+                                DEBUG("'%s' warning -- no data are available for physical read activity test\n", s->name);
+                                return State_Init;
+                        }
+                        break;
+
                 case Resource_ReadOperations:
                         if (Statistics_initialized(&(s->inf.process->read.operations))) {
                                 double value = Statistics_deltaNormalize(&(s->inf.process->read.operations));
@@ -378,6 +393,21 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
                                 }
                         } else {
                                 DEBUG("'%s' warning -- no data are available for bytes write rate test\n", s->name);
+                                return State_Init;
+                        }
+                        break;
+
+                case Resource_WriteBytesPhysical:
+                        if (Statistics_initialized(&(s->inf.process->write.bytesPhysical))) {
+                                double value = Statistics_deltaNormalize(&(s->inf.process->write.bytesPhysical));
+                                if (Util_evalDoubleQExpression(r->operator, value, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "physical write activity %s/s matches resource limit [write %s %s/s]", Convert_bytes2str(value, (char[10]){}), operatorshortnames[r->operator], Convert_bytes2str(r->limit, (char[10]){}));
+                                } else {
+                                        snprintf(report, STRLEN, "physical write activity test succeeded [current write = %s/s]", Convert_bytes2str(value, (char[10]){}));
+                                }
+                        } else {
+                                DEBUG("'%s' warning -- no data are available for physical write activity test\n", s->name);
                                 return State_Init;
                         }
                         break;

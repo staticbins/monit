@@ -2057,7 +2057,7 @@ processes in either percent or as an amount [B, kB, MB, GB]. Example:
  if total memory usage > 1% for 10 cycles then alert
 
 
-=head2 PROCESS DISK I/O TEST
+=head2 PROCESS I/O ACTIVITY TEST
 
 Monit can test process' filesystem read and write activity. This test
 can only be used in the context of a process service type. Monit will
@@ -2066,26 +2066,31 @@ normally need to run as the root user to access this metrics.
 The OS usually supports the per-process I/O metrics by bytes or by
 operations.
 
+Some platforms allows to differentiate the I/O that required physical
+storage access. The physical I/O activity is usually aligned to the
+filesystem page size, so the total and physical I/O may differ even
+if all operations required physical storage access.
+
 Per-process I/O activity statistics by platform:
 
- -----------------------------------
- | Platform     | Operation | Byte |
- -----------------------------------
- | AIX          |     x     |      |
- | DragonFlyBSD |     x     |      |
- | FreeBSD      |     x     |      |
- | Linux        |     x     |  x   |
- | MacOS        |           |  x   |
- | NetBSD       |     x     |      |
- | OpenBSD      |     x     |      |
- | Solaris      |     x     |      |
- -----------------------------------
+ -------------------------------------------------------------
+ | Platform     | Operation | Byte (total) | Byte (physical) |
+ -------------------------------------------------------------
+ | AIX          |     X     |              |                 |
+ | DragonFlyBSD |     X     |              |                 |
+ | FreeBSD      |     X     |              |                 |
+ | Linux        |     X     |      X       |       X         |
+ | MacOS        |           |      X       |                 |
+ | NetBSD       |     X     |              |                 |
+ | OpenBSD      |     X     |              |                 |
+ | Solaris      |     X     |              |                 |
+ -------------------------------------------------------------
 
-=head3 Read: bytes per second
+=head3 Read: bytes per second (total)
 
 Syntax:
 
- IF DISK READ [RATE] <operator> <number> <unit>/S THEN action
+ IF DISK READ [ACTIVITY] <operator> <number> <unit>/S THEN action
 
 I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
 "lt", "eq", "ne" in shell sh notation and "greater", "less",
@@ -2102,13 +2107,36 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check process p...
-       if disk read > 1 MB/s then alert
+       if disk read activity > 1 MB/s then alert
+
+=head3 Read: bytes per second (physical storage)
+
+Syntax:
+
+ IF DISK PHYSICAL READ [ACTIVITY] <operator> <number> <unit>/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<unit> is a choice of "B","KB","MB","GB" or long
+alternatives "byte", "kilobyte", "megabyte", "gigabyte",
+"percent".
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+ check process p...
+       if disk physical read activity > 1 MB/s then alert
 
 =head3 Read: operations per second
 
 Syntax:
 
- IF DISK READ <operator> <number> operations/S THEN action
+ IF DISK READ [ACTIVITY] <operator> <number> operations/S THEN action
 
 I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
 "lt", "eq", "ne" in shell sh notation and "greater", "less",
@@ -2121,13 +2149,13 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check process p...
-       if disk read rate > 500 operations/s then alert
+       if disk read activity > 500 operations/s then alert
 
-=head3 Write: bytes per second
+=head3 Write: bytes per second (total)
 
 Syntax:
 
- IF DISK WRITE <operator> <number> <unit>/S THEN action
+ IF DISK WRITE [ACTIVITY] <operator> <number> <unit>/S THEN action
 
 I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
 "lt", "eq", "ne" in shell sh notation and "greater", "less",
@@ -2144,13 +2172,36 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check process p...
-       if disk write rate > 1 MB/s then alert
+       if disk write activity > 1 MB/s then alert
+
+=head3 Write: bytes per second (physical storage)
+
+Syntax:
+
+ IF DISK PHYSICAL WRITE [ACTIVITY] <operator> <number> <unit>/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<unit> is a choice of "B","KB","MB","GB" or long
+alternatives "byte", "kilobyte", "megabyte", "gigabyte",
+"percent".
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+ check process p...
+       if disk physical write activity > 1 MB/s then alert
 
 =head3 Write: operations per second
 
 Syntax:
 
- IF DISK WRITE <operator> <number> operations/S THEN action
+ IF DISK WRITE [ACTIVITY] <operator> <number> operations/S THEN action
 
 I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
 "lt", "eq", "ne" in shell sh notation and "greater", "less",
@@ -2163,7 +2214,7 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check process p...
-       if disk write rate > 500 operations/s then alert
+       if disk write activity > 500 operations/s then alert
 
 
 =head2 FILE CHECKSUM TEST

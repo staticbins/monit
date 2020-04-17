@@ -330,8 +330,10 @@ typedef enum {
         Resource_SwapKbyte,
         Resource_Threads,
         Resource_ReadBytes,
+        Resource_ReadBytesPhysical,
         Resource_ReadOperations,
         Resource_WriteBytes,
+        Resource_WriteBytesPhysical,
         Resource_WriteOperations,
         Resource_ServiceTime,
         Resource_LoadAveragePerCore1m,
@@ -1013,8 +1015,9 @@ typedef struct FileSystem_T {
 
 
 typedef struct IOStatistics_T {
-        struct Statistics_T operations;        /**< Number of operations completed */
-        struct Statistics_T bytes;      /**< Number of bytes handled by operations */
+        struct Statistics_T operations;                                         /**< Number of operations completed */
+        struct Statistics_T bytes;          /**< Number of bytes handled by operations (total including cached I/O) */
+        struct Statistics_T bytesPhysical;           /**< Number of bytes handled by operations (physical I/O only) */
 } *IOStatistics_T;
 
 

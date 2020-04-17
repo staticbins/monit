@@ -119,10 +119,12 @@ typedef struct Proc_T {
         unsigned long long  item_starttime;
         struct {
                 uint64_t    bytes;
+                uint64_t    bytesPhysical;
                 uint64_t    operations;
         } read;
         struct {
                 uint64_t    bytes;
+                uint64_t    bytesPhysical;
                 uint64_t    operations;
         } write;
         struct {
@@ -239,8 +241,26 @@ static boolean_t _parseProcPidIO(Proc_T proc) {
         char *tmp = NULL;
         if (_statistics.hasIOStatistics) {
                 if (file_readProc(buf, sizeof(buf), "io", proc->pid, NULL)) {
+                        // read bytes (total)
+                        if (! (tmp = strstr(buf, "rchar:"))) {
+                                DEBUG("system statistic error -- cannot find process read bytes\n");
+                                return false;
+                        }
+                        if (sscanf(tmp + 6, "\t%"PRIu64, &(proc->read.bytes)) != 1) {
+                                DEBUG("system statistic error -- cannot get process read bytes\n");
+                                return false;
+                        }
+                        // write bytes (total)
+                        if (! (tmp = strstr(tmp, "wchar:"))) {
+                                DEBUG("system statistic error -- cannot find process write bytes\n");
+                                return false;
+                        }
+                        if (sscanf(tmp + 6, "\t%"PRIu64, &(proc->write.bytes)) != 1) {
+                                DEBUG("system statistic error -- cannot get process write bytes\n");
+                                return false;
+                        }
                         // read operations
-                        if (! (tmp = strstr(buf, "syscr:"))) {
+                        if (! (tmp = strstr(tmp, "syscr:"))) {
                                 DEBUG("system statistic error -- cannot find process read system calls count\n");
                                 return false;
                         }
@@ -259,20 +279,20 @@ static boolean_t _parseProcPidIO(Proc_T proc) {
                         }
                         // read bytes (physical I/O)
                         if (! (tmp = strstr(tmp, "read_bytes:"))) {
-                                DEBUG("system statistic error -- cannot find process read_bytes\n");
+                                DEBUG("system statistic error -- cannot find process physical read bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 11, "\t%"PRIu64, &(proc->read.bytes)) != 1) {
-                                DEBUG("system statistic error -- cannot get process read bytes\n");
+                        if (sscanf(tmp + 11, "\t%"PRIu64, &(proc->read.bytesPhysical)) != 1) {
+                                DEBUG("system statistic error -- cannot get process physical read bytes\n");
                                 return false;
                         }
                         // write bytes (physical I/O)
                         if (! (tmp = strstr(tmp, "write_bytes:"))) {
-                                DEBUG("system statistic error -- cannot find process write_bytes\n");
+                                DEBUG("system statistic error -- cannot find process physical write bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 12, "\t%"PRIu64, &(proc->write.bytes)) != 1) {
-                                DEBUG("system statistic error -- cannot get process write bytes\n");
+                        if (sscanf(tmp + 12, "\t%"PRIu64, &(proc->write.bytesPhysical)) != 1) {
+                                DEBUG("system statistic error -- cannot get process physical write bytes\n");
                                 return false;
                         }
                 } else {
@@ -497,8 +517,10 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].cpu.time = (double)(proc.item_utime + proc.item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
                         pt[count].memory.usage = (uint64_t)proc.item_rss * (uint64_t)page_size;
                         pt[count].read.bytes = proc.read.bytes;
+                        pt[count].read.bytesPhysical = proc.read.bytesPhysical;
                         pt[count].read.operations = proc.read.operations;
                         pt[count].write.bytes = proc.write.bytes;
+                        pt[count].write.bytesPhysical = proc.write.bytesPhysical;
                         pt[count].write.operations = proc.write.operations;
                         pt[count].zombie = proc.item_state == 'Z' ? true : false;
                         pt[count].cmdline = Str_dup(StringBuffer_toString(proc.name));

@@ -184,6 +184,7 @@ in                {/* EMPTY */}
 last              {/* EMPTY */}
 rate              {/* EMPTY */}
 capacity          {/* EMPTY */}
+activity          {/* EMPTY */}
 option(s)?        {/* EMPTY */}
 ssl[ \t]+disable  {/* EMPTY */}
 disable[ \t]+ssl  {/* EMPTY */}
@@ -253,6 +254,7 @@ read[-]?only      { return READONLY; }
 disk              { return DISK; }
 read              { return READ; }
 write             { return WRITE; }
+physical          { return PHYSICAL; }
 service[ ]?time   { return SERVICETIME; }
 operation(s)?("/s")? { return OPERATION; }
 pidfile           { return PIDFILE; }

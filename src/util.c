@@ -1356,12 +1356,20 @@ void Util_printService(Service_T s) {
                                 printf(" %-20s = ", "Disk read limit");
                                 break;
 
+                        case Resource_ReadBytesPhysical:
+                                printf(" %-20s = ", "Disk physical read limit");
+                                break;
+
                         case Resource_ReadOperations:
                                 printf(" %-20s = ", "Disk read limit");
                                 break;
 
                         case Resource_WriteBytes:
                                 printf(" %-20s = ", "Disk write limit");
+                                break;
+
+                        case Resource_WriteBytesPhysical:
+                                printf(" %-20s = ", "Disk physical write limit");
                                 break;
 
                         case Resource_WriteOperations:
@@ -1405,6 +1413,11 @@ void Util_printService(Service_T s) {
 
                         case Resource_ReadBytes:
                         case Resource_WriteBytes:
+                                printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s/s", operatornames[o->operator], Convert_bytes2str(o->limit, (char[10]){}))));
+                                break;
+
+                        case Resource_ReadBytesPhysical:
+                        case Resource_WriteBytesPhysical:
                                 printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s/s", operatornames[o->operator], Convert_bytes2str(o->limit, (char[10]){}))));
                                 break;
 

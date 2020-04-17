@@ -328,13 +328,17 @@ boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid) {
                         s->inf.process->total_mem_percent = ptree[leaf].memory.usage_total >= systeminfo.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage_total / (double)systeminfo.memory.size);
                         s->inf.process->mem_percent       = ptree[leaf].memory.usage >= systeminfo.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage / (double)systeminfo.memory.size);
                 }
-                if (ptree[leaf].read.bytes)
+                if (ptree[leaf].read.bytes >= 0)
                         Statistics_update(&(s->inf.process->read.bytes), ptree[leaf].read.time, ptree[leaf].read.bytes);
-                if (ptree[leaf].read.operations)
+                if (ptree[leaf].read.bytesPhysical >= 0)
+                        Statistics_update(&(s->inf.process->read.bytesPhysical), ptree[leaf].read.time, ptree[leaf].read.bytesPhysical);
+                if (ptree[leaf].read.operations >= 0)
                         Statistics_update(&(s->inf.process->read.operations), ptree[leaf].read.time, ptree[leaf].read.operations);
-                if (ptree[leaf].write.bytes)
+                if (ptree[leaf].write.bytes >= 0)
                         Statistics_update(&(s->inf.process->write.bytes), ptree[leaf].write.time, ptree[leaf].write.bytes);
-                if (ptree[leaf].write.operations)
+                if (ptree[leaf].write.bytesPhysical >= 0)
+                        Statistics_update(&(s->inf.process->write.bytesPhysical), ptree[leaf].write.time, ptree[leaf].write.bytesPhysical);
+                if (ptree[leaf].write.operations >= 0)
                         Statistics_update(&(s->inf.process->write.operations), ptree[leaf].write.time, ptree[leaf].write.operations);
                 return true;
         }
