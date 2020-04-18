@@ -1394,7 +1394,7 @@ void  vLogWarning(const char *,va_list ap);
 void  vLogNotice(const char *, va_list ap);
 void  vLogInfo(const char *, va_list ap);
 void  vLogDebug(const char *, va_list ap);
-void  vLogAbortHandler(const char *s, va_list ap);
+void  vLogAbortHandler(const char *s, va_list ap) __attribute__((noreturn));
 void  log_close(void);
 #ifndef HAVE_VSYSLOG
 #ifdef HAVE_SYSLOG
