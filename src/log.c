@@ -151,6 +151,7 @@ static const char *logPriorityDescription(int p) {
  * @param priority A message priority
  * @param s A formated (printf-style) string to log
  */
+__attribute__((format (printf, 2, 0)))
 static void log_log(int priority, const char *s, va_list ap) {
         ASSERT(s);
 #ifdef HAVE_VA_COPY
