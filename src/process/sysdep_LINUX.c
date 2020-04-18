@@ -329,19 +329,19 @@ static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
                 fclose(f);
                 // Fallback to procfs stat process name if cmdline was empty (even kernel-space processes have informations here)
                 if (! StringBuffer_length(proc->name)) {
-                        char buf[8192];
+                        char buffer[8192];
                         char *tmp = NULL;
                         char *procname = NULL;
-                        if (! file_readProc(buf, sizeof(buf), "stat", proc->pid, NULL)) {
+                        if (! file_readProc(buffer, sizeof(buffer), "stat", proc->pid, NULL)) {
                                 DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->pid);
                                 return false;
                         }
-                        if (! (tmp = strrchr(buf, ')'))) {
+                        if (! (tmp = strrchr(buffer, ')'))) {
                                 DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
                                 return false;
                         }
                         *tmp = 0;
-                        if (! (procname = strchr(buf, '('))) {
+                        if (! (procname = strchr(buffer, '('))) {
                                 DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
                                 return false;
                         }
