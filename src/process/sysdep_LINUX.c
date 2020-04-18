@@ -142,7 +142,7 @@ typedef struct Proc_T {
 /* --------------------------------------- Static constructor and destructor */
 
 
-static void __attribute__ ((constructor)) _constructor() {
+static void __attribute__ ((constructor)) _constructor(void) {
         struct stat sb;
         _statistics.hasIOStatistics = stat("/proc/self/io", &sb) == 0 ? true : false;
 }
@@ -166,7 +166,7 @@ static double hz = 0.;
  * Get system start time
  * @return seconds since unix epoch
  */
-static time_t _getStartTime() {
+static time_t _getStartTime(void) {
         struct sysinfo info;
         if (sysinfo(&info) < 0) {
                 LogError("system statistic error -- cannot get system uptime: %s\n", STRERROR);

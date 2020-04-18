@@ -112,7 +112,7 @@ static struct mylogpriority {
 /**
  * Open a log file or syslog
  */
-static boolean_t open_log() {
+static boolean_t open_log(void) {
         if (Run.flags & Run_UseSyslog) {
                 openlog(prog, LOG_PID, Run.facility);
         } else {
@@ -196,7 +196,7 @@ static void log_log(int priority, const char *s, va_list ap) {
 }
 
 
-static void log_backtrace() {
+static void log_backtrace(void) {
 #ifdef HAVE_BACKTRACE
         int i, frames;
         void *callstack[128];

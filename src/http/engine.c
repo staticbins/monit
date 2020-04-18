@@ -396,7 +396,7 @@ static boolean_t _authenticateHost(struct sockaddr *addr) {
 }
 
 
-static Socket_T _socketProducer() {
+static Socket_T _socketProducer(void) {
         int r = 0;
         do {
                 r = poll(myServerSockets, myServerSocketsCount, 1000);

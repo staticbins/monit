@@ -203,7 +203,7 @@ boolean_t interrupt() {
 /* ----------------------------------------------------------------- Private */
 
 
-static void _validateOnce() {
+static void _validateOnce(void) {
         if (State_open()) {
                 State_restore();
                 validate();

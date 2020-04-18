@@ -182,7 +182,7 @@ static void _appendMail(List_T list, Mail_T m, Event_T e, char *host) {
 }
 
 
-static MailServer_T _connectMTA() {
+static MailServer_T _connectMTA(void) {
         if (! Run.mailservers)
                 THROW(IOException, "No mail servers are defined -- please see the 'set mailserver' statement in the manual");
         MailServer_T mta = NULL;
