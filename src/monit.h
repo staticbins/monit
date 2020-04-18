@@ -1348,18 +1348,18 @@ extern Service_T      servicelist_conf;
 extern ServiceGroup_T servicegrouplist;
 extern SystemInfo_T   systeminfo;
 
-extern char *actionnames[];
-extern char *modenames[];
-extern char *onrebootnames[];
-extern char *checksumnames[];
-extern char *operatornames[];
-extern char *operatorshortnames[];
-extern char *servicetypes[];
-extern char *pathnames[];
-extern char *icmpnames[];
-extern char *socketnames[];
-extern char *timestampnames[];
-extern char *httpmethod[];
+extern const char *actionnames[];
+extern const char *modenames[];
+extern const char *onrebootnames[];
+extern const char *checksumnames[];
+extern const char *operatornames[];
+extern const char *operatorshortnames[];
+extern const char *servicetypes[];
+extern const char *pathnames[];
+extern const char *icmpnames[];
+extern const char *socketnames[];
+extern const char *timestampnames[];
+extern const char *httpmethod[];
 
 
 /* ------------------------------------------------------- Public prototypes */

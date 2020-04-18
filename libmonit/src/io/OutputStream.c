@@ -316,7 +316,7 @@ static void cvt_f(T S, int code, va_list_box *box, unsigned char flags[], int wi
 }
 
 
-static char *Fmt_flags = "-+ 0";
+static const char *Fmt_flags = "-+ 0";
 static fmt_t cvt[256] = {
         /*   0-  7 */     0,     0,     0,     0,     0,     0,     0,     0,
         /*   8- 15 */     0,     0,     0,     0,     0,     0,     0,     0,

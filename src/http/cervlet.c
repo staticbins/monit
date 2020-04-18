@@ -2212,7 +2212,7 @@ static void print_service_rules_program(HttpResponse res, Service_T s) {
 static void print_service_rules_resource(HttpResponse res, Service_T s) {
         char buf[STRLEN];
         for (Resource_T q = s->resourcelist; q; q = q->next) {
-                char *key = NULL;
+                const char *key = NULL;
                 StringBuffer_T sb = StringBuffer_create(256);
                 switch (q->resource_id) {
                         case Resource_CpuPercent:

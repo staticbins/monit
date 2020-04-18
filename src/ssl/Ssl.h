@@ -141,7 +141,7 @@ void Ssl_close(T C);
  * @param timeout Milliseconds to wait for data to be written
  * @return Number of bytes written or -1 if failed
  */
-int Ssl_write(T C, void *b, int size, int timeout);
+int Ssl_write(T C, const void *b, int size, int timeout);
 
 
 /**

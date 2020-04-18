@@ -92,7 +92,7 @@ static Mutex_T log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static struct mylogpriority {
         int  priority;
-        char *description;
+        const char *description;
 } logPriority[] = {
         {LOG_EMERG,   "emergency"},
         {LOG_ALERT,   "alert"},

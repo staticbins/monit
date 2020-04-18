@@ -72,7 +72,7 @@ struct T {
         struct {
                 struct {
                         boolean_t enabled;
-                        char *color;
+                        const char *color;
                 } header;
         } options;
         unsigned columnsCount;

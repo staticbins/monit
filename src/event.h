@@ -69,10 +69,10 @@ typedef enum {
 
 typedef struct myeventtable {
         int id;
-        char *description_failed;
-        char *description_succeeded;
-        char *description_changed;
-        char *description_changednot;
+        const char *description_failed;
+        const char *description_succeeded;
+        const char *description_changed;
+        const char *description_changednot;
         State_Type saveState; // Bitmap of the event states that should trigger state file update
 } EventTable_T;
 
@@ -102,7 +102,7 @@ extern EventTable_T Event_Table[];
  * @param action Description of the event action
  * @param s Optional message describing the event
  */
-void Event_post(Service_T service, long id, State_Type state, EventAction_T action, char *s, ...) __attribute__((format (printf, 5, 6)));
+void Event_post(Service_T service, long id, State_Type state, EventAction_T action, const char *s, ...) __attribute__((format (printf, 5, 6)));
 
 
 /**
