@@ -598,19 +598,19 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
          * First, check if the "MemAvailable" value is available on this system. If it is, we will
          * use it. Otherwise we will attempt to calculate the amount of available memory ourself.
          */
-        if ((ptr = strstr(buf, "MemAvailable:")) && sscanf(ptr + 13, "%ld", &mem_available) == 1) {
+        if ((ptr = strstr(buf, "MemAvailable:")) && sscanf(ptr + 13, "%lu", &mem_available) == 1) {
                 si->memory.usage.bytes = systeminfo.memory.size - (uint64_t)mem_available * 1024;
         } else {
                 DEBUG("'MemAvailable' value not available on this system. Attempting to calculate available memory manually...\n");
-                if (! (ptr = strstr(buf, "MemFree:")) || sscanf(ptr + 8, "%ld", &mem_free) != 1) {
+                if (! (ptr = strstr(buf, "MemFree:")) || sscanf(ptr + 8, "%lu", &mem_free) != 1) {
                         LogError("system statistic error -- cannot get real memory free amount\n");
                         goto error;
                 }
-                if (! (ptr = strstr(buf, "Buffers:")) || sscanf(ptr + 8, "%ld", &buffers) != 1)
+                if (! (ptr = strstr(buf, "Buffers:")) || sscanf(ptr + 8, "%lu", &buffers) != 1)
                         DEBUG("system statistic error -- cannot get real memory buffers amount\n");
-                if (! (ptr = strstr(buf, "Cached:")) || sscanf(ptr + 7, "%ld", &cached) != 1)
+                if (! (ptr = strstr(buf, "Cached:")) || sscanf(ptr + 7, "%lu", &cached) != 1)
                         DEBUG("system statistic error -- cannot get real memory cache amount\n");
-                if (! (ptr = strstr(buf, "SReclaimable:")) || sscanf(ptr + 13, "%ld", &slabreclaimable) != 1)
+                if (! (ptr = strstr(buf, "SReclaimable:")) || sscanf(ptr + 13, "%lu", &slabreclaimable) != 1)
                         DEBUG("system statistic error -- cannot get slab reclaimable memory amount\n");
                 FILE *f = fopen("/proc/spl/kstat/zfs/arcstats", "r");
                 if (f) {
@@ -626,11 +626,11 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
         }
 
         /* Swap */
-        if (! (ptr = strstr(buf, "SwapTotal:")) || sscanf(ptr + 10, "%ld", &swap_total) != 1) {
+        if (! (ptr = strstr(buf, "SwapTotal:")) || sscanf(ptr + 10, "%lu", &swap_total) != 1) {
                 LogError("system statistic error -- cannot get swap total amount\n");
                 goto error;
         }
-        if (! (ptr = strstr(buf, "SwapFree:")) || sscanf(ptr + 9, "%ld", &swap_free) != 1) {
+        if (! (ptr = strstr(buf, "SwapFree:")) || sscanf(ptr + 9, "%lu", &swap_free) != 1) {
                 LogError("system statistic error -- cannot get swap free amount\n");
                 goto error;
         }
