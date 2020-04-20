@@ -159,19 +159,19 @@ static void _ioStatistics(StringBuffer_T B, const char *name, IOStatistics_T sta
         StringBuffer_append(B, "<%s>", name);
         if (Statistics_initialized(&(statistics->bytes))) {
                 StringBuffer_append(B,
-                        "<bytes>"
+                        "<bytesgeneric>"
                         "<count>%.0lf</count>"     // bytes per second
                         "<total>%"PRIu64"</total>" // bytes since boot
-                        "</bytes>",
+                        "</bytesgeneric>",
                         Statistics_deltaNormalize(&(statistics->bytes)),
                         Statistics_raw(&(statistics->bytes)));
         }
         if (Statistics_initialized(&(statistics->bytesPhysical))) {
                 StringBuffer_append(B,
-                        "<bytesPhysical>"
+                        "<bytes>"
                         "<count>%.0lf</count>"     // bytes per second
                         "<total>%"PRIu64"</total>" // bytes since boot
-                        "</bytesPhysical>",
+                        "</bytes>",
                         Statistics_deltaNormalize(&(statistics->bytesPhysical)),
                         Statistics_raw(&(statistics->bytesPhysical)));
         }

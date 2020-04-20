@@ -344,7 +344,7 @@ static void addfiledescriptors(Operator_Type, boolean_t, int64_t, float, Action_
 %token <number> CLEANUPLIMIT
 %token <real> REAL
 %token CHECKPROC CHECKFILESYS CHECKFILE CHECKDIR CHECKHOST CHECKSYSTEM CHECKFIFO CHECKPROGRAM CHECKNET
-%token THREADS CHILDREN METHOD GET HEAD STATUS ORIGIN VERSIONOPT READ WRITE PHYSICAL OPERATION SERVICETIME DISK
+%token THREADS CHILDREN METHOD GET HEAD STATUS ORIGIN VERSIONOPT READ WRITE OPERATION SERVICETIME DISK
 %token RESOURCE MEMORY TOTALMEMORY LOADAVG1 LOADAVG5 LOADAVG15 SWAP
 %token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CORE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
@@ -2348,15 +2348,15 @@ coremultiplier  : /* EMPTY */ { $<number>$ = 1; }
                 ;
 
 
-resourceread    : DISK READ operator value unit currenttime {
+resourceread    : READ operator value unit currenttime {
                         resourceset.resource_id = Resource_ReadBytes;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3 * $<number>4;
+                  }
+                | DISK READ operator value unit currenttime {
+                        resourceset.resource_id = Resource_ReadBytesPhysical;
                         resourceset.operator = $<number>3;
                         resourceset.limit = $<real>4 * $<number>5;
-                  }
-                | DISK PHYSICAL READ operator value unit currenttime {
-                        resourceset.resource_id = Resource_ReadBytesPhysical;
-                        resourceset.operator = $<number>4;
-                        resourceset.limit = $<real>5 * $<number>6;
                   }
                 | DISK READ operator NUMBER OPERATION {
                         resourceset.resource_id = Resource_ReadOperations;
@@ -2365,15 +2365,15 @@ resourceread    : DISK READ operator value unit currenttime {
                   }
                 ;
 
-resourcewrite   : DISK WRITE operator value unit currenttime {
+resourcewrite   : WRITE operator value unit currenttime {
                         resourceset.resource_id = Resource_WriteBytes;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3 * $<number>4;
+                  }
+                | DISK WRITE operator value unit currenttime {
+                        resourceset.resource_id = Resource_WriteBytesPhysical;
                         resourceset.operator = $<number>3;
                         resourceset.limit = $<real>4 * $<number>5;
-                  }
-                | DISK PHYSICAL WRITE operator value unit currenttime {
-                        resourceset.resource_id = Resource_WriteBytesPhysical;
-                        resourceset.operator = $<number>4;
-                        resourceset.limit = $<real>5 * $<number>6;
                   }
                 | DISK WRITE operator NUMBER OPERATION {
                         resourceset.resource_id = Resource_WriteOperations;

@@ -285,7 +285,7 @@ __attribute__((format (printf, 7, 8))) static void _formatStatus(const char *nam
 static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *header, const char *name) {
         char _header[STRLEN] = {};
         if (Statistics_initialized(&(io->bytes))) {
-                snprintf(_header, sizeof(_header), "%s bytes", header);
+                snprintf(_header, sizeof(_header), "%s bytes (generic)", header);
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
                 _formatStatus(_header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytes)), (char[10]){}));
         }

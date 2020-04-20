@@ -2067,26 +2067,49 @@ The OS usually supports the per-process I/O metrics by bytes or by
 operations.
 
 Some platforms allows to differentiate the I/O subset that required physical
-storage access. Note that as the physical I/O is usually aligned to the filesystem
-page, there may be difference between the total and physical I/O even if the process
-tried to read just 1 byte.
+storage access from generic I/O which was handled by cache. Note that as the
+physical I/O is usually aligned to the filesystem page, there may be difference
+between the total and physical I/O even if the process tried to read just 1 byte.
 
 Per-process I/O activity statistics by platform:
 
- -------------------------------------------------------------
- | Platform     | Operation | Byte (total) | Byte (physical) |
- -------------------------------------------------------------
- | AIX          |     X     |              |                 |
- | DragonFlyBSD |     X     |              |                 |
- | FreeBSD      |     X     |              |                 |
- | Linux        |     X     |      X       |       X         |
- | MacOS        |           |      X       |                 |
- | NetBSD       |     X     |              |                 |
- | OpenBSD      |     X     |              |                 |
- | Solaris      |     X     |              |                 |
- -------------------------------------------------------------
+ ---------------------------------------------------------------
+ | Platform     | Operation | Byte (physical) | Byte (generic) |
+ ---------------------------------------------------------------
+ | AIX          |     X     |                 |                |
+ | DragonFlyBSD |     X     |                 |                |
+ | FreeBSD      |     X     |                 |                |
+ | Linux        |     X     |        X        |        X       |
+ | MacOS        |           |        X        |                |
+ | NetBSD       |     X     |                 |                |
+ | OpenBSD      |     X     |                 |                |
+ | Solaris      |     X     |                 |                |
+ ---------------------------------------------------------------
 
-=head3 Read: bytes per second (total)
+=head3 Read: bytes per second (generic)
+
+Syntax:
+
+ IF READ [ACTIVITY] <operator> <number> <unit>/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<unit> is a choice of "B","KB","MB","GB" or long
+alternatives "byte", "kilobyte", "megabyte", "gigabyte",
+"percent".
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+ check process p...
+       if read activity > 1 MB/s then alert
+
+=head3 Read: bytes per second (physical storage)
 
 Syntax:
 
@@ -2109,29 +2132,6 @@ Example:
  check process p...
        if disk read activity > 1 MB/s then alert
 
-=head3 Read: bytes per second (physical storage)
-
-Syntax:
-
- IF DISK PHYSICAL READ [ACTIVITY] <operator> <number> <unit>/S THEN action
-
-I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
-"lt", "eq", "ne" in shell sh notation and "greater", "less",
-"equal", "notequal" in human readable form (if not specified,
-default is EQUAL).
-
-I<unit> is a choice of "B","KB","MB","GB" or long
-alternatives "byte", "kilobyte", "megabyte", "gigabyte",
-"percent".
-
-I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
-"EXEC" or "UNMONITOR".
-
-Example:
-
- check process p...
-       if disk physical read activity > 1 MB/s then alert
-
 =head3 Read: operations per second
 
 Syntax:
@@ -2151,7 +2151,30 @@ Example:
  check process p...
        if disk read activity > 500 operations/s then alert
 
-=head3 Write: bytes per second (total)
+=head3 Write: bytes per second (generic)
+
+Syntax:
+
+ IF WRITE [ACTIVITY] <operator> <number> <unit>/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<unit> is a choice of "B","KB","MB","GB" or long
+alternatives "byte", "kilobyte", "megabyte", "gigabyte",
+"percent".
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+ check process p...
+       if write activity > 1 MB/s then alert
+
+=head3 Write: bytes per second (physical storage)
 
 Syntax:
 
@@ -2173,29 +2196,6 @@ Example:
 
  check process p...
        if disk write activity > 1 MB/s then alert
-
-=head3 Write: bytes per second (physical storage)
-
-Syntax:
-
- IF DISK PHYSICAL WRITE [ACTIVITY] <operator> <number> <unit>/S THEN action
-
-I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
-"lt", "eq", "ne" in shell sh notation and "greater", "less",
-"equal", "notequal" in human readable form (if not specified,
-default is EQUAL).
-
-I<unit> is a choice of "B","KB","MB","GB" or long
-alternatives "byte", "kilobyte", "megabyte", "gigabyte",
-"percent".
-
-I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
-"EXEC" or "UNMONITOR".
-
-Example:
-
- check process p...
-       if disk physical write activity > 1 MB/s then alert
 
 =head3 Write: operations per second
 
