@@ -250,7 +250,7 @@ static boolean_t _getVxfsDiskActivity(void *_inf) {
 
         // Try to find the statistic data in the sysfs first.
         char path[PATH_MAX];
-        snprintf(path, sizeof(path), "/sys/dev/block/%d:%d/stat", st_major, st_minor);
+        snprintf(path, sizeof(path), "/sys/dev/block/%u:%u/stat", st_major, st_minor);
         FILE *f = fopen(path, "r");
         if (f) {
                 uint64_t now = Time_milli();
