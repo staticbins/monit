@@ -489,6 +489,7 @@ __attribute__((format (printf, 5, 6))) static void _displayTableRow(HttpResponse
         va_list ap;
         va_start(ap, value);
         char *_value = Str_vcat(value, ap);
+        va_end(ap);
 
         if (STR_DEF(class))
                 StringBuffer_append(res->outputbuffer, "<tr class='%s'><td>%s</td><td>", class, key);
