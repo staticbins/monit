@@ -142,7 +142,7 @@ typedef struct Proc_T {
 /* --------------------------------------- Static constructor and destructor */
 
 
-static void __attribute__ ((constructor)) _constructor() {
+static void __attribute__ ((constructor)) _constructor(void) {
         struct stat sb;
         _statistics.hasIOStatistics = stat("/proc/self/io", &sb) == 0 ? true : false;
 }
@@ -166,7 +166,7 @@ static double hz = 0.;
  * Get system start time
  * @return seconds since unix epoch
  */
-static time_t _getStartTime() {
+static time_t _getStartTime(void) {
         struct sysinfo info;
         if (sysinfo(&info) < 0) {
                 LogError("system statistic error -- cannot get system uptime: %s\n", STRERROR);
@@ -329,19 +329,19 @@ static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
                 fclose(f);
                 // Fallback to procfs stat process name if cmdline was empty (even kernel-space processes have informations here)
                 if (! StringBuffer_length(proc->name)) {
-                        char buf[8192];
+                        char buffer[8192];
                         char *tmp = NULL;
                         char *procname = NULL;
-                        if (! file_readProc(buf, sizeof(buf), "stat", proc->pid, NULL)) {
+                        if (! file_readProc(buffer, sizeof(buffer), "stat", proc->pid, NULL)) {
                                 DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->pid);
                                 return false;
                         }
-                        if (! (tmp = strrchr(buf, ')'))) {
+                        if (! (tmp = strrchr(buffer, ')'))) {
                                 DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
                                 return false;
                         }
                         *tmp = 0;
-                        if (! (procname = strchr(buf, '('))) {
+                        if (! (procname = strchr(buffer, '('))) {
                                 DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
                                 return false;
                         }

@@ -1348,18 +1348,18 @@ extern Service_T      servicelist_conf;
 extern ServiceGroup_T servicegrouplist;
 extern SystemInfo_T   systeminfo;
 
-extern char *actionnames[];
-extern char *modenames[];
-extern char *onrebootnames[];
-extern char *checksumnames[];
-extern char *operatornames[];
-extern char *operatorshortnames[];
-extern char *servicetypes[];
-extern char *pathnames[];
-extern char *icmpnames[];
-extern char *socketnames[];
-extern char *timestampnames[];
-extern char *httpmethod[];
+extern const char *actionnames[];
+extern const char *modenames[];
+extern const char *onrebootnames[];
+extern const char *checksumnames[];
+extern const char *operatornames[];
+extern const char *operatorshortnames[];
+extern const char *servicetypes[];
+extern const char *pathnames[];
+extern const char *icmpnames[];
+extern const char *socketnames[];
+extern const char *timestampnames[];
+extern const char *httpmethod[];
 
 
 /* ------------------------------------------------------- Public prototypes */
@@ -1386,15 +1386,15 @@ void  LogWarning(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogNotice(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogInfo(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogDebug(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  vLogEmergency(const char *, va_list ap);
-void  vLogAlert(const char *, va_list ap);
-void  vLogCritical(const char *, va_list ap);
-void  vLogError(const char *, va_list ap);
-void  vLogWarning(const char *,va_list ap);
-void  vLogNotice(const char *, va_list ap);
-void  vLogInfo(const char *, va_list ap);
-void  vLogDebug(const char *, va_list ap);
-void  vLogAbortHandler(const char *s, va_list ap);
+void  vLogEmergency(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogAlert(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogCritical(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogError(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogWarning(const char *,va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogNotice(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogInfo(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogDebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogAbortHandler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
 void  log_close(void);
 #ifndef HAVE_VSYSLOG
 #ifdef HAVE_SYSLOG

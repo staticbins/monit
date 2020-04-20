@@ -92,7 +92,7 @@ static Mutex_T log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static struct mylogpriority {
         int  priority;
-        char *description;
+        const char *description;
 } logPriority[] = {
         {LOG_EMERG,   "emergency"},
         {LOG_ALERT,   "alert"},
@@ -112,7 +112,7 @@ static struct mylogpriority {
 /**
  * Open a log file or syslog
  */
-static boolean_t open_log() {
+static boolean_t open_log(void) {
         if (Run.flags & Run_UseSyslog) {
                 openlog(prog, LOG_PID, Run.facility);
         } else {
@@ -151,6 +151,7 @@ static const char *logPriorityDescription(int p) {
  * @param priority A message priority
  * @param s A formated (printf-style) string to log
  */
+__attribute__((format (printf, 2, 0)))
 static void log_log(int priority, const char *s, va_list ap) {
         ASSERT(s);
 #ifdef HAVE_VA_COPY
@@ -195,7 +196,7 @@ static void log_log(int priority, const char *s, va_list ap) {
 }
 
 
-static void log_backtrace() {
+static void log_backtrace(void) {
 #ifdef HAVE_BACKTRACE
         int i, frames;
         void *callstack[128];

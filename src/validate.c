@@ -436,7 +436,7 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
 }
 
 
-static State_Type _checkLoadAverage(Resource_T r, double loadavg, char *name, char report[STRLEN]) {
+static State_Type _checkLoadAverage(Resource_T r, double loadavg, const char *name, char report[STRLEN]) {
         if (Util_evalDoubleQExpression(r->operator, loadavg, r->limit)) {
                 snprintf(report, STRLEN, "%s of %.1f matches resource limit [%s %s %.1f]", name, loadavg, name, operatorshortnames[r->operator], r->limit);
                 return State_Failed;

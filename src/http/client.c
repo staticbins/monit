@@ -82,7 +82,7 @@ static void _argument(StringBuffer_T data, const char *name, const char *value) 
 }
 
 
-static char *_getBasicAuthHeader() {
+static char *_getBasicAuthHeader(void) {
         Auth_T auth = NULL;
         // Find the first cleartext credential for authorization
         for (Auth_T c = Run.httpd.credentials; c; c = c->next) {

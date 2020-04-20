@@ -477,7 +477,7 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 /* --------------------------------------- Static constructor and destructor */
 
 
-static void __attribute__ ((constructor)) _constructor() {
+static void __attribute__ ((constructor)) _constructor(void) {
         struct stat sb;
         _statistics.fd = -1;
         _statistics.generation++; // First generation
@@ -486,7 +486,7 @@ static void __attribute__ ((constructor)) _constructor() {
 }
 
 
-static void __attribute__ ((destructor)) _destructor() {
+static void __attribute__ ((destructor)) _destructor(void) {
         if (_statistics.fd > -1) {
                   close(_statistics.fd);
         }

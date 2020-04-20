@@ -670,7 +670,7 @@ void Ssl_connect(T C, int socket, int timeout, const char *name) {
 }
 
 
-int Ssl_write(T C, void *b, int size, int timeout) {
+int Ssl_write(T C, const void *b, int size, int timeout) {
         ASSERT(C);
         int n = 0;
         if (size > 0) {

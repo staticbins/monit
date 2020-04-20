@@ -15,6 +15,7 @@
  */
 
 
+__attribute__((format (printf, 2, 3)))
 static void append(StringBuffer_T B, const char *s, ...) {
  	va_list ap;
 	va_start(ap, s);

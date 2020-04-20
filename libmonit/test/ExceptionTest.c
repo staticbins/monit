@@ -25,23 +25,23 @@ Exception_T B = {"BException"};
 Exception_T C = {"CException"};
 Exception_T D = {"DException"};
 
-static void throwA() {
+static void throwA(void) {
         THROW(A, NULL);
 }
 
-static void throwB() {
+static void throwB(void) {
         THROW(B, NULL);
 }
 
-static void throwC() {
+static void throwC(void) {
         THROW(C, "A cause");
 }
 
-static void throwD() {
+static void throwD(void) {
         THROW(D, "A cause");
 }
 
-static void indirectA() {
+static void indirectA(void) {
         throwA();
 }
 

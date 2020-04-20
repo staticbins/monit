@@ -61,6 +61,7 @@ struct T {
 /* ---------------------------------------------------------------- Private */
 
 
+__attribute__((format (printf, 2, 0)))
 static inline void _append(T S, const char *s, va_list ap) {
         va_list ap_copy;
         while (true) {

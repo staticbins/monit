@@ -690,9 +690,9 @@ int Socket_print(T S, const char *m, ...) {
 }
 
 
-int Socket_write(T S, void *b, size_t size) {
+int Socket_write(T S, const void *b, size_t size) {
         ssize_t n = 0;
-        void *p = b;
+        const void *p = b;
         ASSERT(S);
         while (size > 0) {
 #ifdef HAVE_OPENSSL

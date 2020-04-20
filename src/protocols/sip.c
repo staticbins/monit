@@ -77,10 +77,10 @@ void check_sip(Socket_T socket) {
         const char *target = P->parameters.sip.target ? P->parameters.sip.target : "monit@foo.bar";
 
         int port = Socket_getLocalPort(socket);
-        char *proto = Socket_isSecure(socket) ? "sips" : "sip";
+        const char *proto = Socket_isSecure(socket) ? "sips" : "sip";
 
-        char *transport = "";
-        char *rport = "";
+        const char *transport = "";
+        const char *rport = "";
         switch (Socket_getType(socket)) {
                 case Socket_Udp:
                         transport = "UDP";

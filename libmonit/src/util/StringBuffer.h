@@ -94,7 +94,7 @@ T StringBuffer_append(T S, const char *s, ...) __attribute__((format (printf, 2,
  * @return a reference to this StringBuffer
  * @exception MemoryException if allocation was used and failed
  */
-T StringBuffer_vappend(T S, const char *s, va_list ap);
+T StringBuffer_vappend(T S, const char *s, va_list ap) __attribute__((format (printf, 2, 0)));
 
 
 /**

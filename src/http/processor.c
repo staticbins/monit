@@ -120,7 +120,7 @@ static HttpParameter parse_parameters(char *);
 static boolean_t create_parameters(HttpRequest req);
 static void destroy_HttpResponse(HttpResponse);
 static HttpRequest create_HttpRequest(Socket_T);
-static void internal_error(Socket_T, int, char *);
+static void internal_error(Socket_T, int, const char *);
 static HttpResponse create_HttpResponse(Socket_T);
 static boolean_t is_authenticated(HttpRequest, HttpResponse);
 static int get_next_token(char *s, int *cursor, char **r);
@@ -841,7 +841,7 @@ static boolean_t basic_authenticate(HttpRequest req) {
  * used internal if the service function fails to setup the framework
  * properly; i.e. with a valid HttpRequest and a valid HttpResponse.
  */
-static void internal_error(Socket_T S, int status, char *msg) {
+static void internal_error(Socket_T S, int status, const char *msg) {
         char date[STRLEN];
         char server[STRLEN];
         const char *status_msg = get_status_string(status);

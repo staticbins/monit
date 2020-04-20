@@ -226,7 +226,7 @@ static const unsigned char b2x[][256] = {
  * Returns the value of the parameter if defined or the String "(not
  * defined)"
  */
-static char *is_str_defined(char *s) {
+static const char *is_str_defined(const char *s) {
         return((s && *s) ? s : "(not defined)");
 }
 
@@ -2031,7 +2031,7 @@ const char *Util_portTypeDescription(Port_T p) {
 
 
 const char *Util_portRequestDescription(Port_T p) {
-        char *request = "";
+        const char *request = "";
         if (p->protocol->check == check_http && p->parameters.http.request)
                 request = p->parameters.http.request;
         else if (p->protocol->check == check_websocket && p->parameters.websocket.request)
@@ -2069,7 +2069,7 @@ const char *Util_timestr(int time) {
         int i = 0;
         struct mytimetable {
                 int id;
-                char *description;
+                const char *description;
         } tt[]= {
                 {Time_Second, "second"},
                 {Time_Minute, "minute"},

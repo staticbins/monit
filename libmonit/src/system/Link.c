@@ -120,7 +120,7 @@ struct T {
 /* ----------------------------------------------------- Static destructor */
 
 
-static void __attribute__ ((destructor)) _destructor() {
+static void __attribute__ ((destructor)) _destructor(void) {
 #ifdef HAVE_IFADDRS_H
         if (_stats.addrs)
                 freeifaddrs(_stats.addrs);
@@ -278,7 +278,7 @@ static void _updateHistory(T L) {
 }
 
 
-static void _updateCache() {
+static void _updateCache(void) {
 #ifdef HAVE_IFADDRS_H
         uint64_t now = Time_milli();
         // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
