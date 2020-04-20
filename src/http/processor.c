@@ -466,8 +466,9 @@ static void do_service(Socket_T s) {
  */
 static char *get_date(char *result, int size) {
         time_t now;
+        struct tm converted;
         time(&now);
-        if (strftime(result, size, DATEFMT, gmtime(&now)) <= 0)
+        if (strftime(result, size, DATEFMT, gmtime_r(&now, &converted)) <= 0)
                 *result = 0;
         return result;
 }
