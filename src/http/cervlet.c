@@ -282,22 +282,22 @@ __attribute__((format (printf, 7, 8))) static void _formatStatus(const char *nam
 }
 
 
-static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *header, const char *name) {
-        char _header[STRLEN] = {};
+static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *name) {
+        char header[STRLEN] = {};
         if (Statistics_initialized(&(io->bytes))) {
-                snprintf(_header, sizeof(_header), "%s bytes (generic)", header);
+                snprintf(header, sizeof(header), "%s bytes", name);
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
-                _formatStatus(_header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytes)), (char[10]){}));
+                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytes)), (char[10]){}));
         }
         if (Statistics_initialized(&(io->bytesPhysical))) {
-                snprintf(_header, sizeof(_header), "%s bytes (physical)", header);
+                snprintf(header, sizeof(header), "disk %s bytes", name);
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytesPhysical));
-                _formatStatus(_header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytesPhysical)), (char[10]){}));
+                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytesPhysical)), (char[10]){}));
         }
         if (Statistics_initialized(&(io->operations))) {
-                snprintf(_header, sizeof(_header), "%s operations", header);
+                snprintf(header, sizeof(header), "disk %s operations", name);
                 double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
-                _formatStatus(_header, Event_Resource, type, res, s, true, "%.1f %ss/s [%"PRIu64" %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
+                _formatStatus(header, Event_Resource, type, res, s, true, "%.1f %ss/s [%"PRIu64" %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
         }
 }
 
@@ -398,8 +398,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         if (s->inf.filesystem->f_filesfree > 0)
                                                 _formatStatus("inodes free", Event_Resource, type, res, s, true, "%lld [%.1f%%]", s->inf.filesystem->f_filesfree, (float)100 * (float)s->inf.filesystem->f_filesfree / (float)s->inf.filesystem->f_files);
                                 }
-                                _printIOStatistics(type, res, s, &(s->inf.filesystem->read), "read", "read");
-                                _printIOStatistics(type, res, s, &(s->inf.filesystem->write), "write", "write");
+                                _printIOStatistics(type, res, s, &(s->inf.filesystem->read), "read");
+                                _printIOStatistics(type, res, s, &(s->inf.filesystem->write), "write");
                                 boolean_t hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
                                 boolean_t hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
                                 boolean_t hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
@@ -443,8 +443,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("total filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.openTotal != -1LL, "%ld", s->inf.process->filedescriptors.openTotal);
 #endif
                                 }
-                                _printIOStatistics(type, res, s, &(s->inf.process->read), "disk read", "read");
-                                _printIOStatistics(type, res, s, &(s->inf.process->write), "disk write", "write");
+                                _printIOStatistics(type, res, s, &(s->inf.process->read), "read");
+                                _printIOStatistics(type, res, s, &(s->inf.process->write), "write");
                                 break;
 
                         case Service_Program:
