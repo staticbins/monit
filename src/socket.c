@@ -175,7 +175,8 @@ static char *_addressToString(const struct sockaddr *addr, socklen_t addrlen, ch
         if (addr->sa_family == AF_UNIX) {
                 snprintf(buf, buflen, "%s", ((struct sockaddr_un *)addr)->sun_path);
         } else {
-                char ip[46], port[6];
+                char ip[NI_MAXHOST];
+                char port[NI_MAXSERV];
                 int status = getnameinfo(addr, addrlen, ip, sizeof(ip), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
                 if (status) {
                         LogError("Cannot get address string -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
