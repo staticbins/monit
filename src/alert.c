@@ -204,7 +204,7 @@ static MailServer_T _connectMTA(void) {
 
 
 static boolean_t _send(List_T list) {
-        boolean_t failed = false;
+        volatile boolean_t failed = false;
         if (List_length(list)) {
                 volatile Mail_T m = NULL;
                 volatile SMTP_T smtp = NULL;

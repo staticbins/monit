@@ -49,15 +49,6 @@ fi
 
 AX_CHECK_COMPILE_FLAG([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
 AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"])
-AX_CHECK_COMPILE_FLAG([-fsanitize=bool], [CFLAGS="$CFLAGS -fsanitize=bool"])
-AX_CHECK_COMPILE_FLAG([-fsanitize=enum], [CFLAGS="$CFLAGS -fsanitize=enum"])
-AX_CHECK_COMPILE_FLAG([-fsanitize=float-divide-by-zero], [CFLAGS="$CFLAGS -fsanitize=float-divide-by-zero"])
-AX_CHECK_COMPILE_FLAG([-fsanitize-address-use-after-scope], [CFLAGS="$CFLAGS -fsanitize-address-use-after-scope"])
-AX_CHECK_COMPILE_FLAG([-fsanitize=signed-integer-overflow], [CFLAGS="$CFLAGS -fsanitize=signed-integer-overflow"])
-AX_CHECK_COMPILE_FLAG([-fsanitize=vla-bound], [CFLAGS="$CFLAGS -fsanitize=vla-bound"])
-AX_CHECK_COMPILE_FLAG([-fsanitize=bounds-strict], [CFLAGS="$CFLAGS -fsanitize=bounds-strict"])
-AX_CHECK_COMPILE_FLAG([-fsanitize=null], [CFLAGS="$CFLAGS -fsanitize=null "])
-AX_CHECK_COMPILE_FLAG([-fsanitize=object-size], [CFLAGS="$CFLAGS -fsanitize=object-size"])
 AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [CFLAGS="$CFLAGS -fcf-protection=full"])
 AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [CFLAGS="$CFLAGS -fstack-clash-protection"])
 
@@ -445,7 +436,7 @@ AC_C_BIGENDIAN
 # If the compiler is gcc, tune warnings and make the char type unsigned
 # and enable C99 support
 if test "x$GCC" = "xyes"; then
-	CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -Wno-unused-command-line-argument -funsigned-char";
+	CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
         # Add C99 support
         CFLAGS="$CFLAGS -D_GNU_SOURCE -std=c99"
         # does this compiler support -Wno-pointer-sign ?
@@ -766,13 +757,17 @@ AC_ARG_WITH(asan,
 )
 
 if test "$use_asan" = "1"; then
-        AC_CHECK_LIB([asan],
-                     [__asan_init],
-                     [CFLAGS="$CFLAGS -fsanitize=address -fno-omit-frame-pointer"],
-                     [
-                        use_asan=0
-                        AC_MSG_WARN([libasan.so enabled but headers or library not found])
-                     ])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=address], [CFLAGS="$CFLAGS -fsanitize=address"])
+        AX_CHECK_COMPILE_FLAG([-fno-omit-frame-pointer], [CFLAGS="$CFLAGS -fno-omit-frame-pointer"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=bool], [CFLAGS="$CFLAGS -fsanitize=bool"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=enum], [CFLAGS="$CFLAGS -fsanitize=enum"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=float-divide-by-zero], [CFLAGS="$CFLAGS -fsanitize=float-divide-by-zero"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize-address-use-after-scope], [CFLAGS="$CFLAGS -fsanitize-address-use-after-scope"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=signed-integer-overflow], [CFLAGS="$CFLAGS -fsanitize=signed-integer-overflow"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=vla-bound], [CFLAGS="$CFLAGS -fsanitize=vla-bound"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=bounds-strict], [CFLAGS="$CFLAGS -fsanitize=bounds-strict"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=null], [CFLAGS="$CFLAGS -fsanitize=null "])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=object-size], [CFLAGS="$CFLAGS -fsanitize=object-size"])
 fi
 
 
@@ -1040,8 +1035,6 @@ AC_ARG_ENABLE(optimized,
         if test "x$enableval" = "xyes" ; then
                 CFLAGS=`echo $CFLAGS|sed 's/-g[[^ ]]*//g'`
                 CFLAGS=`echo $CFLAGS|sed 's/-O.//g'`
-                CFLAGS=`echo $CFLAGS|sed 's/-fsanitize=address//g'`
-                CFLAGS=`echo $CFLAGS|sed 's/-fno-omit-frame-pointer//g'`
                 CFLAGS="$CFLAGS -O3 -DNDEBUG"
                 OPTIMIZED=1
         else

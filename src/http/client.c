@@ -175,7 +175,7 @@ static void _receive(Socket_T S) {
 
 
 static boolean_t _client(const char *request, StringBuffer_T data) {
-        boolean_t status = false;
+        volatile boolean_t status = false;
         if (! exist_daemon()) {
                 LogError("Monit: the monit daemon is not running\n");
                 return status;

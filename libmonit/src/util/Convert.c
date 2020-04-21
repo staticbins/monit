@@ -80,7 +80,7 @@ char *Convert_time2str(double milli, char s[static 11]) {
     const char *sign = (milli < 0) ? "-" : "";
     milli = fabs(milli);
     assert(milli < 3.14e+12); // -99.569 y
-    for (int i = 0; i < (sizeof(conversion) / sizeof(conversion[0])); i++) {
+    for (size_t i = 0; i < (sizeof(conversion) / sizeof(conversion[0])); i++) {
         if (milli >= conversion[i].base) {
             milli /= conversion[i].base;
         } else {

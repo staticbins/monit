@@ -642,7 +642,7 @@ static State_Type _checkPerm(Service_T s, int mode) {
         if (s->perm) {
                 if (mode >= 0) {
                         mode_t m = mode & 07777;
-                        if (m != s->perm->perm) {
+                        if (m != (mode_t)s->perm->perm) {
                                 if (s->perm->test_changes) {
                                         Event_post(s, Event_Permission, State_Changed, s->perm->action, "permission for %s changed from %04o to %04o", s->path, s->perm->perm, m);
                                         s->perm->perm = m;
@@ -1841,8 +1841,8 @@ State_Type check_system(Service_T s) {
 
 
 State_Type check_net(Service_T s) {
-        boolean_t havedata = true;
-        State_Type rv = State_Succeeded;
+        volatile boolean_t havedata = true;
+        volatile State_Type rv = State_Succeeded;
         TRY
         {
                 Link_update(s->inf.net->stats);

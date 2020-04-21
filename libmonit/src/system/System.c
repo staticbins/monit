@@ -111,7 +111,7 @@ boolean_t System_random(void *buf, size_t nbytes) {
         arc4random_buf(buf, nbytes);
         return true;
 #elif defined HAVE_GETRANDOM
-        return (getrandom(buf, nbytes, 0) == nbytes);
+        return (getrandom(buf, nbytes, 0) == (ssize_t)nbytes);
 #else
         int fd = open("/dev/urandom", O_RDONLY);
         if (fd >= 0) {

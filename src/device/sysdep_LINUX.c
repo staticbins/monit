@@ -173,7 +173,7 @@ static boolean_t _getNfsDiskActivity(void *_inf) {
         }
         uint64_t now = Time_milli();
         char line[PATH_MAX];
-        char pattern[PATH_MAX];
+        char pattern[2 * PATH_MAX];
         boolean_t found = false;
         snprintf(pattern, sizeof(pattern), "device %s ", inf->filesystem->object.device);
         while (fgets(line, sizeof(line), f)) {
@@ -206,7 +206,7 @@ static boolean_t _getNfsDiskActivity(void *_inf) {
 
 static boolean_t _getZfsDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        char path[PATH_MAX];
+        char path[2 * PATH_MAX];
         snprintf(path, sizeof(path), "/proc/spl/kstat/zfs/%s/io", inf->filesystem->object.key);
         FILE *f = fopen(path, "r");
         if (f) {
@@ -308,7 +308,7 @@ static boolean_t _getVxfsDiskActivity(void *_inf) {
 
 static boolean_t _getSysfsBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        char path[PATH_MAX];
+        char path[2 * PATH_MAX];
         snprintf(path, sizeof(path), "/sys/class/block/%s/stat", inf->filesystem->object.key);
         FILE *f = fopen(path, "r");
         if (f) {

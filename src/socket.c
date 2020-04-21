@@ -272,7 +272,7 @@ static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_
 error:
                 Net_close(s);
         } else {
-                snprintf(error, sizeof(error), "Cannot create socket to %s -- %s", _addressToString(addr, addrlen, (char[STRLEN]){}, STRLEN), STRERROR);
+                snprintf(error, sizeof(error), "Cannot create socket to %s -- %s", _addressToString(addr, addrlen, (char[2048]){}, 2048), STRERROR);
         }
         THROW(IOException, "%s", error);
         return NULL;

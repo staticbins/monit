@@ -48,7 +48,7 @@ static void indirectA(void) {
 /* Throw and catch exceptions and check that we got the expected exception.
  * If the exception stack is corrupt somehow this should be detected
  */
-static void *thread(void *args) {
+static void *thread(__attribute__ ((unused)) void *args) {
         TRY
                 THROW(A, "A cause");
                 assert(false); // Should not be reached
@@ -228,7 +228,7 @@ int main(void) {
 
         printf("=> Test5: TRY-FINALLY\n");
         {
-                int i = 0;
+                volatile int i = 0;
                 TRY
                         i++;
                 FINALLY

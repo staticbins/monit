@@ -319,7 +319,7 @@ static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
                 char buf[STRLEN] = {};
                 while ((n = fread(buf, 1, sizeof(buf) - 1, f)) > 0) {
                         // The cmdline file contains argv elements/strings separated by '\0' => join the string
-                        for (int i = 0; i < n; i++) {
+                        for (size_t i = 0; i < n; i++) {
                                 if (buf[i] == 0)
                                         StringBuffer_append(proc->name, " ");
                                 else
@@ -502,7 +502,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         struct Proc_T proc = {};
         proc.name = StringBuffer_create(64);
         time_t starttime = _getStartTime();
-        for (int i = 0; i < globbuf.gl_pathc; i++) {
+        for (size_t i = 0; i < globbuf.gl_pathc; i++) {
                 proc.pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
                 if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags) && _parseProcFdCount(&proc)) {
                         // Non-mandatory statistics (may not exist)
@@ -723,7 +723,7 @@ boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
         if (f) {
                 char line[STRLEN];
                 if (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "%lld %lld %lld\n", &(systeminfo.filedescriptors.allocated), &(systeminfo.filedescriptors.unused), &(systeminfo.filedescriptors.maximum)) == 3) {
+                        if (sscanf(line, "%lld %lld %lld\n", &(si->filedescriptors.allocated), &(si->filedescriptors.unused), &(si->filedescriptors.maximum)) == 3) {
                                 rv = true;
                         }
                 }
