@@ -53,3 +53,4 @@ src/y.tab.h
 # Except
 !config/ax_info.m4
 !config/ax_check_compile_flag.m4
+!libmonit/config/ax_check_compile_flag.m4
