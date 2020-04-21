@@ -215,11 +215,11 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                         DEBUG("proc_pid_rusage for pid %d failed -- %s\n", pt[i].pid, STRERROR);
                         } else {
                                 pt[i].read.time = pt[i].write.time = Time_milli();
-                                pt[i].read.bytes = rusage.ri_diskio_bytesread;
-                                pt[i].read.bytesPhysical = -1;
+                                pt[i].read.bytes = -1;
+                                pt[i].read.bytesPhysical = rusage.ri_diskio_bytesread;
                                 pt[i].read.operations = -1;
-                                pt[i].write.bytes = rusage.ri_diskio_byteswritten;
-                                pt[i].write.bytesPhysical = -1;
+                                pt[i].write.bytes = -1;
+                                pt[i].write.bytesPhysical = rusage.ri_diskio_byteswritten;
                                 pt[i].write.operations = -1;
                         }
 #endif
