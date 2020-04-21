@@ -345,7 +345,7 @@ static boolean_t _sendPing(const char *hostname, int socket, struct addrinfo *ad
                         memcpy((int64_t *)(out_icmp4->icmp_data), &started, sizeof(int64_t)); // set data to timestamp
                         header_len = offsetof(struct icmp, icmp_data);
                         out_len = header_len + size;
-                        out_icmp4->icmp_cksum = _checksum((unsigned char *)out_icmp4, out_len); // IPv4 requires checksum computation
+                        out_icmp4->icmp_cksum = _checksum((unsigned char *)out_icmp4, (int)out_len); // IPv4 requires checksum computation
                         out_icmp = out_icmp4;
                         break;
 #ifdef HAVE_IPV6

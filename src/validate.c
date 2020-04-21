@@ -987,7 +987,7 @@ next:
                                 LogError("'%s' cannot seek file %s: %s\n", s->name, s->path, STRERROR);
                                 goto final2;
                         }
-                        if (! fgets(line, Run.limits.fileContentBuffer, file)) {
+                        if (! fgets(line, (int)Run.limits.fileContentBuffer, file)) {
                                 if (! feof(file)) {
                                         rv = State_Failed;
                                         LogError("'%s' cannot read file %s: %s\n", s->name, s->path, STRERROR);
@@ -1032,7 +1032,7 @@ next:
                                         DEBUG("'%s' Pattern %s'%s' match on content line [%s]\n", s->name, ml->not ? "not " : "", ml->match_string, line);
                                         /* Save the line for Event_post */
                                         if (! ml->log)
-                                                ml->log = StringBuffer_create(Run.limits.fileContentBuffer);
+                                                ml->log = StringBuffer_create((int)Run.limits.fileContentBuffer);
                                         if ((size_t)StringBuffer_length(ml->log) < Run.limits.fileContentBuffer) {
                                                 StringBuffer_append(ml->log, "%s\n", line);
                                                 if ((size_t)StringBuffer_length(ml->log) >= Run.limits.fileContentBuffer)
