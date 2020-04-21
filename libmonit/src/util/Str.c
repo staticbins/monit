@@ -300,7 +300,7 @@ char *Str_ndup(const char *s, long n) {
         assert(n >= 0);
         if (s) {
                 size_t l = strlen(s);
-                n = l < n ? l : n; // Use the actual length of s if shorter than n
+                n = l < (unsigned long)n ? l : n; // Use the actual length of s if shorter than n
                 t = ALLOC(n + 1);
                 memcpy(t, s, n);
                 t[n] = 0;
@@ -354,7 +354,7 @@ char *Str_trunc(char *s, int n) {
         assert(n >= 0);
         if (s) {
                 size_t sl = strlen(s);
-                if (sl > n) {
+                if (sl > (size_t)n) {
                         if (n - 3 >= 0)
                                 for (int e = n - 3; e < n; e++)
                                         s[e] = '.';
