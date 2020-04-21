@@ -2493,7 +2493,7 @@ action2         : action {
                 ;
 
 rateXcycles     : NUMBER CYCLE {
-                        if ($<number>1 < 1 || $<number>1 > BITMAP_MAX) {
+                        if ($<number>1 < 1 || (unsigned long)$<number>1 > BITMAP_MAX) {
                                 yyerror2("The number of cycles must be between 1 and %lu", BITMAP_MAX);
                         } else {
                                 rate.count  = $<number>1;
@@ -2503,7 +2503,7 @@ rateXcycles     : NUMBER CYCLE {
                 ;
 
 rateXYcycles    : NUMBER NUMBER CYCLE {
-                        if ($<number>2 < 1 || $<number>2 > BITMAP_MAX) {
+                        if ($<number>2 < 1 || (unsigned long)$<number>2 > BITMAP_MAX) {
                                 yyerror2("The number of cycles must be between 1 and %lu", BITMAP_MAX);
                         } else if ($<number>1 < 1 || $<number>1 > $<number>2) {
                                 yyerror2("The number of events must be between 1 and less then poll cycles");
@@ -3228,7 +3228,7 @@ static void postparse() {
         /* Check the sanity of any dependency graph */
         check_depend();
 
-#ifdef HAVE_OPENSSL
+#if defined HAVE_OPENSSL && defined OPENSSL_FIPS
         Ssl_setFipsMode(Run.flags & Run_FipsEnabled);
 #endif
 

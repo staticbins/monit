@@ -884,7 +884,7 @@ static void version() {
 /**
  * M/Monit heartbeat thread
  */
-static void *heartbeat(void *args) {
+static void *heartbeat(__attribute__ ((unused)) void *args) {
         set_signal_block();
         LogInfo("M/Monit heartbeat started\n");
         LOCK(heartbeatMutex)
@@ -907,7 +907,7 @@ static void *heartbeat(void *args) {
 /**
  * Signalhandler for a daemon reload call
  */
-static RETSIGTYPE do_reload(int sig) {
+static RETSIGTYPE do_reload(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoReload;
 }
 
@@ -915,7 +915,7 @@ static RETSIGTYPE do_reload(int sig) {
 /**
  * Signalhandler for monit finalization
  */
-static RETSIGTYPE do_destroy(int sig) {
+static RETSIGTYPE do_destroy(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_Stopped;
 }
 
@@ -923,7 +923,7 @@ static RETSIGTYPE do_destroy(int sig) {
 /**
  * Signalhandler for a daemon wakeup call
  */
-static RETSIGTYPE do_wakeup(int sig) {
+static RETSIGTYPE do_wakeup(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoWakeup;
 }
 

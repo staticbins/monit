@@ -120,7 +120,7 @@ static boolean_t _getDiskUsage(void *_inf) {
 }
 
 
-static boolean_t _getDummyDiskActivity(void *_inf) {
+static boolean_t _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
         return true;
 }
 

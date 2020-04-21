@@ -528,14 +528,14 @@ void Ssl_threadCleanup() {
 }
 
 
-void Ssl_setFipsMode(boolean_t enabled) {
 #ifdef OPENSSL_FIPS
+void Ssl_setFipsMode(boolean_t enabled) {
         if (enabled && ! FIPS_mode() && ! FIPS_mode_set(1))
                 THROW(AssertException, "SSL: cannot enter FIPS mode -- %s", SSLERROR);
         else if (! enabled && FIPS_mode() && ! FIPS_mode_set(0))
                 THROW(AssertException, "SSL: cannot exit FIPS mode -- %s", SSLERROR);
-#endif
 }
+#endif
 
 
 T Ssl_new(SslOptions_T options) {

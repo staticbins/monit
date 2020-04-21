@@ -669,7 +669,7 @@ void Util_printHash(char *file) {
 }
 
 
-boolean_t Util_getChecksum(char *file, Hash_Type hashtype, char *buf, int bufsize) {
+boolean_t Util_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned long bufsize) {
         int hashlength = 16;
 
         ASSERT(file);

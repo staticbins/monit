@@ -258,7 +258,7 @@ static void _connectRequest(mqtt_t *mqtt) {
 
 static void _connectResponse(mqtt_t *mqtt) {
         mqtt_connect_response_t response = {};
-        if (Socket_read(mqtt->socket, &response, sizeof(mqtt_connect_response_t)) < sizeof(mqtt_connect_response_t)) {
+        if ((long)Socket_read(mqtt->socket, &response, sizeof(mqtt_connect_response_t)) < (long)sizeof(mqtt_connect_response_t)) {
                 THROW(IOException, "Error receiving connection response -- %s", STRERROR);
         }
         if (response.header.messageType != MQTT_Type_ConnectResponse) {

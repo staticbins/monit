@@ -328,7 +328,7 @@ static void _setPingOptions(int socket, struct addrinfo *addr) {
 static boolean_t _sendPing(const char *hostname, int socket, struct addrinfo *addr, int size, int retry, int maxretries, int id, int64_t started) {
         char buf[ICMP_MAXSIZE] = {};
         int header_len = 0;
-        int out_len = 0;
+        unsigned long out_len = 0;
         void *out_icmp = NULL;
         struct icmp *out_icmp4;
 #ifdef HAVE_IPV6

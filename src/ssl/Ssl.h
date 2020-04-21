@@ -92,11 +92,13 @@ void Ssl_stop(void);
 void Ssl_threadCleanup(void);
 
 
+#ifdef OPENSSL_FIPS
 /**
  * Enable or disable FIPS-140 mode
  * @param enabled true to enable FIPS-140 mode
  */
 void Ssl_setFipsMode(boolean_t enabled);
+#endif
 
 
 /**

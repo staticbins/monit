@@ -1051,7 +1051,7 @@ static void include_file(char *pattern) {
         glob_t globbuf;
         errno = 0;
         if (glob(pattern, GLOB_MARK, NULL, &globbuf) == 0) {
-                for (int i = 0; i < globbuf.gl_pathc; i++) {
+                for (size_t i = 0; i < globbuf.gl_pathc; i++) {
                         size_t filename_length = strlen(globbuf.gl_pathv[i]);
                         if ((filename_length == 0) || (globbuf.gl_pathv[i][filename_length - 1] == '~' ) || (globbuf.gl_pathv[i][filename_length - 1] == '/'))
                                 continue; // skip subdirectories and file backup copies

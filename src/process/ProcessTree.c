@@ -170,7 +170,7 @@ static float _cpuUsage(float rawUsage, unsigned threads) {
         if (systeminfo.cpu.count > 0 && rawUsage > 0) {
                 int divisor;
                 if (threads > 1) {
-                        if (threads >= systeminfo.cpu.count) {
+                        if (threads >= (unsigned)systeminfo.cpu.count) {
                                 // Multithreaded application with more threads then CPU cores
                                 divisor = systeminfo.cpu.count;
                         } else {

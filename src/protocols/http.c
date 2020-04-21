@@ -234,10 +234,10 @@ static void _readData(Socket_T socket, Port_T P, volatile char **data, int wantB
 }
 
 
-static void _processBodyChunked(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context) {
+static void _processBodyChunked(Socket_T socket, Port_T P, volatile char **data, __attribute__ ((unused)) int *contentLength, ChecksumContext_T context) {
         char crlf[2] = {};
-        int wantBytes = 0;
-        int haveBytes = 0;
+        unsigned wantBytes = 0;
+        unsigned haveBytes = 0;
         while ((wantBytes = _getChunkSize(socket)) && haveBytes < Run.limits.httpContentBuffer) {
                 if (haveBytes + wantBytes > Run.limits.httpContentBuffer) {
                         DEBUG("HTTP: content buffer limit exceeded -- limiting the data to %d\n", Run.limits.httpContentBuffer);
@@ -256,7 +256,7 @@ static void _processBodyContentLength(Socket_T socket, Port_T P, volatile char *
                 THROW(ProtocolException, "HTTP error: Missing Content-Length header");
         } else if (*contentLength == 0) {
                 THROW(ProtocolException, "HTTP error: No content returned from server");
-        } else if (*contentLength > Run.limits.httpContentBuffer) {
+        } else if (*contentLength > (int)Run.limits.httpContentBuffer) {
                 DEBUG("HTTP: content buffer limit exceeded -- limiting the data to %d\n", Run.limits.httpContentBuffer);
                 *contentLength = Run.limits.httpContentBuffer;
         }
@@ -264,12 +264,12 @@ static void _processBodyContentLength(Socket_T socket, Port_T P, volatile char *
 }
 
 
-static void _processBodyUntilEOF(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context) {
+static void _processBodyUntilEOF(Socket_T socket, Port_T P, volatile char **data, __attribute__ ((unused)) int *contentLength, ChecksumContext_T context) {
         int readBytes = 0;
         if (P->url_request && P->url_request->regex) {
                 // The content test is required => cache the whole body
-                int haveBytes = 0;
-                int wantBytes = STRLEN;
+                unsigned haveBytes = 0;
+                unsigned wantBytes = STRLEN;
                 while (haveBytes < Run.limits.httpContentBuffer && (readBytes = Socket_read(socket, (void *)(*data + haveBytes), wantBytes)) > 0)  {
                         _checksumAppend(P, context, (const char *)(*data + haveBytes), readBytes);
                         haveBytes += readBytes;

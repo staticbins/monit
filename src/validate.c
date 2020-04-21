@@ -674,7 +674,7 @@ static State_Type _checkUid(Service_T s, int uid) {
         ASSERT(s);
         if (s->uid) {
                 if (uid >= 0) {
-                        if (uid != s->uid->uid) {
+                        if ((uid_t)uid != s->uid->uid) {
                                 Event_post(s, Event_Uid, State_Failed, s->uid->action, "uid test failed for %s -- current uid is %d", s->name, uid);
                                 return State_Failed;
                         } else {
@@ -695,7 +695,7 @@ static State_Type _checkEuid(Service_T s, int euid) {
         ASSERT(s);
         if (s->euid) {
                 if (euid >= 0) {
-                        if (euid != s->euid->uid) {
+                        if ((uid_t)euid != s->euid->uid) {
                                 Event_post(s, Event_Uid, State_Failed, s->euid->action, "euid test failed for %s -- current euid is %d", s->name, euid);
                                 return State_Failed;
                         } else {
@@ -792,7 +792,7 @@ static State_Type _checkGid(Service_T s, int gid) {
         ASSERT(s);
         if (s->gid) {
                 if (gid >= 0) {
-                        if (gid != s->gid->gid) {
+                        if ((gid_t)gid != s->gid->gid) {
                                 Event_post(s, Event_Gid, State_Failed, s->gid->action, "gid test failed for %s -- current gid is %d", s->name, gid);
                                 return State_Failed;
                         } else {
@@ -887,7 +887,7 @@ static State_Type _checkSize(Service_T s, off_t size) {
                                                 sl->initialized = true;
                                                 sl->size = size;
                                         } else {
-                                                if (sl->size != size) {
+                                                if ((off_t)sl->size != size) {
                                                         rv = State_Changed;
                                                         Event_post(s, Event_Size, State_Changed, sl->action, "size for %s changed to %s", s->path, Convert_bytes2str(size, buf));
                                                         /* reset expected value for next cycle */
@@ -999,7 +999,7 @@ next:
                                 /* No content: shouldn't happen - empty line will contain at least '\n' */
                                 goto final2;
                         } else if (line[length - 1] != '\n') {
-                                if (length < Run.limits.fileContentBuffer - 1) {
+                                if (length < (size_t)(Run.limits.fileContentBuffer - 1)) {
                                         /* Incomplete line: we gonna read it next time again, allowing the writer to complete the write */
                                         DEBUG("'%s' content match: incomplete line read - no new line at end. (retrying next cycle)\n", s->name);
                                         goto final2;
@@ -1033,9 +1033,9 @@ next:
                                         /* Save the line for Event_post */
                                         if (! ml->log)
                                                 ml->log = StringBuffer_create(Run.limits.fileContentBuffer);
-                                        if (StringBuffer_length(ml->log) < Run.limits.fileContentBuffer) {
+                                        if ((size_t)StringBuffer_length(ml->log) < Run.limits.fileContentBuffer) {
                                                 StringBuffer_append(ml->log, "%s\n", line);
-                                                if (StringBuffer_length(ml->log) >= Run.limits.fileContentBuffer)
+                                                if ((size_t)StringBuffer_length(ml->log) >= Run.limits.fileContentBuffer)
                                                         StringBuffer_append(ml->log, "...\n");
                                         }
                                 } else {

@@ -136,7 +136,7 @@ void monit_http(Httpd_Action action) {
 /* ----------------------------------------------------------------- Private */
 
 
-static void *thread_wrapper(void *arg) {
+static void *thread_wrapper(__attribute__ ((unused)) void *arg) {
         set_signal_block();
         Engine_start();
 #ifdef HAVE_OPENSSL
