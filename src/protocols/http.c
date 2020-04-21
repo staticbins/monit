@@ -215,7 +215,7 @@ static int _readDataFromSocket(Socket_T socket, char *data, int wantBytes) {
 }
 
 
-static void _readData(Socket_T socket, Port_T P, volatile char **data, int wantBytes, unsigned *haveBytes, ChecksumContext_T context) {
+static void _readData(Socket_T socket, Port_T P, volatile char **data, unsigned wantBytes, unsigned *haveBytes, ChecksumContext_T context) {
         if (P->url_request && P->url_request->regex) {
                 // The content test is required => cache the whole body
                 *data = realloc((void *)*data, *haveBytes + wantBytes + 1);
