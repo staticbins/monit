@@ -199,7 +199,7 @@ static unsigned _getChunkSize(Socket_T socket) {
 }
 
 
-static int _readDataFromSocket(Port_T P, Socket_T socket, char *data, int wantBytes) {
+static int _readDataFromSocket(Socket_T socket, char *data, int wantBytes) {
         int readBytes = 0;
         do {
                 int n = Socket_read(socket, data + readBytes, wantBytes - readBytes);
@@ -219,14 +219,14 @@ static void _readData(Socket_T socket, Port_T P, volatile char **data, int wantB
         if (P->url_request && P->url_request->regex) {
                 // The content test is required => cache the whole body
                 *data = realloc((void *)*data, *haveBytes + wantBytes + 1);
-                *haveBytes += _readDataFromSocket(P, socket, (void *)*data + *haveBytes, wantBytes);
+                *haveBytes += _readDataFromSocket(socket, (void *)*data + *haveBytes, wantBytes);
                 _checksumAppend(P, context, (const char *)*data, wantBytes);
                 *(*data + *haveBytes) = 0;
         } else {
                 // No content check is required => use small buffer and compute the checksum on the fly
                 *haveBytes = 0;
                 for (int readBytes = (wantBytes < BUFSIZE) ? wantBytes : BUFSIZE; *haveBytes < wantBytes; readBytes = (wantBytes - *haveBytes) < BUFSIZE ? (wantBytes - *haveBytes) : BUFSIZE) {
-                        _readDataFromSocket(P, socket, (void *)*data, readBytes);
+                        _readDataFromSocket(socket, (void *)*data, readBytes);
                         _checksumAppend(P, context, (const char *)*data, readBytes);
                         *haveBytes += readBytes;
                 }
@@ -245,7 +245,7 @@ static void _processBodyChunked(Socket_T socket, Port_T P, volatile char **data,
                 }
                 _readData(socket, P, data, wantBytes, &haveBytes, context);
                 // Read the CRLF terminator
-                _readDataFromSocket(P, socket, crlf, 2);
+                _readDataFromSocket(socket, crlf, 2);
         }
 }
 
@@ -304,7 +304,7 @@ static void _processStatus(Socket_T socket, Port_T P) {
 }
 
 
-static void _processHeaders(Socket_T socket, Port_T P, void (**processBody)(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context), int *contentLength) {
+static void _processHeaders(Socket_T socket, void (**processBody)(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context), int *contentLength) {
         char buf[512] = {};
         *processBody = _processBodyUntilEOF;
 
@@ -337,7 +337,7 @@ static void _checkResponse(Socket_T socket, Port_T P) {
         void (*processBody)(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context) = NULL;
 
         _processStatus(socket, P);
-        _processHeaders(socket, P, &processBody, &contentLength);
+        _processHeaders(socket, &processBody, &contentLength);
         if ((P->url_request && P->url_request->regex) || P->parameters.http.checksum) {
                 if (processBody) {
                         MD_T hash = {};
