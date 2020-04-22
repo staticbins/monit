@@ -79,26 +79,26 @@ int main(void) {
 
         printf("=> Test6: trim\n");
         {
-                char e[] = "   ";
-                char o[] = " a ";
-                char s[] = "   abcdef";
-                char s4[] = "  \t abc \r\n\t ";
+                char el[]  = "   ";
+                char er[]  = "   ";
+                char elr[] = "   ";
+                char ol[]  = " a ";
+                char or[]  = " a ";
+                char olr[] = " a ";
+                char s[]   = "   abcdef";
+                char s4[]  = "  \t abc \r\n\t ";
                 assert(Str_isEqual(Str_ltrim(s), "abcdef"));
                 printf("\tResult: %s\n", Str_trim(s4));
                 assert(Str_isEqual(s4, "abc"));
                 printf("\tTesting for NULL argument\n");
                 assert(!Str_trim(NULL));
-                assert(Str_isEqual(Str_ltrim(e), ""));
-                memcpy(e, "   ", sizeof("   ") - 1);
-                assert(Str_isEqual(Str_rtrim(e), ""));
-                memcpy(e, "   ", sizeof("   ") - 1);
-                assert(Str_isEqual(Str_trim(e), ""));
-                assert(Str_isEqual(Str_ltrim(o), "a "));
-                memcpy(o, " a ", sizeof(" a ") - 1);
-                assert(Str_isEqual(Str_rtrim(o), " a"));
-                memcpy(o, " a ", sizeof(" a ") - 1);
-                assert(Str_isEqual(Str_trim(o), "a"));
-                assert(Str_isEqual(Str_trim(o), "a"));
+                assert(Str_isEqual(Str_ltrim(el), ""));
+                assert(Str_isEqual(Str_rtrim(er), ""));
+                assert(Str_isEqual(Str_trim(elr), ""));
+                assert(Str_isEqual(Str_ltrim(ol), "a "));
+                assert(Str_isEqual(Str_rtrim(or), " a"));
+                assert(Str_isEqual(Str_trim(olr), "a"));
+                assert(Str_isEqual(Str_trim(olr), "a"));
         }
         printf("=> Test6: OK\n\n");
 
