@@ -229,7 +229,8 @@ static void _connectRequest(mqtt_t *mqtt) {
                 .protocolName[3]                    = 'T',
                 .protocolLevel                      = 4,    // protocol for version 3.1.1
                 .flags                              = MQTT_ConnectRequest_CleanSession,
-                .keepAlive                          = htons(1)
+                .keepAlive                          = htons(1),
+                .data[0]                            = 0
         };
 
         // Client ID
