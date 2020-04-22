@@ -91,8 +91,8 @@ typedef struct LinkData_T {
 #ifndef __LP64__
         unsigned long long raw;
 #endif
-        unsigned long long last;
-        unsigned long long now;
+        long long now;
+        long long last;
         unsigned long long minute[60];
         unsigned long long hour[24];
 } LinkData_T;
@@ -102,8 +102,8 @@ struct T {
         char *object;
         const char *(*resolve)(const char *object); // Resolve Object -> Interface, set during Link_T instantiation by constructor (currently we implement only IPAddress -> Interface lookup)
         struct {
-                unsigned long long last;
-                unsigned long long now;
+                long long last;
+                long long now;
         } timestamp;
         int state;       // State (-1 = N/A, 0 = down, 1 = up)
         int duplex;      // Duplex (-1 = N/A, 0 = half, 1 = full)
@@ -189,15 +189,15 @@ static void _reset(T L) {
 }
 
 
-static unsigned long long _deltaSecond(T L, LinkData_T *data) {
+static long long _deltaSecond(T L, LinkData_T *data) {
         if (L->timestamp.last > 0 && L->timestamp.now > L->timestamp.last)
                 if (data->last > 0 && data->now > data->last)
-                        return (unsigned long long)((data->now - data->last) * 1000. / (L->timestamp.now - L->timestamp.last));
+                        return (long long)((data->now - data->last) * 1000. / (L->timestamp.now - L->timestamp.last));
         return 0ULL;
 }
 
 
-static unsigned long long _deltaMinute(T L, LinkData_T *data, int count) {
+static long long _deltaMinute(T L, LinkData_T *data, int count) {
         int stop = Time_minutes(L->timestamp.now / 1000.);
         int delta = stop - count;
         int start = delta < 0 ? 60 + delta : delta;
@@ -209,7 +209,7 @@ static unsigned long long _deltaMinute(T L, LinkData_T *data, int count) {
 }
 
 
-static unsigned long long _deltaHour(T L, LinkData_T *data, int count) {
+static long long _deltaHour(T L, LinkData_T *data, int count) {
         int stop = Time_hour(L->timestamp.now / 1000.);
         int delta = stop - count;
         int start = delta < 0 ? 24 + delta : delta;
