@@ -101,6 +101,7 @@ int main(void) {
                 assert(Str_isEqual(L->tail->e, "d"));
                 assert(Str_isEqual(L->head->e, "1"));
                 assert(List_length(L) == 19);
+                List_free(&t);
         }
         printf("=> Test4: OK\n\n");
 
