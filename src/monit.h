@@ -474,7 +474,7 @@ typedef struct command_t {
         boolean_t has_gid;      /**< true if a new gid is defined for this Command */
         uid_t uid;         /**< The user id to switch to when running this Command */
         gid_t gid;        /**< The group id to switch to when running this Command */
-        unsigned timeout;     /**< Max seconds which we wait for method to execute */
+        unsigned int timeout;     /**< Max seconds which we wait for method to execute */
 } *command_t;
 
 

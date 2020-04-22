@@ -146,8 +146,8 @@ struct precedence_t {
 };
 
 struct rate_t {
-        unsigned count;
-        unsigned cycles;
+        unsigned int count;
+        unsigned int cycles;
 };
 
 /* yacc interface */
@@ -208,9 +208,9 @@ static struct rate_t rate = {1, 1};
 static struct rate_t rate1 = {1, 1};
 static struct rate_t rate2 = {1, 1};
 static char * htpasswd_file = NULL;
-static unsigned repeat = 0;
-static unsigned repeat1 = 0;
-static unsigned repeat2 = 0;
+static unsigned int repeat = 0;
+static unsigned int repeat1 = 0;
+static unsigned int repeat2 = 0;
 static Digest_Type digesttype = Digest_Cleartext;
 
 #define BITMAP_MAX (sizeof(long long) * 8)
@@ -4167,7 +4167,7 @@ static void addgeneric(Port_T port, char *send, char *expect) {
  * Add the current command object to the current service object's
  * start or stop program.
  */
-static void addcommand(int what, unsigned timeout) {
+static void addcommand(int what, unsigned int timeout) {
 
         switch (what) {
                 case START:   current->start = command; break;

@@ -87,7 +87,7 @@ static int      pagesize;
 static long     total_old    = 0;
 static long     cpu_user_old = 0;
 static long     cpu_syst_old = 0;
-static unsigned maxslp;
+static unsigned int maxslp;
 
 
 

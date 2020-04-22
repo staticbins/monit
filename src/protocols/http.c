@@ -186,9 +186,9 @@ static boolean_t _hasHeader(List_T list, const char *name) {
 }
 
 
-static unsigned _getChunkSize(Socket_T socket) {
+static unsigned int _getChunkSize(Socket_T socket) {
         char buf[9];
-        unsigned wantBytes = 0;
+        unsigned int wantBytes = 0;
         if (! Socket_readLine(socket, buf, sizeof(buf))) {
                 THROW(IOException, "HTTP error: failed to read chunk size -- %s", STRERROR);
         }
@@ -215,7 +215,7 @@ static int _readDataFromSocket(Socket_T socket, char *data, int wantBytes) {
 }
 
 
-static void _readData(Socket_T socket, Port_T P, volatile char **data, unsigned wantBytes, unsigned *haveBytes, ChecksumContext_T context) {
+static void _readData(Socket_T socket, Port_T P, volatile char **data, unsigned int wantBytes, unsigned int *haveBytes, ChecksumContext_T context) {
         if (P->url_request && P->url_request->regex) {
                 // The content test is required => cache the whole body
                 *data = realloc((void *)*data, *haveBytes + wantBytes + 1);
@@ -236,8 +236,8 @@ static void _readData(Socket_T socket, Port_T P, volatile char **data, unsigned 
 
 static void _processBodyChunked(Socket_T socket, Port_T P, volatile char **data, __attribute__ ((unused)) int *contentLength, ChecksumContext_T context) {
         char crlf[2] = {};
-        unsigned wantBytes = 0;
-        unsigned haveBytes = 0;
+        unsigned int wantBytes = 0;
+        unsigned int haveBytes = 0;
         while ((wantBytes = _getChunkSize(socket)) && haveBytes < Run.limits.httpContentBuffer) {
                 if (haveBytes + wantBytes > Run.limits.httpContentBuffer) {
                         DEBUG("HTTP: content buffer limit exceeded -- limiting the data to %d\n", Run.limits.httpContentBuffer);
@@ -251,7 +251,7 @@ static void _processBodyChunked(Socket_T socket, Port_T P, volatile char **data,
 
 
 static void _processBodyContentLength(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context) {
-        unsigned haveBytes = 0;
+        unsigned int haveBytes = 0;
         if (*contentLength < 0) {
                 THROW(ProtocolException, "HTTP error: Missing Content-Length header");
         } else if (*contentLength == 0) {
@@ -268,8 +268,8 @@ static void _processBodyUntilEOF(Socket_T socket, Port_T P, volatile char **data
         int readBytes = 0;
         if (P->url_request && P->url_request->regex) {
                 // The content test is required => cache the whole body
-                unsigned haveBytes = 0;
-                unsigned wantBytes = STRLEN;
+                unsigned int haveBytes = 0;
+                unsigned int wantBytes = STRLEN;
                 while (haveBytes < Run.limits.httpContentBuffer && (readBytes = Socket_read(socket, (void *)(*data + haveBytes), wantBytes)) > 0)  {
                         _checksumAppend(P, context, (const char *)(*data + haveBytes), readBytes);
                         haveBytes += readBytes;

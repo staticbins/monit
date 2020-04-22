@@ -66,8 +66,8 @@
 #define T Box_T
 struct T {
         struct {
-                unsigned row;
-                unsigned column;
+                unsigned int row;
+                unsigned int column;
         } index;
         struct {
                 struct {
@@ -75,7 +75,7 @@ struct T {
                         const char *color;
                 } header;
         } options;
-        unsigned columnsCount;
+        unsigned int columnsCount;
         BoxColumn_T *columns;
         StringBuffer_T b;
 };
@@ -86,7 +86,7 @@ struct T {
 
 static void _printBorderTop(T t) {
         StringBuffer_append(t->b, COLOR_DARKGRAY BOX_DOWN_RIGHT BOX_HORIZONTAL);
-        for (unsigned i = 0; i < t->columnsCount; i++) {
+        for (unsigned int i = 0; i < t->columnsCount; i++) {
                 for (int j = 0; j < t->columns[i].width; j++)
                         StringBuffer_append(t->b, BOX_HORIZONTAL);
                 if (i < t->columnsCount - 1)
@@ -98,7 +98,7 @@ static void _printBorderTop(T t) {
 
 static void _printBorderMiddle(T t) {
         StringBuffer_append(t->b, COLOR_DARKGRAY BOX_VERTICAL_RIGHT BOX_HORIZONTAL);
-        for (unsigned i = 0; i < t->columnsCount; i++) {
+        for (unsigned int i = 0; i < t->columnsCount; i++) {
                 for (int j = 0; j < t->columns[i].width; j++)
                         StringBuffer_append(t->b, BOX_HORIZONTAL);
                 if (i < t->columnsCount - 1)
@@ -110,7 +110,7 @@ static void _printBorderMiddle(T t) {
 
 static void _printBorderBottom(T t) {
         StringBuffer_append(t->b, COLOR_DARKGRAY BOX_UP_RIGHT BOX_HORIZONTAL);
-        for (unsigned i = 0; i < t->columnsCount; i++) {
+        for (unsigned int i = 0; i < t->columnsCount; i++) {
                 for (int j = 0; j < t->columns[i].width; j++)
                         StringBuffer_append(t->b, BOX_HORIZONTAL);
                 if (i < t->columnsCount - 1)
@@ -121,7 +121,7 @@ static void _printBorderBottom(T t) {
 
 
 static void _printHeader(T t) {
-        for (unsigned i = 0; i < t->columnsCount; i++) {
+        for (unsigned int i = 0; i < t->columnsCount; i++) {
                 StringBuffer_append(t->b, COLOR_DARKGRAY BOX_VERTICAL COLOR_RESET " ");
                 StringBuffer_append(t->b, "%s%-*s%s", t->options.header.color, t->columns[i].width, t->columns[i].name, COLOR_RESET);
                 StringBuffer_append(t->b, " ");
@@ -155,7 +155,7 @@ static void _cacheColor(BoxColumn_T *column) {
 // Print a row. If wrap is enabled and the text excceeds width, return true (printed text up to column width, repetition possible to print the rest), otherwise false
 static boolean_t _printRow(T t) {
         boolean_t repeat = false;
-        for (unsigned i = 0; i < t->columnsCount; i++) {
+        for (unsigned int i = 0; i < t->columnsCount; i++) {
                 StringBuffer_append(t->b, COLOR_DARKGRAY BOX_VERTICAL COLOR_RESET " ");
                 if (*(t->columns[i]._color))
                         StringBuffer_append(t->b, "%s", t->columns[i]._color);
@@ -199,7 +199,7 @@ static void _resetColumn(BoxColumn_T *column) {
 
 
 static void _resetRow(T t) {
-        for (unsigned i = 0; i < t->columnsCount; i++)
+        for (unsigned int i = 0; i < t->columnsCount; i++)
                 _resetColumn(&(t->columns[i]));
 }
 
@@ -228,13 +228,13 @@ void Box_free(T *t) {
         ASSERT(t && *t);
         if ((*t)->index.row > 0)
                 _printBorderBottom(*t);
-        for (unsigned i = 0; i < (*t)->columnsCount; i++)
+        for (unsigned int i = 0; i < (*t)->columnsCount; i++)
                 FREE((*t)->columns[i].value);
         FREE(*t);
 }
 
 
-void Box_setColumn(T t, unsigned index, const char *format, ...) {
+void Box_setColumn(T t, unsigned int index, const char *format, ...) {
         ASSERT(t);
         ASSERT(index > 0);
         ASSERT(index <= t->columnsCount);

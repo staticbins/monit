@@ -166,7 +166,7 @@ static void _fillProcessTree(ProcessTree_T *pt, int index) {
  * @param delta The delta of system time between current and previous cycle
  * @return Process' CPU usage [%] since last cycle
  */
-static float _cpuUsage(float rawUsage, unsigned threads) {
+static float _cpuUsage(float rawUsage, unsigned int threads) {
         if (systeminfo.cpu.count > 0 && rawUsage > 0) {
                 int divisor;
                 if (threads > 1) {

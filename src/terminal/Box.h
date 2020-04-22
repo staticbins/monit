@@ -85,7 +85,7 @@ void Box_free(T *t);
  * @param index Column index
  * @param format A format string with optional var args
  */
-void Box_setColumn(T t, unsigned index, const char *format, ...) __attribute__((format (printf, 3, 4)));
+void Box_setColumn(T t, unsigned int index, const char *format, ...) __attribute__((format (printf, 3, 4)));
 
 
 /**
