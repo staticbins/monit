@@ -504,7 +504,8 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
                                         break;
 #endif
                                 default:
-                                        break;
+                                        LogError("Ping for %s -- unknown address family: %d\n", hostname, addr->ai_family);
+                                        continue;
                         }
                         if (s >= 0) {
                                 if (outgoing->ip && bind(s, (struct sockaddr *)&(outgoing->addr), outgoing->addrlen) < 0) {
