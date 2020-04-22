@@ -663,7 +663,7 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         unsigned long long cpu_steal;      // Stolen time, which is the time spent in other operating systems when running in a virtualized environment
         unsigned long long cpu_guest;      // Time spent running a virtual CPU for guest operating systems under the control of the Linux kernel
         unsigned long long cpu_guest_nice; // Time spent running a niced guest (virtual CPU for guest operating systems under the control of the Linux kernel)
-        char buf[STRLEN];
+        char buf[8192];
 
         if (! file_readProc(buf, sizeof(buf), "stat", -1, NULL)) {
                 LogError("system statistic error -- cannot read /proc/stat\n");
