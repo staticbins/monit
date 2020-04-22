@@ -584,11 +584,10 @@ static void _testIp(Port_T p) {
                 // The host may resolve to multiple IPs and if at least one succeeded, we have no problem and don't have to flood the log with partial errors => log only the last error
                 for (struct addrinfo *r = result; r && is_available != Connection_Ok; r = r->ai_next) {
                         if (p->outgoing.addrlen == 0 || p->outgoing.addrlen == r->ai_addrlen) {
-                                const struct sockaddr *localaddr = p->outgoing.addrlen ? (struct sockaddr *)&(p->outgoing.addr) : NULL;
                                 volatile T S = NULL;
                                 TRY
                                 {
-                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, localaddr, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, &(p->target.net.ssl.options), p->timeout);
+                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, p->outgoing.addrlen ? (struct sockaddr *)&(p->outgoing.addr) : NULL, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, &(p->target.net.ssl.options), p->timeout);
                                         S->Port = p;
                                         TRY
                                         {
