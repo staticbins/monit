@@ -651,7 +651,7 @@ error:
  * @return: true if successful, false if failed (or not available)
  */
 boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
-        boolean_t rv;
+        int rv;
         unsigned long long cpu_total;      // Total CPU time
         unsigned long long cpu_user;       // Time spent in user mode
         unsigned long long cpu_nice;       // Time spent in user mode with low priority (nice)
@@ -679,7 +679,7 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
                     &cpu_irq,
                     &cpu_softirq,
                     &cpu_steal,
-                    &cpu_guest
+                    &cpu_guest,
                     &cpu_guest_nice);
         switch (rv) {
                 case 4:
