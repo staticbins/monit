@@ -2004,8 +2004,8 @@ If you'll omit the I<per core> option, the test will check the total load averag
 regardless of CPU cores count.
 
 I<CPU([user|system|wait])> is the percent of time the system spend
-in user or kernel space and I/O. The user/system/wait modifier is
-optional, if not used, the total system cpu usage is tested. Example:
+in user or kernel space and waiting for I/O. The user/system/wait modifier
+is optional, if not used, the total system cpu usage is tested. Example:
 
  if cpu usage > 95% for 10 cycles then alert
 

@@ -455,9 +455,6 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                 case Resource_CpuPercent:
                         {
                                 float cpu =
-#ifdef HAVE_CPU_WAIT
-                                        (systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.) +
-#endif
                                         (systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.) +
                                         (systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
                                 if (cpu < 0.) {
