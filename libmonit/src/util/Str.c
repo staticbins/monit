@@ -87,7 +87,8 @@ char *Str_ltrim(char *s) {
 
 char *Str_rtrim(char *s) {
         if (STR_DEF(s))
-                for (size_t j = strlen(s) - 1; isspace(s[j]); j--) s[j] = 0;
+                for (long j = (long)strlen(s) - 1; j >= 0 && isspace(s[j]); j--)
+                        s[j] = 0;
         return s;
 }
 
