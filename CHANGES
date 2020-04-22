@@ -72,6 +72,8 @@ Fixed: Issue #851: Linux and AIX: The length of the string that describes the pr
 was limited to 4kB, so the "procmatch" may not find the process if the pattern is past this limit. The limit
 was removed on Linux. On AIX the limit was rised to 8kB.
 
+Fixed: Issue #840: Network check: superfluous alerts when the link is down. Thanks to Lonnie Abelbeck.
+
 Fixed: MacOS: Only first 16 characters of the process name was displayed for privileged processes,
 so the pattern based process check and the procmatch CLI may miss some processes.
 
