@@ -299,8 +299,8 @@ char *Str_ndup(const char *s, long n) {
         char *t = NULL;
         assert(n >= 0);
         if (s) {
-                size_t l = strlen(s);
-                n = l < (unsigned long)n ? l : n; // Use the actual length of s if shorter than n
+                long l = (long)strlen(s);
+                n = l < n ? l : n; // Use the actual length of s if shorter than n
                 t = ALLOC(n + 1);
                 memcpy(t, s, n);
                 t[n] = 0;
