@@ -155,7 +155,7 @@ static void __attribute__ ((constructor)) _constructor(void) {
 
 static unsigned long long old_cpu_user     = 0;
 static unsigned long long old_cpu_syst     = 0;
-static unsigned long long old_cpu_iowait     = 0;
+static unsigned long long old_cpu_iowait   = 0;
 static unsigned long long old_cpu_total    = 0;
 
 static long page_size = 0;
@@ -684,36 +684,25 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         switch (rv) {
                 case 4:
                         // linux < 2.5.41
-                        cpu_iowait       = 0;
-                        cpu_irq        = 0;
-                        cpu_softirq    = 0;
-                        cpu_steal      = 0;
-                        cpu_guest      = 0;
-                        cpu_guest_nice = 0;
-                        break;
+                        cpu_iowait     = 0;
+                        // fall through
                 case 5:
                         // linux >= 2.5.41
                         cpu_irq        = 0;
                         cpu_softirq    = 0;
-                        cpu_steal      = 0;
-                        cpu_guest      = 0;
-                        cpu_guest_nice = 0;
-                        break;
+                        // fall through
                 case 7:
                         // linux >= 2.6.0-test4
                         cpu_steal      = 0;
-                        cpu_guest      = 0;
-                        cpu_guest_nice = 0;
-                        break;
+                        // fall through
                 case 8:
                         // linux 2.6.11
                         cpu_guest      = 0;
-                        cpu_guest_nice = 0;
-                        break;
+                        // fall through
                 case 9:
                         // linux >= 2.6.24
                         cpu_guest_nice = 0;
-                        break;
+                        // fall through
                 case 10:
                         // linux >= 2.6.33
                         break;
