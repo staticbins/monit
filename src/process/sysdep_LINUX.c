@@ -155,7 +155,7 @@ static void __attribute__ ((constructor)) _constructor(void) {
 
 static unsigned long long old_cpu_user     = 0;
 static unsigned long long old_cpu_syst     = 0;
-static unsigned long long old_cpu_wait     = 0;
+static unsigned long long old_cpu_iowait     = 0;
 static unsigned long long old_cpu_total    = 0;
 
 static long page_size = 0;
@@ -652,14 +652,17 @@ error:
  */
 boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         boolean_t rv;
-        unsigned long long cpu_total;
-        unsigned long long cpu_user;
-        unsigned long long cpu_nice;
-        unsigned long long cpu_syst;
-        unsigned long long cpu_idle;
-        unsigned long long cpu_wait;
-        unsigned long long cpu_irq;
-        unsigned long long cpu_softirq;
+        unsigned long long cpu_total;      // Total CPU time
+        unsigned long long cpu_user;       // Time spent in user mode
+        unsigned long long cpu_nice;       // Time spent in user mode with low priority (nice)
+        unsigned long long cpu_syst;       // Time spent in system mode
+        unsigned long long cpu_idle;       // Time spent in system mode
+        unsigned long long cpu_iowait;     // Time waiting for I/O to complete. This value is not reliable
+        unsigned long long cpu_irq;        // Time servicing interrupts
+        unsigned long long cpu_softirq;    // Time servicing softirqs
+        unsigned long long cpu_steal;      // Stolen time, which is the time spent in other operating systems when running in a virtualized environment
+        unsigned long long cpu_guest;      // Time spent running a virtual CPU for guest operating systems under the control of the Linux kernel
+        unsigned long long cpu_guest_nice; // Time spent running a niced guest (virtual CPU for guest operating systems under the control of the Linux kernel)
         char buf[STRLEN];
 
         if (! file_readProc(buf, sizeof(buf), "stat", -1, NULL)) {
@@ -667,25 +670,59 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
                 goto error;
         }
 
-        rv = sscanf(buf, "cpu %llu %llu %llu %llu %llu %llu %llu",
+        rv = sscanf(buf, "cpu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
                     &cpu_user,
                     &cpu_nice,
                     &cpu_syst,
                     &cpu_idle,
-                    &cpu_wait,
+                    &cpu_iowait,
                     &cpu_irq,
-                    &cpu_softirq);
-        if (rv < 4) {
-                LogError("system statistic error -- cannot read cpu usage\n");
-                goto error;
-        } else if (rv == 4) {
-                /* linux 2.4.x doesn't support these values */
-                cpu_wait    = 0;
-                cpu_irq     = 0;
-                cpu_softirq = 0;
+                    &cpu_softirq,
+                    &cpu_steal,
+                    &cpu_guest
+                    &cpu_guest_nice);
+        switch (rv) {
+                case 4:
+                        // linux < 2.5.41
+                        cpu_iowait       = 0;
+                        cpu_irq        = 0;
+                        cpu_softirq    = 0;
+                        cpu_steal      = 0;
+                        cpu_guest      = 0;
+                        cpu_guest_nice = 0;
+                        break;
+                case 5:
+                        // linux >= 2.5.41
+                        cpu_irq        = 0;
+                        cpu_softirq    = 0;
+                        cpu_steal      = 0;
+                        cpu_guest      = 0;
+                        cpu_guest_nice = 0;
+                        break;
+                case 7:
+                        // linux >= 2.6.0-test4
+                        cpu_steal      = 0;
+                        cpu_guest      = 0;
+                        cpu_guest_nice = 0;
+                        break;
+                case 8:
+                        // linux 2.6.11
+                        cpu_guest      = 0;
+                        cpu_guest_nice = 0;
+                        break;
+                case 9:
+                        // linux >= 2.6.24
+                        cpu_guest_nice = 0;
+                        break;
+                case 10:
+                        // linux >= 2.6.33
+                        break;
+                default:
+                        LogError("system statistic error -- cannot read cpu usage\n");
+                        goto error;
         }
 
-        cpu_total = cpu_user + cpu_nice + cpu_syst + cpu_idle + cpu_wait + cpu_irq + cpu_softirq;
+        cpu_total = cpu_user + cpu_nice + cpu_syst + cpu_idle + cpu_iowait + cpu_irq + cpu_softirq + cpu_steal + cpu_guest + cpu_guest_nice;
         cpu_user  = cpu_user + cpu_nice;
 
         if (old_cpu_total == 0) {
@@ -696,13 +733,13 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
                 double delta = cpu_total - old_cpu_total;
                 si->cpu.usage.user = _usagePercent(old_cpu_user, cpu_user, delta);
                 si->cpu.usage.system = _usagePercent(old_cpu_syst, cpu_syst, delta);
-                si->cpu.usage.wait = _usagePercent(old_cpu_wait, cpu_wait, delta);
+                si->cpu.usage.wait = _usagePercent(old_cpu_iowait, cpu_iowait, delta);
         }
 
-        old_cpu_user  = cpu_user;
-        old_cpu_syst  = cpu_syst;
-        old_cpu_wait  = cpu_wait;
-        old_cpu_total = cpu_total;
+        old_cpu_user   = cpu_user;
+        old_cpu_syst   = cpu_syst;
+        old_cpu_iowait = cpu_iowait;
+        old_cpu_total  = cpu_total;
         return true;
 
 error:
