@@ -656,10 +656,10 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         unsigned long long cpu_user;       // Time spent in user mode
         unsigned long long cpu_nice;       // Time spent in user mode with low priority (nice)
         unsigned long long cpu_syst;       // Time spent in system mode
-        unsigned long long cpu_idle;       // Time spent in system mode
+        unsigned long long cpu_idle;       // Time idle
         unsigned long long cpu_iowait;     // Time waiting for I/O to complete. This value is not reliable
-        unsigned long long cpu_irq;        // Time servicing interrupts
-        unsigned long long cpu_softirq;    // Time servicing softirqs
+        unsigned long long cpu_hardirq;    // Time servicing hardware interrupts
+        unsigned long long cpu_softirq;    // Time servicing software interrupts
         unsigned long long cpu_steal;      // Stolen time, which is the time spent in other operating systems when running in a virtualized environment
         unsigned long long cpu_guest;      // Time spent running a virtual CPU for guest operating systems under the control of the Linux kernel
         unsigned long long cpu_guest_nice; // Time spent running a niced guest (virtual CPU for guest operating systems under the control of the Linux kernel)
@@ -676,7 +676,7 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
                     &cpu_syst,
                     &cpu_idle,
                     &cpu_iowait,
-                    &cpu_irq,
+                    &cpu_hardirq,
                     &cpu_softirq,
                     &cpu_steal,
                     &cpu_guest,
@@ -684,20 +684,20 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         switch (rv) {
                 case 4:
                         // linux < 2.5.41
-                        cpu_iowait     = 0;
+                        cpu_iowait = 0;
                         // fall through
                 case 5:
                         // linux >= 2.5.41
-                        cpu_irq        = 0;
-                        cpu_softirq    = 0;
+                        cpu_hardirq = 0;
+                        cpu_softirq = 0;
                         // fall through
                 case 7:
                         // linux >= 2.6.0-test4
-                        cpu_steal      = 0;
+                        cpu_steal = 0;
                         // fall through
                 case 8:
                         // linux 2.6.11
-                        cpu_guest      = 0;
+                        cpu_guest = 0;
                         // fall through
                 case 9:
                         // linux >= 2.6.24
@@ -711,7 +711,7 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
                         goto error;
         }
 
-        cpu_total = cpu_user + cpu_nice + cpu_syst + cpu_idle + cpu_iowait + cpu_irq + cpu_softirq + cpu_steal + cpu_guest + cpu_guest_nice;
+        cpu_total = cpu_user + cpu_nice + cpu_syst + cpu_idle + cpu_iowait + cpu_hardirq + cpu_softirq + cpu_steal + cpu_guest + cpu_guest_nice;
         cpu_user  = cpu_user + cpu_nice;
 
         if (old_cpu_total == 0) {

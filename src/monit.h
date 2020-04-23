@@ -574,9 +574,16 @@ typedef struct SystemInfo_T {
         struct {
                 int count;                                      /**< Number of CPUs */
                 struct {
-                        float user;         /**< Total CPU in use in user space [%] */
-                        float system;     /**< Total CPU in use in kernel space [%] */
-                        float wait;            /**< Total CPU in use in waiting [%] */
+                        float user;       /**< Time in user space [%] */
+                        float nice;       /**< Time in user space with low priority [%] */
+                        float system;     /**< Time in kernel space [%] */
+                        float wait;       /**< Idle time while waiting for I/O [%] */
+                        float idle;       /**< Idle time [%] */
+                        float hardirq;    /**< Time servicing hardware interrupts [%] */
+                        float softirq;    /**< Time servicing software interrupts [%] */
+                        float steal;      /**< Stolen time, which is the time spent in other operating systems when running in a virtualized environment [%] */
+                        float guest;      /**< Time spent running a virtual CPU for guest operating systems under the control of the kernel [%] */
+                        float guest_nice; /**< Time spent running a niced guest (virtual CPU for guest operating systems under the control of the kernel) [%] */
                 } usage;
         } cpu;
         struct {
