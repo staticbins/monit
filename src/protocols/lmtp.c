@@ -37,7 +37,7 @@
 /* --------------------------------------------------------------- Private */
 
 
-static void say(Socket_T socket, char *msg) {
+static void say(Socket_T socket, const char *msg) {
         if (Socket_write(socket, msg, strlen(msg)) < 0)
                 THROW(IOException, "LMTP: error sending data -- %s", STRERROR);
 }

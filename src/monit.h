@@ -330,8 +330,10 @@ typedef enum {
         Resource_SwapKbyte,
         Resource_Threads,
         Resource_ReadBytes,
+        Resource_ReadBytesPhysical,
         Resource_ReadOperations,
         Resource_WriteBytes,
+        Resource_WriteBytesPhysical,
         Resource_WriteOperations,
         Resource_ServiceTime,
         Resource_LoadAveragePerCore1m,
@@ -445,10 +447,10 @@ typedef char MD_T[MD_SIZE];
 
 /** Defines monit limits object */
 typedef struct Limits_T {
+        int      programOutput;           /**< Program output truncate limit [B] */
+        size_t   fileContentBuffer;  /**< Maximum tested file content length [B] */
         uint32_t sendExpectBuffer;  /**< Maximum send/expect response length [B] */
-        uint32_t fileContentBuffer;  /**< Maximum tested file content length [B] */
         uint32_t httpContentBuffer;  /**< Maximum tested HTTP content length [B] */
-        uint32_t programOutput;           /**< Program output truncate limit [B] */
         uint32_t networkTimeout;               /**< Default network timeout [ms] */
         uint32_t programTimeout;               /**< Default program timeout [ms] */
         uint32_t stopTimeout;                     /**< Default stop timeout [ms] */
@@ -472,7 +474,7 @@ typedef struct command_t {
         boolean_t has_gid;      /**< true if a new gid is defined for this Command */
         uid_t uid;         /**< The user id to switch to when running this Command */
         gid_t gid;        /**< The group id to switch to when running this Command */
-        unsigned timeout;     /**< Max seconds which we wait for method to execute */
+        unsigned int timeout;     /**< Max seconds which we wait for method to execute */
 } *command_t;
 
 
@@ -572,9 +574,16 @@ typedef struct SystemInfo_T {
         struct {
                 int count;                                      /**< Number of CPUs */
                 struct {
-                        float user;         /**< Total CPU in use in user space [%] */
-                        float system;     /**< Total CPU in use in kernel space [%] */
-                        float wait;            /**< Total CPU in use in waiting [%] */
+                        float user;       /**< Time in user space [%] */
+                        float nice;       /**< Time in user space with low priority [%] */
+                        float system;     /**< Time in kernel space [%] */
+                        float wait;       /**< Idle time while waiting for I/O [%] */
+                        float idle;       /**< Idle time [%] */
+                        float hardirq;    /**< Time servicing hardware interrupts [%] */
+                        float softirq;    /**< Time servicing software interrupts [%] */
+                        float steal;      /**< Stolen time, which is the time spent in other operating systems when running in a virtualized environment [%] */
+                        float guest;      /**< Time spent running a virtual CPU for guest operating systems under the control of the kernel [%] */
+                        float guest_nice; /**< Time spent running a niced guest (virtual CPU for guest operating systems under the control of the kernel) [%] */
                 } usage;
         } cpu;
         struct {
@@ -1013,8 +1022,9 @@ typedef struct FileSystem_T {
 
 
 typedef struct IOStatistics_T {
-        struct Statistics_T operations;        /**< Number of operations completed */
-        struct Statistics_T bytes;      /**< Number of bytes handled by operations */
+        struct Statistics_T operations;                                         /**< Number of operations completed */
+        struct Statistics_T bytes;          /**< Number of bytes handled by operations (total including cached I/O) */
+        struct Statistics_T bytesPhysical;           /**< Number of bytes handled by operations (physical I/O only) */
 } *IOStatistics_T;
 
 
@@ -1345,18 +1355,18 @@ extern Service_T      servicelist_conf;
 extern ServiceGroup_T servicegrouplist;
 extern SystemInfo_T   systeminfo;
 
-extern char *actionnames[];
-extern char *modenames[];
-extern char *onrebootnames[];
-extern char *checksumnames[];
-extern char *operatornames[];
-extern char *operatorshortnames[];
-extern char *servicetypes[];
-extern char *pathnames[];
-extern char *icmpnames[];
-extern char *socketnames[];
-extern char *timestampnames[];
-extern char *httpmethod[];
+extern const char *actionnames[];
+extern const char *modenames[];
+extern const char *onrebootnames[];
+extern const char *checksumnames[];
+extern const char *operatornames[];
+extern const char *operatorshortnames[];
+extern const char *servicetypes[];
+extern const char *pathnames[];
+extern const char *icmpnames[];
+extern const char *socketnames[];
+extern const char *timestampnames[];
+extern const char *httpmethod[];
 
 
 /* ------------------------------------------------------- Public prototypes */
@@ -1383,15 +1393,15 @@ void  LogWarning(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogNotice(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogInfo(const char *, ...) __attribute__((format (printf, 1, 2)));
 void  LogDebug(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  vLogEmergency(const char *, va_list ap);
-void  vLogAlert(const char *, va_list ap);
-void  vLogCritical(const char *, va_list ap);
-void  vLogError(const char *, va_list ap);
-void  vLogWarning(const char *,va_list ap);
-void  vLogNotice(const char *, va_list ap);
-void  vLogInfo(const char *, va_list ap);
-void  vLogDebug(const char *, va_list ap);
-void  vLogAbortHandler(const char *s, va_list ap);
+void  vLogEmergency(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogAlert(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogCritical(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogError(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogWarning(const char *,va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogNotice(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogInfo(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogDebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogAbortHandler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
 void  log_close(void);
 #ifndef HAVE_VSYSLOG
 #ifdef HAVE_SYSLOG

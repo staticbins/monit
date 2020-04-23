@@ -328,7 +328,7 @@ static void _setPingOptions(int socket, struct addrinfo *addr) {
 static boolean_t _sendPing(const char *hostname, int socket, struct addrinfo *addr, int size, int retry, int maxretries, int id, int64_t started) {
         char buf[ICMP_MAXSIZE] = {};
         int header_len = 0;
-        int out_len = 0;
+        unsigned long out_len = 0;
         void *out_icmp = NULL;
         struct icmp *out_icmp4;
 #ifdef HAVE_IPV6
@@ -345,7 +345,7 @@ static boolean_t _sendPing(const char *hostname, int socket, struct addrinfo *ad
                         memcpy((int64_t *)(out_icmp4->icmp_data), &started, sizeof(int64_t)); // set data to timestamp
                         header_len = offsetof(struct icmp, icmp_data);
                         out_len = header_len + size;
-                        out_icmp4->icmp_cksum = _checksum((unsigned char *)out_icmp4, out_len); // IPv4 requires checksum computation
+                        out_icmp4->icmp_cksum = _checksum((unsigned char *)out_icmp4, (int)out_len); // IPv4 requires checksum computation
                         out_icmp = out_icmp4;
                         break;
 #ifdef HAVE_IPV6
@@ -504,7 +504,8 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
                                         break;
 #endif
                                 default:
-                                        break;
+                                        LogError("Ping for %s -- unknown address family: %d\n", hostname, addr->ai_family);
+                                        continue;
                         }
                         if (s >= 0) {
                                 if (outgoing->ip && bind(s, (struct sockaddr *)&(outgoing->addr), outgoing->addrlen) < 0) {

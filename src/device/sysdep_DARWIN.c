@@ -89,7 +89,7 @@ static boolean_t _getDiskUsage(void *_inf) {
 }
 
 
-static boolean_t _getDummyDiskActivity(void *_inf) {
+static boolean_t _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
         return true;
 }
 
@@ -202,7 +202,7 @@ static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
                 {MNT_MULTILABEL, "multilabel"},
                 {MNT_NOATIME, "noatime"}
         };
-        for (int i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
+        for (size_t i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
                 if (flags & t[i].flag) {
                         snprintf(inf->filesystem->flags + strlen(inf->filesystem->flags), sizeof(inf->filesystem->flags) - strlen(inf->filesystem->flags) - 1, "%s%s", count++ ? ", " : "", t[i].description);
                 }

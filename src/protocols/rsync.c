@@ -44,8 +44,8 @@ void check_rsync(Socket_T socket) {
         char  buf[64];
         char  header[11];
         int   rc, version_major, version_minor;
-        char  *rsyncd = "@RSYNCD:";
-        char  *rsyncd_exit = "@RSYNCD: EXIT";
+        const char  *rsyncd = "@RSYNCD:";
+        const char  *rsyncd_exit = "@RSYNCD: EXIT";
 
         ASSERT(socket);
 

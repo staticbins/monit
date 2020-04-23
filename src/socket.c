@@ -175,7 +175,8 @@ static char *_addressToString(const struct sockaddr *addr, socklen_t addrlen, ch
         if (addr->sa_family == AF_UNIX) {
                 snprintf(buf, buflen, "%s", ((struct sockaddr_un *)addr)->sun_path);
         } else {
-                char ip[46], port[6];
+                char ip[NI_MAXHOST];
+                char port[NI_MAXSERV];
                 int status = getnameinfo(addr, addrlen, ip, sizeof(ip), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
                 if (status) {
                         LogError("Cannot get address string -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
@@ -271,7 +272,7 @@ static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_
 error:
                 Net_close(s);
         } else {
-                snprintf(error, sizeof(error), "Cannot create socket to %s -- %s", _addressToString(addr, addrlen, (char[STRLEN]){}, STRLEN), STRERROR);
+                snprintf(error, sizeof(error), "Cannot create socket to %s -- %s", _addressToString(addr, addrlen, (char[2048]){}, 2048), STRERROR);
         }
         THROW(IOException, "%s", error);
         return NULL;
@@ -583,11 +584,10 @@ static void _testIp(Port_T p) {
                 // The host may resolve to multiple IPs and if at least one succeeded, we have no problem and don't have to flood the log with partial errors => log only the last error
                 for (struct addrinfo *r = result; r && is_available != Connection_Ok; r = r->ai_next) {
                         if (p->outgoing.addrlen == 0 || p->outgoing.addrlen == r->ai_addrlen) {
-                                const struct sockaddr *localaddr = p->outgoing.addrlen ? (struct sockaddr *)&(p->outgoing.addr) : NULL;
                                 volatile T S = NULL;
                                 TRY
                                 {
-                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, localaddr, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, &(p->target.net.ssl.options), p->timeout);
+                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, p->outgoing.addrlen ? (struct sockaddr *)&(p->outgoing.addr) : NULL, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, &(p->target.net.ssl.options), p->timeout);
                                         S->Port = p;
                                         TRY
                                         {
@@ -689,9 +689,9 @@ int Socket_print(T S, const char *m, ...) {
 }
 
 
-int Socket_write(T S, void *b, size_t size) {
+int Socket_write(T S, const void *b, size_t size) {
         ssize_t n = 0;
-        void *p = b;
+        const void *p = b;
         ASSERT(S);
         while (size > 0) {
 #ifdef HAVE_OPENSSL

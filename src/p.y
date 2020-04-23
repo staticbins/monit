@@ -146,15 +146,15 @@ struct precedence_t {
 };
 
 struct rate_t {
-        unsigned count;
-        unsigned cycles;
+        unsigned int count;
+        unsigned int cycles;
 };
 
 /* yacc interface */
-void  yyerror(const char *,...);
-void  yyerror2(const char *,...);
-void  yywarning(const char *,...);
-void  yywarning2(const char *,...);
+void  yyerror(const char *,...) __attribute__((format (printf, 1, 2)));
+void  yyerror2(const char *,...) __attribute__((format (printf, 1, 2)));
+void  yywarning(const char *,...) __attribute__((format (printf, 1, 2)));
+void  yywarning2(const char *,...) __attribute__((format (printf, 1, 2)));
 
 /* lexer interface */
 int yylex(void);
@@ -208,9 +208,9 @@ static struct rate_t rate = {1, 1};
 static struct rate_t rate1 = {1, 1};
 static struct rate_t rate2 = {1, 1};
 static char * htpasswd_file = NULL;
-static unsigned repeat = 0;
-static unsigned repeat1 = 0;
-static unsigned repeat2 = 0;
+static unsigned int repeat = 0;
+static unsigned int repeat1 = 0;
+static unsigned int repeat2 = 0;
 static Digest_Type digesttype = Digest_Cleartext;
 
 #define BITMAP_MAX (sizeof(long long) * 8)
@@ -1224,7 +1224,7 @@ allow           : ALLOW STRING':'STRING readonly {
                   }
                 | ALLOW STRING {
                         if (! Engine_addAllow($2))
-                                yywarning2("invalid allow option", $2);
+                                yywarning2("invalid allow option: %s", $2);
                         FREE($2);
                   }
                 ;
@@ -2348,8 +2348,13 @@ coremultiplier  : /* EMPTY */ { $<number>$ = 1; }
                 ;
 
 
-resourceread    : DISK READ operator value unit currenttime {
+resourceread    : READ operator value unit currenttime {
                         resourceset.resource_id = Resource_ReadBytes;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3 * $<number>4;
+                  }
+                | DISK READ operator value unit currenttime {
+                        resourceset.resource_id = Resource_ReadBytesPhysical;
                         resourceset.operator = $<number>3;
                         resourceset.limit = $<real>4 * $<number>5;
                   }
@@ -2360,8 +2365,13 @@ resourceread    : DISK READ operator value unit currenttime {
                   }
                 ;
 
-resourcewrite   : DISK WRITE operator value unit currenttime {
+resourcewrite   : WRITE operator value unit currenttime {
                         resourceset.resource_id = Resource_WriteBytes;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3 * $<number>4;
+                  }
+                | DISK WRITE operator value unit currenttime {
+                        resourceset.resource_id = Resource_WriteBytesPhysical;
                         resourceset.operator = $<number>3;
                         resourceset.limit = $<real>4 * $<number>5;
                   }
@@ -2483,8 +2493,8 @@ action2         : action {
                 ;
 
 rateXcycles     : NUMBER CYCLE {
-                        if ($<number>1 < 1 || $<number>1 > BITMAP_MAX) {
-                                yyerror2("The number of cycles must be between 1 and %d", BITMAP_MAX);
+                        if ($<number>1 < 1 || (unsigned long)$<number>1 > BITMAP_MAX) {
+                                yyerror2("The number of cycles must be between 1 and %lu", BITMAP_MAX);
                         } else {
                                 rate.count  = $<number>1;
                                 rate.cycles = $<number>1;
@@ -2493,8 +2503,8 @@ rateXcycles     : NUMBER CYCLE {
                 ;
 
 rateXYcycles    : NUMBER NUMBER CYCLE {
-                        if ($<number>2 < 1 || $<number>2 > BITMAP_MAX) {
-                                yyerror2("The number of cycles must be between 1 and %d", BITMAP_MAX);
+                        if ($<number>2 < 1 || (unsigned long)$<number>2 > BITMAP_MAX) {
+                                yyerror2("The number of cycles must be between 1 and %lu", BITMAP_MAX);
                         } else if ($<number>1 < 1 || $<number>1 > $<number>2) {
                                 yyerror2("The number of events must be between 1 and less then poll cycles");
                         } else {
@@ -3218,7 +3228,7 @@ static void postparse() {
         /* Check the sanity of any dependency graph */
         check_depend();
 
-#ifdef HAVE_OPENSSL
+#if defined HAVE_OPENSSL && defined OPENSSL_FIPS
         Ssl_setFipsMode(Run.flags & Run_FipsEnabled);
 #endif
 
@@ -3236,7 +3246,7 @@ static boolean_t _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing) {
                 freeaddrinfo(result);
                 return true;
         } else {
-                yyerror2("IP address parsing failed -- %s", ip, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                yyerror2("IP address parsing failed for %s -- %s", ip, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
         }
         return false;
 }
@@ -4157,7 +4167,7 @@ static void addgeneric(Port_T port, char *send, char *expect) {
  * Add the current command object to the current service object's
  * start or stop program.
  */
-static void addcommand(int what, unsigned timeout) {
+static void addcommand(int what, unsigned int timeout) {
 
         switch (what) {
                 case START:   current->start = command; break;
@@ -4433,9 +4443,9 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
 
         if (handle == NULL) {
                 if (username != NULL)
-                        yyerror2("Cannot read htpasswd (%s)", filename);
+                        yyerror2("Cannot read htpasswd (%s) for user %s", filename, username);
                 else
-                        yyerror2("Cannot read htpasswd", filename);
+                        yyerror2("Cannot read htpasswd (%s)", filename);
                 return;
         }
 

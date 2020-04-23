@@ -82,7 +82,7 @@ static void _argument(StringBuffer_T data, const char *name, const char *value) 
 }
 
 
-static char *_getBasicAuthHeader() {
+static char *_getBasicAuthHeader(void) {
         Auth_T auth = NULL;
         // Find the first cleartext credential for authorization
         for (Auth_T c = Run.httpd.credentials; c; c = c->next) {
@@ -175,7 +175,7 @@ static void _receive(Socket_T S) {
 
 
 static boolean_t _client(const char *request, StringBuffer_T data) {
-        boolean_t status = false;
+        volatile boolean_t status = false;
         if (! exist_daemon()) {
                 LogError("Monit: the monit daemon is not running\n");
                 return status;

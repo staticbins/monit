@@ -145,7 +145,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 cmdline = StringBuffer_create(64);
                 args = CALLOC(1, systeminfo.argmax + 1);
         }
-        for (int i = 0; i < treesize; i++) {
+        for (size_t i = 0; i < treesize; i++) {
                 pt[i].uptime    = systeminfo.time / 10. - pinfo[i].kp_proc.p_starttime.tv_sec;
                 pt[i].zombie    = pinfo[i].kp_proc.p_stat == SZOMB ? true : false;
                 pt[i].pid       = pinfo[i].kp_proc.p_pid;
@@ -200,7 +200,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         if (rv <= 0) {
                                 if (errno != EPERM)
                                         DEBUG("proc_pidinfo for pid %d failed -- %s\n", pt[i].pid, STRERROR);
-                        } else if (rv < sizeof(tinfo)) {
+                        } else if ((unsigned long)rv < sizeof(tinfo)) {
                                 LogError("proc_pidinfo for pid %d -- invalid result size\n", pt[i].pid);
                         } else {
                                 pt[i].memory.usage = (uint64_t)tinfo.pti_resident_size;
@@ -215,8 +215,12 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                         DEBUG("proc_pid_rusage for pid %d failed -- %s\n", pt[i].pid, STRERROR);
                         } else {
                                 pt[i].read.time = pt[i].write.time = Time_milli();
-                                pt[i].read.bytes = rusage.ri_diskio_bytesread;
-                                pt[i].write.bytes = rusage.ri_diskio_byteswritten;
+                                pt[i].read.bytes = -1;
+                                pt[i].read.bytesPhysical = rusage.ri_diskio_bytesread;
+                                pt[i].read.operations = -1;
+                                pt[i].write.bytes = -1;
+                                pt[i].write.bytesPhysical = rusage.ri_diskio_byteswritten;
+                                pt[i].write.operations = -1;
                         }
 #endif
                 }
@@ -308,7 +312,7 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 }
 
 
-boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+boolean_t used_system_filedescriptors_sysdep(__attribute__ ((unused)) SystemInfo_T *si) {
         // Not implemented
         return true;
 }

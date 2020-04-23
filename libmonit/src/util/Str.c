@@ -87,7 +87,8 @@ char *Str_ltrim(char *s) {
 
 char *Str_rtrim(char *s) {
         if (STR_DEF(s))
-                for (size_t j = strlen(s) - 1; isspace(s[j]); j--) s[j] = 0;
+                for (long j = (long)strlen(s) - 1; j >= 0 && isspace(s[j]); j--)
+                        s[j] = 0;
         return s;
 }
 
@@ -180,9 +181,12 @@ char *Str_replaceChar(char *s, char o, char n) {
 
 int Str_startsWith(const char *a, const char *b) {
 	if (a && b) {
-	        do
-	                if (toupper(*a++) != toupper(*b++)) return false;
-                while (*b);
+	        do {
+	                if (toupper(*a) != toupper(*b))
+                                return false;
+                        if (*a++ == 0 || *b++ == 0)
+                                break;
+                } while (*b);
                 return true;
         }
         return false;
@@ -299,7 +303,7 @@ char *Str_ndup(const char *s, long n) {
         char *t = NULL;
         assert(n >= 0);
         if (s) {
-                size_t l = strlen(s);
+                long l = (long)strlen(s);
                 n = l < n ? l : n; // Use the actual length of s if shorter than n
                 t = ALLOC(n + 1);
                 memcpy(t, s, n);
@@ -354,7 +358,7 @@ char *Str_trunc(char *s, int n) {
         assert(n >= 0);
         if (s) {
                 size_t sl = strlen(s);
-                if (sl > n) {
+                if (sl > (size_t)n) {
                         if (n - 3 >= 0)
                                 for (int e = n - 3; e < n; e++)
                                         s[e] = '.';

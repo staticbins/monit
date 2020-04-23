@@ -56,7 +56,7 @@ int main(void) {
                 printf("\t1  byte:  ");
                 char buf0[1];
                 assert(System_random(buf0, sizeof(buf0)));
-                for (int i = 0; i < sizeof(buf0); i++) {
+                for (size_t i = 0; i < sizeof(buf0); i++) {
                         printf("%x", buf0[i]);
                 }
                 printf("\n");
@@ -64,7 +64,7 @@ int main(void) {
                 printf("\t4  bytes: ");
                 char buf1[4];
                 assert(System_random(buf1, sizeof(buf1)));
-                for (int i = 0; i < sizeof(buf1); i++) {
+                for (size_t i = 0; i < sizeof(buf1); i++) {
                         printf("%x", buf1[i]);
                 }
                 printf("\n");
@@ -72,7 +72,7 @@ int main(void) {
                 printf("\t16 bytes: ");
                 char buf2[16];
                 assert(System_random(buf2, sizeof(buf2)));
-                for (int i = 0; i < sizeof(buf2); i++) {
+                for (size_t i = 0; i < sizeof(buf2); i++) {
                         printf("%x", buf2[i]);
                 }
                 printf("\n");

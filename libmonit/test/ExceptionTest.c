@@ -25,30 +25,30 @@ Exception_T B = {"BException"};
 Exception_T C = {"CException"};
 Exception_T D = {"DException"};
 
-static void throwA() {
+static void throwA(void) {
         THROW(A, NULL);
 }
 
-static void throwB() {
+static void throwB(void) {
         THROW(B, NULL);
 }
 
-static void throwC() {
+static void throwC(void) {
         THROW(C, "A cause");
 }
 
-static void throwD() {
+static void throwD(void) {
         THROW(D, "A cause");
 }
 
-static void indirectA() {
+static void indirectA(void) {
         throwA();
 }
 
 /* Throw and catch exceptions and check that we got the expected exception.
  * If the exception stack is corrupt somehow this should be detected
  */
-static void *thread(void *args) {
+static void *thread(__attribute__ ((unused)) void *args) {
         TRY
                 THROW(A, "A cause");
                 assert(false); // Should not be reached
@@ -228,7 +228,7 @@ int main(void) {
 
         printf("=> Test5: TRY-FINALLY\n");
         {
-                int i = 0;
+                volatile int i = 0;
                 TRY
                         i++;
                 FINALLY

@@ -14,11 +14,54 @@ AC_CONFIG_SRCDIR([src])
 
 AC_PROG_CC
 
+AX_CHECK_COMPILE_FLAG([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
+AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"])
+AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [CFLAGS="$CFLAGS -fcf-protection=full"])
+AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [CFLAGS="$CFLAGS -fstack-clash-protection"])
+
 # ---------------------------------------------------------------------------
 # Libtool 
 # ---------------------------------------------------------------------------
 
 AC_PROG_LIBTOOL
+
+# ------------------------------------------------------------------------
+# AddressSanitizer
+# ------------------------------------------------------------------------
+
+AC_MSG_CHECKING([for AddressSanitizer support])
+AC_ARG_WITH(asan,
+    [  --with-asan             enable the use of AddressSanitizer (default: disabled)],
+    [
+        dnl Check the withvalue
+        if test "x$withval" = "xno" ; then
+            use_asan=0
+            AC_MSG_RESULT([disabled])
+        fi
+        if test "x$withval" = "xyes" ; then
+            use_asan=1
+            AC_MSG_RESULT([enabled])
+        fi
+    ],
+    [
+        use_asan=0
+        AC_MSG_RESULT([disabled])
+    ]
+)
+
+if test "$use_asan" = "1"; then
+        AX_CHECK_COMPILE_FLAG([-fsanitize=address], [CFLAGS="$CFLAGS -fsanitize=address"])
+        AX_CHECK_COMPILE_FLAG([-fno-omit-frame-pointer], [CFLAGS="$CFLAGS -fno-omit-frame-pointer"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=bool], [CFLAGS="$CFLAGS -fsanitize=bool"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=enum], [CFLAGS="$CFLAGS -fsanitize=enum"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=float-divide-by-zero], [CFLAGS="$CFLAGS -fsanitize=float-divide-by-zero"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize-address-use-after-scope], [CFLAGS="$CFLAGS -fsanitize-address-use-after-scope"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=signed-integer-overflow], [CFLAGS="$CFLAGS -fsanitize=signed-integer-overflow"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=vla-bound], [CFLAGS="$CFLAGS -fsanitize=vla-bound"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=bounds-strict], [CFLAGS="$CFLAGS -fsanitize=bounds-strict"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=null], [CFLAGS="$CFLAGS -fsanitize=null "])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=object-size], [CFLAGS="$CFLAGS -fsanitize=object-size"])
+fi
 
 # ---------------------------------------------------------------------------
 # Build options

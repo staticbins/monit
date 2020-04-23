@@ -87,7 +87,7 @@ static int      pagesize;
 static long     total_old    = 0;
 static long     cpu_user_old = 0;
 static long     cpu_syst_old = 0;
-static unsigned maxslp;
+static unsigned int maxslp;
 
 
 
@@ -188,18 +188,22 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 int index = count;
                 if (pinfo[i].p_tid < 0) {
                         count++;
-                        pt[index].pid              = pinfo[i].p_pid;
-                        pt[index].ppid             = pinfo[i].p_ppid;
-                        pt[index].cred.uid         = pinfo[i].p_ruid;
-                        pt[index].cred.euid        = pinfo[i].p_uid;
-                        pt[index].cred.gid         = pinfo[i].p_rgid;
-                        pt[index].uptime           = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
-                        pt[index].cpu.time         = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
-                        pt[index].memory.usage     = (uint64_t)pinfo[i].p_vm_rssize * (uint64_t)pagesize;
-                        pt[index].zombie           = pinfo[i].p_stat == SZOMB ? true : false;
-                        pt[index].read.operations  = pinfo[i].p_uru_inblock;
-                        pt[index].write.operations = pinfo[i].p_uru_oublock;
-                        pt[index].read.time = pt[i].write.time = now;
+                        pt[index].pid                 = pinfo[i].p_pid;
+                        pt[index].ppid                = pinfo[i].p_ppid;
+                        pt[index].cred.uid            = pinfo[i].p_ruid;
+                        pt[index].cred.euid           = pinfo[i].p_uid;
+                        pt[index].cred.gid            = pinfo[i].p_rgid;
+                        pt[index].uptime              = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
+                        pt[index].cpu.time            = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
+                        pt[index].memory.usage        = (uint64_t)pinfo[i].p_vm_rssize * (uint64_t)pagesize;
+                        pt[index].zombie              = pinfo[i].p_stat == SZOMB ? true : false;
+                        pt[index].read.bytes          = -1;
+                        pt[index].read.bytesPhysical  = -1;
+                        pt[index].read.operations     = pinfo[i].p_uru_inblock;
+                        pt[index].write.bytes         = -1;
+                        pt[index].write.bytesPhysical = -1;
+                        pt[index].write.operations    = pinfo[i].p_uru_oublock;
+                        pt[index].read.time           = pt[i].write.time = now;
                         if (pflags & ProcessEngine_CollectCommandLine) {
                                 char **args = kvm_getargv(kvm_handle, &pinfo[i], 0);
                                 if (args) {

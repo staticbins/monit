@@ -92,11 +92,13 @@ void Ssl_stop(void);
 void Ssl_threadCleanup(void);
 
 
+#ifdef OPENSSL_FIPS
 /**
  * Enable or disable FIPS-140 mode
  * @param enabled true to enable FIPS-140 mode
  */
 void Ssl_setFipsMode(boolean_t enabled);
+#endif
 
 
 /**
@@ -141,7 +143,7 @@ void Ssl_close(T C);
  * @param timeout Milliseconds to wait for data to be written
  * @return Number of bytes written or -1 if failed
  */
-int Ssl_write(T C, void *b, int size, int timeout);
+int Ssl_write(T C, const void *b, int size, int timeout);
 
 
 /**

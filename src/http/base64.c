@@ -107,7 +107,7 @@ char *encode_base64(size_t size, unsigned char *src) {
                 size = strlen((char *)src);
         char *out = CALLOC(sizeof(char), size * 4 / 3 + 4);
         char *p = out;
-        for (int i = 0; i < size; i += 3) {
+        for (size_t i = 0; i < size; i += 3) {
                 unsigned char b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, b7 = 0;
                 b1 = src[i];
                 if (i + 1 < size)

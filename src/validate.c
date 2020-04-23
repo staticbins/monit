@@ -352,6 +352,21 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
                         }
                         break;
 
+                case Resource_ReadBytesPhysical:
+                        if (Statistics_initialized(&(s->inf.process->read.bytesPhysical))) {
+                                double value = Statistics_deltaNormalize(&(s->inf.process->read.bytesPhysical));
+                                if (Util_evalDoubleQExpression(r->operator, value, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "physical read activity %s/s matches resource limit [read %s %s/s]", Convert_bytes2str(value, (char[10]){}), operatorshortnames[r->operator], Convert_bytes2str(r->limit, (char[10]){}));
+                                } else {
+                                        snprintf(report, STRLEN, "physical read activity test succeeded [current read = %s/s]", Convert_bytes2str(value, (char[10]){}));
+                                }
+                        } else {
+                                DEBUG("'%s' warning -- no data are available for physical read activity test\n", s->name);
+                                return State_Init;
+                        }
+                        break;
+
                 case Resource_ReadOperations:
                         if (Statistics_initialized(&(s->inf.process->read.operations))) {
                                 double value = Statistics_deltaNormalize(&(s->inf.process->read.operations));
@@ -382,6 +397,21 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
                         }
                         break;
 
+                case Resource_WriteBytesPhysical:
+                        if (Statistics_initialized(&(s->inf.process->write.bytesPhysical))) {
+                                double value = Statistics_deltaNormalize(&(s->inf.process->write.bytesPhysical));
+                                if (Util_evalDoubleQExpression(r->operator, value, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "physical write activity %s/s matches resource limit [write %s %s/s]", Convert_bytes2str(value, (char[10]){}), operatorshortnames[r->operator], Convert_bytes2str(r->limit, (char[10]){}));
+                                } else {
+                                        snprintf(report, STRLEN, "physical write activity test succeeded [current write = %s/s]", Convert_bytes2str(value, (char[10]){}));
+                                }
+                        } else {
+                                DEBUG("'%s' warning -- no data are available for physical write activity test\n", s->name);
+                                return State_Init;
+                        }
+                        break;
+
                 case Resource_WriteOperations:
                         if (Statistics_initialized(&(s->inf.process->write.operations))) {
                                 double value = Statistics_deltaNormalize(&(s->inf.process->write.operations));
@@ -406,7 +436,7 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
 }
 
 
-static State_Type _checkLoadAverage(Resource_T r, double loadavg, char *name, char report[STRLEN]) {
+static State_Type _checkLoadAverage(Resource_T r, double loadavg, const char *name, char report[STRLEN]) {
         if (Util_evalDoubleQExpression(r->operator, loadavg, r->limit)) {
                 snprintf(report, STRLEN, "%s of %.1f matches resource limit [%s %s %.1f]", name, loadavg, name, operatorshortnames[r->operator], r->limit);
                 return State_Failed;
@@ -425,9 +455,6 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                 case Resource_CpuPercent:
                         {
                                 float cpu =
-#ifdef HAVE_CPU_WAIT
-                                        (systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.) +
-#endif
                                         (systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.) +
                                         (systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
                                 if (cpu < 0.) {
@@ -612,7 +639,7 @@ static State_Type _checkPerm(Service_T s, int mode) {
         if (s->perm) {
                 if (mode >= 0) {
                         mode_t m = mode & 07777;
-                        if (m != s->perm->perm) {
+                        if (m != (mode_t)s->perm->perm) {
                                 if (s->perm->test_changes) {
                                         Event_post(s, Event_Permission, State_Changed, s->perm->action, "permission for %s changed from %04o to %04o", s->path, s->perm->perm, m);
                                         s->perm->perm = m;
@@ -644,7 +671,7 @@ static State_Type _checkUid(Service_T s, int uid) {
         ASSERT(s);
         if (s->uid) {
                 if (uid >= 0) {
-                        if (uid != s->uid->uid) {
+                        if ((uid_t)uid != s->uid->uid) {
                                 Event_post(s, Event_Uid, State_Failed, s->uid->action, "uid test failed for %s -- current uid is %d", s->name, uid);
                                 return State_Failed;
                         } else {
@@ -665,7 +692,7 @@ static State_Type _checkEuid(Service_T s, int euid) {
         ASSERT(s);
         if (s->euid) {
                 if (euid >= 0) {
-                        if (euid != s->euid->uid) {
+                        if ((uid_t)euid != s->euid->uid) {
                                 Event_post(s, Event_Uid, State_Failed, s->euid->action, "euid test failed for %s -- current euid is %d", s->name, euid);
                                 return State_Failed;
                         } else {
@@ -762,7 +789,7 @@ static State_Type _checkGid(Service_T s, int gid) {
         ASSERT(s);
         if (s->gid) {
                 if (gid >= 0) {
-                        if (gid != s->gid->gid) {
+                        if ((gid_t)gid != s->gid->gid) {
                                 Event_post(s, Event_Gid, State_Failed, s->gid->action, "gid test failed for %s -- current gid is %d", s->name, gid);
                                 return State_Failed;
                         } else {
@@ -857,7 +884,7 @@ static State_Type _checkSize(Service_T s, off_t size) {
                                                 sl->initialized = true;
                                                 sl->size = size;
                                         } else {
-                                                if (sl->size != size) {
+                                                if ((off_t)sl->size != size) {
                                                         rv = State_Changed;
                                                         Event_post(s, Event_Size, State_Changed, sl->action, "size for %s changed to %s", s->path, Convert_bytes2str(size, buf));
                                                         /* reset expected value for next cycle */
@@ -957,7 +984,7 @@ next:
                                 LogError("'%s' cannot seek file %s: %s\n", s->name, s->path, STRERROR);
                                 goto final2;
                         }
-                        if (! fgets(line, Run.limits.fileContentBuffer, file)) {
+                        if (! fgets(line, (int)Run.limits.fileContentBuffer, file)) {
                                 if (! feof(file)) {
                                         rv = State_Failed;
                                         LogError("'%s' cannot read file %s: %s\n", s->name, s->path, STRERROR);
@@ -969,7 +996,7 @@ next:
                                 /* No content: shouldn't happen - empty line will contain at least '\n' */
                                 goto final2;
                         } else if (line[length - 1] != '\n') {
-                                if (length < Run.limits.fileContentBuffer - 1) {
+                                if (length < (size_t)(Run.limits.fileContentBuffer - 1)) {
                                         /* Incomplete line: we gonna read it next time again, allowing the writer to complete the write */
                                         DEBUG("'%s' content match: incomplete line read - no new line at end. (retrying next cycle)\n", s->name);
                                         goto final2;
@@ -1002,10 +1029,10 @@ next:
                                         DEBUG("'%s' Pattern %s'%s' match on content line [%s]\n", s->name, ml->not ? "not " : "", ml->match_string, line);
                                         /* Save the line for Event_post */
                                         if (! ml->log)
-                                                ml->log = StringBuffer_create(Run.limits.fileContentBuffer);
-                                        if (StringBuffer_length(ml->log) < Run.limits.fileContentBuffer) {
+                                                ml->log = StringBuffer_create((int)Run.limits.fileContentBuffer);
+                                        if ((size_t)StringBuffer_length(ml->log) < Run.limits.fileContentBuffer) {
                                                 StringBuffer_append(ml->log, "%s\n", line);
-                                                if (StringBuffer_length(ml->log) >= Run.limits.fileContentBuffer)
+                                                if ((size_t)StringBuffer_length(ml->log) >= Run.limits.fileContentBuffer)
                                                         StringBuffer_append(ml->log, "...\n");
                                         }
                                 } else {
@@ -1811,8 +1838,8 @@ State_Type check_system(Service_T s) {
 
 
 State_Type check_net(Service_T s) {
-        boolean_t havedata = true;
-        State_Type rv = State_Succeeded;
+        volatile boolean_t havedata = true;
+        volatile State_Type rv = State_Succeeded;
         TRY
         {
                 Link_update(s->inf.net->stats);
@@ -1826,9 +1853,6 @@ State_Type check_net(Service_T s) {
         END_TRY;
         if (! havedata)
                 return State_Failed; // Terminate test if no data are available
-        for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                Event_post(s, Event_Link, State_Succeeded, link->action, "link data collection succeeded");
-        }
         // State
         if (! Link_getState(s->inf.net->stats)) {
                 for (LinkStatus_T link = s->linkstatuslist; link; link = link->next)

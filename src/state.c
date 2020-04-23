@@ -320,7 +320,7 @@ static void _updateLinkSpeed(Service_T S, int32_t duplex, int64_t speed) {
 }
 
 
-static void _restoreV4() {
+static void _restoreV4(void) {
         // System header
         if (read(file, &booted, sizeof(booted)) != sizeof(booted)) {
                 THROW(IOException, "Unable to read system boot time");
@@ -367,7 +367,7 @@ static void _restoreV4() {
 }
 
 
-static void _restoreV3() {
+static void _restoreV3(void) {
         // System header
         if (read(file, &booted, sizeof(booted)) != sizeof(booted)) {
                 THROW(IOException, "Unable to read system boot time");
@@ -411,7 +411,7 @@ static void _restoreV3() {
 }
 
 
-static void _restoreV2() {
+static void _restoreV2(void) {
         // System header
         booted = systeminfo.booted; // No boot time available => for backward compatibility, act as if the system was not rebooted, as we don't know if monit was only restarted or machine rebooted
         // Services state
@@ -453,7 +453,7 @@ static void _restoreV2() {
 }
 
 
-static void _restoreV1() {
+static void _restoreV1(void) {
         // System header
         booted = systeminfo.booted; // No boot time available => for backward compatibility, act as if the system was not rebooted, as we don't know if monit was only restarted or machine rebooted
         // Services state

@@ -160,19 +160,23 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         if (pflags & ProcessEngine_CollectCommandLine)
                 cmdline = StringBuffer_create(64);
         for (int i = 0; i < treesize; i++) {
-                pt[i].pid              = pinfo[i].ki_pid;
-                pt[i].ppid             = pinfo[i].ki_ppid;
-                pt[i].cred.uid         = pinfo[i].ki_ruid;
-                pt[i].cred.euid        = pinfo[i].ki_uid;
-                pt[i].cred.gid         = pinfo[i].ki_rgid;
-                pt[i].threads.self     = pinfo[i].ki_numthreads;
-                pt[i].uptime           = systeminfo.time / 10. - pinfo[i].ki_start.tv_sec;
-                pt[i].cpu.time         = (double)pinfo[i].ki_runtime / 100000.;
-                pt[i].memory.usage     = (uint64_t)pinfo[i].ki_rssize * (uint64_t)pagesize;
-                pt[i].read.operations  = pinfo[i].ki_rusage.ru_inblock;
-                pt[i].write.operations = pinfo[i].ki_rusage.ru_oublock;
-                pt[i].read.time = pt[i].write.time = now;
-                pt[i].zombie           = pinfo[i].ki_stat == SZOMB ? true : false;
+                pt[i].pid                 = pinfo[i].ki_pid;
+                pt[i].ppid                = pinfo[i].ki_ppid;
+                pt[i].cred.uid            = pinfo[i].ki_ruid;
+                pt[i].cred.euid           = pinfo[i].ki_uid;
+                pt[i].cred.gid            = pinfo[i].ki_rgid;
+                pt[i].threads.self        = pinfo[i].ki_numthreads;
+                pt[i].uptime              = systeminfo.time / 10. - pinfo[i].ki_start.tv_sec;
+                pt[i].cpu.time            = (double)pinfo[i].ki_runtime / 100000.;
+                pt[i].memory.usage        = (uint64_t)pinfo[i].ki_rssize * (uint64_t)pagesize;
+                pt[i].read.bytes          = -1;
+                pt[i].read.bytesPhysical  = -1;
+                pt[i].read.operations     = pinfo[i].ki_rusage.ru_inblock;
+                pt[i].write.bytes         = -1;
+                pt[i].write.bytesPhysical = -1;
+                pt[i].write.operations    = pinfo[i].ki_rusage.ru_oublock;
+                pt[i].read.time           = pt[i].write.time = now;
+                pt[i].zombie              = pinfo[i].ki_stat == SZOMB ? true : false;
                 if (pflags & ProcessEngine_CollectCommandLine) {
                         char **args = kvm_getargv(kvm_handle, &pinfo[i], 0);
                         if (args) {

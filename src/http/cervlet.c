@@ -282,19 +282,22 @@ __attribute__((format (printf, 7, 8))) static void _formatStatus(const char *nam
 }
 
 
-static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *header, const char *name) {
-        boolean_t hasOps = Statistics_initialized(&(io->operations));
-        boolean_t hasBytes = Statistics_initialized(&(io->bytes));
-        if (hasOps && hasBytes) {
-                double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
-                double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
-                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total], %.1f %ss/s [%"PRIu64" %ss total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytes)), (char[10]){}), deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
-        } else if (hasOps) {
-                double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
-                _formatStatus(header, Event_Resource, type, res, s, true, "%.1f %ss/s [%"PRIu64" %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
-        } else if (hasBytes) {
+static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, IOStatistics_T io, const char *name) {
+        char header[STRLEN] = {};
+        if (Statistics_initialized(&(io->bytes))) {
+                snprintf(header, sizeof(header), "%s bytes", name);
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
                 _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytes)), (char[10]){}));
+        }
+        if (Statistics_initialized(&(io->bytesPhysical))) {
+                snprintf(header, sizeof(header), "disk %s bytes", name);
+                double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytesPhysical));
+                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytesPhysical)), (char[10]){}));
+        }
+        if (Statistics_initialized(&(io->operations))) {
+                snprintf(header, sizeof(header), "disk %s operations", name);
+                double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
+                _formatStatus(header, Event_Resource, type, res, s, true, "%.1f %ss/s [%"PRIu64" %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
         }
 }
 
@@ -395,8 +398,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         if (s->inf.filesystem->f_filesfree > 0)
                                                 _formatStatus("inodes free", Event_Resource, type, res, s, true, "%lld [%.1f%%]", s->inf.filesystem->f_filesfree, (float)100 * (float)s->inf.filesystem->f_filesfree / (float)s->inf.filesystem->f_files);
                                 }
-                                _printIOStatistics(type, res, s, &(s->inf.filesystem->read), "read", "read");
-                                _printIOStatistics(type, res, s, &(s->inf.filesystem->write), "write", "write");
+                                _printIOStatistics(type, res, s, &(s->inf.filesystem->read), "read");
+                                _printIOStatistics(type, res, s, &(s->inf.filesystem->write), "write");
                                 boolean_t hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
                                 boolean_t hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
                                 boolean_t hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
@@ -440,8 +443,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("total filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.openTotal != -1LL, "%ld", s->inf.process->filedescriptors.openTotal);
 #endif
                                 }
-                                _printIOStatistics(type, res, s, &(s->inf.process->read), "disk read", "read");
-                                _printIOStatistics(type, res, s, &(s->inf.process->write), "disk write", "write");
+                                _printIOStatistics(type, res, s, &(s->inf.process->read), "read");
+                                _printIOStatistics(type, res, s, &(s->inf.process->write), "write");
                                 break;
 
                         case Service_Program:
@@ -486,6 +489,7 @@ __attribute__((format (printf, 5, 6))) static void _displayTableRow(HttpResponse
         va_list ap;
         va_start(ap, value);
         char *_value = Str_vcat(value, ap);
+        va_end(ap);
 
         if (STR_DEF(class))
                 StringBuffer_append(res->outputbuffer, "<tr class='%s'><td>%s</td><td>", class, key);
@@ -2209,7 +2213,7 @@ static void print_service_rules_program(HttpResponse res, Service_T s) {
 static void print_service_rules_resource(HttpResponse res, Service_T s) {
         char buf[STRLEN];
         for (Resource_T q = s->resourcelist; q; q = q->next) {
-                char *key = NULL;
+                const char *key = NULL;
                 StringBuffer_T sb = StringBuffer_create(256);
                 switch (q->resource_id) {
                         case Resource_CpuPercent:
@@ -2340,7 +2344,9 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                                 break;
 
                         case Resource_ReadBytes:
+                        case Resource_ReadBytesPhysical:
                         case Resource_WriteBytes:
+                        case Resource_WriteBytesPhysical:
                                 Util_printRule(sb, q->action, "if %s %s", operatornames[q->operator], Convert_bytes2str(q->limit, (char[10]){}));
                                 break;
 

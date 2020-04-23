@@ -229,7 +229,8 @@ static void _connectRequest(mqtt_t *mqtt) {
                 .protocolName[3]                    = 'T',
                 .protocolLevel                      = 4,    // protocol for version 3.1.1
                 .flags                              = MQTT_ConnectRequest_CleanSession,
-                .keepAlive                          = htons(1)
+                .keepAlive                          = htons(1),
+                .data[0]                            = 0
         };
 
         // Client ID
@@ -258,7 +259,7 @@ static void _connectRequest(mqtt_t *mqtt) {
 
 static void _connectResponse(mqtt_t *mqtt) {
         mqtt_connect_response_t response = {};
-        if (Socket_read(mqtt->socket, &response, sizeof(mqtt_connect_response_t)) < sizeof(mqtt_connect_response_t)) {
+        if ((long)Socket_read(mqtt->socket, &response, sizeof(mqtt_connect_response_t)) < (long)sizeof(mqtt_connect_response_t)) {
                 THROW(IOException, "Error receiving connection response -- %s", STRERROR);
         }
         if (response.header.messageType != MQTT_Type_ConnectResponse) {

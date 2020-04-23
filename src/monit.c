@@ -137,18 +137,18 @@ Sem_T    heartbeatCond;
 Mutex_T  heartbeatMutex;
 static volatile boolean_t heartbeatRunning = false;
 
-char *actionnames[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
-char *modenames[] = {"active", "passive"};
-char *onrebootnames[] = {"start", "nostart", "laststate"};
-char *checksumnames[] = {"UNKNOWN", "MD5", "SHA1"};
-char *operatornames[] = {"less than", "less than or equal to", "greater than", "greater than or equal to", "equal to", "not equal to", "changed"};
-char *operatorshortnames[] = {"<", "<=", ">", ">=", "=", "!=", "<>"};
-char *servicetypes[] = {"Filesystem", "Directory", "File", "Process", "Remote Host", "System", "Fifo", "Program", "Network"};
-char *pathnames[] = {"Path", "Path", "Path", "Pid file", "Path", "", "Path"};
-char *icmpnames[] = {"Reply", "", "", "Destination Unreachable", "Source Quench", "Redirect", "", "", "Ping", "", "", "Time Exceeded", "Parameter Problem", "Timestamp Request", "Timestamp Reply", "Information Request", "Information Reply", "Address Mask Request", "Address Mask Reply"};
-char *socketnames[] = {"unix", "IP", "IPv4", "IPv6"};
-char *timestampnames[] = {"modify/change time", "access time", "change time", "modify time"};
-char *httpmethod[] = {"", "HEAD", "GET"};
+const char *actionnames[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
+const char *modenames[] = {"active", "passive"};
+const char *onrebootnames[] = {"start", "nostart", "laststate"};
+const char *checksumnames[] = {"UNKNOWN", "MD5", "SHA1"};
+const char *operatornames[] = {"less than", "less than or equal to", "greater than", "greater than or equal to", "equal to", "not equal to", "changed"};
+const char *operatorshortnames[] = {"<", "<=", ">", ">=", "=", "!=", "<>"};
+const char *servicetypes[] = {"Filesystem", "Directory", "File", "Process", "Remote Host", "System", "Fifo", "Program", "Network"};
+const char *pathnames[] = {"Path", "Path", "Path", "Pid file", "Path", "", "Path"};
+const char *icmpnames[] = {"Reply", "", "", "Destination Unreachable", "Source Quench", "Redirect", "", "", "Ping", "", "", "Time Exceeded", "Parameter Problem", "Timestamp Request", "Timestamp Reply", "Information Request", "Information Reply", "Address Mask Request", "Address Mask Reply"};
+const char *socketnames[] = {"unix", "IP", "IPv4", "IPv6"};
+const char *timestampnames[] = {"modify/change time", "access time", "change time", "modify time"};
+const char *httpmethod[] = {"", "HEAD", "GET"};
 
 
 /* ------------------------------------------------------------------ Public */
@@ -203,7 +203,7 @@ boolean_t interrupt() {
 /* ----------------------------------------------------------------- Private */
 
 
-static void _validateOnce() {
+static void _validateOnce(void) {
         if (State_open()) {
                 State_restore();
                 validate();
@@ -617,7 +617,7 @@ static void handle_options(int argc, char **argv, List_T arguments) {
         int deferred_opt = 0;
         opterr = 0;
         Run.mygroup = NULL;
-        const char *shortopts = "c:d:g:l:p:s:HIirtvVhB";
+        const char *shortopts = "+c:d:g:l:p:s:HIirtvVhB";
         while (optind < argc) {
 #ifdef HAVE_GETOPT_LONG
                 struct option longopts[] = {
@@ -884,7 +884,7 @@ static void version() {
 /**
  * M/Monit heartbeat thread
  */
-static void *heartbeat(void *args) {
+static void *heartbeat(__attribute__ ((unused)) void *args) {
         set_signal_block();
         LogInfo("M/Monit heartbeat started\n");
         LOCK(heartbeatMutex)
@@ -907,7 +907,7 @@ static void *heartbeat(void *args) {
 /**
  * Signalhandler for a daemon reload call
  */
-static RETSIGTYPE do_reload(int sig) {
+static RETSIGTYPE do_reload(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoReload;
 }
 
@@ -915,7 +915,7 @@ static RETSIGTYPE do_reload(int sig) {
 /**
  * Signalhandler for monit finalization
  */
-static RETSIGTYPE do_destroy(int sig) {
+static RETSIGTYPE do_destroy(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_Stopped;
 }
 
@@ -923,7 +923,7 @@ static RETSIGTYPE do_destroy(int sig) {
 /**
  * Signalhandler for a daemon wakeup call
  */
-static RETSIGTYPE do_wakeup(int sig) {
+static RETSIGTYPE do_wakeup(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoWakeup;
 }
 

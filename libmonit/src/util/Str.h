@@ -340,7 +340,7 @@ char *Str_cat(const char *s, ...) __attribute__((format (printf, 1, 2)));
  * @return a new String concating s and va_list or NULL on error
  * @exception MemoryException if memory allocation fails
  */
-char *Str_vcat(const char *s, va_list ap);
+char *Str_vcat(const char *s, va_list ap) __attribute__((format (printf, 1, 0)));
 
 
 /**

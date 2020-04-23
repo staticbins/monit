@@ -226,7 +226,7 @@ static const unsigned char b2x[][256] = {
  * Returns the value of the parameter if defined or the String "(not
  * defined)"
  */
-static char *is_str_defined(char *s) {
+static const char *is_str_defined(const char *s) {
         return((s && *s) ? s : "(not defined)");
 }
 
@@ -669,7 +669,7 @@ void Util_printHash(char *file) {
 }
 
 
-boolean_t Util_getChecksum(char *file, Hash_Type hashtype, char *buf, int bufsize) {
+boolean_t Util_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned long bufsize) {
         int hashlength = 16;
 
         ASSERT(file);
@@ -1353,6 +1353,10 @@ void Util_printService(Service_T s) {
                                 break;
 
                         case Resource_ReadBytes:
+                                printf(" %-20s = ", "Read limit");
+                                break;
+
+                        case Resource_ReadBytesPhysical:
                                 printf(" %-20s = ", "Disk read limit");
                                 break;
 
@@ -1361,6 +1365,10 @@ void Util_printService(Service_T s) {
                                 break;
 
                         case Resource_WriteBytes:
+                                printf(" %-20s = ", "Write limit");
+                                break;
+
+                        case Resource_WriteBytesPhysical:
                                 printf(" %-20s = ", "Disk write limit");
                                 break;
 
@@ -1405,6 +1413,11 @@ void Util_printService(Service_T s) {
 
                         case Resource_ReadBytes:
                         case Resource_WriteBytes:
+                                printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s/s", operatornames[o->operator], Convert_bytes2str(o->limit, (char[10]){}))));
+                                break;
+
+                        case Resource_ReadBytesPhysical:
+                        case Resource_WriteBytesPhysical:
                                 printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s/s", operatornames[o->operator], Convert_bytes2str(o->limit, (char[10]){}))));
                                 break;
 
@@ -2018,7 +2031,7 @@ const char *Util_portTypeDescription(Port_T p) {
 
 
 const char *Util_portRequestDescription(Port_T p) {
-        char *request = "";
+        const char *request = "";
         if (p->protocol->check == check_http && p->parameters.http.request)
                 request = p->parameters.http.request;
         else if (p->protocol->check == check_websocket && p->parameters.websocket.request)
@@ -2056,7 +2069,7 @@ const char *Util_timestr(int time) {
         int i = 0;
         struct mytimetable {
                 int id;
-                char *description;
+                const char *description;
         } tt[]= {
                 {Time_Second, "second"},
                 {Time_Minute, "minute"},

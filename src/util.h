@@ -110,7 +110,7 @@ void Util_printHash(char *file);
  * @param bufsize The size of the buffer
  * @return false if failed, otherwise true
  */
-boolean_t Util_getChecksum(char *file, Hash_Type hashtype, char *buf, int bufsize);
+boolean_t Util_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned long bufsize);
 
 
 /**

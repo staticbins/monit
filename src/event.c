@@ -397,7 +397,7 @@ static void _handleEvent(Service_T S, Event_T E) {
  * @param action Description of the event action
  * @param s Optional message describing the event
  */
-void Event_post(Service_T service, long id, State_Type state, EventAction_T action, char *s, ...) {
+void Event_post(Service_T service, long id, State_Type state, EventAction_T action, const char *s, ...) {
         ASSERT(service);
         ASSERT(action);
         ASSERT(s);
