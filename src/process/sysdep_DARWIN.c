@@ -313,7 +313,19 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 
 
 boolean_t used_system_filedescriptors_sysdep(__attribute__ ((unused)) SystemInfo_T *si) {
-        // Not implemented
+        // Open files
+        size_t len = sizeof(si->filedescriptors.allocated);
+        if (sysctlbyname("kern.num_files", &si->filedescriptors.allocated, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.openfiles failed: %s\n", STRERROR);
+                return false;
+        }
+        // Max files
+        int mib[2] = {CTL_KERN, KERN_MAXFILES};
+        len = sizeof(si->filedescriptors.maximum);
+        if (sysctl(mib, 2, &si->filedescriptors.maximum, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.maxfiles failed: %s\n", STRERROR);
+                return false;
+        }
         return true;
 }
 
