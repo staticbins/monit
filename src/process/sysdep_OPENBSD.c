@@ -299,7 +299,20 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 
 
 boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
-        // Not implemented
+        // Open files
+        int mib[2] = {CTL_KERN, KERN_NFILES};
+        size_t len = sizeof(si->filedescriptors.allocated);
+        if (sysctl(mib, 2, &si->filedescriptors.allocated, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.nfiles failed: %s\n", STRERROR);
+                return false;
+        }
+        // Max files
+        mib[1] = KERN_MAXFILES;
+        len = sizeof(si->filedescriptors.maximum);
+        if (sysctl(mib, 2, &si->filedescriptors.maximum, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.maxfiles failed: %s\n", STRERROR);
+                return false;
+        }
         return true;
 }
 
