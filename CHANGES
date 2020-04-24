@@ -11,13 +11,13 @@ via the SSL option, example:
         version: tlsv11
      }
 
-New: Add support for monitoring of filedescriptors usage of a process on Linux. Thanks to Marcel Baur and Lutz Mader. Example:
+New: Linux: Add support for monitoring of filedescriptors usage of a process. Thanks to Marcel Baur and Lutz Mader. Example:
     check process myproc with pidfile /var/run/myproc.pid
         if filedescriptors >= 90% then alert
         if filedescriptors >= 99% then restart
         if total filedescriptors > 5000 then alert
 
-New: Add support for monitoring of system-wide filedescriptors usage on Linux. Example:
+New: Linux: Add support for monitoring of system-wide filedescriptors usage. Example:
     check system $HOST
         if filedescriptors >= 90% then alert
 
@@ -37,16 +37,16 @@ New: Add support for split certificate chain and key for the monit HTTP interfac
      }
      allow myuser:mypassword
 
-New: Enable monitoring of per-process disk read and write I/O operations count on Linux. Example:
+New: Linux: Enable monitoring of per-process disk read and write I/O operations count. Example:
     check process foobar matching "myprocess"
        if disk read activity > 500 operations/s then alert
        if disk write activity > 500 operations/s then alert
 
-New: Allow generic per-process I/O activity monitoring on Linux. Example:
+New: Linux: Allow generic per-process I/O activity monitoring. Example:
        if read activity > 1 mb/s then alert
        if write activity > 1 mb/s then alert
 
-New: Issue #877: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
+New: Issue #877: Linux: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
 
 New: Enable support for compilation with AddressSanitizer. Use "configure --with-asan" to enable.
 
