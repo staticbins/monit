@@ -103,7 +103,7 @@
 static int    page_size;
 static long   old_cpu_user = 0;
 static long   old_cpu_syst = 0;
-static long   old_cpu_wait = 0;
+static long   old_cpu_iowait = 0;
 static long   old_total = 0;
 
 #define MAXSTRSIZE 80
@@ -321,14 +321,14 @@ again:
  */
 boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         int             ncpu = 0, ncpus;
-        long            cpu_user = 0, cpu_syst = 0, cpu_wait = 0, total = 0, diff_total;
+        long            cpu_user = 0, cpu_syst = 0, cpu_iowait = 0, total = 0, diff_total;
         kstat_ctl_t    *kctl;
         kstat_named_t  *knamed;
         kstat_t        *kstat;
         kstat_t       **cpu_ks;
         cpu_stat_t     *cpu_stat;
 
-        si->cpu.usage.user = si->cpu.usage.system = si->cpu.usage.wait = 0;
+        si->cpu.usage.user = si->cpu.usage.system = si->cpu.usage.iowait = 0;
 
         kctl  = kstat_open();
         kstat = kstat_lookup(kctl, "unix", 0, "system_misc");
@@ -371,21 +371,21 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
                 }
                 cpu_user += cpu_stat[i].cpu_sysinfo.cpu[CPU_USER];
                 cpu_syst += cpu_stat[i].cpu_sysinfo.cpu[CPU_KERNEL];
-                cpu_wait += cpu_stat[i].cpu_sysinfo.cpu[CPU_WAIT];
+                cpu_iowait += cpu_stat[i].cpu_sysinfo.cpu[CPU_WAIT];
                 total    += (cpu_stat[i].cpu_sysinfo.cpu[0] + cpu_stat[i].cpu_sysinfo.cpu[1] + cpu_stat[i].cpu_sysinfo.cpu[2] + cpu_stat[i].cpu_sysinfo.cpu[3]);
         }
 
         if (old_total == 0) {
-                si->cpu.usage.user = si->cpu.usage.system = si->cpu.usage.wait = -1.;
+                si->cpu.usage.user = si->cpu.usage.system = si->cpu.usage.iowait = -1.;
         } else if ((diff_total = total - old_total) > 0) {
                 si->cpu.usage.user = (100. * (cpu_user - old_cpu_user)) / diff_total;
                 si->cpu.usage.system = (100. * (cpu_syst - old_cpu_syst)) / diff_total;
-                si->cpu.usage.wait = (100. * (cpu_wait - old_cpu_wait)) / diff_total;
+                si->cpu.usage.iowait = (100. * (cpu_iowait - old_cpu_iowait)) / diff_total;
         }
 
         old_cpu_user = cpu_user;
         old_cpu_syst = cpu_syst;
-        old_cpu_wait = cpu_wait;
+        old_cpu_iowait = cpu_iowait;
         old_total    = total;
 
         FREE(cpu_ks);

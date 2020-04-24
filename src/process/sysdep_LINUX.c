@@ -717,12 +717,12 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         if (old_cpu_total == 0) {
                 si->cpu.usage.user = -1.;
                 si->cpu.usage.system = -1.;
-                si->cpu.usage.wait = -1.;
+                si->cpu.usage.iowait = -1.;
         } else {
                 double delta = cpu_total - old_cpu_total;
                 si->cpu.usage.user = _usagePercent(old_cpu_user, cpu_user, delta);
                 si->cpu.usage.system = _usagePercent(old_cpu_syst, cpu_syst, delta);
-                si->cpu.usage.wait = _usagePercent(old_cpu_iowait, cpu_iowait, delta);
+                si->cpu.usage.iowait = _usagePercent(old_cpu_iowait, cpu_iowait, delta);
         }
 
         old_cpu_user   = cpu_user;
@@ -734,7 +734,7 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 error:
         si->cpu.usage.user = 0.;
         si->cpu.usage.system = 0.;
-        si->cpu.usage.wait = 0.;
+        si->cpu.usage.iowait = 0.;
         return false;
 }
 

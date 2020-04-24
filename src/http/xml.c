@@ -529,7 +529,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.,
                                             systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.,
 #ifdef HAVE_CPU_WAIT
-                                            systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.,
+                                            systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.,
 #endif
                                             systeminfo.memory.usage.percent,
                                             (unsigned long long)((double)systeminfo.memory.usage.bytes / 1024.),               // Send as kB for backward compatibility

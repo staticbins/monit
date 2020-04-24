@@ -577,7 +577,7 @@ typedef struct SystemInfo_T {
                         float user;       /**< Time in user space [%] */
                         float nice;       /**< Time in user space with low priority [%] */
                         float system;     /**< Time in kernel space [%] */
-                        float wait;       /**< Idle time while waiting for I/O [%] */
+                        float iowait;     /**< Idle time while waiting for I/O [%] */
                         float idle;       /**< Idle time [%] */
                         float hardirq;    /**< Time servicing hardware interrupts [%] */
                         float softirq;    /**< Time servicing software interrupts [%] */

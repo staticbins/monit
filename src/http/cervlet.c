@@ -313,7 +313,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 #endif
                                         , systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0., systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.
 #ifdef HAVE_CPU_WAIT
-                                        , systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.
+                                        , systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.
 #endif
                                 );
                                 _formatStatus("memory usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(systeminfo.memory.usage.bytes, (char[10]){}), systeminfo.memory.usage.percent);
@@ -1197,7 +1197,7 @@ static void do_home_system(HttpResponse res) {
                             systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.,
                             systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.
 #ifdef HAVE_CPU_WAIT
-                            , systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.
+                            , systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.
 #endif
                             );
         StringBuffer_append(res->outputbuffer,

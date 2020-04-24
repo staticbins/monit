@@ -494,14 +494,14 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                         break;
 
                 case Resource_CpuWait:
-                        if (systeminfo.cpu.usage.wait < 0.) {
+                        if (systeminfo.cpu.usage.iowait < 0.) {
                                 DEBUG("'%s' cpu wait usage check skipped (initializing)\n", s->name);
                                 return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.wait, r->limit)) {
+                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.iowait, r->limit)) {
                                 rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu wait usage of %.1f%% matches resource limit [cpu wait usage %s %.1f%%]", systeminfo.cpu.usage.wait, operatorshortnames[r->operator], r->limit);
+                                snprintf(report, STRLEN, "cpu wait usage of %.1f%% matches resource limit [cpu wait usage %s %.1f%%]", systeminfo.cpu.usage.iowait, operatorshortnames[r->operator], r->limit);
                         } else {
-                                snprintf(report, STRLEN, "cpu wait usage check succeeded [current cpu wait usage = %.1f%%]", systeminfo.cpu.usage.wait);
+                                snprintf(report, STRLEN, "cpu wait usage check succeeded [current cpu wait usage = %.1f%%]", systeminfo.cpu.usage.iowait);
                         }
                         break;
 

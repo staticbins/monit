@@ -312,7 +312,7 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 
         si->cpu.usage.user = (total > 0) ? (100. * (double)(cp_time[CP_USER] - cpu_user_old) / total) : -1.;
         si->cpu.usage.system = (total > 0) ? (100. * (double)(cp_time[CP_SYS] - cpu_syst_old) / total) : -1.;
-        si->cpu.usage.wait = 0.; /* there is no wait statistic available */
+        si->cpu.usage.iowait = 0.; /* there is no wait statistic available */
 
         cpu_user_old = cp_time[CP_USER];
         cpu_syst_old = cp_time[CP_SYS];

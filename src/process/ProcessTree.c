@@ -488,7 +488,7 @@ boolean_t init_system_info(void) {
 #endif
         systeminfo.cpu.usage.user = -1.;
         systeminfo.cpu.usage.system = -1.;
-        systeminfo.cpu.usage.wait = -1.;
+        systeminfo.cpu.usage.iowait = -1.;
         return (init_process_info_sysdep());
 }
 
@@ -531,7 +531,7 @@ error2:
 error3:
         systeminfo.cpu.usage.user = 0.;
         systeminfo.cpu.usage.system = 0.;
-        systeminfo.cpu.usage.wait = 0.;
+        systeminfo.cpu.usage.iowait = 0.;
 error4:
         systeminfo.filedescriptors.allocated = 0LL;
         systeminfo.filedescriptors.unused = 0LL;
