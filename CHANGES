@@ -17,7 +17,7 @@ New: Linux: Add support for monitoring of filedescriptors usage of a process. Th
         if filedescriptors >= 99% then restart
         if total filedescriptors > 5000 then alert
 
-New: Linux, OpenBSD, FreeBSD: Add support for monitoring of system-wide filedescriptors usage. Example:
+New: Linux, OpenBSD, FreeBSD, DragonflyBSD: Add support for monitoring of system-wide filedescriptors usage. Example:
     check system $HOST
         if filedescriptors >= 90% then alert
 
