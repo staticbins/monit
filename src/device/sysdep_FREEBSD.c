@@ -148,7 +148,7 @@ static boolean_t _parseDevice(const char *path, Device_T device) {
                                         } else {
                                                 if (Str_isEqual(pathname, name)) {
                                                         // Matching label/partition found, parse the disk
-                                                        for (int i = 0; disk[i]; i++) {
+                                                        for (size_t i = 0; disk[i]; i++) {
                                                                 if (isdigit(*(disk + i))) {
                                                                         strncpy(device->key, disk, i < sizeof(device->key) ? i : sizeof(device->key) - 1);
                                                                         device->instance = Str_parseInt(disk + i);
@@ -179,7 +179,7 @@ static boolean_t _getStatistics(uint64_t now) {
 }
 
 
-static boolean_t _getDummyDiskActivity(void *_inf) {
+static boolean_t _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
         return true;
 }
 
@@ -274,7 +274,7 @@ static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
                 {MNT_USER, "user"},
                 {MNT_IGNORE, "ignore"}
         };
-        for (int i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
+        for (size_t i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
                 if (flags & t[i].flag) {
                         snprintf(inf->filesystem->flags + strlen(inf->filesystem->flags), sizeof(inf->filesystem->flags) - strlen(inf->filesystem->flags) - 1, "%s%s", count++ ? ", " : "", t[i].description);
                 }
