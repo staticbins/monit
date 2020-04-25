@@ -119,10 +119,10 @@ static boolean_t _getStatistics(uint64_t now) {
                         LogError("filesystem statistic error -- cannot get disks count: %s\n", STRERROR);
                         return false;
                 }
-                length = _statistics.diskCount * sizeof(struct diskstats);
-                if (_statistics.diskLength != length) {
-                        _statistics.diskLength = length;
-                        RESIZE(_statistics.disk, length);
+                len = _statistics.diskCount * sizeof(struct diskstats);
+                if ((ssize_t)_statistics.diskLength != len) {
+                        _statistics.diskLength = len;
+                        RESIZE(_statistics.disk, len);
                 }
                 mib[1] = HW_DISKSTATS;
                 if (sysctl(mib, 2, _statistics.disk, &(_statistics.diskLength), NULL, 0) == -1) {
