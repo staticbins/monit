@@ -320,7 +320,7 @@ static void _threadID(CRYPTO_THREADID *id) {
 }
 
 
-static void _mutexLock(int mode, int n, const char *file, int line) {
+static void _mutexLock(int mode, int n, __attribute__ ((unused)) const char *file, __attribute__ ((unused)) int line) {
         if (mode & CRYPTO_LOCK)
                 Mutex_lock(instanceMutexTable[n]);
         else
