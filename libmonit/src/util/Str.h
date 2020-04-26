@@ -426,9 +426,18 @@ int Str_cmp(const void *x, const void *y);
 
 
 /**
+ * The maximum length of input for the Str_compareConstantTime()
+ * method. We support up to 64 characters, which is enough for
+ * SHA256 digests.
+*/
+#define Str_compareConstantTimeStringLength 64
+
+
+/**
  * Compare case sensitive two strings in constant time. This function
  * can be used for timing-attack resistent comparison of credentials.
- * Only the first 64 bytes are compared if the strings are longer.
+ * Only the first Str_compareConstantTimeStringLength bytes are compared
+ * if the strings are longer.
  * @param x A String
  * @param y A String
  * @return 0 if x and y are equal otherwise a non-zero integer

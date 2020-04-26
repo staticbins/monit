@@ -4541,8 +4541,8 @@ static boolean_t addcredentials(char *uname, char *passwd, Digest_Type dtype, bo
         ASSERT(uname);
         ASSERT(passwd);
 
-        if (strlen(passwd) > MAX_CONSTANT_TIME_STRING_LENGTH) {
-                yyerror2("Password for user %s is too long, maximum %d allowed", uname, MAX_CONSTANT_TIME_STRING_LENGTH);
+        if (strlen(passwd) > Str_compareConstantTimeStringLength) {
+                yyerror2("Password for user %s is too long, maximum %d allowed", uname, Str_compareConstantTimeStringLength);
                 FREE(uname);
                 FREE(passwd);
                 return false;
