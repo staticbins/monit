@@ -113,7 +113,7 @@ typedef enum {
 
 
 /* Private prototypes */
-static boolean_t is_readonly(HttpRequest);
+static bool is_readonly(HttpRequest);
 static void printFavicon(HttpResponse);
 static void doGet(HttpRequest, HttpResponse);
 static void doPost(HttpRequest, HttpResponse);
@@ -233,7 +233,7 @@ static char *_getUptime(time_t delta, char s[256]) {
 }
 
 
-__attribute__((format (printf, 7, 8))) static void _formatStatus(const char *name, Event_Type errorType, Output_Type type, HttpResponse res, Service_T s, boolean_t validValue, const char *value, ...) {
+__attribute__((format (printf, 7, 8))) static void _formatStatus(const char *name, Event_Type errorType, Output_Type type, HttpResponse res, Service_T s, bool validValue, const char *value, ...) {
         if (type == HTML) {
                 StringBuffer_append(res->outputbuffer, "<tr><td>%c%s</td>", toupper(name[0]), name + 1);
         } else {
@@ -252,7 +252,7 @@ __attribute__((format (printf, 7, 8))) static void _formatStatus(const char *nam
                         StringBuffer_append(res->outputbuffer, type == HTML ? "<td>" : COLOR_DEFAULT);
                 if (type == HTML) {
                         // If the output contains multiple line, wrap use <pre>, otherwise keep as is
-                        boolean_t multiline = strrchr(_value, '\n') ? true : false;
+                        bool multiline = strrchr(_value, '\n') ? true : false;
                         if (multiline)
                                 StringBuffer_append(res->outputbuffer, "<pre>");
                         escapeHTML(res->outputbuffer, _value);
@@ -360,9 +360,9 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 
                         case Service_Net:
                                 {
-                                        long long speed = Link_getSpeed(s->inf.net->stats);
-                                        long long ibytes = Link_getBytesInPerSecond(s->inf.net->stats);
-                                        long long obytes = Link_getBytesOutPerSecond(s->inf.net->stats);
+                                        int64_t speed = Link_getSpeed(s->inf.net->stats);
+                                        int64_t ibytes = Link_getBytesInPerSecond(s->inf.net->stats);
+                                        int64_t obytes = Link_getBytesOutPerSecond(s->inf.net->stats);
                                         _formatStatus("link", Event_Link, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld errors", Link_getErrorsInPerSecond(s->inf.net->stats) + Link_getErrorsOutPerSecond(s->inf.net->stats));
                                         if (speed > 0) {
                                                 _formatStatus("capacity", Event_Speed, type, res, s, Link_getState(s->inf.net->stats) == 1, "%.0lf Mb/s %s-duplex", (double)speed / 1000000., Link_getDuplex(s->inf.net->stats) == 1 ? "full" : "half");
@@ -400,10 +400,10 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 }
                                 _printIOStatistics(type, res, s, &(s->inf.filesystem->read), "read");
                                 _printIOStatistics(type, res, s, &(s->inf.filesystem->write), "write");
-                                boolean_t hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
-                                boolean_t hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
-                                boolean_t hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
-                                boolean_t hasRunTime = Statistics_initialized(&(s->inf.filesystem->time.run));
+                                bool hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
+                                bool hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
+                                bool hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
+                                bool hasRunTime = Statistics_initialized(&(s->inf.filesystem->time.run));
                                 double deltaOperations = Statistics_delta(&(s->inf.filesystem->read.operations)) + Statistics_delta(&(s->inf.filesystem->write.operations));
                                 if (hasReadTime && hasWriteTime) {
                                         double readTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf.filesystem->time.read)) / deltaOperations : 0.;
@@ -485,7 +485,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 }
 
 
-__attribute__((format (printf, 5, 6))) static void _displayTableRow(HttpResponse res, boolean_t escape, const char *class, const char *key, const char *value, ...) {
+__attribute__((format (printf, 5, 6))) static void _displayTableRow(HttpResponse res, bool escape, const char *class, const char *key, const char *value, ...) {
         va_list ap;
         va_start(ap, value);
         char *_value = Str_vcat(value, ap);
@@ -1214,8 +1214,8 @@ static void do_home_system(HttpResponse res) {
 
 static void do_home_process(HttpResponse res) {
         char      buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Process)
@@ -1256,8 +1256,8 @@ static void do_home_process(HttpResponse res) {
                 } else {
                         StringBuffer_append(res->outputbuffer, "<td class='right%s'>%.1f%% [%s]</td>", (s->error & Event_Resource) ? " red-text" : "", s->inf.process->total_mem_percent, Convert_bytes2str(s->inf.process->total_mem, buf));
                 }
-                boolean_t hasReadBytes = Statistics_initialized(&(s->inf.process->read.bytes));
-                boolean_t hasReadOperations = Statistics_initialized(&(s->inf.process->read.operations));
+                bool hasReadBytes = Statistics_initialized(&(s->inf.process->read.bytes));
+                bool hasReadOperations = Statistics_initialized(&(s->inf.process->read.operations));
                 if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || (! hasReadBytes && ! hasReadOperations)) {
                         StringBuffer_append(res->outputbuffer, "<td class='right column'>-</td>");
                 } else if (hasReadBytes) {
@@ -1265,8 +1265,8 @@ static void do_home_process(HttpResponse res) {
                 } else if (hasReadOperations) {
                         StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%.1f/s</td>", (s->error & Event_Resource) ? " red-text" : "", Statistics_deltaNormalize(&(s->inf.process->read.operations)));
                 }
-                boolean_t hasWriteBytes = Statistics_initialized(&(s->inf.process->write.bytes));
-                boolean_t hasWriteOperations = Statistics_initialized(&(s->inf.process->write.operations));
+                bool hasWriteBytes = Statistics_initialized(&(s->inf.process->write.bytes));
+                bool hasWriteOperations = Statistics_initialized(&(s->inf.process->write.operations));
                 if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || (! hasWriteBytes && ! hasWriteOperations)) {
                         StringBuffer_append(res->outputbuffer, "<td class='right column'>-</td>");
                 } else if (hasWriteBytes) {
@@ -1284,8 +1284,8 @@ static void do_home_process(HttpResponse res) {
 
 static void do_home_program(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Program)
@@ -1354,8 +1354,8 @@ static void do_home_program(HttpResponse res) {
 
 static void do_home_net(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Net)
@@ -1395,8 +1395,8 @@ static void do_home_net(HttpResponse res) {
 
 static void do_home_filesystem(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Filesystem)
@@ -1461,8 +1461,8 @@ static void do_home_filesystem(HttpResponse res) {
 
 static void do_home_file(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_File)
@@ -1514,8 +1514,8 @@ static void do_home_file(HttpResponse res) {
 
 static void do_home_fifo(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Fifo)
@@ -1561,8 +1561,8 @@ static void do_home_fifo(HttpResponse res) {
 
 static void do_home_directory(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Directory)
@@ -1608,8 +1608,8 @@ static void do_home_directory(HttpResponse res) {
 
 static void do_home_host(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Host)
@@ -2365,7 +2365,7 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
 }
 
 
-static boolean_t is_readonly(HttpRequest req) {
+static bool is_readonly(HttpRequest req) {
         if (req->remote_user) {
                 Auth_T user_creds = Util_getUserCredentials(req->remote_user);
                 return (user_creds ? user_creds->is_readonly : true);
