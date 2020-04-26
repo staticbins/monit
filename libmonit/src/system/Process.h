@@ -135,7 +135,7 @@ int Process_exitStatus(T P);
  * @param P A Process object
  * @return True if Process is running otherwise false
  */
-int Process_isRunning(T P);
+bool Process_isRunning(T P);
 
 
 /**
