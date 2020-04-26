@@ -292,7 +292,7 @@ AC_C_BIGENDIAN
 # -std=cXX compiler switch which only include a minimum of C headers
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
-# Compiler; tune warnings and make the char type unsigned and enable C11 support
+# Compiler; tune warnings and make the char type unsigned
 CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
 # does this compiler support -Wno-pointer-sign ?
 svd_CFLAGS="$CFLAGS"
@@ -301,16 +301,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"]
 # does this compiler support -Wno-address ?
 svd_CFLAGS="$CFLAGS"
 CFLAGS="-Wno-address $CFLAGS"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
-
-# Clang: turn-off auto added checks to -Wall as of clang-902.0.39.1/Xcode 9.3
-# does this compiler support -Wno-nullability-completeness ?
-svd_CFLAGS="$CFLAGS"
-CFLAGS="-Wno-nullability-completeness $CFLAGS"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
-# does this compiler support -Wno-expansion-to-defined ?
-svd_CFLAGS="$CFLAGS"
-CFLAGS="-Wno-expansion-to-defined $CFLAGS"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
 
 # Require at least C99 and use C11 if available
