@@ -85,7 +85,7 @@ typedef struct response {
         int status;
         Socket_T S;
         const char *protocol;
-        boolean_t is_committed;
+        bool is_committed;
         HttpHeader headers;
         const char *status_msg;
         StringBuffer_T outputbuffer;
