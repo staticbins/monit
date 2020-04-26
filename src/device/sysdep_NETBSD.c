@@ -102,7 +102,7 @@ static void __attribute__ ((destructor)) _destructor() {
 
 
 // Parse the device path like /dev/sd0a -> sd0
-static boolean_t _parseDevice(const char *path, Device_T device) {
+static bool _parseDevice(const char *path, Device_T device) {
         const unsigned char *base = File_basename(path);
         for (int len = strlen(base), i = len - 1; i >= 0; i--) {
                 if (isdigit(*(base + i))) {
@@ -114,7 +114,7 @@ static boolean_t _parseDevice(const char *path, Device_T device) {
 }
 
 
-static boolean_t _getStatistics(uint64_t now) {
+static bool _getStatistics(uint64_t now) {
         // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
         if (now > _statistics.timestamp + 1000 || now < _statistics.timestamp - 1000) {
                 size_t len = 0;
@@ -138,15 +138,15 @@ static boolean_t _getStatistics(uint64_t now) {
 }
 
 
-static boolean_t _getDummyDiskActivity(void *_inf) {
+static bool _getDummyDiskActivity(void *_inf) {
         return true;
 }
 
 
-static boolean_t _getBlockDiskActivity(void *_inf) {
+static bool _getBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
         uint64_t now = Time_milli();
-        boolean_t rv = _getStatistics(now);
+        bool rv = _getStatistics(now);
         if (rv) {
                 for (int i = 0; i < _statistics.diskCount; i++)     {
                         if (Str_isEqual(inf->filesystem->object.key, _statistics.disk[i].name)) {
@@ -163,7 +163,7 @@ static boolean_t _getBlockDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _getDiskUsage(void *_inf) {
+static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
         if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
@@ -180,12 +180,12 @@ static boolean_t _getDiskUsage(void *_inf) {
 }
 
 
-static boolean_t _compareMountpoint(const char *mountpoint, struct statvfs *mnt) {
+static bool _compareMountpoint(const char *mountpoint, struct statvfs *mnt) {
         return IS(mountpoint, mnt->f_mntonname);
 }
 
 
-static boolean_t _compareDevice(const char *device, struct statvfs *mnt) {
+static bool _compareDevice(const char *device, struct statvfs *mnt) {
         return IS(device, mnt->f_mntfromname);
 }
 
@@ -233,7 +233,7 @@ static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
 }
 
 
-static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct statvfs *mnt)) {
+static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct statvfs *mnt)) {
         int countfs = getvfsstat(NULL, 0, MNT_NOWAIT);
         if (countfs != -1) {
                 struct statvfs *mnt = CALLOC(countfs, sizeof(struct statvfs));
@@ -278,7 +278,7 @@ error:
 }
 
 
-static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct statvfs *mnt)) {
+static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct statvfs *mnt)) {
         if (_setDevice(inf, path, compare)) {
                 return (inf->filesystem->object.getDiskUsage(inf) && inf->filesystem->object.getDiskActivity(inf));
         }
@@ -289,14 +289,14 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+bool Filesystem_getByMountpoint(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareMountpoint);
 }
 
 
-boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
+bool Filesystem_getByDevice(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareDevice);

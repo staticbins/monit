@@ -82,7 +82,7 @@
 
 
 static struct {
-        boolean_t iostatEnabled;
+        bool iostatEnabled;
 } _statistics = {};
 
 
@@ -116,12 +116,12 @@ static void __attribute__ ((destructor)) _destructor() {
 /* ----------------------------------------------------------------- Private */
 
 
-static boolean_t _getDummyDiskActivity(void *_inf) {
+static bool _getDummyDiskActivity(void *_inf) {
         return true;
 }
 
 
-static boolean_t _getDiskActivity(void *_inf) {
+static bool _getDiskActivity(void *_inf) {
         /*
          * FIXME:
          *
@@ -167,7 +167,7 @@ static boolean_t _getDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _getDiskUsage(void *_inf) {
+static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statfs usage;
         if (statfs(inf->filesystem->object.mountpoint, &usage) != 0) {
@@ -184,17 +184,17 @@ static boolean_t _getDiskUsage(void *_inf) {
 }
 
 
-static boolean_t _compareMountpoint(const char *mountpoint, struct mntent *mnt) {
+static bool _compareMountpoint(const char *mountpoint, struct mntent *mnt) {
         return IS(mountpoint, mnt->mnt_dir);
 }
 
 
-static boolean_t _compareDevice(const char *device, struct mntent *mnt) {
+static bool _compareDevice(const char *device, struct mntent *mnt) {
         return IS(device, mnt->mnt_fsname);
 }
 
 
-static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct mntent *mnt)) {
+static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct mntent *mnt)) {
         FILE *f = setmntent(MOUNTED, "r");
         if (! f) {
                 LogError("Cannot open %s\n", MOUNTED);
@@ -230,7 +230,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 }
 
 
-static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct mntent *mnt)) {
+static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct mntent *mnt)) {
         if (_setDevice(inf, path, compare)) {
                 return (inf->filesystem->object.getDiskUsage(inf) && inf->filesystem->object.getDiskActivity(inf));
         }
@@ -241,14 +241,14 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+bool Filesystem_getByMountpoint(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareMountpoint);
 }
 
 
-boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
+bool Filesystem_getByDevice(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareDevice);
