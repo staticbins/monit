@@ -33,7 +33,6 @@
 #include <time.h>
 #include <ctype.h>
 #include <stdarg.h>
-#include <stdint.h>
 #include <unistd.h>
 
 #include "Str.h"
@@ -91,7 +90,7 @@ static int count_leap_year(int y)
 
 /* Returns nonzero if the |y| is the leap year. The |y| is the year,
  including century (e.g., 2012) */
-static int is_leap_year(int y)
+static bool is_leap_year(int y)
 {
         return y%4 == 0 && (y%100 != 0 || y%400 == 0);
 }
@@ -970,19 +969,19 @@ time_t Time_now(void) {
 }
 
 
-long long int Time_milli(void) {
+int64_t Time_milli(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
                 THROW(AssertException, "%s", System_getLastError());
-	return (long long int)t.tv_sec * 1000  +  (long long int)t.tv_usec / 1000;
+	return (int64_t)t.tv_sec * 1000  +  (int64_t)t.tv_usec / 1000;
 }
 
 
-long long int Time_micro(void) {
+int64_t Time_micro(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
                 THROW(AssertException, "%s", System_getLastError());
-	return (long long int)t.tv_sec * 1000000  +  (long long int)t.tv_usec;
+	return (int64_t)t.tv_sec * 1000000  +  (int64_t)t.tv_usec;
 }
 
 
