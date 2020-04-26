@@ -175,9 +175,6 @@
 #define T Exception_T
 /** @cond hide */
 #include <pthread.h>
-#define TD_T pthread_key_t
-#define TD_set(key, value) pthread_setspecific((key), (value))
-#define TD_get(key) pthread_getspecific((key))
 typedef struct T {
         const char *name;
 } T;
@@ -198,10 +195,10 @@ enum {
         Exception_handled,
         Exception_finalized
 };
-extern TD_T Exception_Stack;
+extern pthread_key_t Exception_Stack;
 void Exception_init(void);
 void Exception_throw(const T *e, const char *func, const char *file, int line, const char *cause, ...) CLANG_ANALYZER_NORETURN;
-#define pop_exception_stack TD_set(Exception_Stack, ((Exception_Frame*)TD_get(Exception_Stack))->prev)
+#define pop_exception_stack pthread_setspecific(Exception_Stack, ((Exception_Frame*)pthread_getspecific(Exception_Stack))->prev)
 /** @endcond */
 
 
@@ -241,8 +238,8 @@ void Exception_throw(const T *e, const char *func, const char *file, int line, c
 	volatile int Exception_flag; \
         Exception_Frame Exception_frame; \
         Exception_frame.message[0] = 0; \
-        Exception_frame.prev = TD_get(Exception_Stack); \
-        TD_set(Exception_Stack, &Exception_frame); \
+        Exception_frame.prev = pthread_getspecific(Exception_Stack); \
+        pthread_setspecific(Exception_Stack, &Exception_frame); \
         Exception_flag = setjmp(Exception_frame.env); \
         if (Exception_flag == Exception_entered) {
 
