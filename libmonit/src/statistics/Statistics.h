@@ -40,7 +40,7 @@
 
 
 typedef struct T {
-        boolean_t initialized;
+        bool initialized;
 #ifndef __LP64__
         uint64_t raw;
 #endif
@@ -77,7 +77,7 @@ void Statistics_reset(T S);
  * @param S A Statistics object
  * @return true if the counter was initialized, otherwise false
  */
-boolean_t Statistics_initialized(T S);
+bool Statistics_initialized(T S);
 
 
 /**
