@@ -29,8 +29,8 @@
 
 
 typedef struct ProcessTree_T {
-        boolean_t visited;
-        boolean_t zombie;
+        bool visited;
+        bool zombie;
         pid_t pid;
         pid_t ppid;
         int parent;
@@ -105,7 +105,7 @@ void ProcessTree_delete(void);
  * @param pid Process PID to update
  * @return true if succeeded otherwise false.
  */
-boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid);
+bool ProcessTree_updateProcess(Service_T s, pid_t pid);
 
 
 /**
@@ -135,14 +135,14 @@ void ProcessTree_testMatch(char *pattern);
  * Initialize the system information
  * @return true if succeeded otherwise false.
  */
-boolean_t init_system_info(void);
+bool init_system_info(void);
 
 
 /**
  * Update system statistic
  * @return true if successful, otherwise false
  */
-boolean_t update_system_info(void);
+bool update_system_info(void);
 
 
 #endif

@@ -94,7 +94,7 @@ static unsigned int maxslp;
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
         size_t len = sizeof(systeminfo.cpu.count);
         if (sysctl(mib, 2, &systeminfo.cpu.count, &len, NULL, 0) == -1) {
@@ -249,7 +249,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
  * This routine returns kbyte of real memory in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         struct uvmexp vm;
         int mib[2] = {CTL_VM, VM_UVMEXP};
         size_t len = sizeof(struct uvmexp);
@@ -269,7 +269,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
         int    mib[] = {CTL_KERN, KERN_CPTIME};
         long   cp_time[CPUSTATES];
         long   total_new = 0;
@@ -298,7 +298,7 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 }
 
 
-boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
         // Open files
         int mib[2] = {CTL_KERN, KERN_NFILES};
         size_t len = sizeof(si->filedescriptors.allocated);

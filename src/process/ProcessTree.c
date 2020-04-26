@@ -287,7 +287,7 @@ void ProcessTree_delete() {
 }
 
 
-boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid) {
+bool ProcessTree_updateProcess(Service_T s, pid_t pid) {
         ASSERT(s);
 
         /* save the previous pid and set actual one */
@@ -454,7 +454,7 @@ void ProcessTree_testMatch(char *pattern) {
 
 
 //FIXME: move to standalone system class
-boolean_t init_system_info(void) {
+bool init_system_info(void) {
         memset(&systeminfo, 0, sizeof(SystemInfo_T));
         gettimeofday(&systeminfo.collected, NULL);
         if (uname(&systeminfo.uname) < 0) {
@@ -494,7 +494,7 @@ boolean_t init_system_info(void) {
 
 
 //FIXME: move to standalone system class
-boolean_t update_system_info() {
+bool update_system_info() {
         if (getloadavg_sysdep(systeminfo.loadavg, 3) == -1) {
                 LogError("'%s' statistic error -- load average data collection failed\n", Run.system->name);
                 goto error1;
