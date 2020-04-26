@@ -36,7 +36,7 @@
 
 static double epsilon = 1e-6;
 
-static boolean_t _isInt(double x) {
+static bool _isInt(double x) {
     return fabs(x - round(x)) < epsilon;
 }
 
