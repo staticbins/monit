@@ -59,7 +59,7 @@ struct T {
         int offset;
         int length;
         time_t timeout;
-        boolean_t isclosed;
+        bool isclosed;
         uchar_t buffer[BUFFER_SIZE];
 };
 
@@ -145,7 +145,7 @@ time_t InputStream_getTimeout(T S) {
 }
 
 
-int InputStream_isClosed(T S) {
+bool InputStream_isClosed(T S) {
         assert(S);
         return S->isclosed;
 }
