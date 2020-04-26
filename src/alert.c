@@ -203,8 +203,8 @@ static MailServer_T _connectMTA(void) {
 }
 
 
-static boolean_t _send(List_T list) {
-        volatile boolean_t failed = false;
+static bool _send(List_T list) {
+        volatile bool failed = false;
         if (List_length(list)) {
                 volatile Mail_T m = NULL;
                 volatile SMTP_T smtp = NULL;
@@ -245,7 +245,7 @@ static boolean_t _send(List_T list) {
                                                 m->subject,
                                                 now,
                                                 VERSION,
-                                                (long long)Time_now(), System_randomNumber(), Run.mail_hostname ? Run.mail_hostname : Run.system->name,
+                                                (int64_t)Time_now(), System_randomNumber(), Run.mail_hostname ? Run.mail_hostname : Run.system->name,
                                                 m->message) <= 0
                                    )
                                 {
@@ -276,7 +276,7 @@ static boolean_t _send(List_T list) {
 }
 
 
-static boolean_t _hasRecipient(Mail_T list, const char *recipient) {
+static bool _hasRecipient(Mail_T list, const char *recipient) {
         for (Mail_T l = list; l; l = l->next)
                 if (IS(recipient, l->to))
                         return true;

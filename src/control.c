@@ -126,7 +126,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, int6
                 switch (S->type) {
                         case Service_Process:
                                 Command_vSetEnv(C, "MONIT_PROCESS_PID", "%d", S->inf.process->pid);
-                                Command_vSetEnv(C, "MONIT_PROCESS_MEMORY", "%llu", (unsigned long long)((double)S->inf.process->mem / 1024.));
+                                Command_vSetEnv(C, "MONIT_PROCESS_MEMORY", "%llu", (uint64_t)((double)S->inf.process->mem / 1024.));
                                 Command_vSetEnv(C, "MONIT_PROCESS_CHILDREN", "%d", S->inf.process->children);
                                 Command_vSetEnv(C, "MONIT_PROCESS_CPU_PERCENT", "%.1f", S->inf.process->cpu_percent);
                                 break;
@@ -221,9 +221,9 @@ static State_Type _check(Service_T s) {
  * @param s A Service_T object
  * @return true if the service was started otherwise false
  */
-static boolean_t _doStart(Service_T s) {
+static bool _doStart(Service_T s) {
         ASSERT(s);
-        boolean_t rv = true;
+        bool rv = true;
         StringBuffer_T sb = StringBuffer_create(64);
         for (Dependant_T d = s->dependantlist; d; d = d->next ) {
                 Service_T parent = Util_getService(d->dependant);
@@ -272,7 +272,7 @@ static int _executeStop(Service_T s, char *msg, int msglen, int64_t *timeout) {
 }
 
 
-static void _evaluateStop(Service_T s, boolean_t succeeded, int exitStatus, char *msg) {
+static void _evaluateStop(Service_T s, bool succeeded, int exitStatus, char *msg) {
         if (succeeded)
                 Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "stopped");
         else
@@ -286,9 +286,9 @@ static void _evaluateStop(Service_T s, boolean_t succeeded, int exitStatus, char
  * @param unmonitor true if the monitoring should be disabled or false if monitoring should continue (when stop is part of restart)
  * @return true if the service was stopped otherwise false
  */
-static boolean_t _doStop(Service_T s, boolean_t unmonitor) {
+static bool _doStop(Service_T s, bool unmonitor) {
         ASSERT(s);
-        boolean_t rv = true;
+        bool rv = true;
         if (s->stop) {
                 if (s->monitor != Monitor_Not) {
                         int exitStatus;
@@ -324,9 +324,9 @@ static boolean_t _doStop(Service_T s, boolean_t unmonitor) {
  * This function simply restarts the service s.
  * @param s A Service_T object
  */
-static boolean_t _doRestart(Service_T s) {
+static bool _doRestart(Service_T s) {
         ASSERT(s);
-        boolean_t rv = true;
+        bool rv = true;
         if (s->restart) {
                 LogInfo("'%s' restart: '%s'\n", s->name, Util_commandDescription(s->restart, (char[STRLEN]){}));
                 Util_resetInfo(s);
@@ -380,9 +380,9 @@ static void _doUnmonitor(Service_T s) {
  * @param unmonitor Disable service monitoring: used for stop action only to differentiate hard/soft stop - see _doStop()
  * @return true if all depending services were started/stopped otherwise false
  */
-static boolean_t _doDepend(Service_T s, Action_Type action, boolean_t unmonitor) {
+static bool _doDepend(Service_T s, Action_Type action, bool unmonitor) {
         ASSERT(s);
-        boolean_t rv = true;
+        bool rv = true;
         for (Service_T child = servicelist; child; child = child->next) {
                 for (Dependant_T d = child->dependantlist; d; d = d->next) {
                         if (IS(d->dependant, s->name)) {
@@ -429,7 +429,7 @@ static boolean_t _doDepend(Service_T s, Action_Type action, boolean_t unmonitor)
  * @param action A string describing the action to execute
  * @return number of errors
  */
-boolean_t control_service_string(List_T services, const char *action) {
+bool control_service_string(List_T services, const char *action) {
         ASSERT(services);
         ASSERT(action);
         Action_Type a = Util_getAction(action);
@@ -451,9 +451,9 @@ boolean_t control_service_string(List_T services, const char *action) {
  * @param A An action id describing the action to execute
  * @return false for error, otherwise true
  */
-boolean_t control_service(const char *S, Action_Type A) {
+bool control_service(const char *S, Action_Type A) {
         Service_T s = NULL;
-        boolean_t rv = true;
+        bool rv = true;
         ASSERT(S);
         if (! (s = Util_getService(S))) {
                 LogError("Service '%s' -- doesn't exist\n", S);

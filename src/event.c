@@ -137,7 +137,7 @@ static void _saveState(long id, State_Type state) {
  * @param S Actual posted state
  * @return The event state
  */
-static boolean_t _checkState(Event_T E, State_Type S) {
+static bool _checkState(Event_T E, State_Type S) {
         ASSERT(E);
         int count = 0;
         State_Type state = (S == State_Succeeded || S == State_ChangedNot) ? State_Succeeded : State_Failed; /* translate to 0/1 class */
@@ -151,7 +151,7 @@ static boolean_t _checkState(Event_T E, State_Type S) {
         /* Compare as many bits as cycles able to trigger the action */
         for (int i = 0; i < action->cycles; i++) {
                 /* Check the state of the particular cycle given by the bit position */
-                long long flag = (E->state_map >> i) & 0x1;
+                int64_t flag = (E->state_map >> i) & 0x1;
 
                 /* Count occurrences of the posted state */
                 if (flag == state)
@@ -188,7 +188,7 @@ static void _queueAdd(Event_T E) {
 
         /* compose the file name of actual timestamp and service name */
         char file_name[PATH_MAX];
-        snprintf(file_name, PATH_MAX, "%s/%lld_%lx", Run.eventlist_dir, (long long)Time_now(), (long unsigned)E->source->name);
+        snprintf(file_name, PATH_MAX, "%s/%lld_%lx", Run.eventlist_dir, (int64_t)Time_now(), (long unsigned)E->source->name);
 
         LogInfo("Adding event to the queue file %s for later delivery\n", file_name);
 
@@ -198,7 +198,7 @@ static void _queueAdd(Event_T E) {
                 return;
         }
 
-        boolean_t rv;
+        bool rv;
 
         /* write event structure version */
         int version = EVENT_VERSION;
@@ -245,7 +245,7 @@ error:
 static void _queueUpdate(Event_T E, const char *file_name) {
         int version = EVENT_VERSION;
         Action_Type action = Event_get_action(E);
-        boolean_t rv;
+        bool rv;
 
         ASSERT(E);
         ASSERT(E->flag != Handler_Succeeded);

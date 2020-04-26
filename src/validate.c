@@ -914,7 +914,7 @@ static State_Type _checkSize(Service_T s, off_t size) {
 /**
  * Test uptime
  */
-static State_Type _checkUptime(Service_T s, long long uptime) {
+static State_Type _checkUptime(Service_T s, int64_t uptime) {
         ASSERT(s);
         State_Type rv = State_Succeeded;
         if (uptime < 0)
@@ -922,9 +922,9 @@ static State_Type _checkUptime(Service_T s, long long uptime) {
         for (Uptime_T ul = s->uptimelist; ul; ul = ul->next) {
                 if (Util_evalQExpression(ul->operator, uptime, ul->uptime)) {
                         rv = State_Failed;
-                        Event_post(s, Event_Uptime, State_Failed, ul->action, "uptime test failed for %s -- current uptime is %llu seconds", s->path, (unsigned long long)uptime);
+                        Event_post(s, Event_Uptime, State_Failed, ul->action, "uptime test failed for %s -- current uptime is %llu seconds", s->path, (uint64_t)uptime);
                 } else {
-                        Event_post(s, Event_Uptime, State_Succeeded, ul->action, "uptime test succeeded [current uptime = %llu seconds]", (unsigned long long)uptime);
+                        Event_post(s, Event_Uptime, State_Succeeded, ul->action, "uptime test succeeded [current uptime = %llu seconds]", (uint64_t)uptime);
                 }
         }
         return rv;
@@ -1227,10 +1227,10 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                 case Resource_ServiceTime:
                         {
                                 double deltaTime = 0.;
-                                boolean_t hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
-                                boolean_t hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
-                                boolean_t hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
-                                boolean_t hasRunTime = Statistics_initialized(&(s->inf.filesystem->time.run));
+                                bool hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
+                                bool hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
+                                bool hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
+                                bool hasRunTime = Statistics_initialized(&(s->inf.filesystem->time.run));
                                 // Some platforms have detailed R/W time (Linux, MacOS), other just total R/W time (*BSD), Solaris has total R/W time with wait/run granularity. To make the test cross-platform and simple, we operate on sum
                                 if (! hasReadTime && ! hasWriteTime && ! hasWaitTime && ! hasRunTime) {
                                         DEBUG("'%s' warning -- no data are available for service time test\n", s->name);
@@ -1286,7 +1286,7 @@ static void _checkTimeout(Service_T s) {
 }
 
 
-static boolean_t _incron(Service_T s, time_t now) {
+static bool _incron(Service_T s, time_t now) {
         if ((now - s->every.last_run) > 59) { // Minute is the lowest resolution, so only run once per minute
                 if (Time_incron(s->every.spec.cron, now)) {
                         s->every.last_run = now;
@@ -1300,7 +1300,7 @@ static boolean_t _incron(Service_T s, time_t now) {
 /**
  * Returns true if validation should be skiped for this service in this cycle, otherwise false. Handle every statement
  */
-static boolean_t _checkSkip(Service_T s) {
+static bool _checkSkip(Service_T s) {
         ASSERT(s);
         time_t now = Time_now();
         if (s->every.type == Every_SkipCycles) {
@@ -1313,11 +1313,11 @@ static boolean_t _checkSkip(Service_T s) {
                 s->every.spec.cycle.counter = 0;
         } else if (s->every.type == Every_Cron && ! _incron(s, now)) {
                 s->monitor |= Monitor_Waiting;
-                DEBUG("'%s' test skipped as current time (%lld) does not match every's cron spec \"%s\"\n", s->name, (long long)now, s->every.spec.cron);
+                DEBUG("'%s' test skipped as current time (%lld) does not match every's cron spec \"%s\"\n", s->name, (int64_t)now, s->every.spec.cron);
                 return true;
         } else if (s->every.type == Every_NotInCron && Time_incron(s->every.spec.cron, now)) {
                 s->monitor |= Monitor_Waiting;
-                DEBUG("'%s' test skipped as current time (%lld) matches every's cron spec \"not %s\"\n", s->name, (long long)now, s->every.spec.cron);
+                DEBUG("'%s' test skipped as current time (%lld) matches every's cron spec \"not %s\"\n", s->name, (int64_t)now, s->every.spec.cron);
                 return true;
         }
         s->monitor &= ~Monitor_Waiting;
@@ -1341,7 +1341,7 @@ static boolean_t _checkSkip(Service_T s) {
 /**
  * Returns true if scheduled action was performed
  */
-static boolean_t _doScheduledAction(Service_T s) {
+static bool _doScheduledAction(Service_T s) {
         int rv = false;
         Action_Type action = s->doaction;
         if (action != Action_Ignored) {
@@ -1403,7 +1403,7 @@ int validate() {
 State_Type check_process(Service_T s) {
         ASSERT(s);
         State_Type rv = State_Succeeded;
-        boolean_t checkResources = false;
+        bool checkResources = false;
         pid_t pid = ProcessTree_findProcess(s);
         if (! pid) {
                 for (NonExist_T l = s->nonexistlist; l; l = l->next) {
@@ -1838,7 +1838,7 @@ State_Type check_system(Service_T s) {
 
 
 State_Type check_net(Service_T s) {
-        volatile boolean_t havedata = true;
+        volatile bool havedata = true;
         volatile State_Type rv = State_Succeeded;
         TRY
         {
@@ -1863,7 +1863,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_Link, State_Succeeded, link->action, "link up");
         }
         // Link errors
-        long long oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
+        int64_t oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
         for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
                 if (oerrors > 0) {
                         rv = State_Failed;
@@ -1872,7 +1872,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_Link, State_Succeeded, link->action, "upload errors check succeeded");
                 }
         }
-        long long ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
+        int64_t ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
         for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
                 if (ierrors > 0) {
                         rv = State_Failed;
@@ -1883,7 +1883,7 @@ State_Type check_net(Service_T s) {
         }
         // Link speed
         int duplex = Link_getDuplex(s->inf.net->stats);
-        long long speed = Link_getSpeed(s->inf.net->stats);
+        int64_t speed = Link_getSpeed(s->inf.net->stats);
         for (LinkSpeed_T link = s->linkspeedlist; link; link = link->next) {
                 if (speed > 0 && link->speed) {
                         if (duplex > -1 && duplex != link->duplex)
@@ -1924,7 +1924,7 @@ State_Type check_net(Service_T s) {
         // Upload
         char buf1[10], buf2[10];
         for (Bandwidth_T upload = s->uploadbyteslist; upload; upload = upload->next) {
-                long long obytes;
+                int64_t obytes;
                 switch (upload->range) {
                         case Time_Minute:
                                 obytes = Link_getBytesOutPerMinute(s->inf.net->stats, upload->rangecount);
@@ -1945,7 +1945,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_ByteOut, State_Succeeded, upload->action, "%supload check succeeded [current upload rate %s in last %d %s]", upload->range != Time_Second ? "total " : "", Convert_bytes2str(obytes, buf1), upload->rangecount, Util_timestr(upload->range));
         }
         for (Bandwidth_T upload = s->uploadpacketslist; upload; upload = upload->next) {
-                long long opackets;
+                int64_t opackets;
                 switch (upload->range) {
                         case Time_Minute:
                                 opackets = Link_getPacketsOutPerMinute(s->inf.net->stats, upload->rangecount);
@@ -1967,7 +1967,7 @@ State_Type check_net(Service_T s) {
         }
         // Download
         for (Bandwidth_T download = s->downloadbyteslist; download; download = download->next) {
-                long long ibytes;
+                int64_t ibytes;
                 switch (download->range) {
                         case Time_Minute:
                                 ibytes = Link_getBytesInPerMinute(s->inf.net->stats, download->rangecount);
@@ -1988,7 +1988,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_ByteIn, State_Succeeded, download->action, "%sdownload check succeeded [current download rate %s in last %d %s]", download->range != Time_Second ? "total " : "", Convert_bytes2str(ibytes, buf1), download->rangecount, Util_timestr(download->range));
         }
         for (Bandwidth_T download = s->downloadpacketslist; download; download = download->next) {
-                long long ipackets;
+                int64_t ipackets;
                 switch (download->range) {
                         case Time_Minute:
                                 ipackets = Link_getPacketsInPerMinute(s->inf.net->stats, download->rangecount);
