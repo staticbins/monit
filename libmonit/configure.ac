@@ -159,7 +159,7 @@ AC_CHECK_HEADERS([ctype.h errno.h fcntl.h limits.h pthread.h setjmp.h \
                   sys/sendfile.h sys/dirent.h poll.h sys/poll.h sys/event.h \
                   stropts.h sys/ioctl.h sys/filio.h kstat.h ifaddrs.h \
                   net/if_media.h netinet/in.h sys/sysctl.h net/if_dl.h \
-                  sys/random.h sys/protosw.h mach/boolean.h uvm/uvm_param.h])
+                  sys/random.h sys/protosw.h])
 AC_CHECK_HEADERS([net/if.h net/route.h], [], [],
         [
          #ifdef HAVE_SYS_TYPES_H
@@ -193,20 +193,7 @@ AC_CHECK_HEADERS([ \
 # Types
 # ------------------------------------------------------------------------
 
-AC_CHECK_TYPES([boolean_t], [], [],
-        [
-         #ifdef HAVE_SYS_TYPES_H
-         #include <sys/types.h>
-         #endif
-         #ifdef HAVE_MACH_BOOLEAN_H
-         #include <mach/boolean.h>
-         #endif
-         #ifdef HAVE_UVM_UVM_PARAM_H
-         #include <uvm/uvm_param.h>
-         #endif
-        ])
 AC_CHECK_TYPES([uchar_t])
-AC_CHECK_TYPES([uint32_t])
 
 # ------------------------------------------------------------------------
 # Functions 
