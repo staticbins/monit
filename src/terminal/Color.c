@@ -52,7 +52,7 @@
 /* -------------------------------------------------------- Public Methods */
 
 
-boolean_t Color_support() {
+bool Color_support() {
         if (! (Run.flags & Run_Batch) && isatty(STDOUT_FILENO)) {
                 if (getenv("COLORTERM")) {
                         return true;
@@ -69,7 +69,7 @@ boolean_t Color_support() {
 int Color_length(char *s) {
         if (STR_DEF(s)) {
                 int length = 0;
-                boolean_t ansi = false;
+                bool ansi = false;
                 for (int i = 0; s[i]; i++) {
                         if (s[i] == '\033' && s[i + 1] == '[') {
                                 // Escape sequence start
@@ -92,7 +92,7 @@ int Color_length(char *s) {
 char *Color_strip(char *s) {
         if (STR_DEF(s)) {
                 int x, y;
-                boolean_t ansi = false;
+                bool ansi = false;
                 for (x = 0, y = 0; s[y]; y++) {
                         if (s[y] == '\033' && s[y + 1] == '[') {
                                 // Escape sequence start

@@ -71,7 +71,7 @@ struct T {
         } index;
         struct {
                 struct {
-                        boolean_t enabled;
+                        bool enabled;
                         const char *color;
                 } header;
         } options;
@@ -132,7 +132,7 @@ static void _printHeader(T t) {
 
 
 static void _cacheColor(BoxColumn_T *column) {
-        boolean_t ansi = false;
+        bool ansi = false;
         if (column->value) {
                 for (int i = 0, k = 0; column->value[i]; i++) {
                         if (column->value[i] == '\033' && column->value[i + 1] == '[') {
@@ -153,8 +153,8 @@ static void _cacheColor(BoxColumn_T *column) {
 
 
 // Print a row. If wrap is enabled and the text excceeds width, return true (printed text up to column width, repetition possible to print the rest), otherwise false
-static boolean_t _printRow(T t) {
-        boolean_t repeat = false;
+static bool _printRow(T t) {
+        bool repeat = false;
         for (unsigned int i = 0; i < t->columnsCount; i++) {
                 StringBuffer_append(t->b, COLOR_DARKGRAY BOX_VERTICAL COLOR_RESET " ");
                 if (*(t->columns[i]._color))
@@ -207,7 +207,7 @@ static void _resetRow(T t) {
 /* -------------------------------------------------------- Public Methods */
 
 
-T Box_new(StringBuffer_T b, int columnsCount, BoxColumn_T *columns, boolean_t printHeader) {
+T Box_new(StringBuffer_T b, int columnsCount, BoxColumn_T *columns, bool printHeader) {
         ASSERT(b);
         ASSERT(columns);
         ASSERT(columnsCount > 0);
@@ -265,7 +265,7 @@ void Box_printRow(T t) {
         } else {
                 _printBorderMiddle(t);
         }
-        boolean_t repeat = false;
+        bool repeat = false;
         do {
                 repeat = _printRow(t);
         } while (repeat);
@@ -277,7 +277,7 @@ char *Box_strip(char *s) {
         if (STR_DEF(s)) {
                 int x, y;
                 unsigned char *_s = (unsigned char *)s;
-                boolean_t separator = false;
+                bool separator = false;
                 for (x = 0, y = 0; s[y]; y++) {
                         if (! separator) {
                                 if (_s[y] == 0xE2 && _s[y + 1] == 0x94) {
