@@ -28,7 +28,6 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdarg.h>
@@ -62,7 +61,7 @@
 /* ----------------------------------------------------------------- Class */
 
 
-int Dir_mkdir(const char *dir, int perm) {
+bool Dir_mkdir(const char *dir, int perm) {
         if (dir) {
                 if (mkdir(dir, 0777) == 0) {
                         if (perm != 0)
@@ -75,7 +74,7 @@ int Dir_mkdir(const char *dir, int perm) {
 }
 
 
-int Dir_delete(const char *dir) {
+bool Dir_delete(const char *dir) {
         if (dir)
                 return File_delete(dir);
         errno = EINVAL;
@@ -83,7 +82,7 @@ int Dir_delete(const char *dir) {
 }
 
 
-int Dir_chdir(const char *path) {
+bool Dir_chdir(const char *path) {
         if (path) 
                 return (chdir(path)==0);
         errno = EINVAL;
