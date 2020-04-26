@@ -29,7 +29,6 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -106,7 +105,7 @@ int System_getDescriptorsGuarded() {
 }
 
 
-boolean_t System_random(void *buf, size_t nbytes) {
+bool System_random(void *buf, size_t nbytes) {
 #ifdef HAVE_ARC4RANDOM_BUF
         arc4random_buf(buf, nbytes);
         return true;
