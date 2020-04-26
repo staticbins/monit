@@ -34,7 +34,6 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <pwd.h>
 #include <grp.h>
 #include <fcntl.h>
@@ -307,7 +306,7 @@ int Process_exitStatus(Process_T P) {
 }
 
 
-int Process_isRunning(Process_T P) {
+bool Process_isRunning(Process_T P) {
         assert(P);
         return Process_exitStatus(P) < 0;
 }
