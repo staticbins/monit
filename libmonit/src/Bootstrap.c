@@ -26,7 +26,6 @@
 #include "Config.h"
 
 #include <stdarg.h>
-#include <stdint.h>
 
 #include "Thread.h"
 #include "Exception.h"
