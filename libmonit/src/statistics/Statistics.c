@@ -25,7 +25,6 @@
 
 #include "Config.h"
 
-#include <stdint.h>
 
 #include "Statistics.h"
 
@@ -74,7 +73,7 @@ void Statistics_reset(T S) {
 }
 
 
-boolean_t Statistics_initialized(T S) {
+bool Statistics_initialized(T S) {
         return S->initialized;
 }
 
