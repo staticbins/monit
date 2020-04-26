@@ -109,7 +109,7 @@
 static void  do_init(void);                   /* Initialize this application */
 static void  do_reinit(void);       /* Re-initialize the runtime application */
 static void  do_action(List_T);          /* Dispatch to the submitted action */
-static void  do_exit(boolean_t);                           /* Finalize monit */
+static void  do_exit(bool);                           /* Finalize monit */
 static void  do_default(void);                          /* Do default action */
 static void  handle_options(int, char **, List_T); /* Handle program options */
 static void  help(void);             /* Print program help message to stdout */
@@ -135,7 +135,7 @@ SystemInfo_T systeminfo;                              /**< System infomation */
 Thread_T heartbeatThread;
 Sem_T    heartbeatCond;
 Mutex_T  heartbeatMutex;
-static volatile boolean_t heartbeatRunning = false;
+static volatile bool heartbeatRunning = false;
 
 const char *actionnames[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
 const char *modenames[] = {"active", "passive"};
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
  * Wakeup a sleeping monit daemon.
  * Returns true on success otherwise false
  */
-boolean_t do_wakeupcall() {
+bool do_wakeupcall() {
         pid_t pid;
 
         if ((pid = exist_daemon()) > 0) {
@@ -195,7 +195,7 @@ boolean_t do_wakeupcall() {
 }
 
 
-boolean_t interrupt() {
+bool interrupt() {
         return Run.flags & Run_Stopped || Run.flags & Run_DoReload;
 }
 
@@ -493,7 +493,7 @@ static void do_action(List_T arguments) {
 /**
  * Finalize monit
  */
-static void do_exit(boolean_t saveState) {
+static void do_exit(bool saveState) {
         set_signal_block();
         Run.flags |= Run_Stopped;
         if ((Run.flags & Run_Daemon) && ! (Run.flags & Run_Once)) {

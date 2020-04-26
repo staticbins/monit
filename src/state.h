@@ -46,7 +46,7 @@
  * Open the state file
  * @return true if succeeded, otherwise false
  */
-boolean_t State_open(void);
+bool State_open(void);
 
 
 /**
@@ -99,7 +99,7 @@ void State_restore(void);
   * Check if the system rebooted since last cycle.
  * @return true if reboot occurred since last cycle, otherwise false
   */
-boolean_t State_reboot(void);
+bool State_reboot(void);
 
 
 #endif
