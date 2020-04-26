@@ -34,7 +34,6 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <ctype.h>
 #include <regex.h>
 #include <limits.h>
@@ -143,7 +142,7 @@ int Str_parseInt(const char *s) {
 }
 
 
-long long int Str_parseLLong(const char *s) {
+int64_t Str_parseLLong(const char *s) {
         char *e;
         long long l;
         if (STR_UNDEF(s))
@@ -179,7 +178,7 @@ char *Str_replaceChar(char *s, char o, char n) {
 }
 
 
-int Str_startsWith(const char *a, const char *b) {
+bool Str_startsWith(const char *a, const char *b) {
 	if (a && b) {
 	        do {
 	                if (toupper(*a) != toupper(*b))
@@ -193,7 +192,7 @@ int Str_startsWith(const char *a, const char *b) {
 }
 
 
-int Str_endsWith(const char *a, const char *b) {
+bool Str_endsWith(const char *a, const char *b) {
         if (a && b) {
                 size_t i = 0, j = 0;
                 for (i = strlen(a), j = strlen(b); (i && j); i--, j--)
@@ -223,7 +222,7 @@ char *Str_sub(const char *a, const char *b) {
 }
 
 
-int Str_has(const char *charset, const char *s) {
+bool Str_has(const char *charset, const char *s) {
         if (charset && s) {
                 for (int x = 0; s[x]; x++) {
                         for (int y = 0; charset[y]; y++) {
@@ -255,7 +254,7 @@ char *Str_unescape(const char *charset, char *s) {
 }
 
 
-int Str_isEqual(const char *a, const char *b) {
+bool Str_isEqual(const char *a, const char *b) {
         if (a && b) {
                 while (*a && *b)
                         if (toupper(*a++) != toupper(*b++)) return false;
@@ -265,7 +264,7 @@ int Str_isEqual(const char *a, const char *b) {
 }
 
 
-int Str_isByteEqual(const char *a, const char *b) {
+bool Str_isByteEqual(const char *a, const char *b) {
         if (a && b) {
                 while (*a && *b)
                         if (*a++ != *b++) return false;
@@ -378,7 +377,7 @@ char *Str_curtail(char *s, char *t) {
 }
 
 
-int Str_lim(const char *s, int limit) {
+bool Str_lim(const char *s, int limit) {
         assert(limit>=0);
         if (s)
                 for (; (*s && limit--); s++) ;
@@ -386,7 +385,7 @@ int Str_lim(const char *s, int limit) {
 }
 
 
-int Str_match(const char *pattern, const char *subject) {
+bool Str_match(const char *pattern, const char *subject) {
         assert(pattern);
         if (STR_DEF(subject)) {
                 regex_t regex = {0};
@@ -406,9 +405,9 @@ int Str_match(const char *pattern, const char *subject) {
 }
 
 
-unsigned int Str_hash(const void *x) {
+int Str_hash(const void *x) {
         const char *s = x;
-        unsigned long h = 0, g;
+        uint64_t h = 0, g;
         assert(x);
         while (*s) {
                 h = (h << 4) + *s++;
