@@ -116,7 +116,6 @@ AC_CHECK_HEADERS([ \
 	loadavg.h \
 	locale.h \
 	lvm.h \
-        mach/boolean.h \
         mach/host_info.h \
         mach/mach.h \
         mach/mach_host.h \
@@ -361,25 +360,6 @@ AC_CHECK_HEADERS([ \
 # Types
 # ------------------------------------------------------------------------
 
-AC_CHECK_TYPES([boolean_t], [], [],
-        [
-         #ifdef HAVE_SYS_TYPES_H
-         #include <sys/types.h>
-         #endif
-         #ifdef HAVE_MACH_BOOLEAN_H
-         #include <mach/boolean.h>
-         #endif
-         #ifdef HAVE_UVM_UVM_PARAM_H
-         #include <uvm/uvm_param.h>
-         #endif
-         #ifdef HAVE_VM_VM_H
-         #include <vm/vm.h>
-         #endif
-         #ifdef HAVE_KINFO_H
-         #include <kinfo.h>
-         #endif
-        ])
-
 AC_TYPE_MODE_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
@@ -429,25 +409,46 @@ AC_TRY_LINK([
 # Compiler
 # ------------------------------------------------------------------------
 
-# Compiler characteristics
+AC_PROG_CC
+AC_PROG_CXX
 AC_C_CONST
 AC_C_BIGENDIAN
+# Define _GNU_SOURCE so we can have Posix headers etc included. We use the
+# -std=cXX compiler switch which only include a minimum of C headers
+CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
-# If the compiler is gcc, tune warnings and make the char type unsigned
-# and enable C99 support
-if test "x$GCC" = "xyes"; then
-	CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
-        # Add C99 support
-        CFLAGS="$CFLAGS -D_GNU_SOURCE -std=c99"
-        # does this compiler support -Wno-pointer-sign ?
-        svd_CFLAGS="$CFLAGS"
-        CFLAGS="-Wno-pointer-sign $CFLAGS"
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
-        # does this compiler support -Wno-address ?
-        svd_CFLAGS="$CFLAGS"
-        CFLAGS="-Wno-address $CFLAGS"
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
-fi
+# Compiler; tune warnings and make the char type unsigned and enable C11 support
+CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
+# does this compiler support -Wno-pointer-sign ?
+svd_CFLAGS="$CFLAGS"
+CFLAGS="-Wno-pointer-sign $CFLAGS"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+# does this compiler support -Wno-address ?
+svd_CFLAGS="$CFLAGS"
+CFLAGS="-Wno-address $CFLAGS"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+
+# Clang: turn-off auto added checks to -Wall as of clang-902.0.39.1/Xcode 9.3
+# does this compiler support -Wno-nullability-completeness ?
+svd_CFLAGS="$CFLAGS"
+CFLAGS="-Wno-nullability-completeness $CFLAGS"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+# does this compiler support -Wno-expansion-to-defined ?
+svd_CFLAGS="$CFLAGS"
+CFLAGS="-Wno-expansion-to-defined $CFLAGS"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+
+# Require at least C99 and use C11 if available
+AC_RUN_IFELSE(
+[AC_LANG_PROGRAM([], [dnl
+        #ifdef __STDC_VERSION__
+        #if __STDC_VERSION__ >= 201112L
+        return 0;
+        #endif
+        #endif
+        return 1;
+        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"])
+AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
 
 
 # ------------------------------------------------------------------------
