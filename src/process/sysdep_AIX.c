@@ -117,13 +117,13 @@ int getargs(struct procentry64 *processBuffer, int bufferLen, char *argsBuffer, 
 
 static int                page_size;
 static int                cpu_initialized = 0;
-static unsigned long long cpu_total_old = 0ULL;
-static unsigned long long cpu_user_old  = 0ULL;
-static unsigned long long cpu_syst_old  = 0ULL;
-static unsigned long long cpu_iowait_old  = 0ULL;
+static uint64_t cpu_total_old = 0ULL;
+static uint64_t cpu_user_old  = 0ULL;
+static uint64_t cpu_syst_old  = 0ULL;
+static uint64_t cpu_iowait_old  = 0ULL;
 
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         perfstat_memory_total_t mem;
 
         if (perfstat_memory_total(NULL, &mem, sizeof(perfstat_memory_total_t), 1) < 1) {
@@ -271,7 +271,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
  * This routine returns kbyte of real memory in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         perfstat_memory_total_t  mem;
 
         /* Memory */
@@ -293,13 +293,13 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
         perfstat_cpu_total_t cpu;
-        unsigned long long cpu_total;
-        unsigned long long cpu_total_new = 0ULL;
-        unsigned long long cpu_user      = 0ULL;
-        unsigned long long cpu_syst      = 0ULL;
-        unsigned long long cpu_iowait      = 0ULL;
+        uint64_t cpu_total;
+        uint64_t cpu_total_new = 0ULL;
+        uint64_t cpu_user      = 0ULL;
+        uint64_t cpu_syst      = 0ULL;
+        uint64_t cpu_iowait      = 0ULL;
 
         if (perfstat_cpu_total(NULL, &cpu, sizeof(perfstat_cpu_total_t), 1) < 0) {
                 LogError("system statistic error -- perfstat_cpu_total failed: %s\n", STRERROR);
@@ -335,7 +335,7 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 }
 
 
-boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
         // Not implemented
         return true;
 }

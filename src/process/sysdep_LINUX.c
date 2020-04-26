@@ -116,7 +116,7 @@ typedef struct Proc_T {
         int                 item_threads;
         unsigned long       item_utime;
         unsigned long       item_stime;
-        unsigned long long  item_starttime;
+        uint64_t  item_starttime;
         struct {
                 uint64_t    bytes;
                 uint64_t    bytesPhysical;
@@ -153,10 +153,10 @@ static void __attribute__ ((constructor)) _constructor(void) {
 
 #define NSEC_PER_SEC    1000000000L
 
-static unsigned long long old_cpu_user     = 0;
-static unsigned long long old_cpu_syst     = 0;
-static unsigned long long old_cpu_iowait   = 0;
-static unsigned long long old_cpu_total    = 0;
+static uint64_t old_cpu_user     = 0;
+static uint64_t old_cpu_syst     = 0;
+static uint64_t old_cpu_iowait   = 0;
+static uint64_t old_cpu_total    = 0;
 
 static long page_size = 0;
 
@@ -177,7 +177,7 @@ static time_t _getStartTime(void) {
 
 
 // parse /proc/PID/stat
-static boolean_t _parseProcPidStat(Proc_T proc) {
+static bool _parseProcPidStat(Proc_T proc) {
         char buf[8192];
         char *tmp = NULL;
         if (! file_readProc(buf, sizeof(buf), "stat", proc->pid, NULL)) {
@@ -208,7 +208,7 @@ static boolean_t _parseProcPidStat(Proc_T proc) {
 
 
 // parse /proc/PID/status
-static boolean_t _parseProcPidStatus(Proc_T proc) {
+static bool _parseProcPidStatus(Proc_T proc) {
         char buf[4096];
         char *tmp = NULL;
         if (! file_readProc(buf, sizeof(buf), "status", proc->pid, NULL)) {
@@ -236,7 +236,7 @@ static boolean_t _parseProcPidStatus(Proc_T proc) {
 
 
 // parse /proc/PID/io
-static boolean_t _parseProcPidIO(Proc_T proc) {
+static bool _parseProcPidIO(Proc_T proc) {
         char buf[4096];
         char *tmp = NULL;
         if (_statistics.hasIOStatistics) {
@@ -305,7 +305,7 @@ static boolean_t _parseProcPidIO(Proc_T proc) {
 
 
 // parse /proc/PID/cmdline
-static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
+static bool _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
         if (pflags & ProcessEngine_CollectCommandLine) {
                 char filename[STRLEN];
                 // Try to collect the command-line from the procfs cmdline (user-space processes)
@@ -353,7 +353,7 @@ static boolean_t _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
 
 
 // parse /proc/PID/attr/current
-static boolean_t _parseProcPidAttrCurrent(Proc_T proc) {
+static bool _parseProcPidAttrCurrent(Proc_T proc) {
         if (file_readProc(proc->secattr, sizeof(proc->secattr), "attr/current", proc->pid, NULL)) {
                 Str_trim(proc->secattr);
                 return true;
@@ -362,7 +362,7 @@ static boolean_t _parseProcPidAttrCurrent(Proc_T proc) {
 }
 
 // count entries in /proc/PID/fd
-static boolean_t _parseProcFdCount(Proc_T proc) {
+static bool _parseProcFdCount(Proc_T proc) {
         uint64_t file_count = 0;
         DIR *dirp;
         char fd_path[32];
@@ -411,7 +411,7 @@ static boolean_t _parseProcFdCount(Proc_T proc) {
         return true;
 }
 
-static double _usagePercent(unsigned long long previous, unsigned long long current, double total) {
+static double _usagePercent(uint64_t previous, uint64_t current, double total) {
         if (current < previous) {
                 // The counter jumped back (observed for cpu wait metric on Linux 4.15) or wrapped
                 return 0.;
@@ -423,7 +423,7 @@ static double _usagePercent(unsigned long long previous, unsigned long long curr
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         if ((hz = sysconf(_SC_CLK_TCK)) <= 0.) {
                 DEBUG("system statistic error -- cannot get hz: %s\n", STRERROR);
                 return false;
@@ -575,7 +575,7 @@ int getloadavg_sysdep(double *loadv, int nelem) {
  * This routine returns real memory in use.
  * @return: true if successful, false if failed
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         char          *ptr;
         char           buf[2048];
         unsigned long  mem_available = 0UL;
@@ -650,19 +650,19 @@ error:
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
         int rv;
-        unsigned long long cpu_total;      // Total CPU time
-        unsigned long long cpu_user;       // Time spent in user mode
-        unsigned long long cpu_nice;       // Time spent in user mode with low priority (nice)
-        unsigned long long cpu_syst;       // Time spent in system mode
-        unsigned long long cpu_idle;       // Time idle
-        unsigned long long cpu_iowait;     // Time waiting for I/O to complete. This value is not reliable
-        unsigned long long cpu_hardirq;    // Time servicing hardware interrupts
-        unsigned long long cpu_softirq;    // Time servicing software interrupts
-        unsigned long long cpu_steal;      // Stolen time, which is the time spent in other operating systems when running in a virtualized environment
-        unsigned long long cpu_guest;      // Time spent running a virtual CPU for guest operating systems under the control of the Linux kernel
-        unsigned long long cpu_guest_nice; // Time spent running a niced guest (virtual CPU for guest operating systems under the control of the Linux kernel)
+        uint64_t cpu_total;      // Total CPU time
+        uint64_t cpu_user;       // Time spent in user mode
+        uint64_t cpu_nice;       // Time spent in user mode with low priority (nice)
+        uint64_t cpu_syst;       // Time spent in system mode
+        uint64_t cpu_idle;       // Time idle
+        uint64_t cpu_iowait;     // Time waiting for I/O to complete. This value is not reliable
+        uint64_t cpu_hardirq;    // Time servicing hardware interrupts
+        uint64_t cpu_softirq;    // Time servicing software interrupts
+        uint64_t cpu_steal;      // Stolen time, which is the time spent in other operating systems when running in a virtualized environment
+        uint64_t cpu_guest;      // Time spent running a virtual CPU for guest operating systems under the control of the Linux kernel
+        uint64_t cpu_guest_nice; // Time spent running a niced guest (virtual CPU for guest operating systems under the control of the Linux kernel)
         char buf[8192];
 
         if (! file_readProc(buf, sizeof(buf), "stat", -1, NULL)) {
@@ -743,8 +743,8 @@ error:
  * This routine returns filedescriptors statistics
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
-        boolean_t rv = false;
+bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+        bool rv = false;
         FILE *f = fopen("/proc/sys/fs/file-nr", "r");
         if (f) {
                 char line[STRLEN];
