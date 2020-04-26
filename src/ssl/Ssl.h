@@ -97,7 +97,7 @@ void Ssl_threadCleanup(void);
  * Enable or disable FIPS-140 mode
  * @param enabled true to enable FIPS-140 mode
  */
-void Ssl_setFipsMode(boolean_t enabled);
+void Ssl_setFipsMode(bool enabled);
 #endif
 
 
