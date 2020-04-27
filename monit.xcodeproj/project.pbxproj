@@ -103,9 +103,9 @@
 			isEditable = 1;
 			outputFiles = (
 				"$(DERIVED_FILES_DIR)/y.tab.c",
-				"$(DERIVED_FILES_DIR)/tokens.h",
+				"$(DERIVED_FILES_DIR)/y.tab.h",
 			);
-			script = "bison -dtv ${INPUT_FILE_PATH} -o ${DERIVED_FILES_DIR}/y.tab.c;\nmv ${DERIVED_FILES_DIR}/y.tab.h ${DERIVED_FILES_DIR}/tokens.h;";
+			script = "bison -dtv ${INPUT_FILE_PATH} -o ${DERIVED_FILES_DIR}/y.tab.c;\n";
 		};
 		52F6E8CB13A751430023F87A /* PBXBuildRule */ = {
 			isa = PBXBuildRule;
@@ -118,7 +118,7 @@
 			outputFiles = (
 				"$(DERIVED_FILES_DIR)/lex.yy.c",
 			);
-			script = "flex -i -o ${DERIVED_FILES_DIR}/lex.yy.c ${INPUT_FILE_PATH}";
+			script = "flex -i -o ${DERIVED_FILES_DIR}/lex.yy.c ${INPUT_FILE_PATH}\n";
 		};
 /* End PBXBuildRule section */
 
