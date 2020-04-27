@@ -185,7 +185,6 @@ AC_CHECK_HEADERS([ \
         uvm/uvm_extern.h \
         uvm/uvm_param.h \
         vm/vm.h \
-        inttypes.h \
 	])
 
 AC_CHECK_HEADERS([ \
