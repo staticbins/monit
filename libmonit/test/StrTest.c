@@ -156,7 +156,7 @@ int main(void) {
                 printf("\tResult:\n");
                 printf("\tParsed int = %d\n", Str_parseInt(i));
                 assert(Str_parseInt(i)==-2812);
-                printf("\tParsed int64_t = %lld\n", Str_parseLLong(ll));
+                printf("\tParsed long long = %lld\n", Str_parseLLong(ll));
                 assert(Str_parseLLong(ll)==2147483642);
                 printf("\tParsed double = %.9f\n", Str_parseDouble(d));
                 assert(Str_parseDouble(d)==2.718281828);

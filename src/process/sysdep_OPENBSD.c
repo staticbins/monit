@@ -102,14 +102,14 @@ bool init_process_info_sysdep(void) {
                 return false;
         }
 
-        int64_t physmem;
+        long long physmem;
         mib[1] = HW_PHYSMEM64;
         len    = sizeof(physmem);
         if (sysctl(mib, 2, &physmem, &len, NULL, 0) == -1) {
                 DEBUG("system statistic error -- cannot get real memory amount: %s\n", STRERROR);
                 return false;
         }
-        systeminfo.memory.size = (uint64_t)physmem;
+        systeminfo.memory.size = (unsigned long long)physmem;
 
         mib[1] = HW_PAGESIZE;
         len    = sizeof(pagesize);
@@ -172,7 +172,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
 
         pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         if (! (kvm_handle = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, buf))) {
                 FREE(pinfo);
                 FREE(pt);
@@ -195,7 +195,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[index].cred.gid            = pinfo[i].p_rgid;
                         pt[index].uptime              = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
                         pt[index].cpu.time            = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
-                        pt[index].memory.usage        = (uint64_t)pinfo[i].p_vm_rssize * (uint64_t)pagesize;
+                        pt[index].memory.usage        = (unsigned long long)pinfo[i].p_vm_rssize * (unsigned long long)pagesize;
                         pt[index].zombie              = pinfo[i].p_stat == SZOMB ? true : false;
                         pt[index].read.bytes          = -1;
                         pt[index].read.bytesPhysical  = -1;
@@ -258,9 +258,9 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 LogError("system statistic error -- cannot get memory usage: %s\n", STRERROR);
                 return false;
         }
-        si->memory.usage.bytes = (uint64_t)(vm.active + vm.wired) * (uint64_t)pagesize;
-        si->swap.size = (uint64_t)vm.swpages * (uint64_t)pagesize;
-        si->swap.usage.bytes = (uint64_t)vm.swpginuse * (uint64_t)pagesize;
+        si->memory.usage.bytes = (unsigned long long)(vm.active + vm.wired) * (unsigned long long)pagesize;
+        si->swap.size = (unsigned long long)vm.swpages * (unsigned long long)pagesize;
+        si->swap.usage.bytes = (unsigned long long)vm.swpginuse * (unsigned long long)pagesize;
         return true;
 }
 

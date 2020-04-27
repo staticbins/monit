@@ -64,7 +64,7 @@ struct T {
         uchar_t *length;
         bool isclosed;
         int sessionWritten;
-        int64_t bytesWritten;
+        long long bytesWritten;
         uchar_t buffer[BUFFER_SIZE + 1];
 };
 
@@ -392,7 +392,7 @@ bool OutputStream_isClosed(T S) {
 }
 
 
-int64_t OutputStream_getBytesWritten(T S) {
+long long OutputStream_getBytesWritten(T S) {
         assert(S);
         return S->bytesWritten;
 }

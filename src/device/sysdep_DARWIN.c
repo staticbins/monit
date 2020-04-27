@@ -110,7 +110,7 @@ static bool _getBlockDiskActivity(void *_inf) {
                                         if (statistics) {
                                                 rv = true;
                                                 UInt64 value = 0;
-                                                uint64_t now = Time_milli();
+                                                unsigned long long now = Time_milli();
                                                 // Total read bytes
                                                 CFNumberRef number = CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsBytesReadKey));
                                                 if (number) {
@@ -173,9 +173,9 @@ static bool _compareDevice(const char *device, struct statfs *mnt) {
 }
 
 
-static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
+static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
         struct mystable {
-                uint64_t flag;
+                unsigned long long flag;
                 char *description;
         } t[]= {
                 {MNT_RDONLY, "ro"},

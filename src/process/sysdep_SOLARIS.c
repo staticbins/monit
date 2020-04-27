@@ -111,7 +111,7 @@ static long   old_total = 0;
 bool init_process_info_sysdep(void) {
         systeminfo.cpu.count = sysconf( _SC_NPROCESSORS_ONLN);
         page_size = getpagesize();
-        systeminfo.memory.size = (uint64_t)sysconf(_SC_PHYS_PAGES) * (uint64_t)page_size;
+        systeminfo.memory.size = (unsigned long long)sysconf(_SC_PHYS_PAGES) * (unsigned long long)page_size;
         kstat_ctl_t *kctl = kstat_open();
         if (kctl) {
                 kstat_t *kstat = kstat_lookup(kctl, "unix", 0, "system_misc");
@@ -119,7 +119,7 @@ bool init_process_info_sysdep(void) {
                         if (kstat_read(kctl, kstat, 0) != -1) {
                                 kstat_named_t *knamed = kstat_data_lookup(kstat, "boot_time");
                                 if (knamed)
-                                        systeminfo.booted = (uint64_t)knamed->value.ul;
+                                        systeminfo.booted = (unsigned long long)knamed->value.ul;
                         }
                 }
                 kstat_close(kctl);
@@ -165,7 +165,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[i].cred.gid     = psinfo->pr_gid;
                         pt[i].uptime       = systeminfo.time / 10. - psinfo->pr_start.tv_sec;
                         pt[i].zombie       = psinfo->pr_nlwp == 0 ? true : false; // If we don't have any light-weight processes (LWP) then we are definitely a zombie
-                        pt[i].memory.usage = (uint64_t)psinfo->pr_rssize * 1024;
+                        pt[i].memory.usage = (unsigned long long)psinfo->pr_rssize * 1024;
                         if (pflags & ProcessEngine_CollectCommandLine) {
                                 pt[i].cmdline = Str_dup(psinfo->pr_psargs);
                                 if (STR_UNDEF(pt[i].cmdline)) {
@@ -222,8 +222,8 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         kstat_t            *kstat;
         swaptbl_t          *s;
         char               *strtab;
-        uint64_t  total = 0ULL;
-        uint64_t  used  = 0ULL;
+        unsigned long long  total = 0ULL;
+        unsigned long long  used  = 0ULL;
 
         /* Memory */
         kctl = kstat_open();
@@ -239,7 +239,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                         }
                         kstat_named_t *rss = kstat_data_lookup(kstat, "rss");
                         if (rss)
-                                si->memory.usage.bytes = (uint64_t)rss->value.i64;
+                                si->memory.usage.bytes = (unsigned long long)rss->value.i64;
                 } else {
                         /* Solaris Zone */
                         size_t nres;
@@ -249,7 +249,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                                 kstat_close(kctl);
                                 return false;
                         }
-                        si->memory.usage.bytes = (uint64_t)result.vmu_rss_all;
+                        si->memory.usage.bytes = (unsigned long long)result.vmu_rss_all;
                 }
         } else {
                 kstat = kstat_lookup(kctl, "unix", 0, "system_pages");
@@ -260,11 +260,11 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 }
                 knamed = kstat_data_lookup(kstat, "freemem");
                 if (knamed) {
-                        uint64_t freemem = (uint64_t)knamed->value.ul * (uint64_t)page_size, arcsize = 0ULL;
+                        unsigned long long freemem = (unsigned long long)knamed->value.ul * (unsigned long long)page_size, arcsize = 0ULL;
                         kstat = kstat_lookup(kctl, "zfs", 0, "arcstats");
                         if (kstat_read(kctl, kstat, 0) != -1) {
                                 knamed = kstat_data_lookup(kstat, "size");
-                                arcsize = (uint64_t)knamed->value.ul;
+                                arcsize = (unsigned long long)knamed->value.ul;
                         }
                         si->memory.usage.bytes = systeminfo.memory.size - freemem - arcsize;
                 }
@@ -308,8 +308,8 @@ again:
         }
         FREE(s);
         FREE(strtab);
-        si->swap.size = (uint64_t)total * (uint64_t)page_size;
-        si->swap.usage.bytes = (uint64_t)used * (uint64_t)page_size;
+        si->swap.size = (unsigned long long)total * (unsigned long long)page_size;
+        si->swap.usage.bytes = (unsigned long long)used * (unsigned long long)page_size;
 
         return true;
 }

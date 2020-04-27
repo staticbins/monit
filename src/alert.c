@@ -238,14 +238,14 @@ static bool _send(List_T list) {
                                                 "MIME-Version: 1.0\r\n"
                                                 "Content-Type: text/plain; charset=utf-8\r\n"
                                                 "Content-Transfer-Encoding: 8bit\r\n"
-                                                "Message-Id: <%lld.%"PRIx64"@%s>\r\n"
+                                                "Message-Id: <%lld.%llx@%s>\r\n"
                                                 "\r\n"
                                                 "%s",
                                                 m->to,
                                                 m->subject,
                                                 now,
                                                 VERSION,
-                                                (int64_t)Time_now(), System_randomNumber(), Run.mail_hostname ? Run.mail_hostname : Run.system->name,
+                                                (long long)Time_now(), System_randomNumber(), Run.mail_hostname ? Run.mail_hostname : Run.system->name,
                                                 m->message) <= 0
                                    )
                                 {

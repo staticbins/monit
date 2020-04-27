@@ -1075,10 +1075,10 @@ void Util_printService(Service_T s) {
         for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->total) {
-                        printf(" %-20s = %s\n", "Total filedescriptors", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %"PRId64, operatornames[o->operator], o->limit_absolute)));
+                        printf(" %-20s = %s\n", "Total filedescriptors", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %lld", operatornames[o->operator], o->limit_absolute)));
                 } else {
                         if (o->limit_absolute > -1)
-                                printf(" %-20s = %s\n", "Filedescriptors", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %"PRId64, operatornames[o->operator], o->limit_absolute)));
+                                printf(" %-20s = %s\n", "Filedescriptors", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %lld", operatornames[o->operator], o->limit_absolute)));
                         else
                                 printf(" %-20s = %s\n", "Filedescriptors", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent)));
                 }
@@ -1835,7 +1835,7 @@ char *Util_getHTTPHostHeader(Socket_T s, char *hostBuf, int len) {
 }
 
 
-bool Util_evalQExpression(Operator_Type operator, int64_t left, int64_t right) {
+bool Util_evalQExpression(Operator_Type operator, long long left, long long right) {
         switch (operator) {
                 case Operator_Greater:
                         if (left > right)

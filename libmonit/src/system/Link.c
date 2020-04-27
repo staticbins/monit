@@ -83,18 +83,18 @@
 
 static struct {
         struct ifaddrs *addrs;
-        uint64_t timestamp;
+        unsigned long long timestamp;
 } _stats = {};
 
 
 typedef struct LinkData_T {
 #ifndef __LP64__
-        uint64_t raw;
+        unsigned long long raw;
 #endif
-        int64_t now;
-        int64_t last;
-        uint64_t minute[60];
-        uint64_t hour[24];
+        long long now;
+        long long last;
+        unsigned long long minute[60];
+        unsigned long long hour[24];
 } LinkData_T;
 
 
@@ -102,12 +102,12 @@ struct T {
         char *object;
         const char *(*resolve)(const char *object); // Resolve Object -> Interface, set during Link_T instantiation by constructor (currently we implement only IPAddress -> Interface lookup)
         struct {
-                int64_t last;
-                int64_t now;
+                long long last;
+                long long now;
         } timestamp;
         int state;       // State (-1 = N/A, 0 = down, 1 = up)
         int duplex;      // Duplex (-1 = N/A, 0 = half, 1 = full)
-        int64_t speed; // Speed [bps]
+        long long speed; // Speed [bps]
         LinkData_T ipackets;  // Packets received on interface
         LinkData_T ierrors;   // Input errors on interface
         LinkData_T ibytes;    // Total number of octets received
@@ -131,8 +131,8 @@ static void __attribute__ ((destructor)) _destructor(void) {
 /* --------------------------------------------------------------- Private */
 
 
-static void _updateValue(LinkData_T *data, uint64_t raw) {
-       uint64_t value = raw;
+static void _updateValue(LinkData_T *data, unsigned long long raw) {
+       unsigned long long value = raw;
 #ifndef __LP64__
         if (raw < data->raw)
                 value = data->now + ULONG_MAX + 1ULL - data->raw + raw; // Counter wrapped
@@ -164,7 +164,7 @@ static void _updateValue(LinkData_T *data, uint64_t raw) {
 #endif
 
 
-static void _resetData(LinkData_T *data, uint64_t value) {
+static void _resetData(LinkData_T *data, unsigned long long value) {
 #ifndef __LP64__
         data->raw = value;
 #endif
@@ -189,15 +189,15 @@ static void _reset(T L) {
 }
 
 
-static int64_t _deltaSecond(T L, LinkData_T *data) {
+static long long _deltaSecond(T L, LinkData_T *data) {
         if (L->timestamp.last > 0 && L->timestamp.now > L->timestamp.last)
                 if (data->last > 0 && data->now > data->last)
-                        return (int64_t)((data->now - data->last) * 1000. / (L->timestamp.now - L->timestamp.last));
+                        return (long long)((data->now - data->last) * 1000. / (L->timestamp.now - L->timestamp.last));
         return 0ULL;
 }
 
 
-static int64_t _deltaMinute(T L, LinkData_T *data, int count) {
+static long long _deltaMinute(T L, LinkData_T *data, int count) {
         int stop = Time_minutes(L->timestamp.now / 1000.);
         int delta = stop - count;
         int start = delta < 0 ? 60 + delta : delta;
@@ -209,7 +209,7 @@ static int64_t _deltaMinute(T L, LinkData_T *data, int count) {
 }
 
 
-static int64_t _deltaHour(T L, LinkData_T *data, int count) {
+static long long _deltaHour(T L, LinkData_T *data, int count) {
         int stop = Time_hour(L->timestamp.now / 1000.);
         int delta = stop - count;
         int start = delta < 0 ? 24 + delta : delta;
@@ -280,7 +280,7 @@ static void _updateHistory(T L) {
 
 static void _updateCache(void) {
 #ifdef HAVE_IFADDRS_H
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
         if (now > _stats.timestamp + 1000 || now < _stats.timestamp - 1000) {
                 _stats.timestamp = now;
@@ -352,25 +352,25 @@ void Link_update(T L) {
 }
 
 
-int64_t Link_getBytesInPerSecond(T L) {
+long long Link_getBytesInPerSecond(T L) {
         assert(L);
         return L->state > 0 ? _deltaSecond(L, &(L->ibytes)) : -1LL;
 }
 
 
-int64_t Link_getBytesInPerMinute(T L, int count) {
+long long Link_getBytesInPerMinute(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaMinute(L, &(L->ibytes), count) : -1LL;
 }
 
 
-int64_t Link_getBytesInPerHour(T L, int count) {
+long long Link_getBytesInPerHour(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaHour(L, &(L->ibytes), count) : -1LL;
 }
 
 
-int64_t Link_getBytesInTotal(T L) {
+long long Link_getBytesInTotal(T L) {
         assert(L);
         return L->state > 0 ? L->ibytes.now : -1LL;
 }
@@ -382,73 +382,73 @@ double Link_getSaturationInPerSecond(T L) {
 }
 
 
-int64_t Link_getPacketsInPerSecond(T L) {
+long long Link_getPacketsInPerSecond(T L) {
         assert(L);
         return L->state > 0 ? _deltaSecond(L, &(L->ipackets)) : -1LL;
 }
 
 
-int64_t Link_getPacketsInPerMinute(T L, int count) {
+long long Link_getPacketsInPerMinute(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaMinute(L, &(L->ipackets), count) : -1LL;
 }
 
 
-int64_t Link_getPacketsInPerHour(T L, int count) {
+long long Link_getPacketsInPerHour(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaHour(L, &(L->ipackets), count) : -1LL;
 }
 
 
-int64_t Link_getPacketsInTotal(T L) {
+long long Link_getPacketsInTotal(T L) {
         assert(L);
         return L->state > 0 ? L->ipackets.now : -1LL;
 }
 
 
-int64_t Link_getErrorsInPerSecond(T L) {
+long long Link_getErrorsInPerSecond(T L) {
         assert(L);
         return L->state > 0 ? _deltaSecond(L, &(L->ierrors)) : -1LL;
 }
 
 
-int64_t Link_getErrorsInPerMinute(T L, int count) {
+long long Link_getErrorsInPerMinute(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaMinute(L, &(L->ierrors), count) : -1LL;
 }
 
 
-int64_t Link_getErrorsInPerHour(T L, int count) {
+long long Link_getErrorsInPerHour(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaHour(L, &(L->ierrors), count) : -1LL;
 }
 
 
-int64_t Link_getErrorsInTotal(T L) {
+long long Link_getErrorsInTotal(T L) {
         assert(L);
         return L->state > 0 ? L->ierrors.now : -1LL;
 }
 
 
-int64_t Link_getBytesOutPerSecond(T L) {
+long long Link_getBytesOutPerSecond(T L) {
         assert(L);
         return L->state > 0 ? _deltaSecond(L, &(L->obytes)) : -1LL;
 }
 
 
-int64_t Link_getBytesOutPerMinute(T L, int count) {
+long long Link_getBytesOutPerMinute(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaMinute(L, &(L->obytes), count) : -1LL;
 }
 
 
-int64_t Link_getBytesOutPerHour(T L, int count) {
+long long Link_getBytesOutPerHour(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaHour(L, &(L->obytes), count) : -1LL;
 }
 
 
-int64_t Link_getBytesOutTotal(T L) {
+long long Link_getBytesOutTotal(T L) {
         assert(L);
         return L->state > 0 ? L->obytes.now : -1LL;
 }
@@ -460,49 +460,49 @@ double Link_getSaturationOutPerSecond(T L) {
 }
 
 
-int64_t Link_getPacketsOutPerSecond(T L) {
+long long Link_getPacketsOutPerSecond(T L) {
         assert(L);
         return L->state > 0 ? _deltaSecond(L, &(L->opackets)) : -1LL;
 }
 
 
-int64_t Link_getPacketsOutPerMinute(T L, int count) {
+long long Link_getPacketsOutPerMinute(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaMinute(L, &(L->opackets), count) : -1LL;
 }
 
 
-int64_t Link_getPacketsOutPerHour(T L, int count) {
+long long Link_getPacketsOutPerHour(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaHour(L, &(L->opackets), count) : -1LL;
 }
 
 
-int64_t Link_getPacketsOutTotal(T L) {
+long long Link_getPacketsOutTotal(T L) {
         assert(L);
         return L->state > 0 ? L->opackets.now : -1LL;
 }
 
 
-int64_t Link_getErrorsOutPerSecond(T L) {
+long long Link_getErrorsOutPerSecond(T L) {
         assert(L);
         return L->state > 0 ? _deltaSecond(L, &(L->oerrors)) : -1LL;
 }
 
 
-int64_t Link_getErrorsOutPerMinute(T L, int count) {
+long long Link_getErrorsOutPerMinute(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaMinute(L, &(L->oerrors), count) : -1LL;
 }
 
 
-int64_t Link_getErrorsOutPerHour(T L, int count) {
+long long Link_getErrorsOutPerHour(T L, int count) {
         assert(L);
         return L->state > 0 ? _deltaHour(L, &(L->oerrors), count) : -1LL;
 }
 
 
-int64_t Link_getErrorsOutTotal(T L) {
+long long Link_getErrorsOutTotal(T L) {
         assert(L);
         return L->state > 0 ? L->oerrors.now : -1LL;
 }
@@ -514,7 +514,7 @@ int Link_getState(T L) {
 }
 
 
-int64_t Link_getSpeed(T L) {
+long long Link_getSpeed(T L) {
         assert(L);
         return L->state > 0 ? L->speed : -1LL;
 }

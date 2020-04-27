@@ -99,7 +99,7 @@ static bool _update(T L, const char *interface) {
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/rx_bytes", name);
         f = fopen(path, "r");
         if (f) {
-                int64_t ibytes;
+                long long ibytes;
                 if (fscanf(f, "%lld\n", &ibytes) != 1) {
                         fclose(f);
                         THROW(AssertException, "Cannot parse %s -- %s", path, System_getError(errno));
@@ -116,7 +116,7 @@ static bool _update(T L, const char *interface) {
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/rx_packets", name);
         f = fopen(path, "r");
         if (f) {
-                int64_t ipackets;
+                long long ipackets;
                 if (fscanf(f, "%lld\n", &ipackets) != 1) {
                         fclose(f);
                         THROW(AssertException, "Cannot parse %s -- %s", path, System_getError(errno));
@@ -133,7 +133,7 @@ static bool _update(T L, const char *interface) {
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/rx_errors", name);
         f = fopen(path, "r");
         if (f) {
-                int64_t ierrors;
+                long long ierrors;
                 if (fscanf(f, "%lld\n", &ierrors) != 1) {
                         fclose(f);
                         THROW(AssertException, "Cannot parse %s -- %s", path, System_getError(errno));
@@ -150,7 +150,7 @@ static bool _update(T L, const char *interface) {
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/tx_bytes", name);
         f = fopen(path, "r");
         if (f) {
-                int64_t obytes;
+                long long obytes;
                 if (fscanf(f, "%lld\n", &obytes) != 1) {
                         fclose(f);
                         THROW(AssertException, "Cannot parse %s -- %s", path, System_getError(errno));
@@ -167,7 +167,7 @@ static bool _update(T L, const char *interface) {
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/tx_packets", name);
         f = fopen(path, "r");
         if (f) {
-                int64_t opackets;
+                long long opackets;
                 if (fscanf(f, "%lld\n", &opackets) != 1) {
                         fclose(f);
                         THROW(AssertException, "Cannot parse %s -- %s", path, System_getError(errno));
@@ -184,7 +184,7 @@ static bool _update(T L, const char *interface) {
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/tx_errors", name);
         f = fopen(path, "r");
         if (f) {
-                int64_t oerrors;
+                long long oerrors;
                 if (fscanf(f, "%lld\n", &oerrors) != 1) {
                         fclose(f);
                         THROW(AssertException, "Cannot parse %s -- %s", path, System_getError(errno));

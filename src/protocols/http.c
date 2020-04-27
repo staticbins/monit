@@ -334,8 +334,7 @@ static void _processHeaders(Socket_T socket, void (**processBody)(Socket_T socke
  */
 static void _checkResponse(Socket_T socket, Port_T P) {
         int contentLength = -1;
-        void (*processBody)(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context) = NULL;
-
+        void (*processBody)(Socket_T socket, Port_T P, volatile char **data, int *contentLength, ChecksumContext_T context);
         _processStatus(socket, P);
         _processHeaders(socket, &processBody, &contentLength);
         if ((P->url_request && P->url_request->regex) || P->parameters.http.checksum) {

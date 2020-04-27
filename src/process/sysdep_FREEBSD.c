@@ -152,7 +152,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 kvm_close(kvm_handle);
                 return 0;
         }
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
 
         ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
@@ -168,7 +168,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].threads.self        = pinfo[i].ki_numthreads;
                 pt[i].uptime              = systeminfo.time / 10. - pinfo[i].ki_start.tv_sec;
                 pt[i].cpu.time            = (double)pinfo[i].ki_runtime / 100000.;
-                pt[i].memory.usage        = (uint64_t)pinfo[i].ki_rssize * (uint64_t)pagesize;
+                pt[i].memory.usage        = (unsigned long long)pinfo[i].ki_rssize * (unsigned long long)pagesize;
                 pt[i].read.bytes          = -1;
                 pt[i].read.bytesPhysical  = -1;
                 pt[i].read.operations     = pinfo[i].ki_rusage.ru_inblock;
@@ -239,7 +239,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 LogError("system statistics error -- wired memory usage statics error\n");
                 return false;
         }
-        uint64_t arcsize = 0ULL;
+        unsigned long long arcsize = 0ULL;
         len = sizeof(arcsize);
         if (sysctlbyname("kstat.zfs.misc.arcstats.size", &arcsize, &len, NULL, 0) == 0) {
                 if (len != sizeof(arcsize)) {
@@ -247,12 +247,12 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                         return false;
                 }
         }
-        si->memory.usage.bytes = (uint64_t)(active + wired) * (uint64_t)pagesize - arcsize;
+        si->memory.usage.bytes = (unsigned long long)(active + wired) * (unsigned long long)pagesize - arcsize;
 
         /* Swap */
         int mib[16] = {};
-        uint64_t total = 0ULL;
-        uint64_t used  = 0ULL;
+        unsigned long long total = 0ULL;
+        unsigned long long used  = 0ULL;
         size_t miblen = sizeof(mib) / sizeof(mib[0]);
         if (sysctlnametomib("vm.swap_info", mib, &miblen) == -1) {
                 LogError("system statistics error -- cannot get swap usage: %s\n", STRERROR);
@@ -275,8 +275,8 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 used  += xsw.xsw_used;
                 n++;
         }
-        si->swap.size = (uint64_t)total * (uint64_t)pagesize;
-        si->swap.usage.bytes = (uint64_t)used * (uint64_t)pagesize;
+        si->swap.size = (unsigned long long)total * (unsigned long long)pagesize;
+        si->swap.usage.bytes = (unsigned long long)used * (unsigned long long)pagesize;
         return true;
 }
 

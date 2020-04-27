@@ -290,7 +290,7 @@ char *Util_getHTTPHostHeader(Socket_T s, char *hostBuf, int len);
  * @param rightExpression rval
  * @return the boolean value of the expression
  */
-bool Util_evalQExpression(Operator_Type operator, int64_t left, int64_t right);
+bool Util_evalQExpression(Operator_Type operator, long long left, long long right);
 
 
 /**

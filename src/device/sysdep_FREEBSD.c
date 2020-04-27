@@ -90,7 +90,7 @@
 
 
 static struct {
-        uint64_t timestamp;
+        unsigned long long timestamp;
         struct statinfo disk;
 } _statistics = {};
 
@@ -111,8 +111,8 @@ static void __attribute__ ((destructor)) _destructor() {
 /* ----------------------------------------------------------------- Private */
 
 
-static uint64_t _bintimeToMilli(struct bintime *time) {
-        return time->sec * 1000 + (((uint64_t)1000 * (uint32_t)(time->frac >> 32)) >> 32);
+static unsigned long long _bintimeToMilli(struct bintime *time) {
+        return time->sec * 1000 + (((unsigned long long)1000 * (uint32_t)(time->frac >> 32)) >> 32);
 }
 
 
@@ -166,7 +166,7 @@ static bool _parseDevice(const char *path, Device_T device) {
 }
 
 
-static bool _getStatistics(uint64_t now) {
+static bool _getStatistics(unsigned long long now) {
         // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
         if (now > _statistics.timestamp + 1000 || now < _statistics.timestamp - 1000) {
                 if (devstat_getdevs(NULL, &(_statistics.disk)) == -1) {
@@ -186,12 +186,12 @@ static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
 
 static bool _getBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         bool rv = _getStatistics(now);
         if (rv) {
                 for (int i = 0; i < _statistics.disk.dinfo->numdevs; i++) {
                         if (_statistics.disk.dinfo->devices[i].unit_number == inf->filesystem->object.instance && IS(_statistics.disk.dinfo->devices[i].device_name, inf->filesystem->object.key)) {
-                                uint64_t now = _statistics.disk.snap_time * 1000;
+                                unsigned long long now = _statistics.disk.snap_time * 1000;
                                 Statistics_update(&(inf->filesystem->time.read), now, _bintimeToMilli(&(_statistics.disk.dinfo->devices[i].duration[DEVSTAT_READ])));
                                 Statistics_update(&(inf->filesystem->read.bytes), now, _statistics.disk.dinfo->devices[i].bytes[DEVSTAT_READ]);
                                 Statistics_update(&(inf->filesystem->read.operations),  now, _statistics.disk.dinfo->devices[i].operations[DEVSTAT_READ]);
@@ -233,9 +233,9 @@ static bool _compareDevice(const char *device, struct statfs *mnt) {
 }
 
 
-static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
+static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
         struct mystable {
-                uint64_t flag;
+                unsigned long long flag;
                 char *description;
         } t[]= {
 #ifdef MNT_AUTOMOUNTED

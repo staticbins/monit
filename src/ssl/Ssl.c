@@ -303,9 +303,9 @@ static bool _setVersion(SSL_CTX *ctx, SslOptions_T options) {
 
 
 static bool _retry(int socket, int *timeout, bool (*callback)(int socket, time_t milliseconds)) {
-        int64_t start = Time_milli();
+        long long start = Time_milli();
         if (callback(socket, *timeout)) {
-                int64_t stop = Time_milli();
+                long long stop = Time_milli();
                 if (stop >= start && (*timeout -= stop - start) > 0) // Reduce timeout with guard against backward clock jumps
                         return true;
         }

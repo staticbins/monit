@@ -95,13 +95,7 @@
 #ifdef HAVE_VM_VM_H
 #include <vm/vm.h>
 #endif
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#else
-#define PRIu64 "llu"
-#endif
 
-#include <stdint.h>
 #include <stdbool.h>
 
 
@@ -573,29 +567,29 @@ typedef struct SystemInfo_T {
                 } usage;
         } cpu;
         struct {
-                uint64_t size;                      /**< Maximal system real memory */
+                unsigned long long size;                      /**< Maximal system real memory */
                 struct {
                         float percent;  /**< Total real memory in use in the system */
-                        uint64_t bytes; /**< Total real memory in use in the system */
+                        unsigned long long bytes; /**< Total real memory in use in the system */
                 } usage;
         } memory;
         struct {
-                uint64_t size;                                       /**< Swap size */
+                unsigned long long size;                                       /**< Swap size */
                 struct {
                         float percent;         /**< Total swap in use in the system */
-                        uint64_t bytes;        /**< Total swap in use in the system */
+                        unsigned long long bytes;        /**< Total swap in use in the system */
                 } usage;
         } swap;
         struct {
-                int64_t allocated;        /**< Number of allocated filedescriptors */
-                int64_t unused;              /**< Number of unused filedescriptors */
-                int64_t maximum;                        /**< Filedescriptors limit */
+                long long allocated;        /**< Number of allocated filedescriptors */
+                long long unused;              /**< Number of unused filedescriptors */
+                long long maximum;                        /**< Filedescriptors limit */
         } filedescriptors;
         size_t argmax;                                                   /**< Program arguments maximum [B] */
         double loadavg[3];                                                         /**< Load average triple */
         struct utsname uname;                                 /**< Platform information provided by uname() */
         struct timeval collected;                                             /**< When were data collected */
-        uint64_t booted; /**< System boot time (seconds since UNIX epoch, using platform-agnostic uint64_t) */
+        unsigned long long booted; /**< System boot time (seconds since UNIX epoch, using platform-agnostic unsigned long long) */
         double time;                                                                      /**< 1/10 seconds */
         double time_prev;                                                                 /**< 1/10 seconds */
 } SystemInfo_T;
@@ -772,7 +766,7 @@ typedef struct Timestamp_T {
         bool test_changes;       /**< true if we only should test for changes */
         Timestamp_Type type;
         Operator_Type operator;                           /**< Comparison operator */
-        uint64_t time;                                    /**< Timestamp watermark */
+        unsigned long long time;                                    /**< Timestamp watermark */
         time_t lastTimestamp;        /**< Last timestamp (context depends on type) */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
@@ -835,7 +829,7 @@ typedef struct Size_T {
         bool initialized;                   /**< true if size was initialized */
         bool test_changes;       /**< true if we only should test for changes */
         Operator_Type operator;                           /**< Comparison operator */
-        uint64_t size;                               /**< Size watermark */
+        unsigned long long size;                               /**< Size watermark */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
@@ -846,7 +840,7 @@ typedef struct Size_T {
 /** Defines uptime object */
 typedef struct Uptime_T {
         Operator_Type operator;                           /**< Comparison operator */
-        uint64_t uptime;                           /**< Uptime watermark */
+        unsigned long long uptime;                           /**< Uptime watermark */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
@@ -864,7 +858,7 @@ typedef struct LinkStatus_T {
 
 typedef struct LinkSpeed_T {
         int duplex;                                        /**< Last duplex status */
-        int64_t speed;                                     /**< Last speed [bps] */
+        long long speed;                                     /**< Last speed [bps] */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
@@ -886,7 +880,7 @@ typedef struct Bandwidth_T {
         Operator_Type operator;                           /**< Comparison operator */
         Time_Type range;                            /**< Time range to watch: unit */
         int rangecount;                            /**< Time range to watch: count */
-        uint64_t limit;                              /**< Data watermark */
+        unsigned long long limit;                              /**< Data watermark */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
         /** For internal use */
@@ -951,7 +945,7 @@ typedef struct SecurityAttribute_T {
 
 typedef struct Filedescriptors_T {
         bool total;             /**<Whether to include filedescriptors of children */
-        int64_t limit_absolute;                              /**<  Filedescriptors limit */
+        long long limit_absolute;                              /**<  Filedescriptors limit */
         float limit_percent;                                 /**< Filedescriptors limit */
         Operator_Type operator;                           /**< Comparison operator */
         EventAction_T action;  /**< Description of the action upon event occurence */
@@ -998,7 +992,7 @@ typedef struct FileSystem_T {
         Resource_Type resource;               /**< Whether to check inode or space */
         Operator_Type operator;                           /**< Comparison operator */
         //FIXME: union
-        int64_t limit_absolute;                          /**< Watermark - blocks */
+        long long limit_absolute;                          /**< Watermark - blocks */
         float limit_percent;                              /**< Watermark - percent */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
@@ -1024,27 +1018,27 @@ typedef struct Device_T {
         char key[PATH_MAX];
         char module[256];
         char type[64];
-        uint64_t flags;
+        unsigned long long flags;
         bool (*getDiskUsage)(void *);
         bool (*getDiskActivity)(void *);
 } *Device_T;
 
 
 typedef struct TimestampInfo_T {
-        uint64_t access;
-        uint64_t change;
-        uint64_t modify;
+        unsigned long long access;
+        unsigned long long change;
+        unsigned long long modify;
 } *TimestampInfo_T;
 
 
 typedef struct FileSystemInfo_T {
-        int64_t  f_blocks;              /**< Total data blocks in filesystem */
-        int64_t  f_blocksfree;   /**< Free blocks available to non-superuser */
-        int64_t  f_blocksfreetotal;           /**< Free blocks in filesystem */
-        int64_t  f_blocksused;                  /**< Used space total blocks */
-        int64_t  f_files;                /**< Total file nodes in filesystem */
-        int64_t  f_filesfree;             /**< Free file nodes in filesystem */
-        int64_t  f_filesused;                  /**< Used inode total objects */
+        long long  f_blocks;              /**< Total data blocks in filesystem */
+        long long  f_blocksfree;   /**< Free blocks available to non-superuser */
+        long long  f_blocksfreetotal;           /**< Free blocks in filesystem */
+        long long  f_blocksused;                  /**< Used space total blocks */
+        long long  f_files;                /**< Total file nodes in filesystem */
+        long long  f_filesfree;             /**< Free file nodes in filesystem */
+        long long  f_filesused;                  /**< Used inode total objects */
         float inode_percent;                        /**< Used inode percentage */
         float space_percent;                        /**< Used space percentage */
         int f_bsize;                                  /**< Transfer block size */
@@ -1105,8 +1099,8 @@ typedef struct ProcessInfo_T {
         int gid;                                              /**< Process GID */
         int threads;
         int children;
-        uint64_t mem;
-        uint64_t total_mem;
+        unsigned long long mem;
+        unsigned long long total_mem;
         float mem_percent;                                     /**< percentage */
         float total_mem_percent;                               /**< percentage */
         float cpu_percent;                                     /**< percentage */
@@ -1116,11 +1110,11 @@ typedef struct ProcessInfo_T {
         struct IOStatistics_T write;                     /**< Write statistics */
         char secattr[STRLEN];                         /**< Security attributes */
         struct {
-                int64_t open;                        /**< number of opened files */
-                int64_t openTotal;             /**< number of total opened files */
+                long long open;                        /**< number of opened files */
+                long long openTotal;             /**< number of total opened files */
                 struct {
-                        int64_t soft;                 /**< Filedescriptors soft limit */
-                        int64_t hard;                 /**< Filedescriptors hard limit */
+                        long long soft;                 /**< Filedescriptors soft limit */
+                        long long hard;                 /**< Filedescriptors hard limit */
                 } limit;
         } filedescriptors;
 } *ProcessInfo_T;
@@ -1216,7 +1210,7 @@ typedef struct Service_T {
         int                error;                          /**< Error flags bitmap */
         int                error_hint;   /**< Failed/Changed hint for error bitmap */
         union Info_T       inf;                          /**< Service check result */
-        struct timeval     collected;                /**< When were data collected */ //FIXME: replace with uint64_t? (all places where timeval is used) ... Time_milli()?
+        struct timeval     collected;                /**< When were data collected */ //FIXME: replace with unsigned long long? (all places where timeval is used) ... Time_milli()?
         char              *token;                                /**< Action token */
 
         /** Events */
@@ -1230,7 +1224,7 @@ typedef struct Service_T {
                 State_Type        state;                                 /**< Test state */
                 bool         state_changed;              /**< true if state changed */
                 Handler_Type      flag;                     /**< The handlers state flag */
-                int64_t         state_map;           /**< Event bitmap for last cycles */
+                long long         state_map;           /**< Event bitmap for last cycles */
                 unsigned int      count;                             /**< The event rate */
                 char             *message;    /**< Optional message describing the event */
                 EventAction_T     action;           /**< Description of the event action */

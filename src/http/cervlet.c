@@ -297,7 +297,7 @@ static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, 
         if (Statistics_initialized(&(io->operations))) {
                 snprintf(header, sizeof(header), "disk %s operations", name);
                 double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
-                _formatStatus(header, Event_Resource, type, res, s, true, "%.1f %ss/s [%"PRIu64" %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
+                _formatStatus(header, Event_Resource, type, res, s, true, "%.1f %ss/s [%llu %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
         }
 }
 
@@ -360,9 +360,9 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 
                         case Service_Net:
                                 {
-                                        int64_t speed = Link_getSpeed(s->inf.net->stats);
-                                        int64_t ibytes = Link_getBytesInPerSecond(s->inf.net->stats);
-                                        int64_t obytes = Link_getBytesOutPerSecond(s->inf.net->stats);
+                                        long long speed = Link_getSpeed(s->inf.net->stats);
+                                        long long ibytes = Link_getBytesInPerSecond(s->inf.net->stats);
+                                        long long obytes = Link_getBytesOutPerSecond(s->inf.net->stats);
                                         _formatStatus("link", Event_Link, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld errors", Link_getErrorsInPerSecond(s->inf.net->stats) + Link_getErrorsOutPerSecond(s->inf.net->stats));
                                         if (speed > 0) {
                                                 _formatStatus("capacity", Event_Speed, type, res, s, Link_getState(s->inf.net->stats) == 1, "%.0lf Mb/s %s-duplex", (double)speed / 1000000., Link_getDuplex(s->inf.net->stats) == 1 ? "full" : "half");
@@ -438,9 +438,9 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("memory total", Event_Resource, type, res, s, s->inf.process->total_mem_percent >= 0, "%.1f%% [%s]", s->inf.process->total_mem_percent, Convert_bytes2str(s->inf.process->total_mem, (char[10]){}));
 #ifdef LINUX
                                         _formatStatus("security attribute", Event_Invalid, type, res, s, *(s->inf.process->secattr), "%s", s->inf.process->secattr);
-                                        int64_t limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
-                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.open != -1LL, "%ld [%.1f%% of %ld limit]", s->inf.process->filedescriptors.open, (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit, limit);
-                                        _formatStatus("total filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.openTotal != -1LL, "%ld", s->inf.process->filedescriptors.openTotal);
+                                        long long limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
+                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.open != -1LL, "%lld [%.1f%% of %lld limit]", s->inf.process->filedescriptors.open, (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit, limit);
+                                        _formatStatus("total filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.openTotal != -1LL, "%lld", s->inf.process->filedescriptors.openTotal);
 #endif
                                 }
                                 _printIOStatistics(type, res, s, &(s->inf.process->read), "read");
@@ -1942,10 +1942,10 @@ static void print_service_rules_filedescriptors(HttpResponse res, Service_T s) {
         for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (o->total) {
-                        _displayTableRow(res, true, "rule", "Total filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %"PRId64, operatornames[o->operator], o->limit_absolute)));
+                        _displayTableRow(res, true, "rule", "Total filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %lld", operatornames[o->operator], o->limit_absolute)));
                 } else {
                         if (o->limit_absolute > -1LL)
-                                _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %"PRId64, operatornames[o->operator], o->limit_absolute)));
+                                _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %lld", operatornames[o->operator], o->limit_absolute)));
                         else
                                 _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %.1f%%", operatornames[o->operator], o->limit_percent)));
                 }

@@ -107,7 +107,7 @@ time_t timegm(struct tm *tm)
 {
         int days;
         int num_leap_year;
-        int64_t t;
+        long long t;
         if(tm->tm_mon > 11) {
                 return -1;
         }
@@ -117,7 +117,7 @@ time_t timegm(struct tm *tm)
         if(tm->tm_mon >= 2 && is_leap_year(tm->tm_year + 1900)) {
                 ++days;
         }
-        t = ((int64_t)days * 24 + tm->tm_hour) * 3600 + tm->tm_min * 60 + tm->tm_sec;
+        t = ((long long)days * 24 + tm->tm_hour) * 3600 + tm->tm_min * 60 + tm->tm_sec;
         if(sizeof(time_t) == 4) {
                 if(t < INT_MIN || t > INT_MAX) {
                         return -1;
@@ -969,19 +969,19 @@ time_t Time_now(void) {
 }
 
 
-int64_t Time_milli(void) {
+long long Time_milli(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
                 THROW(AssertException, "%s", System_getLastError());
-	return (int64_t)t.tv_sec * 1000  +  (int64_t)t.tv_usec / 1000;
+	return (long long)t.tv_sec * 1000  +  (long long)t.tv_usec / 1000;
 }
 
 
-int64_t Time_micro(void) {
+long long Time_micro(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
                 THROW(AssertException, "%s", System_getLastError());
-	return (int64_t)t.tv_sec * 1000000  +  (int64_t)t.tv_usec;
+	return (long long)t.tv_sec * 1000000  +  (long long)t.tv_usec;
 }
 
 
@@ -1118,15 +1118,15 @@ char *Time_uptime(time_t sec, char *result) {
                 result[0] = 0;
                 if (sec > 0) {
                         if ((r = sec/86400) > 0) {
-                                n = snprintf(result, 24, "%lldd", (int64_t)r);
+                                n = snprintf(result, 24, "%lldd", (long long)r);
                                 sec -= r * 86400;
                         }
                         if ((r = sec/3600) > 0) {
-                                n += snprintf(result + n, (24 - n), "%s%lldh", n ? ", " : "", (int64_t)r);
+                                n += snprintf(result + n, (24 - n), "%s%lldh", n ? ", " : "", (long long)r);
                                 sec -= r * 3600;
                         }
                         r = sec/60;
-                        snprintf(result + n, (24 - n), "%s%lldm", n ? ", " : "", (int64_t)r);
+                        snprintf(result + n, (24 - n), "%s%lldm", n ? ", " : "", (long long)r);
                 }
         }
         return result;

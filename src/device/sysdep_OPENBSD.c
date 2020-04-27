@@ -74,7 +74,7 @@
 
 
 static struct {
-        uint64_t timestamp;
+        unsigned long long timestamp;
         size_t diskCount;
         size_t diskLength;
         struct diskstats *disk;
@@ -92,7 +92,7 @@ static void __attribute__ ((destructor)) _destructor() {
 /* ----------------------------------------------------------------- Private */
 
 
-static uint64_t _timevalToMilli(struct timeval *time) {
+static unsigned long long _timevalToMilli(struct timeval *time) {
         return time->tv_sec * 1000 + time->tv_usec / 1000.;
 }
 
@@ -110,7 +110,7 @@ static bool _parseDevice(const char *path, Device_T device) {
 }
 
 
-static bool _getStatistics(uint64_t now) {
+static bool _getStatistics(unsigned long long now) {
         // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
         if (now > _statistics.timestamp + 1000 || now < _statistics.timestamp - 1000) {
                 ssize_t len = sizeof(_statistics.diskCount);
@@ -142,7 +142,7 @@ static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
 
 static bool _getBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         bool rv = _getStatistics(now);
         if (rv) {
                 for (size_t i = 0; i < _statistics.diskCount; i++)     {
@@ -187,9 +187,9 @@ static bool _compareDevice(const char *device, struct statfs *mnt) {
 }
 
 
-static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
+static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
         struct mystable {
-                uint64_t flag;
+                unsigned long long flag;
                 char *description;
         } t[]= {
                 {MNT_RDONLY, "ro"},

@@ -124,13 +124,13 @@ int Str_parseInt(const char *s);
 
 
 /**
- * Parses the string argument as a signed int64_t in base 10. 
+ * Parses the string argument as a signed long long in base 10.
  * @param s A string
- * @return The int64_t represented by the string argument.
+ * @return The long long represented by the string argument.
  * @exception NumberFormatException If the String does not contain a
- * parsable int64_t
+ * parsable long long
  */
-int64_t Str_parseLLong(const char *s);
+long long Str_parseLLong(const char *s);
 
 
 /**

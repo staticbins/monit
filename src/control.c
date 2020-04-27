@@ -93,7 +93,7 @@ static int _getOutput(InputStream_T in, char *buf, int buflen) {
 }
 
 
-static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, int64_t *timeout) {
+static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long long *timeout) {
         ASSERT(S);
         ASSERT(c);
         ASSERT(msg);
@@ -111,7 +111,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, int6
         }
         END_TRY;
         if (C) {
-                int64_t _timeoutMilli = *timeout / 1000.;
+                long long _timeoutMilli = *timeout / 1000.;
                 for (int i = 1; i < c->length; i++)
                         Command_appendArgument(C, c->arg[i]);
                 if (c->has_uid)
@@ -126,7 +126,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, int6
                 switch (S->type) {
                         case Service_Process:
                                 Command_vSetEnv(C, "MONIT_PROCESS_PID", "%d", S->inf.process->pid);
-                                Command_vSetEnv(C, "MONIT_PROCESS_MEMORY", "%llu", (uint64_t)((double)S->inf.process->mem / 1024.));
+                                Command_vSetEnv(C, "MONIT_PROCESS_MEMORY", "%llu", (unsigned long long)((double)S->inf.process->mem / 1024.));
                                 Command_vSetEnv(C, "MONIT_PROCESS_CHILDREN", "%d", S->inf.process->children);
                                 Command_vSetEnv(C, "MONIT_PROCESS_CPU_PERCENT", "%.1f", S->inf.process->cpu_percent);
                                 break;
@@ -166,7 +166,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, int6
 }
 
 
-static Process_Status _waitProcessStart(Service_T s, int64_t *timeout) {
+static Process_Status _waitProcessStart(Service_T s, long long *timeout) {
         long wait = RETRY_INTERVAL;
         do {
                 Time_usleep(wait);
@@ -183,7 +183,7 @@ static Process_Status _waitProcessStart(Service_T s, int64_t *timeout) {
 }
 
 
-static Process_Status _waitProcessStop(int pid, int64_t *timeout) {
+static Process_Status _waitProcessStop(int pid, long long *timeout) {
         do {
                 Time_usleep(RETRY_INTERVAL);
                 if (! pid || (getpgid(pid) == -1 && errno != EPERM))
@@ -203,7 +203,7 @@ static State_Type _check(Service_T s) {
         rv = s->check(s);
         if (s->type == Service_Program && s->program->P) {
                 // check program executes the program and needs to be called again to collect the exit value and evaluate the status
-                int64_t timeout = s->program->timeout * USEC_PER_MSEC;
+                long long timeout = s->program->timeout * USEC_PER_MSEC;
                 do {
                         Time_usleep(RETRY_INTERVAL);
                         timeout -= RETRY_INTERVAL;
@@ -243,7 +243,7 @@ static bool _doStart(Service_T s) {
                         if (s->type != Service_Process || ! ProcessTree_findProcess(s)) {
                                 LogInfo("'%s' start: '%s'\n", s->name, Util_commandDescription(s->start, (char[STRLEN]){}));
                                 char msg[1024];
-                                int64_t timeout = s->start->timeout * USEC_PER_MSEC;
+                                long long timeout = s->start->timeout * USEC_PER_MSEC;
                                 int status = _commandExecute(s, s->start, msg, sizeof(msg), &timeout);
                                 if (status < 0 || (s->type == Service_Process && _waitProcessStart(s, &timeout) != Process_Started)) {
                                         Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to start (exit status %d) -- %s", status, *msg ? msg : "no output");
@@ -266,7 +266,7 @@ static bool _doStart(Service_T s) {
 }
 
 
-static int _executeStop(Service_T s, char *msg, int msglen, int64_t *timeout) {
+static int _executeStop(Service_T s, char *msg, int msglen, long long *timeout) {
         LogInfo("'%s' stop: '%s'\n", s->name, Util_commandDescription(s->stop, (char[STRLEN]){}));
         return _commandExecute(s, s->stop, msg, msglen, timeout);
 }
@@ -293,7 +293,7 @@ static bool _doStop(Service_T s, bool unmonitor) {
                 if (s->monitor != Monitor_Not) {
                         int exitStatus;
                         char msg[1024];
-                        int64_t timeout = s->stop->timeout * USEC_PER_MSEC;
+                        long long timeout = s->stop->timeout * USEC_PER_MSEC;
                         if (s->type == Service_Process) {
                                 int pid = ProcessTree_findProcess(s);
                                 if (pid) {
@@ -331,7 +331,7 @@ static bool _doRestart(Service_T s) {
                 LogInfo("'%s' restart: '%s'\n", s->name, Util_commandDescription(s->restart, (char[STRLEN]){}));
                 Util_resetInfo(s);
                 char msg[1024];
-                int64_t timeout = s->restart->timeout * USEC_PER_MSEC;
+                long long timeout = s->restart->timeout * USEC_PER_MSEC;
                 int status = _commandExecute(s, s->restart, msg, sizeof(msg), &timeout);
                 if (status < 0 || (s->type == Service_Process && _waitProcessStart(s, &timeout) != Process_Started)) {
                         rv = false;

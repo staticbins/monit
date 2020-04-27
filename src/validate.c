@@ -729,7 +729,7 @@ static State_Type _checkSystemFiledescriptors(Service_T s) {
                 if (o->limit_absolute > -1LL) {
                         if (Util_evalQExpression(o->operator, systeminfo.filedescriptors.allocated, o->limit_absolute)) {
                                 rv = State_Failed;
-                                Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %lld matches limit [filedescriptors %s %"PRId64"]", systeminfo.filedescriptors.allocated, operatorshortnames[o->operator], o->limit_absolute);
+                                Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %lld matches limit [filedescriptors %s %lld]", systeminfo.filedescriptors.allocated, operatorshortnames[o->operator], o->limit_absolute);
                         } else {
                                 Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %lld]", systeminfo.filedescriptors.allocated);
                         }
@@ -754,18 +754,18 @@ static State_Type _checkProcessFiledescriptors(Service_T s) {
                 if (o->total) {
                         if (Util_evalQExpression(o->operator, s->inf.process->filedescriptors.openTotal, o->limit_absolute)) {
                                 rv = State_Failed;
-                                Event_post(s, Event_Resource, State_Failed, o->action, "total  filedescriptors usage of %"PRId64" matches limit [filedescriptors %s %"PRId64"]", s->inf.process->filedescriptors.openTotal, operatorshortnames[o->operator], o->limit_absolute);
+                                Event_post(s, Event_Resource, State_Failed, o->action, "total  filedescriptors usage of %lld matches limit [filedescriptors %s %lld]", s->inf.process->filedescriptors.openTotal, operatorshortnames[o->operator], o->limit_absolute);
                         } else {
-                                Event_post(s, Event_Resource, State_Succeeded, o->action, "total filedescriptors usage test succeeded [current filedescriptors usage = %"PRId64"]", s->inf.process->filedescriptors.openTotal);
+                                Event_post(s, Event_Resource, State_Succeeded, o->action, "total filedescriptors usage test succeeded [current filedescriptors usage = %lld]", s->inf.process->filedescriptors.openTotal);
                         }
                 } else {
-                        int64_t limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
+                        long long limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
                         if (o->limit_absolute > -1LL) {
                                 if (Util_evalQExpression(o->operator, s->inf.process->filedescriptors.open, o->limit_absolute)) {
                                         rv = State_Failed;
-                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %"PRId64" matches limit [filedescriptors %s %"PRId64"]", s->inf.process->filedescriptors.open, operatorshortnames[o->operator], o->limit_absolute);
+                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %lld matches limit [filedescriptors %s %lld]", s->inf.process->filedescriptors.open, operatorshortnames[o->operator], o->limit_absolute);
                                 } else {
-                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %"PRId64"]", s->inf.process->filedescriptors.open);
+                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %lld]", s->inf.process->filedescriptors.open);
                                 }
                         } else {
                                 float usage = limit > 0 ? (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit : 0;
@@ -914,7 +914,7 @@ static State_Type _checkSize(Service_T s, off_t size) {
 /**
  * Test uptime
  */
-static State_Type _checkUptime(Service_T s, int64_t uptime) {
+static State_Type _checkUptime(Service_T s, long long uptime) {
         ASSERT(s);
         State_Type rv = State_Succeeded;
         if (uptime < 0)
@@ -922,9 +922,9 @@ static State_Type _checkUptime(Service_T s, int64_t uptime) {
         for (Uptime_T ul = s->uptimelist; ul; ul = ul->next) {
                 if (Util_evalQExpression(ul->operator, uptime, ul->uptime)) {
                         rv = State_Failed;
-                        Event_post(s, Event_Uptime, State_Failed, ul->action, "uptime test failed for %s -- current uptime is %llu seconds", s->path, (uint64_t)uptime);
+                        Event_post(s, Event_Uptime, State_Failed, ul->action, "uptime test failed for %s -- current uptime is %llu seconds", s->path, (unsigned long long)uptime);
                 } else {
-                        Event_post(s, Event_Uptime, State_Succeeded, ul->action, "uptime test succeeded [current uptime = %llu seconds]", (uint64_t)uptime);
+                        Event_post(s, Event_Uptime, State_Succeeded, ul->action, "uptime test succeeded [current uptime = %llu seconds]", (unsigned long long)uptime);
                 }
         }
         return rv;
@@ -1139,7 +1139,7 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                         return State_Failed;
                                 }
                         } else {
-                                int64_t bytesUsed = s->inf.filesystem->f_blocksused * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
+                                long long bytesUsed = s->inf.filesystem->f_blocksused * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
                                 if (Util_evalQExpression(td->operator, bytesUsed, td->limit_absolute)) {
                                         char buf1[10];
                                         char buf2[10];
@@ -1159,7 +1159,7 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                         return State_Failed;
                                 }
                         } else {
-				int64_t bytesFreeTotal = s->inf.filesystem->f_blocksfreetotal * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
+				long long bytesFreeTotal = s->inf.filesystem->f_blocksfreetotal * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
                                 if (Util_evalQExpression(td->operator, bytesFreeTotal, td->limit_absolute)) {
                                         char buf1[10];
                                         char buf2[10];
@@ -1313,11 +1313,11 @@ static bool _checkSkip(Service_T s) {
                 s->every.spec.cycle.counter = 0;
         } else if (s->every.type == Every_Cron && ! _incron(s, now)) {
                 s->monitor |= Monitor_Waiting;
-                DEBUG("'%s' test skipped as current time (%lld) does not match every's cron spec \"%s\"\n", s->name, (int64_t)now, s->every.spec.cron);
+                DEBUG("'%s' test skipped as current time (%lld) does not match every's cron spec \"%s\"\n", s->name, (long long)now, s->every.spec.cron);
                 return true;
         } else if (s->every.type == Every_NotInCron && Time_incron(s->every.spec.cron, now)) {
                 s->monitor |= Monitor_Waiting;
-                DEBUG("'%s' test skipped as current time (%lld) matches every's cron spec \"not %s\"\n", s->name, (int64_t)now, s->every.spec.cron);
+                DEBUG("'%s' test skipped as current time (%lld) matches every's cron spec \"not %s\"\n", s->name, (long long)now, s->every.spec.cron);
                 return true;
         }
         s->monitor &= ~Monitor_Waiting;
@@ -1458,7 +1458,7 @@ State_Type check_process(Service_T s) {
                         if (_checkProcessResources(s, pr) == State_Failed)
                                 rv = State_Failed;
         }
-        int64_t uptimeMilli = (int64_t)(s->inf.process->uptime) * 1000LL;
+        long long uptimeMilli = (long long)(s->inf.process->uptime) * 1000LL;
         for (Port_T pp = s->portlist; pp; pp = pp->next) {
                 //FIXME: instead of pause, try to test, but ignore any errors in the start timeout timeframe ... will allow to display the port response time as soon as available, instead of waiting for 30+ seconds
                 /* pause port tests in the start timeout timeframe while the process is starting (it may take some time to the process before it starts accepting connections) */
@@ -1707,7 +1707,7 @@ State_Type check_program(Service_T s) {
                 _programOutput(Process_getInputStream(P), s->program->inprogressOutput);
                 // Is the program still running?
                 if (Process_exitStatus(P) < 0) {
-                        int64_t execution_time = (now - s->program->started) * 1000;
+                        long long execution_time = (now - s->program->started) * 1000;
                         if (execution_time > s->program->timeout) { // Program timed out
                                 rv = State_Failed;
                                 LogError("'%s' program timed out after %s. Killing program with pid %ld\n", s->name, Convert_time2str(execution_time, (char[11]){}), (long)Process_getPid(P));
@@ -1863,7 +1863,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_Link, State_Succeeded, link->action, "link up");
         }
         // Link errors
-        int64_t oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
+        long long oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
         for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
                 if (oerrors > 0) {
                         rv = State_Failed;
@@ -1872,7 +1872,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_Link, State_Succeeded, link->action, "upload errors check succeeded");
                 }
         }
-        int64_t ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
+        long long ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
         for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
                 if (ierrors > 0) {
                         rv = State_Failed;
@@ -1883,7 +1883,7 @@ State_Type check_net(Service_T s) {
         }
         // Link speed
         int duplex = Link_getDuplex(s->inf.net->stats);
-        int64_t speed = Link_getSpeed(s->inf.net->stats);
+        long long speed = Link_getSpeed(s->inf.net->stats);
         for (LinkSpeed_T link = s->linkspeedlist; link; link = link->next) {
                 if (speed > 0 && link->speed) {
                         if (duplex > -1 && duplex != link->duplex)
@@ -1924,7 +1924,7 @@ State_Type check_net(Service_T s) {
         // Upload
         char buf1[10], buf2[10];
         for (Bandwidth_T upload = s->uploadbyteslist; upload; upload = upload->next) {
-                int64_t obytes;
+                long long obytes;
                 switch (upload->range) {
                         case Time_Minute:
                                 obytes = Link_getBytesOutPerMinute(s->inf.net->stats, upload->rangecount);
@@ -1945,7 +1945,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_ByteOut, State_Succeeded, upload->action, "%supload check succeeded [current upload rate %s in last %d %s]", upload->range != Time_Second ? "total " : "", Convert_bytes2str(obytes, buf1), upload->rangecount, Util_timestr(upload->range));
         }
         for (Bandwidth_T upload = s->uploadpacketslist; upload; upload = upload->next) {
-                int64_t opackets;
+                long long opackets;
                 switch (upload->range) {
                         case Time_Minute:
                                 opackets = Link_getPacketsOutPerMinute(s->inf.net->stats, upload->rangecount);
@@ -1967,7 +1967,7 @@ State_Type check_net(Service_T s) {
         }
         // Download
         for (Bandwidth_T download = s->downloadbyteslist; download; download = download->next) {
-                int64_t ibytes;
+                long long ibytes;
                 switch (download->range) {
                         case Time_Minute:
                                 ibytes = Link_getBytesInPerMinute(s->inf.net->stats, download->rangecount);
@@ -1988,7 +1988,7 @@ State_Type check_net(Service_T s) {
                         Event_post(s, Event_ByteIn, State_Succeeded, download->action, "%sdownload check succeeded [current download rate %s in last %d %s]", download->range != Time_Second ? "total " : "", Convert_bytes2str(ibytes, buf1), download->rangecount, Util_timestr(download->range));
         }
         for (Bandwidth_T download = s->downloadpacketslist; download; download = download->next) {
-                int64_t ipackets;
+                long long ipackets;
                 switch (download->range) {
                         case Time_Minute:
                                 ipackets = Link_getPacketsInPerMinute(s->inf.net->stats, download->rangecount);

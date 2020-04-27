@@ -638,7 +638,7 @@ void Socket_test(void *P) {
         Port_T p = P;
         TRY
         {
-                int64_t start = Time_micro();
+                long long start = Time_micro();
                 switch (p->family) {
                         case Socket_Unix:
                                 _testUnix(p);

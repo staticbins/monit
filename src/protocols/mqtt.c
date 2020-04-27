@@ -235,7 +235,7 @@ static void _connectRequest(mqtt_t *mqtt) {
 
         // Client ID
         char id[STRLEN] = {};
-        snprintf(id, sizeof(id), "monit-%lld", (int64_t)Run.incarnation);
+        snprintf(id, sizeof(id), "monit-%lld", (long long)Run.incarnation);
         _payload(&connect, id, MQTT_ConnectRequest_None);
 
         // Username

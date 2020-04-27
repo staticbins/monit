@@ -116,22 +116,22 @@ typedef struct Proc_T {
         int                 item_threads;
         unsigned long       item_utime;
         unsigned long       item_stime;
-        uint64_t  item_starttime;
+        unsigned long long  item_starttime;
         struct {
-                uint64_t    bytes;
-                uint64_t    bytesPhysical;
-                uint64_t    operations;
+                unsigned long long    bytes;
+                unsigned long long    bytesPhysical;
+                unsigned long long    operations;
         } read;
         struct {
-                uint64_t    bytes;
-                uint64_t    bytesPhysical;
-                uint64_t    operations;
+                unsigned long long    bytes;
+                unsigned long long    bytesPhysical;
+                unsigned long long    operations;
         } write;
         struct {
-                int64_t     open;
+                long long     open;
                 struct {
-                        int64_t soft;
-                        int64_t hard;
+                        long long soft;
+                        long long hard;
                 } limit;
         } filedescriptors;
         char                secattr[STRLEN];
@@ -153,10 +153,10 @@ static void __attribute__ ((constructor)) _constructor(void) {
 
 #define NSEC_PER_SEC    1000000000L
 
-static uint64_t old_cpu_user     = 0;
-static uint64_t old_cpu_syst     = 0;
-static uint64_t old_cpu_iowait   = 0;
-static uint64_t old_cpu_total    = 0;
+static unsigned long long old_cpu_user     = 0;
+static unsigned long long old_cpu_syst     = 0;
+static unsigned long long old_cpu_iowait   = 0;
+static unsigned long long old_cpu_total    = 0;
 
 static long page_size = 0;
 
@@ -246,7 +246,7 @@ static bool _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot find process read bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 6, "\t%"PRIu64, &(proc->read.bytes)) != 1) {
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->read.bytes)) != 1) {
                                 DEBUG("system statistic error -- cannot get process read bytes\n");
                                 return false;
                         }
@@ -255,7 +255,7 @@ static bool _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot find process write bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 6, "\t%"PRIu64, &(proc->write.bytes)) != 1) {
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->write.bytes)) != 1) {
                                 DEBUG("system statistic error -- cannot get process write bytes\n");
                                 return false;
                         }
@@ -264,7 +264,7 @@ static bool _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot find process read system calls count\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 6, "\t%"PRIu64, &(proc->read.operations)) != 1) {
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->read.operations)) != 1) {
                                 DEBUG("system statistic error -- cannot get process read system calls count\n");
                                 return false;
                         }
@@ -273,7 +273,7 @@ static bool _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot find process write system calls count\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 6, "\t%"PRIu64, &(proc->write.operations)) != 1) {
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->write.operations)) != 1) {
                                 DEBUG("system statistic error -- cannot get process write system calls count\n");
                                 return false;
                         }
@@ -282,7 +282,7 @@ static bool _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot find process physical read bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 11, "\t%"PRIu64, &(proc->read.bytesPhysical)) != 1) {
+                        if (sscanf(tmp + 11, "\t%llu", &(proc->read.bytesPhysical)) != 1) {
                                 DEBUG("system statistic error -- cannot get process physical read bytes\n");
                                 return false;
                         }
@@ -291,7 +291,7 @@ static bool _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot find process physical write bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 12, "\t%"PRIu64, &(proc->write.bytesPhysical)) != 1) {
+                        if (sscanf(tmp + 12, "\t%llu", &(proc->write.bytesPhysical)) != 1) {
                                 DEBUG("system statistic error -- cannot get process physical write bytes\n");
                                 return false;
                         }
@@ -363,7 +363,7 @@ static bool _parseProcPidAttrCurrent(Proc_T proc) {
 
 // count entries in /proc/PID/fd
 static bool _parseProcFdCount(Proc_T proc) {
-        uint64_t file_count = 0;
+        unsigned long long file_count = 0;
         DIR *dirp;
         char fd_path[32];
 
@@ -411,7 +411,7 @@ static bool _parseProcFdCount(Proc_T proc) {
         return true;
 }
 
-static double _usagePercent(uint64_t previous, uint64_t current, double total) {
+static double _usagePercent(unsigned long long previous, unsigned long long current, double total) {
         if (current < previous) {
                 // The counter jumped back (observed for cpu wait metric on Linux 4.15) or wrapped
                 return 0.;
@@ -447,7 +447,7 @@ bool init_process_info_sysdep(void) {
                 char line[STRLEN];
                 systeminfo.memory.size = 0L;
                 while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "MemTotal: %"PRIu64, &systeminfo.memory.size) == 1) {
+                        if (sscanf(line, "MemTotal: %llu", &systeminfo.memory.size) == 1) {
                                 systeminfo.memory.size *= 1024;
                                 break;
                         }
@@ -464,7 +464,7 @@ bool init_process_info_sysdep(void) {
                 char line[STRLEN];
                 systeminfo.booted = 0;
                 while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "btime %"PRIu64, &systeminfo.booted) == 1) {
+                        if (sscanf(line, "btime %llu", &systeminfo.booted) == 1) {
                                 break;
                         }
                 }
@@ -516,7 +516,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].threads.self = proc.item_threads;
                         pt[count].uptime = starttime > 0 ? (systeminfo.time / 10. - (starttime + (time_t)(proc.item_starttime / hz))) : 0;
                         pt[count].cpu.time = (double)(proc.item_utime + proc.item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
-                        pt[count].memory.usage = (uint64_t)proc.item_rss * (uint64_t)page_size;
+                        pt[count].memory.usage = (unsigned long long)proc.item_rss * (unsigned long long)page_size;
                         pt[count].read.bytes = proc.read.bytes;
                         pt[count].read.bytesPhysical = proc.read.bytesPhysical;
                         pt[count].read.operations = proc.read.operations;
@@ -585,7 +585,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         unsigned long  slabreclaimable = 0UL;
         unsigned long  swap_total = 0UL;
         unsigned long  swap_free = 0UL;
-        uint64_t       zfsarcsize = 0ULL;
+        unsigned long long       zfsarcsize = 0ULL;
 
         if (! file_readProc(buf, sizeof(buf), "meminfo", -1, NULL)) {
                 LogError("system statistic error -- cannot get system memory info\n");
@@ -599,7 +599,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
          * use it. Otherwise we will attempt to calculate the amount of available memory ourself.
          */
         if ((ptr = strstr(buf, "MemAvailable:")) && sscanf(ptr + 13, "%lu", &mem_available) == 1) {
-                si->memory.usage.bytes = systeminfo.memory.size - (uint64_t)mem_available * 1024;
+                si->memory.usage.bytes = systeminfo.memory.size - (unsigned long long)mem_available * 1024;
         } else {
                 DEBUG("'MemAvailable' value not available on this system. Attempting to calculate available memory manually...\n");
                 if (! (ptr = strstr(buf, "MemFree:")) || sscanf(ptr + 8, "%lu", &mem_free) != 1) {
@@ -616,13 +616,13 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 if (f) {
                         char line[STRLEN];
                         while (fgets(line, sizeof(line), f)) {
-                                if (sscanf(line, "size %*d %"PRIu64, &zfsarcsize) == 1) {
+                                if (sscanf(line, "size %*d %llu", &zfsarcsize) == 1) {
                                         break;
                                 }
                         }
                         fclose(f);
                 }
-                si->memory.usage.bytes = systeminfo.memory.size - zfsarcsize - (uint64_t)(mem_free + buffers + cached + slabreclaimable) * 1024;
+                si->memory.usage.bytes = systeminfo.memory.size - zfsarcsize - (unsigned long long)(mem_free + buffers + cached + slabreclaimable) * 1024;
         }
 
         /* Swap */
@@ -634,8 +634,8 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 LogError("system statistic error -- cannot get swap free amount\n");
                 goto error;
         }
-        si->swap.size = (uint64_t)swap_total * 1024;
-        si->swap.usage.bytes = (uint64_t)(swap_total - swap_free) * 1024;
+        si->swap.size = (unsigned long long)swap_total * 1024;
+        si->swap.usage.bytes = (unsigned long long)(swap_total - swap_free) * 1024;
 
         return true;
 
@@ -652,17 +652,17 @@ error:
  */
 bool used_system_cpu_sysdep(SystemInfo_T *si) {
         int rv;
-        uint64_t cpu_total;      // Total CPU time
-        uint64_t cpu_user;       // Time spent in user mode
-        uint64_t cpu_nice;       // Time spent in user mode with low priority (nice)
-        uint64_t cpu_syst;       // Time spent in system mode
-        uint64_t cpu_idle;       // Time idle
-        uint64_t cpu_iowait;     // Time waiting for I/O to complete. This value is not reliable
-        uint64_t cpu_hardirq;    // Time servicing hardware interrupts
-        uint64_t cpu_softirq;    // Time servicing software interrupts
-        uint64_t cpu_steal;      // Stolen time, which is the time spent in other operating systems when running in a virtualized environment
-        uint64_t cpu_guest;      // Time spent running a virtual CPU for guest operating systems under the control of the Linux kernel
-        uint64_t cpu_guest_nice; // Time spent running a niced guest (virtual CPU for guest operating systems under the control of the Linux kernel)
+        unsigned long long cpu_total;      // Total CPU time
+        unsigned long long cpu_user;       // Time spent in user mode
+        unsigned long long cpu_nice;       // Time spent in user mode with low priority (nice)
+        unsigned long long cpu_syst;       // Time spent in system mode
+        unsigned long long cpu_idle;       // Time idle
+        unsigned long long cpu_iowait;     // Time waiting for I/O to complete. This value is not reliable
+        unsigned long long cpu_hardirq;    // Time servicing hardware interrupts
+        unsigned long long cpu_softirq;    // Time servicing software interrupts
+        unsigned long long cpu_steal;      // Stolen time, which is the time spent in other operating systems when running in a virtualized environment
+        unsigned long long cpu_guest;      // Time spent running a virtual CPU for guest operating systems under the control of the Linux kernel
+        unsigned long long cpu_guest_nice; // Time spent running a niced guest (virtual CPU for guest operating systems under the control of the Linux kernel)
         char buf[8192];
 
         if (! file_readProc(buf, sizeof(buf), "stat", -1, NULL)) {

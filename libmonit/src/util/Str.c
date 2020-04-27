@@ -142,9 +142,9 @@ int Str_parseInt(const char *s) {
 }
 
 
-int64_t Str_parseLLong(const char *s) {
+long long Str_parseLLong(const char *s) {
         char *e;
-        int64_t l;
+        long long l;
         if (STR_UNDEF(s))
                 THROW(NumberFormatException, "For input string null");
         errno = 0;
@@ -407,7 +407,7 @@ bool Str_match(const char *pattern, const char *subject) {
 
 int Str_hash(const void *x) {
         const char *s = x;
-        uint64_t h = 0, g;
+        unsigned long long h = 0, g;
         assert(x);
         while (*s) {
                 h = (h << 4) + *s++;

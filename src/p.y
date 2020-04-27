@@ -213,7 +213,7 @@ static unsigned int repeat1 = 0;
 static unsigned int repeat2 = 0;
 static Digest_Type digesttype = Digest_Cleartext;
 
-#define BITMAP_MAX (sizeof(int64_t) * 8)
+#define BITMAP_MAX (sizeof(long long) * 8)
 
 
 /* -------------------------------------------------------------- Prototypes */
@@ -312,7 +312,7 @@ static void _setSSLVersion(short version);
 #endif
 static void _unsetSSLVersion(short version);
 static void addsecurityattribute(char *, Action_Type, Action_Type);
-static void addfiledescriptors(Operator_Type, bool, int64_t, float, Action_Type, Action_Type);
+static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Type, Action_Type);
 
 %}
 
@@ -1950,7 +1950,7 @@ ppid            : IF CHANGED PPID rate1 THEN action1 {
 
 uptime          : IF UPTIME operator NUMBER time rate1 THEN action1 recovery {
                         uptimeset.operator = $<number>3;
-                        uptimeset.uptime = ((uint64_t)$4 * $<number>5);
+                        uptimeset.uptime = ((unsigned long long)$4 * $<number>5);
                         addeventaction(&(uptimeset).action, $<number>8, $<number>9);
                         adduptime(&uptimeset);
                   }
@@ -2779,7 +2779,7 @@ matchflagnot    : /* EMPTY */ {
 
 size            : IF SIZE operator NUMBER unit rate1 THEN action1 recovery {
                         sizeset.operator = $<number>3;
-                        sizeset.size = ((uint64_t)$4 * $<number>5);
+                        sizeset.size = ((unsigned long long)$4 * $<number>5);
                         addeventaction(&(sizeset).action, $<number>8, $<number>9);
                         addsize(&sizeset);
                   }
@@ -2825,7 +2825,7 @@ secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recover
                 ;
 
 filedescriptors : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
-                        addfiledescriptors($<number>3, false, (int64_t)$4, -1., $<number>7, $<number>8);
+                        addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
                   }
                 | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
                         addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
@@ -2833,7 +2833,7 @@ filedescriptors : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery
                 ;
 
 filedescriptorstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
-                        addfiledescriptors($<number>4, true, (int64_t)$5, -1., $<number>8, $<number>9);
+                        addfiledescriptors($<number>4, true, (long long)$5, -1., $<number>8, $<number>9);
                   }
                 ;
 
@@ -2863,7 +2863,7 @@ linkspeed    : IF CHANGED LINK rate1 THEN action1 recovery {
 
 linksaturation : IF SATURATION operator NUMBER PERCENT rate1 THEN action1 recovery {
                         linksaturationset.operator = $<number>3;
-                        linksaturationset.limit = (uint64_t)$4;
+                        linksaturationset.limit = (unsigned long long)$4;
                         addeventaction(&(linksaturationset).action, $<number>8, $<number>9);
                         addlinksaturation(current, &linksaturationset);
                   }
@@ -2871,7 +2871,7 @@ linksaturation : IF SATURATION operator NUMBER PERCENT rate1 THEN action1 recove
 
 upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>3;
-                        bandwidthset.limit = ((uint64_t)$4 * $<number>5);
+                        bandwidthset.limit = ((unsigned long long)$4 * $<number>5);
                         bandwidthset.rangecount = 1;
                         bandwidthset.range = $<number>6;
                         addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
@@ -2879,7 +2879,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
                   }
                 | IF TOTAL UPLOAD operator NUMBER unit totaltime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>4;
-                        bandwidthset.limit = ((uint64_t)$5 * $<number>6);
+                        bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
                         bandwidthset.rangecount = 1;
                         bandwidthset.range = $<number>7;
                         addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
@@ -2887,7 +2887,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
                   }
                 | IF TOTAL UPLOAD operator NUMBER unit NUMBER totaltime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>4;
-                        bandwidthset.limit = ((uint64_t)$5 * $<number>6);
+                        bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
                         bandwidthset.rangecount = $7;
                         bandwidthset.range = $<number>8;
                         addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
@@ -2895,7 +2895,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
                   }
                 | IF UPLOAD operator NUMBER PACKET currenttime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>3;
-                        bandwidthset.limit = (uint64_t)$4;
+                        bandwidthset.limit = (unsigned long long)$4;
                         bandwidthset.rangecount = 1;
                         bandwidthset.range = $<number>6;
                         addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
@@ -2903,7 +2903,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
                   }
                 | IF TOTAL UPLOAD operator NUMBER PACKET totaltime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>4;
-                        bandwidthset.limit = (uint64_t)$5;
+                        bandwidthset.limit = (unsigned long long)$5;
                         bandwidthset.rangecount = 1;
                         bandwidthset.range = $<number>7;
                         addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
@@ -2911,7 +2911,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
                   }
                 | IF TOTAL UPLOAD operator NUMBER PACKET NUMBER totaltime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>4;
-                        bandwidthset.limit = (uint64_t)$5;
+                        bandwidthset.limit = (unsigned long long)$5;
                         bandwidthset.rangecount = $7;
                         bandwidthset.range = $<number>8;
                         addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
@@ -2921,7 +2921,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
 
 download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>3;
-                        bandwidthset.limit = ((uint64_t)$4 * $<number>5);
+                        bandwidthset.limit = ((unsigned long long)$4 * $<number>5);
                         bandwidthset.rangecount = 1;
                         bandwidthset.range = $<number>6;
                         addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
@@ -2929,7 +2929,7 @@ download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action
                   }
                 | IF TOTAL DOWNLOAD operator NUMBER unit totaltime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>4;
-                        bandwidthset.limit = ((uint64_t)$5 * $<number>6);
+                        bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
                         bandwidthset.rangecount = 1;
                         bandwidthset.range = $<number>7;
                         addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
@@ -2937,7 +2937,7 @@ download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action
                   }
                 | IF TOTAL DOWNLOAD operator NUMBER unit NUMBER totaltime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>4;
-                        bandwidthset.limit = ((uint64_t)$5 * $<number>6);
+                        bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
                         bandwidthset.rangecount = $7;
                         bandwidthset.range = $<number>8;
                         addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
@@ -2945,7 +2945,7 @@ download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action
                   }
                 | IF DOWNLOAD operator NUMBER PACKET currenttime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>3;
-                        bandwidthset.limit = (uint64_t)$4;
+                        bandwidthset.limit = (unsigned long long)$4;
                         bandwidthset.rangecount = 1;
                         bandwidthset.range = $<number>6;
                         addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
@@ -2953,7 +2953,7 @@ download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action
                   }
                 | IF TOTAL DOWNLOAD operator NUMBER PACKET totaltime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>4;
-                        bandwidthset.limit = (uint64_t)$5;
+                        bandwidthset.limit = (unsigned long long)$5;
                         bandwidthset.rangecount = 1;
                         bandwidthset.range = $<number>7;
                         addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
@@ -2961,7 +2961,7 @@ download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action
                   }
                 | IF TOTAL DOWNLOAD operator NUMBER PACKET NUMBER totaltime rate1 THEN action1 recovery {
                         bandwidthset.operator = $<number>4;
-                        bandwidthset.limit = (uint64_t)$5;
+                        bandwidthset.limit = (unsigned long long)$5;
                         bandwidthset.rangecount = $7;
                         bandwidthset.range = $<number>8;
                         addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
@@ -3641,7 +3641,7 @@ static void addsize(Size_T ss) {
         if (s->test_changes) {
                 s->initialized = ! stat(current->path, &buf);
                 if (s->initialized)
-                        s->size = (uint64_t)buf.st_size;
+                        s->size = (unsigned long long)buf.st_size;
         }
 
         s->next = current->sizelist;
@@ -5091,7 +5091,7 @@ static void addsecurityattribute(char *value, Action_Type failed, Action_Type su
         current->secattrlist = attr;
 }
 
-static void addfiledescriptors(Operator_Type operator, bool total, int64_t value_absolute, float value_percent, Action_Type failed, Action_Type succeeded) {
+static void addfiledescriptors(Operator_Type operator, bool total, long long value_absolute, float value_percent, Action_Type failed, Action_Type succeeded) {
         Filedescriptors_T fds;
         NEW(fds);
         addeventaction(&(fds->action), failed, succeeded);

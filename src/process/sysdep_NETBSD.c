@@ -165,7 +165,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 return 0;
         }
 
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         StringBuffer_T cmdline = NULL;
         if (pflags & ProcessEngine_CollectCommandLine)
                 cmdline = StringBuffer_create(64);
@@ -178,7 +178,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].threads.self        = pinfo[i].p_nlwps;
                 pt[i].uptime              = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
                 pt[i].cpu.time            = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
-                pt[i].memory.usage        = (uint64_t)pinfo[i].p_vm_rssize * (uint64_t)pagesize;
+                pt[i].memory.usage        = (unsigned long long)pinfo[i].p_vm_rssize * (unsigned long long)pagesize;
                 pt[i].zombie              = pinfo[i].p_stat == SZOMB ? true : false;
                 pt[i].read.bytes          = -1;
                 pt[i].read.bytesPhysical  = -1;
@@ -239,9 +239,9 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 si->swap.size = 0ULL;
                 return false;
         }
-        si->memory.usage.bytes = (uint64_t)(vm.active + vm.wired) * (uint64_t)vm.pagesize;
-        si->swap.size = (uint64_t)vm.swpages * (uint64_t)vm.pagesize;
-        si->swap.usage.bytes = (uint64_t)vm.swpginuse * (uint64_t)vm.pagesize;
+        si->memory.usage.bytes = (unsigned long long)(vm.active + vm.wired) * (unsigned long long)vm.pagesize;
+        si->swap.size = (unsigned long long)vm.swpages * (unsigned long long)vm.pagesize;
+        si->swap.usage.bytes = (unsigned long long)vm.swpginuse * (unsigned long long)vm.pagesize;
         return true;
 }
 
@@ -252,7 +252,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
  */
 bool used_system_cpu_sysdep(SystemInfo_T *si) {
         int       mib[] = {CTL_KERN, KERN_CP_TIME};
-        int64_t cp_time[CPUSTATES];
+        long long cp_time[CPUSTATES];
         long      total_new = 0;
         long      total;
         size_t    len;

@@ -58,7 +58,7 @@ typedef struct {
         int32_t operation;       // operation type
         // OP_REPLY
         int32_t flags;           // flags
-        int64_t cursorId;        // cursor id
+        long long cursorId;        // cursor id
         int32_t cursorStart;     // cursor start
         int32_t returned;        // returned documents count
         unsigned char *response; // BSON encoded response object
