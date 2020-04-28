@@ -101,15 +101,15 @@
 
 #include "Ssl.h"
 #include "Address.h"
-
+#include "statistics/Statistics.h"
+#include "net/socket.h"
+#include "net/Link.h"
 
 // libmonit
 #include "system/Command.h"
 #include "system/Process.h"
 #include "util/Str.h"
 #include "util/StringBuffer.h"
-#include "system/Link.h"
-#include "statistics/Statistics.h"
 #include "thread/Thread.h"
 
 
@@ -382,8 +382,6 @@ typedef enum {
 #define LIMIT_STARTTIMEOUT      30000
 #define LIMIT_RESTARTTIMEOUT    30000
 
-
-#include "socket.h"
 
 
 /** ------------------------------------------------- Special purpose macros */

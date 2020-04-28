@@ -33,10 +33,11 @@ monit_SOURCES	= src/y.tab.c \
 		  src/log.c \
 		  src/md5.c \
 		  src/md5_crypt.c \
-		  src/net.c \
+		  src/net/net.c \
+                  src/net/socket.c \
+                  src/net/Link.c \
 		  src/sha1.c \
 		  src/signal.c \
-		  src/socket.c \
 		  src/spawn.c \
 		  src/state.c \
 		  src/util.c \
@@ -91,7 +92,8 @@ monit_SOURCES	= src/y.tab.c \
 		  src/protocols/websocket.c \
 		  src/ssl/Ssl.c \
 		  src/terminal/Box.c \
-		  src/terminal/Color.c
+		  src/terminal/Color.c \
+                  src/statistics/Statistics.c
 
 monit_LDADD 	= libmonit/libmonit.la
 monit_LDFLAGS 	= -static $(EXTLDFLAGS)

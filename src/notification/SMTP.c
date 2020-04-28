@@ -58,8 +58,6 @@
 #endif
 
 #include "monit.h"
-#include "net.h"
-#include "socket.h"
 #include "base64.h"
 #include "SMTP.h"
 

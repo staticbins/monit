@@ -29,7 +29,6 @@
 #include "config.h"
 
 #include "monit.h"
-#include "socket.h"
 
 /* Protocols supported */
 typedef enum {

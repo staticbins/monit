@@ -57,7 +57,6 @@
 #endif
 
 #include "monit.h"
-#include "net.h"
 #include "engine.h"
 
 // libmonit

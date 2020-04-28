@@ -50,7 +50,6 @@
 
 #include "monit.h"
 #include "event.h"
-#include "net.h"
 #include "alert.h"
 #include "SMTP.h"
 

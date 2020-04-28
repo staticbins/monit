@@ -30,8 +30,6 @@
 #include <stdio.h>
 
 #include "monit.h"
-#include "net.h"
-#include "socket.h"
 #include "httpstatus.h"
 
 /* Server masquerade */

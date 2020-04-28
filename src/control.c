@@ -54,8 +54,6 @@
 
 #include "monit.h"
 #include "ProcessTree.h"
-#include "net.h"
-#include "socket.h"
 #include "event.h"
 #include "util.h"
 #include "system/Time.h"

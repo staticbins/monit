@@ -185,6 +185,9 @@ AC_CHECK_HEADERS([ \
         uvm/uvm_extern.h \
         uvm/uvm_param.h \
         vm/vm.h \
+        net/if_media.h \
+        net/if_dl.h \
+        net/route.h
 	])
 
 AC_CHECK_HEADERS([ \
@@ -238,7 +241,7 @@ AC_CHECK_HEADERS([ \
          #include <netinet/ip.h>
          #endif
         ])
-
+        
 AC_CHECK_HEADERS([ \
 	netinet/icmp6.h \
         ],

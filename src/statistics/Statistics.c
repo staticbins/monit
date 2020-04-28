@@ -23,10 +23,9 @@
  */
 
 
-#include "Config.h"
+#include "config.h"
 
-
-#include "Statistics.h"
+#include "monit.h"
 
 
 /**

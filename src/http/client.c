@@ -53,8 +53,6 @@
 #endif
 
 #include "monit.h"
-#include "net.h"
-#include "socket.h"
 #include "ProcessTree.h"
 #include "device.h"
 #include "Color.h"

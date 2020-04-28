@@ -86,10 +86,9 @@
 
 #include "monit.h"
 #include "engine.h"
-#include "net.h"
 #include "processor.h"
 #include "cervlet.h"
-#include "socket.h"
+#include "net/net.h"
 #include "SslServer.h"
 
 // libmonit

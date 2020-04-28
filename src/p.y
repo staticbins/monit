@@ -121,7 +121,6 @@
 #include <openssl/ssl.h>
 #endif
 
-#include "net.h"
 #include "monit.h"
 #include "protocol.h"
 #include "engine.h"

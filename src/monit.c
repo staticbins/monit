@@ -75,7 +75,6 @@
 #endif
 
 #include "monit.h"
-#include "net.h"
 #include "ProcessTree.h"
 #include "state.h"
 #include "event.h"

@@ -42,7 +42,6 @@
 #endif
 
 #include "monit.h"
-#include "socket.h"
 #include "event.h"
 #include "MMonit.h"
 

@@ -96,9 +96,8 @@
 #include "monit.h"
 #include "alert.h"
 #include "event.h"
-#include "socket.h"
-#include "net.h"
 #include "device.h"
+#include "net/net.h"
 #include "ProcessTree.h"
 #include "protocol.h"
 
