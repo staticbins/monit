@@ -37,24 +37,26 @@ typedef enum {
 
 
 typedef enum {
-        SSL_Auto,
-        SSL_V2,
-        SSL_V3,
-        SSL_TLSV1,
-        SSL_TLSV11,
-        SSL_TLSV12,
-        SSL_TLSV13
+        SSL_Auto    = 0x0,
+        SSL_V2      = 0x1,
+        SSL_V3      = 0x2,
+        SSL_TLSV1   = 0x4,
+        SSL_TLSV11  = 0x8,
+        SSL_TLSV12  = 0x10,
+        SSL_TLSV13  = 0x20
 } __attribute__((__packed__)) Ssl_Version;
 
 
 typedef struct SslOptions_T {
         Ssl_Flags flags;                                            /**< SSL flags */
+        short version;                       /**< The list of allowed SSL versions */
         short verify;             /**< true if certificate verification is enabled */
         short allowSelfSigned;     /**< true if self signed certificate is allowed */
-        short version;                  /**< The SSL version to use for connection */
         short checksumType;                                     /**< Checksum type */
         char *checksum;     /**< The expected checksum of the server's certificate */
         char *pemfile;                            /**< Optional server certificate */
+        char *pemchain;         /**< Optional alternative server certificate chain */
+        char *pemkey;                 /**< Optional alternative server private key */
         char *clientpemfile;                      /**< Optional client certificate */
         char *ciphers;                               /**< Allowed SSL ciphers list */
         char *CACertificateFile;             /**< Path to CA certificates PEM file */
@@ -90,11 +92,13 @@ void Ssl_stop(void);
 void Ssl_threadCleanup(void);
 
 
+#ifdef OPENSSL_FIPS
 /**
  * Enable or disable FIPS-140 mode
  * @param enabled true to enable FIPS-140 mode
  */
 void Ssl_setFipsMode(bool enabled);
+#endif
 
 
 /**
@@ -139,7 +143,7 @@ void Ssl_close(T C);
  * @param timeout Milliseconds to wait for data to be written
  * @return Number of bytes written or -1 if failed
  */
-int Ssl_write(T C, void *b, int size, int timeout);
+int Ssl_write(T C, const void *b, int size, int timeout);
 
 
 /**

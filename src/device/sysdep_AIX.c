@@ -75,6 +75,7 @@
 #endif
 
 #include "monit.h"
+#include "device.h"
 
 
 /* ----------------------------------------------------- MARK: - Definitions */

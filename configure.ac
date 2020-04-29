@@ -6,7 +6,7 @@ AC_PREREQ([2.53])
 # Note: in  case of beta subversion, use underscore "_" rather then dash "-"
 # since RPM doesn't allow dash in Version
 # Example: 5.0_beta2
-AC_INIT([monit], [6.0.0], [monit-general@nongnu.org])
+AC_INIT([monit], [5.27.0], [monit-general@nongnu.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
@@ -46,6 +46,11 @@ else
 	POD2MANFLAGS="--center 'User Commands' --release AC_PACKAGE_VERSION --date='www.mmonit.com' --lax"
 	AC_SUBST([POD2MANFLAGS])
 fi
+
+AX_CHECK_COMPILE_FLAG([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
+AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"])
+AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [CFLAGS="$CFLAGS -fcf-protection=full"])
+AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [CFLAGS="$CFLAGS -fstack-clash-protection"])
 
 
 # ------------------------------------------------------------------------
@@ -171,7 +176,6 @@ AC_CHECK_HEADERS([ \
 	loadavg.h \
 	locale.h \
 	lvm.h \
-        mach/boolean.h \
         mach/host_info.h \
         mach/mach.h \
         mach/mach_host.h \
@@ -226,6 +230,7 @@ AC_CHECK_HEADERS([ \
 	sys/statfs.h \
 	sys/statvfs.h \
 	sys/sysinfo.h \
+	sys/sysmacros.h \
 	sys/systemcfg.h \
 	sys/time.h \
 	sys/tree.h \
@@ -242,7 +247,9 @@ AC_CHECK_HEADERS([ \
         uvm/uvm_extern.h \
         uvm/uvm_param.h \
         vm/vm.h \
-        inttypes.h \
+        net/if_media.h \
+        net/if_dl.h \
+        net/route.h
 	])
 
 AC_CHECK_HEADERS([ \
@@ -315,7 +322,7 @@ AC_CHECK_HEADERS([ \
          #include <netinet/ip.h>
          #endif
         ])
-
+        
 AC_CHECK_HEADERS([ \
 	netinet/icmp6.h \
         ],
@@ -486,10 +493,15 @@ AC_TRY_LINK([
 # Compiler
 # ------------------------------------------------------------------------
 
-# Compiler characteristics
+AC_PROG_CC
+AC_PROG_CXX
 AC_C_CONST
 AC_C_BIGENDIAN
+# Define _GNU_SOURCE so we can have Posix headers etc included. We use the
+# -std=cXX compiler switch which only include a minimum of C headers
+CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
+# Compiler; tune warnings and make the char type unsigned
 CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
 # does this compiler support -Wno-pointer-sign ?
 svd_CFLAGS="$CFLAGS"
@@ -784,6 +796,45 @@ fi
 
 
 # ------------------------------------------------------------------------
+# AddressSanitizer
+# ------------------------------------------------------------------------
+
+AC_MSG_CHECKING([for AddressSanitizer support])
+AC_ARG_WITH(asan,
+    [  --with-asan             enable the use of AddressSanitizer (default: disabled)],
+    [
+        dnl Check the withvalue
+        if test "x$withval" = "xno" ; then
+            use_asan=0
+            AC_MSG_RESULT([disabled])
+        fi
+        if test "x$withval" = "xyes" ; then
+            use_asan=1
+            AC_MSG_RESULT([enabled])
+        fi
+    ],
+    [
+        use_asan=0
+        AC_MSG_RESULT([disabled])
+    ]
+)
+
+if test "$use_asan" = "1"; then
+        AX_CHECK_COMPILE_FLAG([-fsanitize=address], [CFLAGS="$CFLAGS -fsanitize=address"])
+        AX_CHECK_COMPILE_FLAG([-fno-omit-frame-pointer], [CFLAGS="$CFLAGS -fno-omit-frame-pointer"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=bool], [CFLAGS="$CFLAGS -fsanitize=bool"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=enum], [CFLAGS="$CFLAGS -fsanitize=enum"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=float-divide-by-zero], [CFLAGS="$CFLAGS -fsanitize=float-divide-by-zero"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize-address-use-after-scope], [CFLAGS="$CFLAGS -fsanitize-address-use-after-scope"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=signed-integer-overflow], [CFLAGS="$CFLAGS -fsanitize=signed-integer-overflow"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=vla-bound], [CFLAGS="$CFLAGS -fsanitize=vla-bound"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=bounds-strict], [CFLAGS="$CFLAGS -fsanitize=bounds-strict"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=null], [CFLAGS="$CFLAGS -fsanitize=null "])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=object-size], [CFLAGS="$CFLAGS -fsanitize=object-size"])
+fi
+
+
+# ------------------------------------------------------------------------
 # SSL Code
 # ------------------------------------------------------------------------
 
@@ -1009,35 +1060,9 @@ if test "$use_sslstatic" = "1" -o "$use_ssl" = "1"; then
                 AC_DEFINE([HAVE_SSLV2], 1, [Define to 1 if you have openssl with SSLv2])
         fi
 
-        AC_MSG_CHECKING([for TLSv1.1])
-        AC_LINK_IFELSE(
-                [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [TLSv1_1_method()])],
-                [tlsv11=yes],
-                [tlsv11=no])
-        AC_MSG_RESULT($tlsv11)
-        if test "$tlsv11" = "yes" ; then
-                AC_DEFINE([HAVE_TLSV1_1], 1, [Define to 1 if you have openssl with TLSv1.1])
-        fi
-
-        AC_MSG_CHECKING([for TLSv1.2])
-        AC_LINK_IFELSE(
-                [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [TLSv1_2_method()])],
-                [tlsv12=yes],
-                [tlsv12=no])
-        AC_MSG_RESULT($tlsv12)
-        if test "$tlsv12" = "yes" ; then
-                AC_DEFINE([HAVE_TLSV1_2], 1, [Define to 1 if you have openssl with TLSv1.2])
-        fi
-
-        AC_MSG_CHECKING([for TLSv1.3])
-        AC_LINK_IFELSE(
-                [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [TLSv1_3_method()])],
-                [tlsv13=yes],
-                [tlsv13=no])
-        AC_MSG_RESULT($tlsv13)
-        if test "$tlsv13" = "yes" ; then
-                AC_DEFINE([HAVE_TLSV1_3], 1, [Define to 1 if you have openssl with TLSv1.3])
-        fi
+        AC_CHECK_DECL([SSL_OP_NO_TLSv1_1], [AC_DEFINE([HAVE_TLSV1_1], 1, [Define to 1 if you have openssl with TLSv1.1])], [], [[#include <openssl/ssl.h>]])
+        AC_CHECK_DECL([SSL_OP_NO_TLSv1_2], [AC_DEFINE([HAVE_TLSV1_2], 1, [Define to 1 if you have openssl with TLSv1.2])], [], [[#include <openssl/ssl.h>]])
+        AC_CHECK_DECL([SSL_OP_NO_TLSv1_3], [AC_DEFINE([HAVE_TLSV1_3], 1, [Define to 1 if you have openssl with TLSv1.3])], [], [[#include <openssl/ssl.h>]])
 
         AC_MSG_CHECKING([for EC_KEY support])
         AC_LINK_IFELSE(
@@ -1136,54 +1161,14 @@ echo "           pid file location: ${piddir}"
 echo "           Install directory: ${prefix}"
 echo
 
-cat <<EOT
-+------------------------------------------------------------+
-| License:                                                   |
-| This is Open Source Software and use is subject to the GNU |
-| AFFERO GENERAL PUBLIC LICENSE version 3, available in this |
-| distribution in the file COPYING.                          |
-|                                                            |
-| By continuing this installation process, you are bound by  |
-| the terms of this license agreement. If you do not agree   |
-| with the terms of this license, you must abort the         |
-| installation process at this point.                        |
-+------------------------------------------------------------+
-| Monit has been configured with the following options:      |
-|                                                            |
-EOT
-if test "xfalse" = "x$zlib"; then
-echo "|   Compression:                                  DISABLED   |"
-else
-echo "|   Compression:                                  ENABLED    |"
-fi
-if test "$use_pam" = "1"; then
-echo "|   PAM support:                                  ENABLED    |"
-else
-echo "|   PAM support:                                  DISABLED   |"
-fi
-if test "$use_sslstatic" = "1" -o "$use_ssl" = "1"; then
-echo "|   SSL support:                                  ENABLED    |"
-else
-echo "|   SSL support:                                  DISABLED   |"
-fi
-if test "$use_largefiles" = "1"; then
-echo "|   Large files support:                          ENABLED    |"
-else
-echo "|   Large files support:                          DISABLED   |"
-fi
-if test "$use_ipv6" = "1"; then
-echo "|   IPv6 support:                                 ENABLED    |"
-else
-echo "|   IPv6 support:                                 DISABLED   |"
-fi
-if test "x1" = "x$OPTIMIZED"; then
-echo "|   Optimized:                                    ENABLED    |"
-else
-echo "|   Optimized:                                    DISABLED   |"
-fi
-if test "xfalse" = "x$profile"; then
-echo "|   Profiling:                                    DISABLED   |"
-else
-echo "|   Profiling:                                    ENABLED    |"
-fi
-echo "+------------------------------------------------------------+"
+AX_INFO_AGPL()
+AX_INFO_TITLE([Monit has been configured with the following options:])
+AX_INFO_ENABLED([Compression:],           [test "xfalse" != "x$zlib"])
+AX_INFO_ENABLED([PAM support:],           [test "$use_pam" = "1"])
+AX_INFO_ENABLED([SSL support:],           [test "$use_sslstatic" = "1" -o "$use_ssl" = "1"])
+AX_INFO_ENABLED([Large files support:],   [test "$use_largefiles" = "1"])
+AX_INFO_ENABLED([ASAN support:],          [test "$use_asan" = "1"])
+AX_INFO_ENABLED([IPv6 support:],          [test "$use_ipv6" = "1"])
+AX_INFO_ENABLED([Optimized:],             [test "x1" = "x$OPTIMIZED"])
+AX_INFO_ENABLED([Profiling:],             [test "xfalse" != "x$profile"])
+AX_INFO_BREAK()

@@ -45,6 +45,7 @@
 #endif
 
 #include "md5.h"
+#include "md5_crypt.h"
 
 
 /* 0 ... 63 => ascii - 64 */

@@ -61,6 +61,7 @@ struct T {
 /* ---------------------------------------------------------------- Private */
 
 
+__attribute__((format (printf, 2, 0)))
 static inline void _append(T S, const char *s, va_list ap) {
         va_list ap_copy;
         while (true) {
@@ -154,7 +155,7 @@ int StringBuffer_replace(T S, const char *a, const char *b) {
                         size_t diff = bl - strlen(a);
                         if (diff > 0) {
                                 size_t required = (diff * n) + S->used + 1;
-                                if (required >= S->length) {
+                                if (required >= (size_t)S->length) {
                                         S->length = (int)required;
                                         RESIZE(S->buffer, S->length);
                                 }

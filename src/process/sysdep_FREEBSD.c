@@ -152,7 +152,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 kvm_close(kvm_handle);
                 return 0;
         }
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
 
         ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
@@ -160,19 +160,23 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         if (pflags & ProcessEngine_CollectCommandLine)
                 cmdline = StringBuffer_create(64);
         for (int i = 0; i < treesize; i++) {
-                pt[i].pid              = pinfo[i].ki_pid;
-                pt[i].ppid             = pinfo[i].ki_ppid;
-                pt[i].cred.uid         = pinfo[i].ki_ruid;
-                pt[i].cred.euid        = pinfo[i].ki_uid;
-                pt[i].cred.gid         = pinfo[i].ki_rgid;
-                pt[i].threads.self     = pinfo[i].ki_numthreads;
-                pt[i].uptime           = systeminfo.time / 10. - pinfo[i].ki_start.tv_sec;
-                pt[i].cpu.time         = (double)pinfo[i].ki_runtime / 100000.;
-                pt[i].memory.usage     = (uint64_t)pinfo[i].ki_rssize * (uint64_t)pagesize;
-                pt[i].read.operations  = pinfo[i].ki_rusage.ru_inblock;
-                pt[i].write.operations = pinfo[i].ki_rusage.ru_oublock;
-                pt[i].read.time = pt[i].write.time = now;
-                pt[i].zombie           = pinfo[i].ki_stat == SZOMB ? true : false;
+                pt[i].pid                 = pinfo[i].ki_pid;
+                pt[i].ppid                = pinfo[i].ki_ppid;
+                pt[i].cred.uid            = pinfo[i].ki_ruid;
+                pt[i].cred.euid           = pinfo[i].ki_uid;
+                pt[i].cred.gid            = pinfo[i].ki_rgid;
+                pt[i].threads.self        = pinfo[i].ki_numthreads;
+                pt[i].uptime              = systeminfo.time / 10. - pinfo[i].ki_start.tv_sec;
+                pt[i].cpu.time            = (double)pinfo[i].ki_runtime / 100000.;
+                pt[i].memory.usage        = (unsigned long long)pinfo[i].ki_rssize * (unsigned long long)pagesize;
+                pt[i].read.bytes          = -1;
+                pt[i].read.bytesPhysical  = -1;
+                pt[i].read.operations     = pinfo[i].ki_rusage.ru_inblock;
+                pt[i].write.bytes         = -1;
+                pt[i].write.bytesPhysical = -1;
+                pt[i].write.operations    = pinfo[i].ki_rusage.ru_oublock;
+                pt[i].read.time           = pt[i].write.time = now;
+                pt[i].zombie              = pinfo[i].ki_stat == SZOMB ? true : false;
                 if (pflags & ProcessEngine_CollectCommandLine) {
                         char **args = kvm_getargv(kvm_handle, &pinfo[i], 0);
                         if (args) {
@@ -235,7 +239,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 LogError("system statistics error -- wired memory usage statics error\n");
                 return false;
         }
-        uint64_t arcsize = 0ULL;
+        unsigned long long arcsize = 0ULL;
         len = sizeof(arcsize);
         if (sysctlbyname("kstat.zfs.misc.arcstats.size", &arcsize, &len, NULL, 0) == 0) {
                 if (len != sizeof(arcsize)) {
@@ -243,7 +247,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                         return false;
                 }
         }
-        si->memory.usage.bytes = (uint64_t)(active + wired) * (uint64_t)pagesize - arcsize;
+        si->memory.usage.bytes = (unsigned long long)(active + wired) * (unsigned long long)pagesize - arcsize;
 
         /* Swap */
         int mib[16] = {};
@@ -271,8 +275,8 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 used  += xsw.xsw_used;
                 n++;
         }
-        si->swap.size = (uint64_t)total * (uint64_t)pagesize;
-        si->swap.usage.bytes = (uint64_t)used * (uint64_t)pagesize;
+        si->swap.size = (unsigned long long)total * (unsigned long long)pagesize;
+        si->swap.usage.bytes = (unsigned long long)used * (unsigned long long)pagesize;
         return true;
 }
 
@@ -308,11 +312,29 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
         si->cpu.usage.user = (total > 0) ? (100. * (double)(cp_time[CP_USER] - cpu_user_old) / total) : -1.;
         si->cpu.usage.system = (total > 0) ? (100. * (double)(cp_time[CP_SYS] - cpu_syst_old) / total) : -1.;
-        si->cpu.usage.wait = 0.; /* there is no wait statistic available */
+        si->cpu.usage.iowait = 0.; /* there is no wait statistic available */
 
         cpu_user_old = cp_time[CP_USER];
         cpu_syst_old = cp_time[CP_SYS];
 
+        return true;
+}
+
+
+bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+        // Open files
+        size_t len = sizeof(si->filedescriptors.allocated);
+        if (sysctlbyname("kern.openfiles", &si->filedescriptors.allocated, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.openfiles failed: %s\n", STRERROR);
+                return false;
+        }
+        // Max files
+        int mib[2] = {CTL_KERN, KERN_MAXFILES};
+        len = sizeof(si->filedescriptors.maximum);
+        if (sysctl(mib, 2, &si->filedescriptors.maximum, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.maxfiles failed: %s\n", STRERROR);
+                return false;
+        }
         return true;
 }
 

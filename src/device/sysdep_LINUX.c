@@ -70,7 +70,12 @@
 #include <fcntl.h>
 #endif
 
+#ifdef HAVE_SYS_SYSMACROS_H
+#include <sys/sysmacros.h>
+#endif
+
 #include "monit.h"
+#include "device.h"
 
 // libmonit
 #include "io/File.h"
@@ -115,7 +120,7 @@ static bool _getDiskUsage(void *_inf) {
 }
 
 
-static bool _getDummyDiskActivity(void *_inf) {
+static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
         return true;
 }
 
@@ -127,7 +132,7 @@ static bool _getCifsDiskActivity(void *_inf) {
                 LogError("Cannot open %s\n", CIFSSTAT);
                 return false;
         }
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         char line[PATH_MAX];
         bool found = false;
         while (fgets(line, sizeof(line), f)) {
@@ -140,9 +145,9 @@ static bool _getCifsDiskActivity(void *_inf) {
                 } else if (found) {
                         char label1[256];
                         char label2[256];
-                        uint64_t operations;
-                        uint64_t bytes;
-                        if (sscanf(line, "%255[^:]: %"PRIu64" %255[^:]: %"PRIu64, label1, &operations, label2, &bytes) == 4) {
+                        unsigned long long operations;
+                        unsigned long long bytes;
+                        if (sscanf(line, "%255[^:]: %llu %255[^:]: %llu", label1, &operations, label2, &bytes) == 4) {
                                 if (Str_isEqual(label1, "Reads") && Str_isEqual(label2, "Bytes")) {
                                         Statistics_update(&(inf->filesystem->read.bytes), now, bytes);
                                         Statistics_update(&(inf->filesystem->read.operations), now, operations);
@@ -166,9 +171,9 @@ static bool _getNfsDiskActivity(void *_inf) {
                 LogError("Cannot open %s\n", NFSSTAT);
                 return false;
         }
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         char line[PATH_MAX];
-        char pattern[PATH_MAX];
+        char pattern[2 * PATH_MAX];
         bool found = false;
         snprintf(pattern, sizeof(pattern), "device %s ", inf->filesystem->object.device);
         while (fgets(line, sizeof(line), f)) {
@@ -176,11 +181,11 @@ static bool _getNfsDiskActivity(void *_inf) {
                         found = true;
                 } else if (found) {
                         char name[256];
-                        uint64_t operations;
-                        uint64_t bytesSent;
-                        uint64_t bytesReceived;
-                        uint64_t time;
-                        if (sscanf(line, " %255[^:]: %"PRIu64" %*u %*u %"PRIu64 " %"PRIu64" %*u %*u %"PRIu64, name, &operations, &bytesSent, &bytesReceived, &time) == 5) {
+                        unsigned long long operations;
+                        unsigned long long bytesSent;
+                        unsigned long long bytesReceived;
+                        unsigned long long time;
+                        if (sscanf(line, " %255[^:]: %llu %*u %*u %llu %llu %*u %*u %llu", name, &operations, &bytesSent, &bytesReceived, &time) == 5) {
                                 if (Str_isEqual(name, "READ")) {
                                         Statistics_update(&(inf->filesystem->time.read), now, time / 1000.); // us -> ms
                                         Statistics_update(&(inf->filesystem->read.bytes), now, bytesReceived);
@@ -201,17 +206,17 @@ static bool _getNfsDiskActivity(void *_inf) {
 
 static bool _getZfsDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        char path[PATH_MAX];
+        char path[2 * PATH_MAX];
         snprintf(path, sizeof(path), "/proc/spl/kstat/zfs/%s/io", inf->filesystem->object.key);
         FILE *f = fopen(path, "r");
         if (f) {
                 char line[STRLEN];
-                uint64_t now = Time_milli();
-                uint64_t waitTime = 0ULL, runTime = 0ULL;
-                uint64_t readOperations = 0ULL, readBytes = 0ULL;
-                uint64_t writeOperations = 0ULL, writeBytes = 0ULL;
+                unsigned long long now = Time_milli();
+                unsigned long long waitTime = 0ULL, runTime = 0ULL;
+                unsigned long long readOperations = 0ULL, readBytes = 0ULL;
+                unsigned long long writeOperations = 0ULL, writeBytes = 0ULL;
                 while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "%"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64" %*u %*u %"PRIu64"", &readBytes, &writeBytes, &readOperations, &writeOperations, &waitTime, &runTime) == 6) {
+                        if (sscanf(line, "%llu %llu %llu %llu %llu %*u %*u %llu", &readBytes, &writeBytes, &readOperations, &writeOperations, &waitTime, &runTime) == 6) {
                                 Statistics_update(&(inf->filesystem->read.bytes), now, readBytes);
                                 Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
                                 Statistics_update(&(inf->filesystem->write.bytes), now, writeBytes);
@@ -229,16 +234,88 @@ static bool _getZfsDiskActivity(void *_inf) {
 }
 
 
+static bool _getVxfsDiskActivity(void *_inf) {
+        Info_T inf = _inf;
+
+        // Get the major and minor node number to find the statistic data.
+        struct stat statbuf;
+        unsigned int st_major, st_minor;
+        unsigned int major = 0, minor = 0;
+
+        if (stat(inf->filesystem->object.device, &statbuf) < 0) {
+                return false;
+        }
+        st_major = major(statbuf.st_rdev);
+        st_minor = minor(statbuf.st_rdev);
+
+        // Try to find the statistic data in the sysfs first.
+        char path[PATH_MAX];
+        snprintf(path, sizeof(path), "/sys/dev/block/%u:%u/stat", st_major, st_minor);
+        FILE *f = fopen(path, "r");
+        if (f) {
+                unsigned long long now = Time_milli();
+                unsigned long long readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
+                unsigned long long writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
+                if (fscanf(f, "%llu %*u %llu %llu %llu %*u %llu %llu %*u %*u %*u", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
+                        LogError("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
+                        fclose(f);
+                        return false;
+                }
+                Statistics_update(&(inf->filesystem->time.read), now, readTime);
+                Statistics_update(&(inf->filesystem->read.bytes), now, readSectors * 512);
+                Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
+                Statistics_update(&(inf->filesystem->time.write), now, writeTime);
+                Statistics_update(&(inf->filesystem->write.bytes), now, writeSectors * 512);
+                Statistics_update(&(inf->filesystem->write.operations), now, writeOperations);
+                fclose(f);
+                return true;
+        }
+        DEBUG("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
+
+        // Use the procfs file for backup purpose only.
+        // It should not used as main data collector, it support kernels >= 2.6.25 format only, too.
+        f = fopen(DISKSTAT, "r");
+        if (f) {
+                unsigned long long now = Time_milli();
+                unsigned long long readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
+                unsigned long long writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
+                char line[PATH_MAX];
+                while (fgets(line, sizeof(line), f)) {
+                        char name[256] = {};
+
+                        // Traverse the /proc/diskstats to have the statistics.
+                        // The kernels >= 2.6.25 format with 11 fields is supported only.
+                        if (fscanf(f, "%u %u %255s %llu %*u %llu %llu %llu %*u %llu %llu %*u %*u %*u", &major, &minor, name, &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) == 9 && major == st_major && minor == st_minor) {
+                                Statistics_update(&(inf->filesystem->time.read), now, readTime);
+                                Statistics_update(&(inf->filesystem->read.bytes), now, readSectors * 512);
+                                Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
+                                Statistics_update(&(inf->filesystem->time.write), now, writeTime);
+                                Statistics_update(&(inf->filesystem->write.bytes), now, writeSectors * 512);
+                                Statistics_update(&(inf->filesystem->write.operations), now, writeOperations);
+                                fclose(f);
+                                return true;
+                        }
+                }
+                fclose(f);
+                DEBUG("filesystem statistic error: cannot find device number %u %u for %s\n", st_major, st_minor, inf->filesystem->object.device);
+        } else {
+                DEBUG("filesystem statistic error: cannot read %s -- %s\n", DISKSTAT, STRERROR);
+        }
+        // Always true to get the disk usage, at least.
+        return true;
+}
+
+
 static bool _getSysfsBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        char path[PATH_MAX];
+        char path[2 * PATH_MAX];
         snprintf(path, sizeof(path), "/sys/class/block/%s/stat", inf->filesystem->object.key);
         FILE *f = fopen(path, "r");
         if (f) {
-                uint64_t now = Time_milli();
-                uint64_t readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
-                uint64_t writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
-                if (fscanf(f, "%"PRIu64" %*u %"PRIu64" %"PRIu64" %"PRIu64" %*u %"PRIu64" %"PRIu64" %*u %*u %*u", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
+                unsigned long long now = Time_milli();
+                unsigned long long readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
+                unsigned long long writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
+                if (fscanf(f, "%llu %*u %llu %llu %llu %*u %llu %llu %*u %*u %*u", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
                         fclose(f);
                         LogError("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
                         return false;
@@ -261,16 +338,16 @@ static bool _getProcfsBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
         FILE *f = fopen(DISKSTAT, "r");
         if (f) {
-                uint64_t now = Time_milli();
-                uint64_t readOperations = 0ULL, readSectors = 0ULL;
-                uint64_t writeOperations = 0ULL, writeSectors = 0ULL;
+                unsigned long long now = Time_milli();
+                unsigned long long readOperations = 0ULL, readSectors = 0ULL;
+                unsigned long long writeOperations = 0ULL, writeSectors = 0ULL;
                 char line[PATH_MAX];
                 while (fgets(line, sizeof(line), f)) {
                         char name[256] = {};
                         // Fallback for kernels < 2.6.25: the /proc/diskstats used to have just 4 statistics, the file is present on >= 2.6.25 too and has 11 fields (same format as /sys/class/block/<NAME>/stat), but we use sysfs for it
                         // as we read the given partition directly instead of traversing the whole filesystems list. In this function we expect the old 4-statistics format - if it should be ever used as main data collector, it needs to
                         // be modified to support >= 2.6.25 format too.
-                        if (fscanf(f, " %*d %*d %255s %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64, name, &readOperations, &readSectors, &writeOperations, &writeSectors) == 5 && Str_isEqual(name, inf->filesystem->object.key)) {
+                        if (fscanf(f, " %*d %*d %255s %llu %llu %llu %llu", name, &readOperations, &readSectors, &writeOperations, &writeSectors) == 5 && Str_isEqual(name, inf->filesystem->object.key)) {
                                 Statistics_update(&(inf->filesystem->read.bytes), now, readSectors * 512);
                                 Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
                                 Statistics_update(&(inf->filesystem->write.bytes), now, writeSectors * 512);
@@ -332,6 +409,11 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                                 // Need base zpool name for /proc/spl/kstat/zfs/<NAME>/io lookup:
                                 snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s", inf->filesystem->object.device);
                                 Str_replaceChar(inf->filesystem->object.key, '/', 0);
+                        } else if (IS(mnt->mnt_type, "vxfs")) {
+                                // VXFS, Veritas FS
+                                inf->filesystem->object.getDiskActivity = _getVxfsDiskActivity;
+                                // Use device major and minor number lookup in sysfs or procfs.
+                                snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s", inf->filesystem->object.device);
                         } else {
                                 if (realpath(mnt->mnt_fsname, inf->filesystem->object.key)) {
                                         // Need base name for /sys/class/block/<NAME>/stat or /proc/diskstats lookup:
@@ -395,7 +477,7 @@ static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char 
 /* --------------------------------------- Static constructor and destructor */
 
 
-static void __attribute__ ((constructor)) _constructor() {
+static void __attribute__ ((constructor)) _constructor(void) {
         struct stat sb;
         _statistics.fd = -1;
         _statistics.generation++; // First generation
@@ -404,7 +486,7 @@ static void __attribute__ ((constructor)) _constructor() {
 }
 
 
-static void __attribute__ ((destructor)) _destructor() {
+static void __attribute__ ((destructor)) _destructor(void) {
         if (_statistics.fd > -1) {
                   close(_statistics.fd);
         }

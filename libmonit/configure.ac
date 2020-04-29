@@ -14,11 +14,54 @@ AC_CONFIG_SRCDIR([src])
 
 AC_PROG_CC
 
+AX_CHECK_COMPILE_FLAG([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
+AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"])
+AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [CFLAGS="$CFLAGS -fcf-protection=full"])
+AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [CFLAGS="$CFLAGS -fstack-clash-protection"])
+
 # ---------------------------------------------------------------------------
 # Libtool 
 # ---------------------------------------------------------------------------
 
 AC_PROG_LIBTOOL
+
+# ------------------------------------------------------------------------
+# AddressSanitizer
+# ------------------------------------------------------------------------
+
+AC_MSG_CHECKING([for AddressSanitizer support])
+AC_ARG_WITH(asan,
+    [  --with-asan             enable the use of AddressSanitizer (default: disabled)],
+    [
+        dnl Check the withvalue
+        if test "x$withval" = "xno" ; then
+            use_asan=0
+            AC_MSG_RESULT([disabled])
+        fi
+        if test "x$withval" = "xyes" ; then
+            use_asan=1
+            AC_MSG_RESULT([enabled])
+        fi
+    ],
+    [
+        use_asan=0
+        AC_MSG_RESULT([disabled])
+    ]
+)
+
+if test "$use_asan" = "1"; then
+        AX_CHECK_COMPILE_FLAG([-fsanitize=address], [CFLAGS="$CFLAGS -fsanitize=address"])
+        AX_CHECK_COMPILE_FLAG([-fno-omit-frame-pointer], [CFLAGS="$CFLAGS -fno-omit-frame-pointer"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=bool], [CFLAGS="$CFLAGS -fsanitize=bool"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=enum], [CFLAGS="$CFLAGS -fsanitize=enum"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=float-divide-by-zero], [CFLAGS="$CFLAGS -fsanitize=float-divide-by-zero"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize-address-use-after-scope], [CFLAGS="$CFLAGS -fsanitize-address-use-after-scope"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=signed-integer-overflow], [CFLAGS="$CFLAGS -fsanitize=signed-integer-overflow"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=vla-bound], [CFLAGS="$CFLAGS -fsanitize=vla-bound"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=bounds-strict], [CFLAGS="$CFLAGS -fsanitize=bounds-strict"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=null], [CFLAGS="$CFLAGS -fsanitize=null "])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=object-size], [CFLAGS="$CFLAGS -fsanitize=object-size"])
+fi
 
 # ---------------------------------------------------------------------------
 # Build options
@@ -140,7 +183,35 @@ AC_CHECK_HEADERS([ctype.h errno.h fcntl.h limits.h pthread.h setjmp.h \
                   sys/sendfile.h sys/dirent.h poll.h sys/poll.h sys/event.h \
                   stropts.h sys/ioctl.h sys/filio.h kstat.h ifaddrs.h \
                   net/if_media.h netinet/in.h sys/sysctl.h net/if_dl.h \
-                  sys/random.h sys/protosw.h mach/boolean.h uvm/uvm_param.h])
+                  sys/random.h sys/protosw.h])
+AC_CHECK_HEADERS([net/if.h net/route.h], [], [],
+        [
+         #ifdef HAVE_SYS_TYPES_H
+         #include <sys/types.h>
+         #endif
+         #if HAVE_SYS_SOCKET_H
+         #include <sys/socket.h>
+         #endif
+         #if HAVE_NETINET_IN_SYSTM_H
+         #include <netinet/in.h>
+         #endif
+         #if HAVE_NETINET_IN_SYSTM_H
+         #include <netinet/in_systm.h>
+         #endif
+         #if HAVE_NETINET_IP_H
+         #include <netinet/ip.h>
+         #endif
+        ])
+AC_CHECK_HEADERS([ \
+        libperfstat.h \
+        ],
+        [],
+        [],
+        [
+         #ifdef HAVE_SYS_PROTOSW_H
+         #include <sys/protosw.h>
+         #endif
+        ])
 
 # ------------------------------------------------------------------------
 # Types
@@ -237,11 +308,15 @@ fi
 # Compiler 
 # ---------------------------------------------------------------------------
 
-# Compiler characteristics
+AC_PROG_CC
+AC_PROG_CXX
 AC_C_CONST
 AC_C_BIGENDIAN
+# Define _GNU_SOURCE so we can have Posix headers etc included. We use the
+# -std=cXX compiler switch which only include a minimum of C headers
+CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
-# Compiler; tune warnings and make the char type unsigned and enable C11 support
+# Compiler; tune warnings and make the char type unsigned
 CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
 # does this compiler support -Wno-pointer-sign ?
 svd_CFLAGS="$CFLAGS"
@@ -263,34 +338,6 @@ AC_RUN_IFELSE(
         return 1;
         ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"])
 AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
-
-# ------------------------------------------------------------------------
-# Atomic support
-# ------------------------------------------------------------------------
-AC_CHECK_HEADERS([stdatomic.h], [have_atomic_h="yes"], [have_atomic_h="no"])
-if test $have_atomic_h = "no"
-then
-        AC_MSG_CHECKING(for Atomic support)
-        if test `uname` = "Darwin" -o `uname` = "FreeBSD"
-        then
-                AC_MSG_RESULT(yes)
-        elif test `uname` = "SunOS"
-        then
-                AC_CHECK_HEADER([atomic.h],
-                [AC_MSG_RESULT(yes)],
-                [AC_MSG_ERROR([atomic.h is required for atomic support])])
-        else
-                AC_RUN_IFELSE([AC_LANG_PROGRAM([],[dnl
-                #if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 1)))
-                return 0;
-                #else
-                return 1;
-                #endif
-	        ])],
-	        [AC_MSG_RESULT(yes)],
-	        [AC_MSG_FAILURE([GCC version > 4.1 is required for atomic support])])
-        fi
-fi
 
 # ------------------------------------------------------------------------
 # IPv6 Support

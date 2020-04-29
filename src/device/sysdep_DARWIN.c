@@ -63,6 +63,7 @@
 #endif
 
 #include "monit.h"
+#include "device.h"
 
 // libmonit
 #include "system/Time.h"
@@ -88,7 +89,7 @@ static bool _getDiskUsage(void *_inf) {
 }
 
 
-static bool _getDummyDiskActivity(void *_inf) {
+static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
         return true;
 }
 
@@ -109,7 +110,7 @@ static bool _getBlockDiskActivity(void *_inf) {
                                         if (statistics) {
                                                 rv = true;
                                                 UInt64 value = 0;
-                                                uint64_t now = Time_milli();
+                                                unsigned long long now = Time_milli();
                                                 // Total read bytes
                                                 CFNumberRef number = CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsBytesReadKey));
                                                 if (number) {
@@ -172,9 +173,9 @@ static bool _compareDevice(const char *device, struct statfs *mnt) {
 }
 
 
-static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
+static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
         struct mystable {
-                uint64_t flag;
+                unsigned long long flag;
                 char *description;
         } t[]= {
                 {MNT_RDONLY, "ro"},
@@ -201,7 +202,7 @@ static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
                 {MNT_MULTILABEL, "multilabel"},
                 {MNT_NOATIME, "noatime"}
         };
-        for (int i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
+        for (size_t i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
                 if (flags & t[i].flag) {
                         snprintf(inf->filesystem->flags + strlen(inf->filesystem->flags), sizeof(inf->filesystem->flags) - strlen(inf->filesystem->flags) - 1, "%s%s", count++ ? ", " : "", t[i].description);
                 }

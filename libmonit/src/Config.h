@@ -78,7 +78,7 @@
 #include "NumberFormatException.h"
 
 
-/* ------------------------------------------ General Purpose value macros */
+/* ------------------------------------------------------- Constant macros */
 
 
 /**
@@ -96,15 +96,6 @@
 #ifndef HAVE_UCHAR_T
 typedef unsigned char uchar_t;
 #endif
-
-
-/* -------------------------------------------------------------- Globals  */
-
-
-/**
- * Library Debug flag. If set to true, emit debug output
- */
-extern bool MonitDebug;
 
 
 #endif

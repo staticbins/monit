@@ -28,7 +28,6 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -90,7 +89,7 @@ int File_open(const char *file, const char *mode) {
 }
 
 
-int File_close(int fd) {
+bool File_close(int fd) {
         int r;
         do
                 r = close(fd);
@@ -99,7 +98,7 @@ int File_close(int fd) {
 }
 
 
-int File_rewind(int fd) {
+bool File_rewind(int fd) {
         return (lseek(fd, 0, SEEK_SET) >=0);
 }
 
@@ -134,7 +133,7 @@ time_t File_atime(const char *file) {
 }
 
 
-int File_isFile(const char *file) {
+bool File_isFile(const char *file) {
         if (file) {
                 struct stat buf;
                 return (stat(file, &buf) == 0 && S_ISREG(buf.st_mode));
@@ -143,7 +142,7 @@ int File_isFile(const char *file) {
 }
 
 
-int File_isSocket(const char *file) {
+bool File_isSocket(const char *file) {
         if (file) {
                 struct stat buf;
                 return (stat(file, &buf) == 0 && S_ISSOCK(buf.st_mode));
@@ -152,7 +151,7 @@ int File_isSocket(const char *file) {
 }
 
 
-int File_isDirectory(const char *file) {
+bool File_isDirectory(const char *file) {
         if (file) {
                 struct stat buf;
                 return (stat(file, &buf) == 0 && S_ISDIR(buf.st_mode));
@@ -161,7 +160,7 @@ int File_isDirectory(const char *file) {
 }
 
 
-int File_exist(const char *file) {
+bool File_exist(const char *file) {
         if (file) {
                 struct stat buf;
                 return (stat(file, &buf) == 0);
@@ -199,7 +198,7 @@ off_t File_size(const char *file) {
 }
 
 
-int File_chmod(const char *file, mode_t mode) {
+bool File_chmod(const char *file, mode_t mode) {
         if (file)
                 return (chmod(file, mode) == 0);
         errno = EINVAL;
@@ -230,28 +229,28 @@ mode_t File_setUmask(mode_t mask) {
 }
 
 
-int File_isReadable(const char *file) {
+bool File_isReadable(const char *file) {
         if (file) 
                 return (access(file, R_OK) == 0);
         return false;
 }
 
 
-int File_isWritable(const char *file) {
+bool File_isWritable(const char *file) {
         if (file) 
                 return (access(file, W_OK) == 0);
         return false;
 }
 
 
-int File_isExecutable(const char *file) {
+bool File_isExecutable(const char *file) {
         if (file) 
                 return (access(file, X_OK) == 0);
         return false;
 }
 
 
-int File_delete(const char *file) {
+bool File_delete(const char *file) {
         if (file)
                 return (remove(file) == 0);
         errno = ENOENT;
@@ -259,7 +258,7 @@ int File_delete(const char *file) {
 }
 
 
-int File_rename(const char *file, const char *name) {
+bool File_rename(const char *file, const char *name) {
         if (file)                
                 return (rename(file, name) == 0);
         errno = ENOENT;

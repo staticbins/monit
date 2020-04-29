@@ -4,7 +4,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <stdarg.h>
 #include <unistd.h>
 
@@ -20,7 +19,7 @@
  */
 
 
-int main(int argc, char **argv) {
+int main(__attribute__ ((unused)) int argc, __attribute__ ((unused)) char **argv) {
 
         Bootstrap(); // Need to initialize library
 

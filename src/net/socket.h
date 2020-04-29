@@ -239,7 +239,7 @@ int Socket_print(T S, const char *m, ...) __attribute__((format (printf, 2, 3)))
  * @param size The size of the data in b
  * @return The bytes sent or -1 if an error occurred
  */
-int Socket_write(T S, void *b, size_t size);
+int Socket_write(T S, const void *b, size_t size);
 
 
 /**

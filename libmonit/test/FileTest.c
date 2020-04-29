@@ -74,7 +74,7 @@ int main(void) {
                 printf("\texist: yes\n");
                 assert((i = File_mod(path)) > 0);
                 printf("\tpermission mode: %o\n", i & 07777);
-                assert(i == s.st_mode);
+                assert(i == (int)s.st_mode);
                 assert(File_chmod(path, 00640) == true);
                 assert((File_mod(path) & 07777) == 00640);
                 assert(File_isReadable(path) == true);
@@ -104,7 +104,7 @@ int main(void) {
                 int i;
                 assert((i = File_umask()) >= 0);
                 printf("\tumask: %o\n", i & 07777);
-                assert(File_setUmask(0002) == i);
+                assert((int)File_setUmask(0002) == i);
                 assert(File_setUmask(i) == 0002);
         }
         printf("=> Test4: OK\n\n");

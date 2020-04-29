@@ -117,7 +117,10 @@
 #include <unistd.h>
 #endif
 
-#include "net.h"
+#ifdef HAVE_OPENSSL
+#include <openssl/ssl.h>
+#endif
+
 #include "monit.h"
 #include "protocol.h"
 #include "engine.h"
@@ -143,15 +146,15 @@ struct precedence_t {
 };
 
 struct rate_t {
-        unsigned count;
-        unsigned cycles;
+        unsigned int count;
+        unsigned int cycles;
 };
 
 /* yacc interface */
-void  yyerror(const char *,...);
-void  yyerror2(const char *,...);
-void  yywarning(const char *,...);
-void  yywarning2(const char *,...);
+void  yyerror(const char *,...) __attribute__((format (printf, 1, 2)));
+void  yyerror2(const char *,...) __attribute__((format (printf, 1, 2)));
+void  yywarning(const char *,...) __attribute__((format (printf, 1, 2)));
+void  yywarning2(const char *,...) __attribute__((format (printf, 1, 2)));
 
 /* lexer interface */
 int yylex(void);
@@ -205,9 +208,9 @@ static struct rate_t rate = {1, 1};
 static struct rate_t rate1 = {1, 1};
 static struct rate_t rate2 = {1, 1};
 static char * htpasswd_file = NULL;
-static unsigned repeat = 0;
-static unsigned repeat1 = 0;
-static unsigned repeat2 = 0;
+static unsigned int repeat = 0;
+static unsigned int repeat1 = 0;
+static unsigned int repeat2 = 0;
 static Digest_Type digesttype = Digest_Cleartext;
 
 #define BITMAP_MAX (sizeof(int64_t) * 8)
@@ -304,7 +307,12 @@ static command_t copycommand(command_t);
 static int verifyMaxForward(int);
 static void _setPEM(char **store, char *path, const char *description, bool isFile);
 static void _setSSLOptions(SslOptions_T options);
+#ifdef HAVE_OPENSSL
+static void _setSSLVersion(short version);
+#endif
+static void _unsetSSLVersion(short version);
 static void addsecurityattribute(char *, Action_Type, Action_Type);
+static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Type, Action_Type);
 
 %}
 
@@ -319,7 +327,7 @@ static void addsecurityattribute(char *, Action_Type, Action_Type);
 %token IF ELSE THEN FAILED
 %token SET LOGFILE FACILITY DAEMON SYSLOG MAILSERVER HTTPD ALLOW REJECTOPT ADDRESS INIT TERMINAL BATCH
 %token READONLY CLEARTEXT MD5HASH SHA1HASH CRYPT DELAY
-%token PEMFILE ENABLE DISABLE SSL CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
+%token PEMFILE PEMKEY PEMCHAIN ENABLE DISABLE SSLTOKEN CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
 %token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL
 %token IDFILE STATEFILE SEND EXPECT CYCLE COUNT REMINDER REPEAT
 %token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT PROGRAMTIMEOUT STARTTIMEOUT STOPTIMEOUT RESTARTTIMEOUT
@@ -327,7 +335,7 @@ static void addsecurityattribute(char *, Action_Type, Action_Type);
 %token HOST HOSTNAME PORT IPV4 IPV6 TYPE UDP TCP TCPSSL PROTOCOL CONNECTION
 %token ALERT NOALERT MAILFORMAT UNIXSOCKET SIGNATURE
 %token TIMEOUT RETRY RESTART CHECKSUM EVERY NOTEVERY
-%token DEFAULT HTTP HTTPS APACHESTATUS FTP SMTP SMTPS POP POPS IMAP IMAPS CLAMAV NNTP NTP3 MYSQL DNS WEBSOCKET
+%token DEFAULT HTTP HTTPS APACHESTATUS FTP SMTP SMTPS POP POPS IMAP IMAPS CLAMAV NNTP NTP3 MYSQL DNS WEBSOCKET MQTT
 %token SSH DWP LDAP2 LDAP3 RDATE RSYNC TNS PGSQL POSTFIXPOLICY SIP LMTP GPS RADIUS MEMCACHE REDIS MONGODB SIEVE SPAMASSASSIN FAIL2BAN
 %token <string> STRING PATH MAILADDR MAILFROM MAILREPLYTO MAILSUBJECT
 %token <string> MAILBODY SERVICENAME STRINGNAME
@@ -338,11 +346,12 @@ static void addsecurityattribute(char *, Action_Type, Action_Type);
 %token CHECKPROC CHECKFILESYS CHECKFILE CHECKDIR CHECKHOST CHECKSYSTEM CHECKFIFO CHECKPROGRAM CHECKNET
 %token THREADS CHILDREN METHOD GET HEAD STATUS ORIGIN VERSIONOPT READ WRITE OPERATION SERVICETIME DISK
 %token RESOURCE MEMORY TOTALMEMORY LOADAVG1 LOADAVG5 LOADAVG15 SWAP
-%token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
+%token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CORE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
 %token UID EUID GID MMONIT INSTANCE USERNAME PASSWORD
-%token TIME ATIME CTIME MTIME CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH
-%token SSLAUTO SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 TLSV13 CERTMD5 AUTO
+%token TIME ATIME CTIME MTIME CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH 
+%token SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 TLSV13 CERTMD5 AUTO
+%token NOSSLV2 NOSSLV3 NOTLSV1 NOTLSV11 NOTLSV12 NOTLSV13
 %token BYTE KILOBYTE MEGABYTE GIGABYTE
 %token INODE SPACE TFREE PERMISSION SIZE MATCH NOT IGNORE ACTION UPTIME
 %token EXEC UNMONITOR PING PING4 PING6 ICMP ICMPECHO NONEXIST EXIST INVALID DATA RECOVERED PASSED SUCCEEDED
@@ -354,6 +363,7 @@ static void addsecurityattribute(char *, Action_Type, Action_Type);
 %token <number> MAXFORWARD
 %token FIPS
 %token SECURITY ATTRIBUTE
+%token FILEDESCRIPTORS
 
 %left GREATER GREATEROREQUAL LESS LESSOREQUAL EQUAL NOTEQUAL
 
@@ -409,6 +419,8 @@ optproc         : start
                 | uid
                 | euid
                 | secattr
+                | filedescriptors
+                | filedescriptorstotal
                 | gid
                 | uptime
                 | connection
@@ -551,6 +563,7 @@ optsystem       : start
                 | depend
                 | resourcesystem
                 | uptime
+                | filedescriptors
                 ;
 
 optfifolist     : /* EMPTY */
@@ -620,7 +633,7 @@ setterminal     : SET TERMINAL BATCH {
                 ;
 
 startdelay      : /* EMPTY */ {
-                        $<number>$ = START_DELAY;
+                        $<number>$ = 0;
                   }
                 | START DELAY NUMBER {
                         $<number>$ = $3;
@@ -784,15 +797,15 @@ credentials     : /* EMPTY */
                   }
                 ;
 
-setssl          : SET SSL '{' ssloptionlist '}' {
+setssl          : SET SSLTOKEN '{' ssloptionlist '}' {
                         _setSSLOptions(&(Run.ssl));
                   }
                 ;
 
-ssl             : SSL {
+ssl             : SSLTOKEN {
                         sslset.flags = SSL_Enabled;
                   }
-                | SSL '{' ssloptionlist '}'
+                | SSLTOKEN '{' ssloptionlist '}'
                 ;
 
 ssloptionlist   : /* EMPTY */
@@ -815,7 +828,7 @@ ssloption       : VERIFY ':' ENABLE {
                         sslset.flags = SSL_Enabled;
                         sslset.allowSelfSigned = false;
                   }
-                | VERSIONOPT ':' sslversion {
+                | VERSIONOPT ':' sslversionlist {
                         sslset.flags = SSL_Enabled;
                   }
                 | CIPHER ':' STRING {
@@ -824,6 +837,12 @@ ssloption       : VERIFY ':' ENABLE {
                   }
                 | PEMFILE ':' PATH {
                         _setPEM(&(sslset.pemfile), $3, "SSL server PEM file", true);
+                  }
+                | PEMCHAIN ':' PATH {
+                        _setPEM(&(sslset.pemchain), $3, "SSL certificate chain PEM file", true);
+                  }
+                | PEMKEY ':' PATH {
+                        _setPEM(&(sslset.pemkey), $3, "SSL server private key PEM file", true);
                   }
                 | CLIENTPEMFILE ':' PATH {
                         _setPEM(&(sslset.clientpemfile), $3, "SSL client PEM file", true);
@@ -880,50 +899,78 @@ checksumoperator : /* EMPTY */
                  | EQUAL
                  ;
 
+sslversionlist  : /* EMPTY */
+                | sslversionlist sslversion
+                ;
+
 sslversion      : SSLV2 {
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_V2;
+#if defined OPENSSL_NO_SSL2 || ! defined HAVE_SSLV2 || ! defined HAVE_OPENSSL
+                        yyerror("Your SSL Library does not support SSL version 2");
+#else
+                        _setSSLVersion(SSL_V2);
+#endif
+                  }
+                | NOSSLV2 {
+                        _unsetSSLVersion(SSL_V2);
                   }
                 | SSLV3 {
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_V3;
+#if defined OPENSSL_NO_SSL3 || ! defined HAVE_OPENSSL
+                        yyerror("Your SSL Library does not support SSL version 3");
+#else
+                        _setSSLVersion(SSL_V3);
+#endif
+                  }
+                | NOSSLV3 {
+                        _unsetSSLVersion(SSL_V3);
                   }
                 | TLSV1 {
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV1;
+#if defined OPENSSL_NO_TLS1_METHOD || ! defined HAVE_OPENSSL
+                        yyerror("Your SSL Library does not support TLS version 1.0");
+#else
+                        _setSSLVersion(SSL_TLSV1);
+#endif
                   }
-                | TLSV11
-                {
-#ifndef HAVE_TLSV1_1
+                | NOTLSV1 {
+                        _unsetSSLVersion(SSL_TLSV1);
+                  }
+                | TLSV11 {
+#if defined OPENSSL_NO_TLS1_1_METHOD || ! defined HAVE_TLSV1_1 || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support TLS version 1.1");
+#else
+                        _setSSLVersion(SSL_TLSV11);
 #endif
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV11;
                 }
-                | TLSV12
-                {
-#ifndef HAVE_TLSV1_2
+                | NOTLSV11 {
+                        _unsetSSLVersion(SSL_TLSV11);
+                  }
+                | TLSV12 {
+#if defined OPENSSL_NO_TLS1_2_METHOD || ! defined HAVE_TLSV1_2 || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support TLS version 1.2");
+#else
+                        _setSSLVersion(SSL_TLSV12);
 #endif
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV12;
                 }
-                | TLSV13
-                {
-#ifndef HAVE_TLSV1_3
+                | NOTLSV12 {
+                        _unsetSSLVersion(SSL_TLSV12);
+                  }
+                | TLSV13 {
+#if defined OPENSSL_NO_TLS1_3_METHOD || ! defined HAVE_TLSV1_3 || ! defined HAVE_OPENSSL
                         yyerror("Your SSL Library does not support TLS version 1.3");
+#else
+                        _setSSLVersion(SSL_TLSV13);
 #endif
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_TLSV13;
                 }
-
-                | SSLAUTO {
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_Auto;
+                | NOTLSV13 {
+                        _unsetSSLVersion(SSL_TLSV13);
                   }
                 | AUTO {
-                        sslset.flags = SSL_Enabled;
-                        sslset.version = SSL_Auto;
+                        // Enable just TLS 1.2 and 1.3 by default
+#if ! defined OPENSSL_NO_TLS1_2_METHOD && defined HAVE_TLSV1_2 && defined HAVE_OPENSSL
+                        _setSSLVersion(SSL_TLSV12);
+#endif
+#if ! defined OPENSSL_NO_TLS1_3_METHOD && defined HAVE_TLSV1_3 && defined HAVE_OPENSSL
+                        _setSSLVersion(SSL_TLSV13);
+#endif
                   }
                 ;
 
@@ -1001,12 +1048,22 @@ mailserveropt   : username {
 sethttpd        : SET HTTPD httpdlist {
                         if (sslset.flags & SSL_Enabled) {
 #ifdef HAVE_OPENSSL
-                                if (! sslset.pemfile) {
+                                if (sslset.pemfile) {
+                                        if (sslset.pemchain || sslset.pemkey) {
+                                                yyerror("SSL server option pemfile and pemchain|pemkey are mutually exclusive");
+                                        } else if (! file_checkStat(sslset.pemfile, "SSL server PEM file", S_IRWXU)) {
+                                                yyerror("SSL server PEM file permissions check failed");
+                                        } else {
+                                                _setSSLOptions(&(Run.httpd.socket.net.ssl));
+                                        }
+                                } else if (sslset.pemchain && sslset.pemkey) {
+                                        if (! file_checkStat(sslset.pemkey, "SSL server private key PEM file", S_IRWXU)) {
+                                                yyerror("SSL server private key PEM file permissions check failed");
+                                        } else {
+                                                _setSSLOptions(&(Run.httpd.socket.net.ssl));
+                                        }
+                                } else {
                                         yyerror("SSL server PEM file is required (please use ssl pemfile option)");
-                                } else if (! file_checkStat(sslset.pemfile, "SSL server PEM file", S_IRWXU)) {
-                                        yyerror("SSL server PEM file permissions check failed");
-                                } else  {
-                                        _setSSLOptions(&(Run.httpd.socket.net.ssl));
                                 }
 #else
                                 yyerror("SSL is not supported");
@@ -1167,7 +1224,7 @@ allow           : ALLOW STRING':'STRING readonly {
                   }
                 | ALLOW STRING {
                         if (! Engine_addAllow($2))
-                                yywarning2("invalid allow option", $2);
+                                yywarning2("invalid allow option: %s", $2);
                         FREE($2);
                   }
                 ;
@@ -1558,6 +1615,9 @@ protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                 | PROTOCOL MONGODB  {
                         portset.protocol = Protocol_get(Protocol_MONGODB);
                   }
+                | PROTOCOL MQTT mqttlist {
+                        portset.protocol = Protocol_get(Protocol_MQTT);
+                  }
                 | PROTOCOL MYSQL mysqllist {
                         portset.protocol = Protocol_get(Protocol_MYSQL);
                   }
@@ -1676,6 +1736,18 @@ smtp            : username {
                   }
                 | password {
                         portset.parameters.smtp.password = $<string>1;
+                  }
+                ;
+
+mqttlist        : /* EMPTY */
+                | mqttlist mqtt
+                ;
+
+mqtt            : username {
+                        portset.parameters.mqtt.username = $<string>1;
+                  }
+                | password {
+                        portset.parameters.mqtt.password = $<string>1;
                   }
                 ;
 
@@ -1882,6 +1954,7 @@ uptime          : IF UPTIME operator NUMBER time rate1 THEN action1 recovery {
                         addeventaction(&(uptimeset).action, $<number>8, $<number>9);
                         adduptime(&uptimeset);
                   }
+                ;
 
 icmpcount       : COUNT NUMBER {
                         icmpset.count = $<number>2;
@@ -2245,10 +2318,23 @@ resourcechild   : CHILDREN operator NUMBER {
                   }
                 ;
 
-resourceload    : resourceloadavg operator value {
-                        resourceset.resource_id = $<number>1;
-                        resourceset.operator = $<number>2;
-                        resourceset.limit = $<real>3;
+resourceload    : resourceloadavg coremultiplier operator value {
+                        switch ($<number>1) {
+                                case Resource_LoadAverage1m:
+                                        resourceset.resource_id = $<number>2 > 1 ? Resource_LoadAveragePerCore1m : $<number>1;
+                                        break;
+                                case Resource_LoadAverage5m:
+                                        resourceset.resource_id = $<number>2 > 1 ? Resource_LoadAveragePerCore5m : $<number>1;
+                                        break;
+                                case Resource_LoadAverage15m:
+                                        resourceset.resource_id = $<number>2 > 1 ? Resource_LoadAveragePerCore15m : $<number>1;
+                                        break;
+                                default:
+                                        resourceset.resource_id = $<number>1;
+                                        break;
+                        }
+                        resourceset.operator = $<number>3;
+                        resourceset.limit = $<real>4;
                   }
                 ;
 
@@ -2257,8 +2343,18 @@ resourceloadavg : LOADAVG1  { $<number>$ = Resource_LoadAverage1m; }
                 | LOADAVG15 { $<number>$ = Resource_LoadAverage15m; }
                 ;
 
-resourceread    : DISK READ operator value unit currenttime {
+coremultiplier  : /* EMPTY */ { $<number>$ = 1; }
+                | CORE        { $<number>$ = systeminfo.cpu.count; }
+                ;
+
+
+resourceread    : READ operator value unit currenttime {
                         resourceset.resource_id = Resource_ReadBytes;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3 * $<number>4;
+                  }
+                | DISK READ operator value unit currenttime {
+                        resourceset.resource_id = Resource_ReadBytesPhysical;
                         resourceset.operator = $<number>3;
                         resourceset.limit = $<real>4 * $<number>5;
                   }
@@ -2269,8 +2365,13 @@ resourceread    : DISK READ operator value unit currenttime {
                   }
                 ;
 
-resourcewrite   : DISK WRITE operator value unit currenttime {
+resourcewrite   : WRITE operator value unit currenttime {
                         resourceset.resource_id = Resource_WriteBytes;
+                        resourceset.operator = $<number>2;
+                        resourceset.limit = $<real>3 * $<number>4;
+                  }
+                | DISK WRITE operator value unit currenttime {
+                        resourceset.resource_id = Resource_WriteBytesPhysical;
                         resourceset.operator = $<number>3;
                         resourceset.limit = $<real>4 * $<number>5;
                   }
@@ -2392,8 +2493,8 @@ action2         : action {
                 ;
 
 rateXcycles     : NUMBER CYCLE {
-                        if ($<number>1 < 1 || $<number>1 > BITMAP_MAX) {
-                                yyerror2("The number of cycles must be between 1 and %d", BITMAP_MAX);
+                        if ($<number>1 < 1 || (unsigned long)$<number>1 > BITMAP_MAX) {
+                                yyerror2("The number of cycles must be between 1 and %lu", BITMAP_MAX);
                         } else {
                                 rate.count  = $<number>1;
                                 rate.cycles = $<number>1;
@@ -2402,8 +2503,8 @@ rateXcycles     : NUMBER CYCLE {
                 ;
 
 rateXYcycles    : NUMBER NUMBER CYCLE {
-                        if ($<number>2 < 1 || $<number>2 > BITMAP_MAX) {
-                                yyerror2("The number of cycles must be between 1 and %d", BITMAP_MAX);
+                        if ($<number>2 < 1 || (unsigned long)$<number>2 > BITMAP_MAX) {
+                                yyerror2("The number of cycles must be between 1 and %lu", BITMAP_MAX);
                         } else if ($<number>1 < 1 || $<number>1 > $<number>2) {
                                 yyerror2("The number of events must be between 1 and less then poll cycles");
                         } else {
@@ -2723,6 +2824,19 @@ secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recover
                   }
                 ;
 
+filedescriptors : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
+                  }
+                | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
+                        addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
+                  }
+                ;
+
+filedescriptorstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        addfiledescriptors($<number>4, true, (long long)$5, -1., $<number>8, $<number>9);
+                  }
+                ;
+
 gid             : IF FAILED GID STRING rate1 THEN action1 recovery {
                         gidset.gid = get_gid($4, 0);
                         addeventaction(&(gidset).action, $<number>7, $<number>8);
@@ -2940,8 +3054,6 @@ void yywarning2(const char *s, ...) {
 bool parse(char *controlfile) {
         ASSERT(controlfile);
 
-        servicelist = tail = current = NULL;
-
         if ((yyin = fopen(controlfile,"r")) == (FILE *)NULL) {
                 LogError("Cannot open the control file '%s' -- %s\n", controlfile, STRERROR);
                 return false;
@@ -2985,6 +3097,7 @@ bool parse(char *controlfile) {
  * Initialize objects used by the parser.
  */
 static void preparse() {
+        servicelist = tail = current = NULL;
         /* Set instance incarnation ID */
         time(&Run.incarnation);
         /* Reset lexer */
@@ -3061,8 +3174,10 @@ static void postparse() {
                 return;
 
         /* If defined - add the last service to the service list */
-        if (current)
+        if (current) {
                 addservice(current);
+                current = NULL;
+        }
 
         /* Check that we do not start monit in daemon mode without having a poll time */
         if (! Run.polltime && ((Run.flags & Run_Daemon) || (Run.flags & Run_Foreground))) {
@@ -3113,7 +3228,7 @@ static void postparse() {
         /* Check the sanity of any dependency graph */
         check_depend();
 
-#ifdef HAVE_OPENSSL
+#if defined HAVE_OPENSSL && defined OPENSSL_FIPS
         Ssl_setFipsMode(Run.flags & Run_FipsEnabled);
 #endif
 
@@ -3131,7 +3246,7 @@ static bool _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing) {
                 freeaddrinfo(result);
                 return true;
         } else {
-                yyerror2("IP address parsing failed -- %s", ip, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                yyerror2("IP address parsing failed for %s -- %s", ip, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
         }
         return false;
 }
@@ -3187,6 +3302,8 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
         current->monitor  = Monitor_Init;
         current->onreboot = Run.onreboot;
         current->name     = name;
+        current->name_urlescaped = Util_urlEncode(name, false);
+        current->name_htmlescaped = escapeHTML(StringBuffer_create(16), name);
         current->check    = check;
         current->path     = value;
 
@@ -3313,7 +3430,6 @@ static void addservicegroup(char *name) {
 
 /*
  * Add a dependant entry to the current service dependant list
- *
  */
 static void adddependant(char *dependant) {
         Dependant_T d;
@@ -3326,6 +3442,8 @@ static void adddependant(char *dependant) {
                 d->next = current->dependantlist;
 
         d->dependant = dependant;
+        d->dependant_urlescaped = Util_urlEncode(dependant, false);
+        d->dependant_htmlescaped = escapeHTML(StringBuffer_create(16), dependant);
         current->dependantlist = d;
 
 }
@@ -3710,44 +3828,44 @@ static void addperm(Perm_T ps) {
 
 static void addlinkstatus(Service_T s, LinkStatus_T L) {
         ASSERT(L);
-        
+
         LinkStatus_T l;
         NEW(l);
         l->action = L->action;
-        
+
         l->next = s->linkstatuslist;
         s->linkstatuslist = l;
-        
+
         reset_linkstatusset();
 }
 
 
 static void addlinkspeed(Service_T s, LinkSpeed_T L) {
         ASSERT(L);
-        
+
         LinkSpeed_T l;
         NEW(l);
         l->action = L->action;
-        
+
         l->next = s->linkspeedlist;
         s->linkspeedlist = l;
-        
+
         reset_linkspeedset();
 }
 
 
 static void addlinksaturation(Service_T s, LinkSaturation_T L) {
         ASSERT(L);
-        
+
         LinkSaturation_T l;
         NEW(l);
         l->operator = L->operator;
         l->limit = L->limit;
         l->action = L->action;
-        
+
         l->next = s->linksaturationlist;
         s->linksaturationlist = l;
-        
+
         reset_linksaturationset();
 }
 
@@ -3867,12 +3985,12 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
                                 command1 = copycommand(savecommand);
                         }
                 }
-                
+
                 addmatch(ms, actionnumber, linenumber);
         }
         if (actionnumber == Action_Exec && savecommand)
                 gccmd(&savecommand);
-        
+
         fclose(handle);
 }
 
@@ -3942,7 +4060,7 @@ static void addfilesystem(FileSystem_T ds) {
 
         dev->next               = current->filesystemlist;
         current->filesystemlist = dev;
-        
+
         reset_filesystemset();
 
 }
@@ -4049,7 +4167,7 @@ static void addgeneric(Port_T port, char *send, char *expect) {
  * Add the current command object to the current service object's
  * start or stop program.
  */
-static void addcommand(int what, unsigned timeout) {
+static void addcommand(int what, unsigned int timeout) {
 
         switch (what) {
                 case START:   current->start = command; break;
@@ -4058,7 +4176,7 @@ static void addcommand(int what, unsigned timeout) {
         }
 
         command->timeout = timeout;
-        
+
         command = NULL;
 
 }
@@ -4325,9 +4443,9 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
 
         if (handle == NULL) {
                 if (username != NULL)
-                        yyerror2("Cannot read htpasswd (%s)", filename);
+                        yyerror2("Cannot read htpasswd (%s) for user %s", filename, username);
                 else
-                        yyerror2("Cannot read htpasswd", filename);
+                        yyerror2("Cannot read htpasswd (%s)", filename);
                 return;
         }
 
@@ -4423,8 +4541,8 @@ static bool addcredentials(char *uname, char *passwd, Digest_Type dtype, bool re
         ASSERT(uname);
         ASSERT(passwd);
 
-        if (strlen(passwd) > MAX_CONSTANT_TIME_STRING_LENGTH) {
-                yyerror2("Password for user %s is too long, maximum %d allowed", uname, MAX_CONSTANT_TIME_STRING_LENGTH);
+        if (strlen(passwd) > Str_compareConstantTimeStringLength) {
+                yyerror2("Password for user %s is too long, maximum %d allowed", uname, Str_compareConstantTimeStringLength);
                 FREE(uname);
                 FREE(passwd);
                 return false;
@@ -4794,7 +4912,6 @@ static int check_perm(int perm) {
  * Assures that graph is a Directed Acyclic Graph (DAG).
  */
 static void check_depend() {
-        Service_T s;
         Service_T depends_on = NULL;
         Service_T* dlt = &depend_list; /* the current tail of it                                 */
         bool done;                /* no unvisited nodes left?                               */
@@ -4804,7 +4921,7 @@ static void check_depend() {
         do {
                 done = true;
                 found_some = false;
-                for (s = servicelist; s; s = s->next) {
+                for (Service_T s = servicelist; s; s = s->next) {
                         Dependant_T d;
                         if (s->visited)
                                 continue;
@@ -4813,7 +4930,7 @@ static void check_depend() {
                         for (d = s->dependantlist; d; d = d->next) {
                                 Service_T dp = Util_getService(d->dependant);
                                 if (! dp) {
-                                        LogError("Depend service '%s' is not defined in the control file\n", d->dependant);
+                                        LogError("Depending service '%s' is not defined in the control file\n", d->dependant);
                                         exit(1);
                                 }
                                 if (! dp->visited) {
@@ -4839,7 +4956,7 @@ static void check_depend() {
         ASSERT(depend_list);
         servicelist = depend_list;
 
-        for (s = depend_list; s; s = s->next_depend)
+        for (Service_T s = depend_list; s; s = s->next_depend)
                 s->next = s->next_depend;
 }
 
@@ -4913,12 +5030,16 @@ static command_t copycommand(command_t source) {
 static void _setPEM(char **store, char *path, const char *description, bool isFile) {
         if (*store) {
                 yyerror2("Duplicate %s", description);
+                FREE(path);
         } else if (! File_exist(path)) {
                 yyerror2("%s doesn't exist", description);
+                FREE(path);
         } else if (! (isFile ? File_isFile(path) : File_isDirectory(path))) {
                 yyerror2("%s is not a %s", description, isFile ? "file" : "directory");
+                FREE(path);
         } else if (! File_isReadable(path)) {
                 yyerror2("Cannot read %s", description);
+                FREE(path);
         } else {
                 sslset.flags = SSL_Enabled;
                 *store = path;
@@ -4936,10 +5057,30 @@ static void _setSSLOptions(SslOptions_T options) {
         options->clientpemfile = sslset.clientpemfile;
         options->flags = sslset.flags;
         options->pemfile = sslset.pemfile;
+        options->pemchain = sslset.pemchain;
+        options->pemkey = sslset.pemkey;
         options->verify = sslset.verify;
         options->version = sslset.version;
         reset_sslset();
 }
+
+
+#ifdef HAVE_OPENSSL
+static void _setSSLVersion(short version) {
+        sslset.flags = SSL_Enabled;
+        if (sslset.version == -1)
+                sslset.version = version;
+        else
+                sslset.version |= version;
+}
+#endif
+
+
+static void _unsetSSLVersion(short version) {
+        if (sslset.version != -1)
+                sslset.version &= ~version;
+}
+
 
 static void addsecurityattribute(char *value, Action_Type failed, Action_Type succeeded) {
         SecurityAttribute_T attr;
@@ -4948,5 +5089,17 @@ static void addsecurityattribute(char *value, Action_Type failed, Action_Type su
         attr->attribute = value;
         attr->next = current->secattrlist;
         current->secattrlist = attr;
+}
+
+static void addfiledescriptors(Operator_Type operator, bool total, long long value_absolute, float value_percent, Action_Type failed, Action_Type succeeded) {
+        Filedescriptors_T fds;
+        NEW(fds);
+        addeventaction(&(fds->action), failed, succeeded);
+        fds->total = total;
+        fds->limit_absolute = value_absolute;
+        fds->limit_percent = value_percent;
+        fds->operator = operator;
+        fds->next = current->filedescriptorslist;
+        current->filedescriptorslist = fds;
 }
 

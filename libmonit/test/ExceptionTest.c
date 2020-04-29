@@ -4,7 +4,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <stdarg.h>
 
 #include "Bootstrap.h"
@@ -25,30 +24,30 @@ Exception_T B = {"BException"};
 Exception_T C = {"CException"};
 Exception_T D = {"DException"};
 
-void throwA() {
+static void throwA(void) {
         THROW(A, NULL);
 }
 
-void throwB() {
+static void throwB(void) {
         THROW(B, NULL);
 }
 
-void throwC() {
+static void throwC(void) {
         THROW(C, "A cause");
 }
 
-void throwD() {
+static void throwD(void) {
         THROW(D, "A cause");
 }
 
-void indirectA() {
+static void indirectA(void) {
         throwA();
 }
 
-/* Throw and catch exceptions and check that we got the expected exception. 
+/* Throw and catch exceptions and check that we got the expected exception.
  * If the exception stack is corrupt somehow this should be detected
  */
-void *thread(void *args) {
+static void *thread(__attribute__ ((unused)) void *args) {
         TRY
                 THROW(A, "A cause");
                 assert(false); // Should not be reached
@@ -172,7 +171,7 @@ void *thread(void *args) {
         CATCH(A)
                 assert(false); // Should not be reached
         END_TRY;
-        return NULL; 
+        return NULL;
 }
 
 
@@ -228,7 +227,7 @@ int main(void) {
 
         printf("=> Test5: TRY-FINALLY\n");
         {
-                int i = 0;
+                volatile int i = 0;
                 TRY
                         i++;
                 FINALLY
@@ -268,7 +267,7 @@ int main(void) {
         {
                 TRY
                         assert(false); // Throws AssertException
-                        printf("Test8 failed\n"); 
+                        printf("Test8 failed\n");
                         exit(1);
                 CATCH(AssertException)
                         printf("\tResult: ok got AssertException\n");

@@ -102,7 +102,7 @@ time_t InputStream_getTimeout(T S);
  * @param S An InputStream object
  * @return true if the descriptor was closed, otherwise false
  */
-int InputStream_isClosed(T S);
+bool InputStream_isClosed(T S);
 
 
 /**

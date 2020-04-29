@@ -23,7 +23,7 @@
  */
 
 
-#include "xconfig.h"
+#include "config.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -62,15 +62,12 @@
 
 #include "monit.h"
 
-#include "statistics/Statistics.h"
-#include "Link.h"
-
 // libmonit
-#include "exceptions/AssertException.h"
-#include "system/Mem.h"
 #include "system/Time.h"
 #include "system/System.h"
 #include "util/Str.h"
+#include "exceptions/AssertException.h"
+
 
 
 /**
@@ -90,7 +87,7 @@
 
 static struct {
         struct ifaddrs *addrs;
-        uint64_t timestamp;
+        unsigned long long timestamp;
 } _stats = {};
 
 
@@ -98,10 +95,10 @@ typedef struct LinkData_T {
 #ifndef __LP64__
         uint64_t raw;
 #endif
-        uint64_t last;
-        uint64_t now;
-        uint64_t minute[60];
-        uint64_t hour[24];
+        long long now;
+        long long last;
+        unsigned long long minute[60];
+        unsigned long long hour[24];
 } LinkData_T;
 
 
@@ -109,8 +106,8 @@ struct T {
         char *object;
         const char *(*resolve)(const char *object); // Resolve Object -> Interface, set during Link_T instantiation by constructor (currently we implement only IPAddress -> Interface lookup)
         struct {
-                uint64_t last;
-                uint64_t now;
+                long long last;
+                long long now;
         } timestamp;
         int state;       // State (-1 = N/A, 0 = down, 1 = up)
         int duplex;      // Duplex (-1 = N/A, 0 = half, 1 = full)
@@ -127,7 +124,7 @@ struct T {
 /* --------------------------------------------- MARK: - Static destructor */
 
 
-static void __attribute__ ((destructor)) _destructor() {
+static void __attribute__ ((destructor)) _destructor(void) {
 #ifdef HAVE_IFADDRS_H
         if (_stats.addrs)
                 freeifaddrs(_stats.addrs);
@@ -196,15 +193,15 @@ static void _reset(T L) {
 }
 
 
-static uint64_t _deltaSecond(T L, LinkData_T *data) {
+static long long _deltaSecond(T L, LinkData_T *data) {
         if (L->timestamp.last > 0 && L->timestamp.now > L->timestamp.last)
                 if (data->last > 0 && data->now > data->last)
-                        return (uint64_t)((data->now - data->last) * 1000. / (L->timestamp.now - L->timestamp.last));
+                        return (long long)((data->now - data->last) * 1000. / (L->timestamp.now - L->timestamp.last));
         return 0ULL;
 }
 
 
-static uint64_t _deltaMinute(T L, LinkData_T *data, int count) {
+static long long _deltaMinute(T L, LinkData_T *data, int count) {
         int stop = Time_minutes(L->timestamp.now / 1000.);
         int delta = stop - count;
         int start = delta < 0 ? 60 + delta : delta;
@@ -216,7 +213,7 @@ static uint64_t _deltaMinute(T L, LinkData_T *data, int count) {
 }
 
 
-static uint64_t _deltaHour(T L, LinkData_T *data, int count) {
+static long long _deltaHour(T L, LinkData_T *data, int count) {
         int stop = Time_hour(L->timestamp.now / 1000.);
         int delta = stop - count;
         int start = delta < 0 ? 24 + delta : delta;
@@ -285,9 +282,9 @@ static void _updateHistory(T L) {
 }
 
 
-static void _updateCache() {
+static void _updateCache(void) {
 #ifdef HAVE_IFADDRS_H
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
         if (now > _stats.timestamp + 1000 || now < _stats.timestamp - 1000) {
                 _stats.timestamp = now;
@@ -340,7 +337,7 @@ void Link_reset(T L) {
 }
 
 
-int Link_isGetByAddressSupported() {
+bool Link_isGetByAddressSupported(void) {
 #ifdef HAVE_IFADDRS_H
         return true;
 #else

@@ -75,7 +75,6 @@
 #endif
 
 #include "monit.h"
-#include "net.h"
 #include "ProcessTree.h"
 #include "state.h"
 #include "event.h"
@@ -109,10 +108,10 @@
 
 static void  do_init(void);                   /* Initialize this application */
 static void  do_reinit(void);       /* Re-initialize the runtime application */
-static void  do_action(int, char **);    /* Dispatch to the submitted action */
+static void  do_action(List_T);          /* Dispatch to the submitted action */
 static void  do_exit(bool);                           /* Finalize monit */
 static void  do_default(void);                          /* Do default action */
-static void  handle_options(int, char **);         /* Handle program options */
+static void  handle_options(int, char **, List_T); /* Handle program options */
 static void  help(void);             /* Print program help message to stdout */
 static void  version(void);                     /* Print version information */
 static void *heartbeat(void *args);              /* M/Monit heartbeat thread */
@@ -138,19 +137,18 @@ Sem_T    heartbeatCond;
 Mutex_T  heartbeatMutex;
 static volatile bool heartbeatRunning = false;
 
-char *actionnames[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
-char *modenames[] = {"active", "passive"};
-char *onrebootnames[] = {"start", "nostart", "laststate"};
-char *checksumnames[] = {"UNKNOWN", "MD5", "SHA1"};
-char *operatornames[] = {"less than", "less than or equal to", "greater than", "greater than or equal to", "equal to", "not equal to", "changed"};
-char *operatorshortnames[] = {"<", "<=", ">", ">=", "=", "!=", "<>"};
-char *servicetypes[] = {"Filesystem", "Directory", "File", "Process", "Remote Host", "System", "Fifo", "Program", "Network"};
-char *pathnames[] = {"Path", "Path", "Path", "Pid file", "Path", "", "Path"};
-char *icmpnames[] = {"Reply", "", "", "Destination Unreachable", "Source Quench", "Redirect", "", "", "Ping", "", "", "Time Exceeded", "Parameter Problem", "Timestamp Request", "Timestamp Reply", "Information Request", "Information Reply", "Address Mask Request", "Address Mask Reply"};
-char *sslnames[] = {"auto", "v2", "v3", "tlsv1", "tlsv1.1", "tlsv1.2", "tlsv1.3"};
-char *socketnames[] = {"unix", "IP", "IPv4", "IPv6"};
-char *timestampnames[] = {"modify/change time", "access time", "change time", "modify time"};
-char *httpmethod[] = {"", "HEAD", "GET"};
+const char *actionnames[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
+const char *modenames[] = {"active", "passive"};
+const char *onrebootnames[] = {"start", "nostart", "laststate"};
+const char *checksumnames[] = {"UNKNOWN", "MD5", "SHA1"};
+const char *operatornames[] = {"less than", "less than or equal to", "greater than", "greater than or equal to", "equal to", "not equal to", "changed"};
+const char *operatorshortnames[] = {"<", "<=", ">", ">=", "=", "!=", "<>"};
+const char *servicetypes[] = {"Filesystem", "Directory", "File", "Process", "Remote Host", "System", "Fifo", "Program", "Network"};
+const char *pathnames[] = {"Path", "Path", "Path", "Pid file", "Path", "", "Path"};
+const char *icmpnames[] = {"Reply", "", "", "Destination Unreachable", "Source Quench", "Redirect", "", "", "Ping", "", "", "Time Exceeded", "Parameter Problem", "Timestamp Request", "Timestamp Reply", "Information Request", "Information Reply", "Address Mask Request", "Address Mask Reply"};
+const char *socketnames[] = {"unix", "IP", "IPv4", "IPv6"};
+const char *timestampnames[] = {"modify/change time", "access time", "change time", "modify time"};
+const char *httpmethod[] = {"", "HEAD", "GET"};
 
 
 /* ---------------------------------------------------- MARK: - Public */
@@ -169,9 +167,11 @@ int main(int argc, char **argv) {
         Ssl_start();
 #endif
         init_env();
-        handle_options(argc, argv);
+        List_T arguments = List_new();
+        handle_options(argc, argv, arguments);
         do_init();
-        do_action(argc, argv);
+        do_action(arguments);
+        List_free(&arguments);
         do_exit(false);
         return 0;
 }
@@ -203,7 +203,7 @@ bool interrupt() {
 /* --------------------------------------------------------- MARK: - Private */
 
 
-static void _validateOnce() {
+static void _validateOnce(void) {
         if (State_open()) {
                 State_restore();
                 validate();
@@ -406,8 +406,8 @@ static void do_reinit() {
 /**
  * Dispatch to the submitted action - actions are program arguments
  */
-static void do_action(int argc, char **args) {
-        char *action = args[optind];
+static void do_action(List_T arguments) {
+        char *action = List_pop(arguments);
 
         Run.flags |= Run_Once;
 
@@ -418,7 +418,7 @@ static void do_action(int argc, char **args) {
                    IS(action, "monitor")   ||
                    IS(action, "unmonitor") ||
                    IS(action, "restart")) {
-                char *service = args[++optind];
+                char *service = List_pop(arguments);
                 if (Run.mygroup || service) {
                         int errors = 0;
                         List_T services = List_new();
@@ -455,19 +455,19 @@ static void do_action(int argc, char **args) {
                 LogInfo("Reinitializing %s daemon\n", prog);
                 kill_daemon(SIGHUP);
         } else if (IS(action, "status")) {
-                char *service = args[++optind];
+                char *service = List_pop(arguments);
                 if (! HttpClient_status(Run.mygroup, service))
                         exit(1);
         } else if (IS(action, "summary")) {
-                char *service = args[++optind];
+                char *service = List_pop(arguments);
                 if (! HttpClient_summary(Run.mygroup, service))
                         exit(1);
         } else if (IS(action, "report")) {
-                char *type = args[++optind];
+                char *type = List_pop(arguments);
                 if (! HttpClient_report(type))
                         exit(1);
         } else if (IS(action, "procmatch")) {
-                char *pattern = args[++optind];
+                char *pattern = List_pop(arguments);
                 if (! pattern) {
                         printf("Invalid syntax - usage: procmatch \"<pattern>\"\n");
                         exit(1);
@@ -477,7 +477,7 @@ static void do_action(int argc, char **args) {
                 kill_daemon(SIGTERM);
         } else if (IS(action, "validate")) {
                 if (do_wakeupcall()) {
-                        char *service = args[++optind];
+                        char *service = List_pop(arguments);
                         HttpClient_status(Run.mygroup, service);
                 } else {
                         _validateOnce();
@@ -542,9 +542,6 @@ static void do_default() {
                         LogInfo("Starting Monit %s daemon\n", VERSION);
                 }
 
-                if (Run.startdelay)
-                        LogInfo("Monit start delay set to %ds\n", Run.startdelay);
-
                 if (! (Run.flags & Run_Foreground))
                         daemonize();
 
@@ -559,9 +556,11 @@ static void do_default() {
 
                 atexit(file_finalize);
 
-                if (Run.startdelay) {
+                if (Run.startdelay && State_reboot()) {
                         time_t now = Time_now();
                         time_t delay = now + Run.startdelay;
+
+                        LogInfo("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
 
                         /* sleep can be interrupted by signal => make sure we paused long enough */
                         while (now < delay) {
@@ -613,42 +612,44 @@ static void do_default() {
  * Handle program options - Options set from the commandline
  * takes precedence over those found in the control file
  */
-static void handle_options(int argc, char **argv) {
+static void handle_options(int argc, char **argv, List_T arguments) {
         int opt;
         int deferred_opt = 0;
         opterr = 0;
         Run.mygroup = NULL;
-        const char *shortopts = "c:d:g:l:p:s:HIirtvVhB";
+        const char *shortopts = "+c:d:g:l:p:s:HIirtvVhB";
+        while (optind < argc) {
 #ifdef HAVE_GETOPT_LONG
-        struct option longopts[] = {
-                {"conf",        required_argument,      NULL,   'c'},
-                {"daemon",      required_argument,      NULL,   'd'},
-                {"group",       required_argument,      NULL,   'g'},
-                {"logfile",     required_argument,      NULL,   'l'},
-                {"pidfile",     required_argument,      NULL,   'p'},
-                {"statefile",   required_argument,      NULL,   's'},
-                {"hash",        optional_argument,      NULL,   'H'},
-                {"id",          no_argument,            NULL,   'i'},
-                {"help",        no_argument,            NULL,   'h'},
-                {"resetid",     no_argument,            NULL,   'r'},
-                {"test",        no_argument,            NULL,   't'},
-                {"verbose",     no_argument,            NULL,   'v'},
-                {"batch",       no_argument,            NULL,   'B'},
-                {"interactive", no_argument,            NULL,   'I'},
-                {"version",     no_argument,            NULL,   'V'},
-                {0}
-        };
-        while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1)
+                struct option longopts[] = {
+                        {"conf",        required_argument,      NULL,   'c'},
+                        {"daemon",      required_argument,      NULL,   'd'},
+                        {"group",       required_argument,      NULL,   'g'},
+                        {"logfile",     required_argument,      NULL,   'l'},
+                        {"pidfile",     required_argument,      NULL,   'p'},
+                        {"statefile",   required_argument,      NULL,   's'},
+                        {"hash",        optional_argument,      NULL,   'H'},
+                        {"id",          no_argument,            NULL,   'i'},
+                        {"help",        no_argument,            NULL,   'h'},
+                        {"resetid",     no_argument,            NULL,   'r'},
+                        {"test",        no_argument,            NULL,   't'},
+                        {"verbose",     no_argument,            NULL,   'v'},
+                        {"batch",       no_argument,            NULL,   'B'},
+                        {"interactive", no_argument,            NULL,   'I'},
+                        {"version",     no_argument,            NULL,   'V'},
+                        {0}
+                };
+                if ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1)
 #else
-                while ((opt = getopt(argc, argv, shortopts)) != -1)
+                if ((opt = getopt(argc, argv, shortopts)) != -1)
 #endif
                 {
                         switch (opt) {
                                 case 'c':
                                 {
                                         char *f = optarg;
+                                        char realpath[PATH_MAX] = {};
                                         if (f[0] != SEPARATOR_CHAR)
-                                                f = File_getRealPath(optarg, (char[PATH_MAX]){});
+                                                f = File_getRealPath(optarg, realpath);
                                         if (! f)
                                                 THROW(AssertException, "The control file '%s' does not exist at %s",
                                                       Str_trunc(optarg, 80), Dir_cwd((char[STRLEN]){}, STRLEN));
@@ -763,7 +764,10 @@ static void handle_options(int argc, char **argv) {
                                         exit(1);
                                 }
                         }
+                } else {
+                        List_append(arguments, argv[optind++]);
                 }
+        }
         /* Handle deferred options to make arguments to the program positional
          independent. These options are handled last, here as they represent exit
          points in the application and the control-file might be set with -c and
@@ -873,14 +877,14 @@ static void version() {
         printf("out");
 #endif
         printf(" large files\n");
-        printf("Copyright (C) 2001-2019 Tildeslash Ltd. All Rights Reserved.\n");
+        printf("Copyright (C) 2001-2020 Tildeslash Ltd. All Rights Reserved.\n");
 }
 
 
 /**
  * M/Monit heartbeat thread
  */
-static void *heartbeat(void *args) {
+static void *heartbeat(__attribute__ ((unused)) void *args) {
         set_signal_block();
         LogInfo("M/Monit heartbeat started\n");
         LOCK(heartbeatMutex)
@@ -903,7 +907,7 @@ static void *heartbeat(void *args) {
 /**
  * Signalhandler for a daemon reload call
  */
-static RETSIGTYPE do_reload(int sig) {
+static RETSIGTYPE do_reload(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoReload;
 }
 
@@ -911,7 +915,7 @@ static RETSIGTYPE do_reload(int sig) {
 /**
  * Signalhandler for monit finalization
  */
-static RETSIGTYPE do_destroy(int sig) {
+static RETSIGTYPE do_destroy(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_Stopped;
 }
 
@@ -919,7 +923,7 @@ static RETSIGTYPE do_destroy(int sig) {
 /**
  * Signalhandler for a daemon wakeup call
  */
-static RETSIGTYPE do_wakeup(int sig) {
+static RETSIGTYPE do_wakeup(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoWakeup;
 }
 

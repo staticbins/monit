@@ -141,7 +141,7 @@ char *file_findControlFile() {
 }
 
 
-bool file_createPidFile(char *pidfile) {
+bool file_createPidFile(const char *pidfile) {
         ASSERT(pidfile);
         unlink(pidfile);
         FILE *F = fopen(pidfile, "w");
@@ -155,7 +155,7 @@ bool file_createPidFile(char *pidfile) {
 }
 
 
-bool file_checkStat(char *filename, char *description, int permmask) {
+bool file_checkStat(const char *filename, const char *description, mode_t permmask) {
         ASSERT(filename);
         ASSERT(description);
         errno = 0;
@@ -180,7 +180,7 @@ bool file_checkStat(char *filename, char *description, int permmask) {
 }
 
 
-bool file_checkQueueDirectory(char *path) {
+bool file_checkQueueDirectory(const char *path) {
         if (mkdir(path, 0700) < 0 && errno != EEXIST) {
                 LogError("Cannot create the event queue directory '%s' -- %s\n", path, STRERROR);
                 return false;
@@ -189,7 +189,7 @@ bool file_checkQueueDirectory(char *path) {
 }
 
 
-bool file_checkQueueLimit(char *path, int limit) {
+bool file_checkQueueLimit(const char *path, int limit) {
         if (limit >= 0) {
                 DIR *dir = opendir(path);
                 if (! dir) {
@@ -213,7 +213,7 @@ bool file_checkQueueLimit(char *path, int limit) {
 }
 
 
-bool file_writeQueue(FILE *file, void *data, size_t size) {
+bool file_writeQueue(FILE *file, const void *data, size_t size) {
         ASSERT(file);
         /* write size */
         size_t rv = fwrite(&size, 1, sizeof(size_t), file);
@@ -266,7 +266,7 @@ void *file_readQueue(FILE *file, size_t *size) {
 }
 
 
-bool file_readProc(char *buf, int buf_size, char *name, int pid, int *bytes_read) {
+bool file_readProc(char *buf, int buf_size, const char *name, int pid, int *bytes_read) {
         ASSERT(buf);
         ASSERT(name);
 

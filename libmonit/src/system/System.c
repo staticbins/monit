@@ -29,7 +29,6 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -119,26 +118,12 @@ int System_fds() {
 }
 
 
-int System_cpus(void) {
-        static int ncores = 0;
-        if (!ncores) {
-                ncores = (int)sysconf(_SC_NPROCESSORS_ONLN);
-                if (ncores <= 0) {
-                        int mib[2] = {CTL_HW, HW_NCPU};
-                        size_t len = sizeof(ncores);
-                        sysctl(mib, 2, &ncores, &len, NULL, 0);
-                }
-        }
-        return ncores;
-}
-
-
 bool System_random(void *buf, size_t nbytes) {
 #ifdef HAVE_ARC4RANDOM_BUF
         arc4random_buf(buf, nbytes);
         return true;
 #elif defined HAVE_GETRANDOM
-        return (getrandom(buf, nbytes, 0) == nbytes);
+        return (getrandom(buf, nbytes, 0) == (ssize_t)nbytes);
 #else
         int fd = open("/dev/urandom", O_RDONLY);
         if (fd >= 0) {
@@ -158,9 +143,8 @@ bool System_random(void *buf, size_t nbytes) {
 }
 
 
-uint64_t System_randomNumber(uint64_t limit) {
-        assert(limit > 1 && limit <= UINT64_MAX);
-        uint64_t random = 0;
+unsigned long long System_randomNumber() {
+        unsigned long long random;
         System_random(&random, sizeof(random));
         return random % limit;
 }

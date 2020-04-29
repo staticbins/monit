@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "Fmt.h"
+#include "Convert.h"
 
 
 /* ----------------------------------------------------- MARK: - Definitions */
@@ -42,45 +42,38 @@ static inline bool _isIntegral(double x, double precision) {
 /* ------------------------------------------------------- Private Methods */
 
 
-static inline char *_bytestr(double bytes, char s[static 10], int base) {
-        assert(s);
-        const char *kNotation[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", NULL};
-        *s = 0;
-        char *sign = (bytes < 0) ? "-" : "";
-        bytes = fabs(bytes);
-        assert(bytes < 1e+24);
-        for (int i = 0; kNotation[i]; i++) {
-                if (bytes >= base) {
-                        bytes /= base;
-                } else {
-                        snprintf(s, 10, _isIntegral(bytes, 0.05) ? "%s%.0lf %s" : "%s%.1lf %s", sign, bytes, kNotation[i]);
-                        break;
-                }
-        }
-        return s;
+static bool _isInt(double x) {
+    return fabs(x - round(x)) < epsilon;
 }
 
 
 /* -------------------------------------------------------- Public Methods */
 
 
-char *Fmt_ibyte(double bytes, char s[static 10]) {
-        int base = 1024;
-        return _bytestr(bytes, s, base);
+char *Convert_bytes2str(double bytes, char s[static 10]) {
+    assert(s);
+    static const char *kNotation[] = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", NULL};
+    *s = 0;
+    const char *sign = (bytes < 0) ? "-" : "";
+    bytes = fabs(bytes);
+    assert(bytes < 1e+24);
+    for (int i = 0; kNotation[i]; i++) {
+        if (bytes >= 1024) {
+            bytes /= 1024;
+        } else {
+            snprintf(s, 10, _isInt(bytes) ? "%s%.0lf %s" : "%s%.1lf %s", sign, bytes, kNotation[i]);
+            break;
+        }
+    }
+    return s;
 }
 
 
-char *Fmt_byte(double bytes, char s[static 10]) {
-        int base = 1000;
-        return _bytestr(bytes, s, base);
-}
-
-
-char *Fmt_ms(double milli, char s[static 11]) {
+char *Convert_time2str(double milli, char s[static 11]) {
     assert(s);
     struct conversion {
         double base;
-        char *suffix;
+        const char *suffix;
     } conversion[] = {
         {1000, "ms"}, // millisecond
         {60,   "s"},  // second
@@ -90,10 +83,10 @@ char *Fmt_ms(double milli, char s[static 11]) {
         {999,  "y"}   // year
     };
     *s = 0;
-    char *sign = (milli < 0) ? "-" : "";
+    const char *sign = (milli < 0) ? "-" : "";
     milli = fabs(milli);
     assert(milli < 3.14e+12); // -99.569 y
-    for (int i = 0; i < (sizeof(conversion) / sizeof(conversion[0])); i++) {
+    for (size_t i = 0; i < (sizeof(conversion) / sizeof(conversion[0])); i++) {
         if (milli >= conversion[i].base) {
             milli /= conversion[i].base;
         } else {

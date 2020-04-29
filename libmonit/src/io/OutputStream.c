@@ -64,7 +64,7 @@ struct T {
         uchar_t *length;
         bool isclosed;
         int sessionWritten;
-        int64_t bytesWritten;
+        long long bytesWritten;
         uchar_t buffer[BUFFER_SIZE + 1];
 };
 
@@ -173,7 +173,7 @@ static void putd(T S, const char *str, int len, unsigned char flags[], int width
 }
 
 
-static void cvt_s(T S, int code, va_list_box *box, unsigned char flags[], int width, int precision) {
+static void cvt_s(T S, __attribute__ ((unused)) int code, va_list_box *box, unsigned char flags[], int width, int precision) {
         uchar_t *str = va_arg(box->ap, uchar_t *);
         assert(str);
         int len = (int)strlen((char*)str);
@@ -198,7 +198,7 @@ static void cvt_s(T S, int code, va_list_box *box, unsigned char flags[], int wi
 }
 
 
-static void cvt_d(T S, int code, va_list_box *box, unsigned char flags[], int width, int precision) {
+static void cvt_d(T S, __attribute__ ((unused)) int code, va_list_box *box, unsigned char flags[], int width, int precision) {
         int val = va_arg(box->ap, int);
         unsigned int m;
         char buf[43];
@@ -218,7 +218,7 @@ static void cvt_d(T S, int code, va_list_box *box, unsigned char flags[], int wi
 }
 
 
-static void cvt_l(T S, int code, va_list_box *box, unsigned char flags[], int width, int precision) {
+static void cvt_l(T S, __attribute__ ((unused)) int code, va_list_box *box, unsigned char flags[], int width, int precision) {
         long val = va_arg(box->ap, long);
         unsigned long m;
         char buf[43];
@@ -238,7 +238,7 @@ static void cvt_l(T S, int code, va_list_box *box, unsigned char flags[], int wi
 }
 
 
-static void cvt_u(T S, int code, va_list_box *box, unsigned char flags[], int width, int precision) {
+static void cvt_u(T S, __attribute__ ((unused)) int code, va_list_box *box, unsigned char flags[], int width, int precision) {
         unsigned long m = va_arg(box->ap, unsigned long);
         char buf[43];
         char *p = buf + sizeof buf;
@@ -249,7 +249,7 @@ static void cvt_u(T S, int code, va_list_box *box, unsigned char flags[], int wi
 }
 
 
-static void cvt_o(T S, int code, va_list_box *box, unsigned char flags[], int width, int precision) {
+static void cvt_o(T S, __attribute__ ((unused)) int code, va_list_box *box, unsigned char flags[], int width, int precision) {
         unsigned long m = va_arg(box->ap, unsigned long);
         char buf[43];
         char *p = buf + sizeof buf;
@@ -260,7 +260,7 @@ static void cvt_o(T S, int code, va_list_box *box, unsigned char flags[], int wi
 }
 
 
-static void cvt_x(T S, int code, va_list_box *box, unsigned char flags[], int width, int precision) {
+static void cvt_x(T S, __attribute__ ((unused)) int code, va_list_box *box, unsigned char flags[], int width, int precision) {
         unsigned long m = va_arg(box->ap, unsigned long);
         char buf[43];
         char *p = buf + sizeof buf;
@@ -271,7 +271,7 @@ static void cvt_x(T S, int code, va_list_box *box, unsigned char flags[], int wi
 }
 
 
-static void cvt_p(T S, int code, va_list_box *box, unsigned char flags[], int width, int precision) {
+static void cvt_p(T S, __attribute__ ((unused)) int code, va_list_box *box, unsigned char flags[], int width, int precision) {
         unsigned long m = (unsigned long)va_arg(box->ap, void*);
         char buf[43];
         char *p = buf + sizeof buf;
@@ -283,7 +283,7 @@ static void cvt_p(T S, int code, va_list_box *box, unsigned char flags[], int wi
 }
 
 
-static void cvt_c(T S, int code, va_list_box *box, unsigned char flags[], int width, int precision) {
+static void cvt_c(T S, __attribute__ ((unused)) int code, va_list_box *box, unsigned char flags[], int width, __attribute__ ((unused)) int precision) {
         if (width == INT_MIN)
                 width = 0;
         if (width < 0) {
@@ -316,7 +316,7 @@ static void cvt_f(T S, int code, va_list_box *box, unsigned char flags[], int wi
 }
 
 
-static char *Fmt_flags = "-+ 0";
+static const char *Fmt_flags = "-+ 0";
 static fmt_t cvt[256] = {
         /*   0-  7 */     0,     0,     0,     0,     0,     0,     0,     0,
         /*   8- 15 */     0,     0,     0,     0,     0,     0,     0,     0,
@@ -386,13 +386,13 @@ time_t OutputStream_getTimeout(T S) {
 }
 
 
-int OutputStream_isClosed(T S) {
+bool OutputStream_isClosed(T S) {
         assert(S);
         return S->isclosed;
 }
 
 
-int64_t OutputStream_getBytesWritten(T S) {
+long long OutputStream_getBytesWritten(T S) {
         assert(S);
         return S->bytesWritten;
 }

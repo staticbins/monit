@@ -49,7 +49,7 @@ static bool _update(T L, const char *interface) {
         snprintf(path, sizeof(path), "/sys/class/net/%s/operstate", name);
         FILE *f = fopen(path, "r");
         if (f) {
-                if (fscanf(f, "%256s\n", buf) != 1) {
+                if (fscanf(f, "%255s\n", buf) != 1) {
                         fclose(f);
                         THROW(AssertException, "Cannot parse %s -- %s", path, System_getError(errno));
                 }
@@ -86,7 +86,7 @@ static bool _update(T L, const char *interface) {
         snprintf(path, sizeof(path), "/sys/class/net/%s/duplex", name);
         f = fopen(path, "r");
         if (f) {
-                if (fscanf(f, "%256s\n", buf) == 1 && ! Str_isEqual(buf, "unknown"))
+                if (fscanf(f, "%255s\n", buf) == 1 && ! Str_isEqual(buf, "unknown"))
                         L->duplex = Str_isEqual(buf, "full") ? 1LL : 0LL;
                 else
                         L->duplex = -1;

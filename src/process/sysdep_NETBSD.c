@@ -80,7 +80,7 @@ static int      pagesize;
 static long     total_old    = 0;
 static long     cpu_user_old = 0;
 static long     cpu_syst_old = 0;
-static unsigned maxslp;
+static unsigned int maxslp;
 
 
 /* ---------------------------------------------------- MARK: - Public */
@@ -165,22 +165,29 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 return 0;
         }
 
+        unsigned long long now = Time_milli();
         StringBuffer_T cmdline = NULL;
         if (pflags & ProcessEngine_CollectCommandLine)
                 cmdline = StringBuffer_create(64);
         for (int i = 0; i < treesize; i++) {
-                pt[i].pid              = pinfo[i].p_pid;
-                pt[i].ppid             = pinfo[i].p_ppid;
-                pt[i].cred.uid         = pinfo[i].p_ruid;
-                pt[i].cred.euid        = pinfo[i].p_uid;
-                pt[i].cred.gid         = pinfo[i].p_rgid;
-                pt[i].threads.self     = pinfo[i].p_nlwps;
-                pt[i].uptime           = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
-                pt[i].cpu.time         = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
-                pt[i].memory.usage     = (uint64_t)pinfo[i].p_vm_rssize * (uint64_t)pagesize;
-                pt[i].zombie           = pinfo[i].p_stat == SZOMB ? true : false;
-                pt[i].read.operations  = pinfo[i].p_uru_inblock;
-                pt[i].write.operations = pinfo[i].p_uru_oublock;
+                pt[i].pid                 = pinfo[i].p_pid;
+                pt[i].ppid                = pinfo[i].p_ppid;
+                pt[i].cred.uid            = pinfo[i].p_ruid;
+                pt[i].cred.euid           = pinfo[i].p_uid;
+                pt[i].cred.gid            = pinfo[i].p_rgid;
+                pt[i].threads.self        = pinfo[i].p_nlwps;
+                pt[i].uptime              = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
+                pt[i].cpu.time            = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
+                pt[i].memory.usage        = (unsigned long long)pinfo[i].p_vm_rssize * (unsigned long long)pagesize;
+                pt[i].zombie              = pinfo[i].p_stat == SZOMB ? true : false;
+                pt[i].read.bytes          = -1;
+                pt[i].read.bytesPhysical  = -1;
+                pt[i].read.operations     = pinfo[i].p_uru_inblock;
+                pt[i].read.time           = now;
+                pt[i].write.bytes         = -1;
+                pt[i].write.bytesPhysical = -1;
+                pt[i].write.operations    = pinfo[i].p_uru_oublock;
+                pt[i].write.time          = now;
                 if (pflags & ProcessEngine_CollectCommandLine) {
                         char **args = kvm_getargv2(kvm_handle, &pinfo[i], 0);
                         if (args) {
@@ -232,9 +239,9 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 si->swap.size = 0ULL;
                 return false;
         }
-        si->memory.usage.bytes = (uint64_t)(vm.active + vm.wired) * (uint64_t)vm.pagesize;
-        si->swap.size = (uint64_t)vm.swpages * (uint64_t)vm.pagesize;
-        si->swap.usage.bytes = (uint64_t)vm.swpginuse * (uint64_t)vm.pagesize;
+        si->memory.usage.bytes = (unsigned long long)(vm.active + vm.wired) * (unsigned long long)vm.pagesize;
+        si->swap.size = (unsigned long long)vm.swpages * (unsigned long long)vm.pagesize;
+        si->swap.usage.bytes = (unsigned long long)vm.swpginuse * (unsigned long long)vm.pagesize;
         return true;
 }
 
@@ -263,11 +270,17 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
         si->cpu.usage.user = (total > 0) ? (100. * (double)(cp_time[CP_USER] - cpu_user_old) / total) : -1.;
         si->cpu.usage.system = (total > 0) ? (100. * (double)(cp_time[CP_SYS] - cpu_syst_old) / total) : -1.;
-        si->cpu.usage.wait = 0; /* there is no wait statistic available */
+        si->cpu.usage.iowait = 0; /* there is no wait statistic available */
 
         cpu_user_old = cp_time[CP_USER];
         cpu_syst_old = cp_time[CP_SYS];
 
+        return true;
+}
+
+
+bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+        // Not implemented
         return true;
 }
 

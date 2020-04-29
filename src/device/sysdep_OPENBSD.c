@@ -63,6 +63,7 @@
 #endif
 
 #include "monit.h"
+#include "device.h"
 
 // libmonit
 #include "system/Time.h"
@@ -73,7 +74,7 @@
 
 
 static struct {
-        uint64_t timestamp;
+        unsigned long long timestamp;
         size_t diskCount;
         size_t diskLength;
         struct diskstats *disk;
@@ -91,7 +92,7 @@ static void __attribute__ ((destructor)) _destructor() {
 /* --------------------------------------------------------- MARK: - Private */
 
 
-static uint64_t _timevalToMilli(struct timeval *time) {
+static unsigned long long _timevalToMilli(struct timeval *time) {
         return time->tv_sec * 1000 + time->tv_usec / 1000.;
 }
 
@@ -99,9 +100,9 @@ static uint64_t _timevalToMilli(struct timeval *time) {
 // Parse the device path like /dev/sd0a -> sd0
 static bool _parseDevice(const char *path, Device_T device) {
         const char *base = File_basename(path);
-        for (int len = strlen(base), i = len - 1; i >= 0; i--) {
+        for (ssize_t len = strlen(base), i = len - 1; i >= 0; i--) {
                 if (isdigit(*(base + i))) {
-                        strncpy(device->key, base, i + 1 < sizeof(device->key) ? i + 1 : sizeof(device->key) - 1);
+                        strncpy(device->key, base, i + 1 < (ssize_t)sizeof(device->key) ? i + 1 : (ssize_t)sizeof(device->key) - 1);
                         return true;
                 }
         }
@@ -109,19 +110,19 @@ static bool _parseDevice(const char *path, Device_T device) {
 }
 
 
-static bool _getStatistics(uint64_t now) {
+static bool _getStatistics(unsigned long long now) {
         // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
         if (now > _statistics.timestamp + 1000 || now < _statistics.timestamp - 1000) {
-                size_t len = sizeof(_statistics.diskCount);
+                ssize_t len = sizeof(_statistics.diskCount);
                 int mib[2] = {CTL_HW, HW_DISKCOUNT};
                 if (sysctl(mib, 2, &(_statistics.diskCount), &len, NULL, 0) == -1) {
                         LogError("filesystem statistic error -- cannot get disks count: %s\n", STRERROR);
                         return false;
                 }
-                int length = _statistics.diskCount * sizeof(struct diskstats);
-                if (_statistics.diskLength != length) {
-                        _statistics.diskLength = length;
-                        RESIZE(_statistics.disk, length);
+                len = _statistics.diskCount * sizeof(struct diskstats);
+                if ((ssize_t)_statistics.diskLength != len) {
+                        _statistics.diskLength = len;
+                        RESIZE(_statistics.disk, len);
                 }
                 mib[1] = HW_DISKSTATS;
                 if (sysctl(mib, 2, _statistics.disk, &(_statistics.diskLength), NULL, 0) == -1) {
@@ -134,17 +135,17 @@ static bool _getStatistics(uint64_t now) {
 }
 
 
-static bool _getDummyDiskActivity(void *_inf) {
+static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
         return true;
 }
 
 
 static bool _getBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         bool rv = _getStatistics(now);
         if (rv) {
-                for (int i = 0; i < _statistics.diskCount; i++)     {
+                for (size_t i = 0; i < _statistics.diskCount; i++)     {
                         if (Str_isEqual(inf->filesystem->object.key, _statistics.disk[i].ds_name)) {
                                 Statistics_update(&(inf->filesystem->read.bytes), now, _statistics.disk[i].ds_rbytes);
                                 Statistics_update(&(inf->filesystem->write.bytes), now, _statistics.disk[i].ds_wbytes);
@@ -186,9 +187,9 @@ static bool _compareDevice(const char *device, struct statfs *mnt) {
 }
 
 
-static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
+static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
         struct mystable {
-                uint64_t flag;
+                unsigned long long flag;
                 char *description;
         } t[]= {
                 {MNT_RDONLY, "ro"},
@@ -207,7 +208,7 @@ static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
                 {MNT_QUOTA, "quota"},
                 {MNT_ROOTFS, "rootfs"}
         };
-        for (int i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
+        for (size_t i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
                 if (flags & t[i].flag) {
                         snprintf(inf->filesystem->flags + strlen(inf->filesystem->flags), sizeof(inf->filesystem->flags) - strlen(inf->filesystem->flags) - 1, "%s%s", count++ ? ", " : "", t[i].description);
                 }

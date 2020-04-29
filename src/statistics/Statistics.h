@@ -42,15 +42,15 @@
 typedef struct T {
         bool initialized;
 #ifndef __LP64__
-        uint64_t raw;
+        unsigned long long raw;
 #endif
         struct {
-                uint64_t time;
-                uint64_t value;
+                unsigned long long time;
+                unsigned long long value;
         } last;
         struct {
-                uint64_t time;
-                uint64_t value;
+                unsigned long long time;
+                unsigned long long value;
         } current;
 } *T;
 
@@ -62,7 +62,7 @@ typedef struct T {
  * @param timestamp A value timestamp [ms]
  * @param value A raw value to which the object should be set
  */
-void Statistics_update(T S, uint64_t time, uint64_t value);
+void Statistics_update(T S, unsigned long long time, unsigned long long value);
 
 
 /**
@@ -85,7 +85,7 @@ bool Statistics_initialized(T S);
  * @param S A Statistics object
  * @return last raw value
  */
-uint64_t Statistics_raw(T S);
+unsigned long long Statistics_raw(T S);
 
 
 /**
@@ -93,7 +93,7 @@ uint64_t Statistics_raw(T S);
  * @param S A Statistics object
  * @return delta
  */
-uint64_t Statistics_delta(T S);
+unsigned long long Statistics_delta(T S);
 
 
 /**

@@ -30,8 +30,6 @@
 #include <stdio.h>
 
 #include "monit.h"
-#include "net.h"
-#include "socket.h"
 #include "httpstatus.h"
 
 /* Server masquerade */
@@ -102,7 +100,7 @@ const char *get_status_string(int status_code);
 void add_Impl(void(*doGet)(HttpRequest, HttpResponse), void(*doPost)(HttpRequest, HttpResponse));
 void set_content_type(HttpResponse res, const char *mime);
 const char *get_header(HttpRequest req, const char *header_name);
-void escapeHTML(StringBuffer_T sb, const char *s);
+StringBuffer_T escapeHTML(StringBuffer_T sb, const char *s);
 void send_error(HttpRequest, HttpResponse, int status, const char *message, ...) __attribute__((format (printf, 4, 5)));
 const char *get_parameter(HttpRequest req, const char *parameter_name);
 void set_header(HttpResponse res, const char *name, const char *value, ...) __attribute__((format (printf, 3, 4)));

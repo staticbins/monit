@@ -110,7 +110,7 @@ void Util_printHash(char *file);
  * @param bufsize The size of the buffer
  * @return false if failed, otherwise true
  */
-bool Util_getChecksum(char *file, Hash_Type hashtype, char *buf, int bufsize);
+bool Util_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned long bufsize);
 
 
 /**
@@ -284,7 +284,7 @@ char *Util_getHTTPHostHeader(Socket_T s, char *hostBuf, int len);
  * @param rightExpression rval
  * @return the boolean value of the expression
  */
-bool Util_evalQExpression(Operator_Type operator, int64_t left, int64_t right);
+bool Util_evalQExpression(Operator_Type operator, long long left, long long right);
 
 
 /**
@@ -346,7 +346,7 @@ StringBuffer_T Util_printEventratio(Action_T action, StringBuffer_T buf);
  * @param rule Rule description
  * @return StringBuffer reference
  */
-StringBuffer_T Util_printRule(StringBuffer_T buf, EventAction_T action, const char *rule, ...);
+StringBuffer_T Util_printRule(StringBuffer_T buf, EventAction_T action, const char *rule, ...) __attribute__((format (printf, 3, 4)));
 
 
 /**

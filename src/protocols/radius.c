@@ -58,7 +58,7 @@ void check_radius(Socket_T socket) {
         int secret_len;
         Port_T P;
         md5_context_t ctx;
-        char *secret;
+        const char *secret;
         unsigned char *attr;
         unsigned char  digest[16];
         unsigned char  response[STRLEN];
@@ -128,7 +128,7 @@ void check_radius(Socket_T socket) {
         System_random(request + 4, 16);
 
         /* sign the packet */
-        Util_hmacMD5(request, sizeof(request), (unsigned char *)secret, secret_len, request + 22);
+        Util_hmacMD5(request, sizeof(request), (const unsigned char *)secret, secret_len, request + 22);
 
         if (Socket_write(socket, (unsigned char *)request, sizeof(request)) < 0)
                 THROW(IOException, "RADIUS: error sending query -- %s", STRERROR);

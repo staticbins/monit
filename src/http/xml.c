@@ -159,18 +159,27 @@ static void _ioStatistics(StringBuffer_T B, const char *name, IOStatistics_T sta
         StringBuffer_append(B, "<%s>", name);
         if (Statistics_initialized(&(statistics->bytes))) {
                 StringBuffer_append(B,
-                        "<bytes>"
+                        "<bytesgeneric>"
                         "<count>%.0lf</count>"     // bytes per second
-                        "<total>%"PRIu64"</total>" // bytes since boot
-                        "</bytes>",
+                        "<total>%llu</total>" // bytes since boot
+                        "</bytesgeneric>",
                         Statistics_deltaNormalize(&(statistics->bytes)),
                         Statistics_raw(&(statistics->bytes)));
+        }
+        if (Statistics_initialized(&(statistics->bytesPhysical))) {
+                StringBuffer_append(B,
+                        "<bytes>"
+                        "<count>%.0lf</count>"     // bytes per second
+                        "<total>%llu</total>" // bytes since boot
+                        "</bytes>",
+                        Statistics_deltaNormalize(&(statistics->bytesPhysical)),
+                        Statistics_raw(&(statistics->bytesPhysical)));
         }
         if (Statistics_initialized(&(statistics->operations))) {
                 StringBuffer_append(B,
                         "<operations>"
                         "<count>%.0lf</count>"     // operations per second
-                        "<total>%"PRIu64"</total>" // operations since boot
+                        "<total>%llu</total>" // operations since boot
                         "</operations>",
                         Statistics_deltaNormalize(&(statistics->operations)),
                         Statistics_raw(&(statistics->operations)));
@@ -217,15 +226,27 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
         }
         if (Util_hasServiceStatus(S)) {
                 switch (S->type) {
+                        case Service_System:
+                                StringBuffer_append(B,
+                                        "<filedescriptors>"
+                                        "<allocated>%lld</allocatedopen>"
+                                        "<unused>%lld</unused>"
+                                        "<maximum>%lld</maximum>"
+                                        "</filedescriptors>",
+                                        systeminfo.filedescriptors.allocated,
+                                        systeminfo.filedescriptors.unused,
+                                        systeminfo.filedescriptors.maximum);
+                                break;
+
                         case Service_File:
                                 StringBuffer_append(B,
                                         "<mode>%o</mode>"
                                         "<uid>%d</uid>"
                                         "<gid>%d</gid>"
                                         "<timestamps>"
-                                        "<access>%"PRIu64"</access>"
-                                        "<change>%"PRIu64"</change>"
-                                        "<modify>%"PRIu64"</modify>"
+                                        "<access>%llu</access>"
+                                        "<change>%llu</change>"
+                                        "<modify>%llu</modify>"
                                         "</timestamps>"
                                         "<size>%lld</size>",
                                         S->inf.file->mode & 07777,
@@ -245,9 +266,9 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<uid>%d</uid>"
                                         "<gid>%d</gid>"
                                         "<timestamps>"
-                                        "<access>%"PRIu64"</access>"
-                                        "<change>%"PRIu64"</change>"
-                                        "<modify>%"PRIu64"</modify>"
+                                        "<access>%llu</access>"
+                                        "<change>%llu</change>"
+                                        "<modify>%llu</modify>"
                                         "</timestamps>",
                                         S->inf.directory->mode & 07777,
                                         (int)S->inf.directory->uid,
@@ -263,9 +284,9 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<uid>%d</uid>"
                                         "<gid>%d</gid>"
                                         "<timestamps>"
-                                        "<access>%"PRIu64"</access>"
-                                        "<change>%"PRIu64"</change>"
-                                        "<modify>%"PRIu64"</modify>"
+                                        "<access>%llu</access>"
+                                        "<change>%llu</change>"
+                                        "<modify>%llu</modify>"
                                         "</timestamps>",
                                         S->inf.fifo->mode & 07777,
                                         (int)S->inf.fifo->uid,
@@ -405,7 +426,15 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 "<cpu>"
                                                 "<percent>%.1f</percent>"
                                                 "<percenttotal>%.1f</percenttotal>"
-                                                "</cpu>",
+                                                "</cpu>"
+                                                "<filedescriptors>"
+                                                "<open>%lld</open>"
+                                                "<opentotal>%lld</opentotal>"
+                                                "<limit>"
+                                                "<soft>%lld</soft>"
+                                                "<hard>%lld</hard>"
+                                                "</limit>"
+                                                "</filedescriptors>",
                                                 S->inf.process->threads,
                                                 S->inf.process->children,
                                                 S->inf.process->mem_percent,
@@ -413,7 +442,11 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 (uint64_t)((double)S->inf.process->mem / 1024.),       // Send as kB for backward compatibility
                                                 (uint64_t)((double)S->inf.process->total_mem / 1024.), // Send as kB for backward compatibility
                                                 S->inf.process->cpu_percent,
-                                                S->inf.process->total_cpu_percent);
+                                                S->inf.process->total_cpu_percent,
+                                                S->inf.process->filedescriptors.open,
+                                                S->inf.process->filedescriptors.openTotal,
+                                                S->inf.process->filedescriptors.limit.soft,
+                                                S->inf.process->filedescriptors.limit.hard);
                                 }
                                 _ioStatistics(B, "read", &(S->inf.process->read));
                                 _ioStatistics(B, "write", &(S->inf.process->write));
@@ -496,7 +529,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.,
                                             systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.,
 #ifdef HAVE_CPU_WAIT
-                                            systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.,
+                                            systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.,
 #endif
                                             systeminfo.memory.usage.percent,
                                             (uint64_t)((double)systeminfo.memory.usage.bytes / 1024.),               // Send as kB for backward compatibility

@@ -120,7 +120,7 @@ static HttpParameter parse_parameters(char *);
 static bool create_parameters(HttpRequest req);
 static void destroy_HttpResponse(HttpResponse);
 static HttpRequest create_HttpRequest(Socket_T);
-static void internal_error(Socket_T, int, char *);
+static void internal_error(Socket_T, int, const char *);
 static HttpResponse create_HttpResponse(Socket_T);
 static bool is_authenticated(HttpRequest, HttpResponse);
 static int get_next_token(char *s, int *cursor, char **r);
@@ -176,7 +176,7 @@ void Processor_setHttpPostLimit() {
 }
 
 
-void escapeHTML(StringBuffer_T sb, const char *s) {
+StringBuffer_T escapeHTML(StringBuffer_T sb, const char *s) {
         for (int i = 0; s[i]; i++) {
                 if (s[i] == '<')
                         StringBuffer_append(sb, "&lt;");
@@ -187,6 +187,7 @@ void escapeHTML(StringBuffer_T sb, const char *s) {
                 else
                         StringBuffer_append(sb, "%c", s[i]);
         }
+        return sb;
 }
 
 
@@ -465,8 +466,9 @@ static void do_service(Socket_T s) {
  */
 static char *get_date(char *result, int size) {
         time_t now;
+        struct tm converted;
         time(&now);
-        if (strftime(result, size, DATEFMT, gmtime(&now)) <= 0)
+        if (strftime(result, size, DATEFMT, gmtime_r(&now, &converted)) <= 0)
                 *result = 0;
         return result;
 }
@@ -840,7 +842,7 @@ static bool basic_authenticate(HttpRequest req) {
  * used internal if the service function fails to setup the framework
  * properly; i.e. with a valid HttpRequest and a valid HttpResponse.
  */
-static void internal_error(Socket_T S, int status, char *msg) {
+static void internal_error(Socket_T S, int status, const char *msg) {
         char date[STRLEN];
         char server[STRLEN];
         const char *status_msg = get_status_string(status);

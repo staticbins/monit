@@ -121,27 +121,27 @@ typedef struct mystate4 {
         int32_t            ncycle;
         union {
                 struct {
-                        uint64_t atime;
-                        uint64_t ctime;
-                        uint64_t mtime;
+                        unsigned long long atime;
+                        unsigned long long ctime;
+                        unsigned long long mtime;
                         int32_t mode;
                 } directory;
 
                 struct {
-                        uint64_t inode;
-                        uint64_t readpos;
-                        uint64_t size;
-                        uint64_t atime;
-                        uint64_t ctime;
-                        uint64_t mtime;
+                        unsigned long long inode;
+                        unsigned long long readpos;
+                        unsigned long long size;
+                        unsigned long long atime;
+                        unsigned long long ctime;
+                        unsigned long long mtime;
                         int32_t mode;
                         MD_T hash;
                 } file;
 
                 struct {
-                        uint64_t atime;
-                        uint64_t ctime;
-                        uint64_t mtime;
+                        unsigned long long atime;
+                        unsigned long long ctime;
+                        unsigned long long mtime;
                         int32_t mode;
                 } fifo;
 
@@ -151,7 +151,7 @@ typedef struct mystate4 {
 
                 struct {
                         int32_t duplex;
-                        int64_t speed;
+                        long long speed;
                         //FIXME: when Link API is moved from libmonit to monit, save also link bytes in/out and packets in/out history, so the network statistics is not reset on each monit reload
                 } net;
         } priv;
@@ -167,21 +167,21 @@ typedef struct mystate3 {
         int32_t            ncycle;
         union {
                 struct {
-                        uint64_t timestamp;
+                        unsigned long long timestamp;
                         int32_t mode;
                 } directory;
 
                 struct {
-                        uint64_t inode;
-                        uint64_t readpos;
-                        uint64_t size;
-                        uint64_t timestamp;
+                        unsigned long long inode;
+                        unsigned long long readpos;
+                        unsigned long long size;
+                        unsigned long long timestamp;
                         int32_t mode;
                         MD_T hash;
                 } file;
 
                 struct {
-                        uint64_t timestamp;
+                        unsigned long long timestamp;
                         int32_t mode;
                 } fifo;
 
@@ -192,7 +192,7 @@ typedef struct mystate3 {
 
                 struct {
                         int32_t duplex;
-                        int64_t speed;
+                        long long speed;
                 } net;
         } priv;
 } State3_T;
@@ -211,8 +211,8 @@ typedef struct mystate1 {
         int32_t            ncycle;
         union {
                 struct {
-                        uint64_t inode;
-                        uint64_t readpos;
+                        unsigned long long inode;
+                        unsigned long long readpos;
                 } file;
         } priv;
 } State1_T;
@@ -225,12 +225,12 @@ typedef struct mystate0 {
         int32_t  nstart;
         int32_t  ncycle;
         int32_t  monitor;
-        uint64_t error;               // obsolete since Monit 5.0
+        unsigned long long error;               // obsolete since Monit 5.0
 } State0_T;
 
 
 static int file = -1;
-static uint64_t booted = 0ULL;
+static unsigned long long booted = 0ULL;
 static bool _stateDirty = false;
 
 
@@ -260,13 +260,13 @@ static void _updateMonitor(Service_T S, Monitor_State monitor) {
 }
 
 
-static void _updateFilePosition(Service_T S, uint64_t inode, uint64_t readpos) {
+static void _updateFilePosition(Service_T S, unsigned long long inode, unsigned long long readpos) {
         S->inf.file->inode = (ino_t)inode;
         S->inf.file->readpos = (off_t)readpos;
 }
 
 
-static void _updateTimestamp(Service_T S, uint64_t atime, uint64_t ctime, uint64_t mtime) {
+static void _updateTimestamp(Service_T S, unsigned long long atime, unsigned long long ctime, unsigned long long mtime) {
         for (Timestamp_T t = S->timestamplist; t; t = t->next) {
                 if (t->test_changes) {
                         switch (t->type) {
@@ -295,7 +295,7 @@ static void _updatePermission(Service_T S, int mode) {
 }
 
 
-static void _updateSize(Service_T S, int64_t size) {
+static void _updateSize(Service_T S, long long size) {
         for (Size_T s = S->sizelist; s; s = s->next) {
                 if (s->test_changes) {
                         s->size = size;
@@ -313,7 +313,7 @@ static void _updateChecksum(Service_T S, char *hash) {
 }
 
 
-static void _updateLinkSpeed(Service_T S, int32_t duplex, int64_t speed) {
+static void _updateLinkSpeed(Service_T S, int32_t duplex, long long speed) {
         for (LinkSpeed_T l = S->linkspeedlist; l; l = l->next) {
                 l->duplex = duplex;
                 l->speed = speed;
@@ -321,7 +321,7 @@ static void _updateLinkSpeed(Service_T S, int32_t duplex, int64_t speed) {
 }
 
 
-static void _restoreV4() {
+static void _restoreV4(void) {
         // System header
         if (read(file, &booted, sizeof(booted)) != sizeof(booted)) {
                 THROW(IOException, "Unable to read system boot time");
@@ -368,7 +368,7 @@ static void _restoreV4() {
 }
 
 
-static void _restoreV3() {
+static void _restoreV3(void) {
         // System header
         if (read(file, &booted, sizeof(booted)) != sizeof(booted)) {
                 THROW(IOException, "Unable to read system boot time");
@@ -412,7 +412,7 @@ static void _restoreV3() {
 }
 
 
-static void _restoreV2() {
+static void _restoreV2(void) {
         // System header
         booted = systeminfo.booted; // No boot time available => for backward compatibility, act as if the system was not rebooted, as we don't know if monit was only restarted or machine rebooted
         // Services state
@@ -454,7 +454,7 @@ static void _restoreV2() {
 }
 
 
-static void _restoreV1() {
+static void _restoreV1(void) {
         // System header
         booted = systeminfo.booted; // No boot time available => for backward compatibility, act as if the system was not rebooted, as we don't know if monit was only restarted or machine rebooted
         // Services state
@@ -543,28 +543,28 @@ void State_save() {
                         state.ncycle = service->ncycle;
                         switch (service->type) {
                                 case Service_Directory:
-                                        state.priv.directory.atime = (uint64_t)service->inf.directory->timestamp.access;
-                                        state.priv.directory.ctime = (uint64_t)service->inf.directory->timestamp.change;
-                                        state.priv.directory.mtime = (uint64_t)service->inf.directory->timestamp.modify;
+                                        state.priv.directory.atime = (unsigned long long)service->inf.directory->timestamp.access;
+                                        state.priv.directory.ctime = (unsigned long long)service->inf.directory->timestamp.change;
+                                        state.priv.directory.mtime = (unsigned long long)service->inf.directory->timestamp.modify;
                                         state.priv.directory.mode = service->inf.directory->mode;
                                         break;
 
                                 case Service_Fifo:
-                                        state.priv.fifo.atime = (uint64_t)service->inf.fifo->timestamp.access;
-                                        state.priv.fifo.ctime = (uint64_t)service->inf.fifo->timestamp.change;
-                                        state.priv.fifo.mtime = (uint64_t)service->inf.fifo->timestamp.modify;
+                                        state.priv.fifo.atime = (unsigned long long)service->inf.fifo->timestamp.access;
+                                        state.priv.fifo.ctime = (unsigned long long)service->inf.fifo->timestamp.change;
+                                        state.priv.fifo.mtime = (unsigned long long)service->inf.fifo->timestamp.modify;
                                         state.priv.fifo.mode = service->inf.fifo->mode;
                                         break;
 
                                 case Service_File:
                                         state.priv.file.inode = service->inf.file->inode;
                                         state.priv.file.readpos = service->inf.file->readpos;
-                                        state.priv.file.size = (int64_t)service->inf.file->size;
-                                        state.priv.file.atime = (uint64_t)service->inf.file->timestamp.access;
-                                        state.priv.file.ctime = (uint64_t)service->inf.file->timestamp.change;
-                                        state.priv.file.mtime = (uint64_t)service->inf.file->timestamp.modify;
+                                        state.priv.file.size = (long long)service->inf.file->size;
+                                        state.priv.file.atime = (unsigned long long)service->inf.file->timestamp.access;
+                                        state.priv.file.ctime = (unsigned long long)service->inf.file->timestamp.change;
+                                        state.priv.file.mtime = (unsigned long long)service->inf.file->timestamp.modify;
                                         state.priv.file.mode = service->inf.file->mode;
-                                        strncpy(state.priv.file.hash, service->inf.file->cs_sum, sizeof(state.priv.file.hash) - 1);
+                                        snprintf(state.priv.file.hash, sizeof(state.priv.file.hash), "%s", service->inf.file->cs_sum);
                                         break;
 
                                 case Service_Filesystem:
@@ -660,5 +660,10 @@ void State_restore() {
                 LogError("State file '%s': %s\n", Run.files.state, Exception_frame.message);
         }
         END_TRY;
+}
+
+
+bool State_reboot() {
+        return systeminfo.booted == booted ? false : true;
 }
 

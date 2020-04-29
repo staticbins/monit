@@ -518,9 +518,8 @@ immediately. Calling C<monit> with the quit argument will kill a
 running Monit daemon process instead of waking it up.
 
 The start delay option can be used to wait (once) before Monit starts
-checking services. This can be useful for example when the system
-boots. Monit will by default start checking services immediately at
-startup.
+checking services after system reboot. Monit will by default start
+checking services immediately at startup.
 
 
 =head1 INIT SUPPORT
@@ -602,20 +601,31 @@ Common SSL/TLS options can be set using the following statement and
 will apply to all SSL connections made through Monit:
 
   SET <SSL | TLS> [OPTIONS] {
-      VERSION: <AUTO | SSLV2 | SSLV3 | TLSV1 | TLSV11 | TLSV12 | TLSV13>
+      VERSION: <AUTO | [-]SSLV2 | [-]SSLV3 | [-]TLSV1 | [-]TLSV11 | [-]TLSV12 | [-]TLSV13>, ...
       VERIFY: <ENABLE | DISABLE>
       SELFSIGNED: <ALLOW | REJECT>
       CIPHERS: <string>
       PEMFILE: <path>
+      PEMCHAIN: <path>
+      PEMKEY: <path>
       CLIENTPEMFILE: <path>
       CACERTIFICATEFILE: <path>
       CACERTIFICATEPATH: <path>
   }
 
 I<VERSION> set the specific SSL/TLS version to use. By default Monit
-uses AUTO. In AUTO mode, only TLS is used, SSLv2 and SSLv3 is
-considered obsolete. If you have to use SSLv2 or SSLv3, you must
-explicitly set the version.
+uses AUTO. In AUTO mode, only TLS 1.2 and 1.3 are allowed, all other
+protocols are considered obsolete. If you want to use the obsolete
+protocol you must explicitly set the version. You can exclude the protocol
+using the "-" prefix.
+Exclude list example:
+  set ssl {
+      version: auto -sslv2 -sslv3 -tlsv1 -tlsv11
+  }
+Example of allowed protocols list:
+  set ssl {
+      version: tlsv12 tlsv13
+  }
 
 I<VERIFY> enable SSL server certificate verification. This will verify
 and report an error if the server certificate is not trusted, not valid
@@ -633,6 +643,11 @@ I<CIPHERS> override default SSL/TLS ciphers.
 
 I<PEMFILE> set the path to the SSL server certificate
 "database-file" in PEM format. This options has effect only for the
+monit HTTP interface.
+
+As an alternative to setting I<PEMFILE> with a combined chain-key file,
+I<PEMCHAIN> and I<PEMKEY> set the path to the SSL certificate chain respectively
+the server private key file in PEM format. This options has effect only for the
 monit HTTP interface.
 
 I<CLIENTPEMFILE> set the path to the PEM encoded SSL client certificates
@@ -797,17 +812,32 @@ over IP version 4, specify an IPv4 address:
 B<SSL> enable SSL/TLS for Monit's web interface.  See L<options|"SSL OPTIONS">
 for full list of SSL options.
 
-I<PEMFILE> set the path to the PEM encoded file, which contains the
+I<PEMFILE> sets the path to the PEM encoded file, which contains the
 server's private key and certificate. This file should be stored in a
 safe place on the filesystem and should have strict permissions, no
 more than 0700.
 
-Example:
+As an alternative I<PEMCHAIN> and I<PEMKEY> sets the path to separate PEM encoded
+certificate chain and private key file. The key file should be stored in a
+safe place on the filesystem and should have strict permissions, no
+more than 0700.
+
+Example for using pemfile:
 
  set httpd
      port 2812
      with ssl {
         pemfile: /etc/ssl/certs/monit.pem
+     }
+     allow myuser:mypassword
+
+Example for using separate certificate chain and key:
+
+ set httpd
+     port 2812
+     with ssl {
+        pemchain: /etc/ssl/certs/monit.chain.pem
+        pemkey: /etc/ssl/certs/monit.key.pem
      }
      allow myuser:mypassword
 
@@ -1962,17 +1992,20 @@ I<resource> set depends on the service type:
 
 =head3 System resource tests
 
-I<LOADAVG([1min|5min|15min])> refers to the system's load average.
+I<LOADAVG([1min|5min|15min]) [PER CORE]> refers to the system's load average.
 The load average is the number of processes in the system run
-queue, averaged over the specified time period. Example:
+queue per CPU core, averaged over the specified time period. Example:
 
- if loadavg (1min) > 90 for 15 cycles then alert
- if loadavg (5min) > 80 for 10 cycles then alert
- if loadavg (15min) > 70 for 8 cycles then alert
+ if loadavg (1min) per core > 2 for 15 cycles then alert
+ if loadavg (5min) per core > 1.5 for 10 cycles then alert
+ if loadavg (15min) per core > 1 for 8 cycles then alert
+
+If you'll omit the I<per core> option, the test will check the total load average
+regardless of CPU cores count.
 
 I<CPU([user|system|wait])> is the percent of time the system spend
-in user or kernel space and I/O. The user/system/wait modifier is
-optional, if not used, the total system cpu usage is tested. Example:
+in user or kernel space and waiting for I/O. The user/system/wait modifier
+is optional, if not used, the total system cpu usage is tested. Example:
 
  if cpu usage > 95% for 10 cycles then alert
 
@@ -2024,7 +2057,7 @@ processes in either percent or as an amount [B, kB, MB, GB]. Example:
  if total memory usage > 1% for 10 cycles then alert
 
 
-=head2 PROCESS DISK I/O TEST
+=head2 PROCESS I/O ACTIVITY TEST
 
 Monit can test process' filesystem read and write activity. This test
 can only be used in the context of a process service type. Monit will
@@ -2033,26 +2066,31 @@ normally need to run as the root user to access this metrics.
 The OS usually supports the per-process I/O metrics by bytes or by
 operations.
 
+Some platforms allows to differentiate the I/O subset that required physical
+storage access from generic I/O which was handled by cache. Note that as the
+physical I/O is usually aligned to the filesystem page, there may be difference
+between the total and physical I/O even if the process tried to read just 1 byte.
+
 Per-process I/O activity statistics by platform:
 
- -----------------------------------
- | Platform     | Operation | Byte |
- -----------------------------------
- | AIX          |     x     |      |
- | DragonFlyBSD |     x     |      |
- | FreeBSD      |     x     |      |
- | Linux        |           |  x   |
- | MacOS        |           |  x   |
- | NetBSD       |     x     |      |
- | OpenBSD      |     x     |      |
- | Solaris      |     x     |      |
- -----------------------------------
+ ---------------------------------------------------------------
+ | Platform     | Operation | Byte (physical) | Byte (generic) |
+ ---------------------------------------------------------------
+ | AIX          |     X     |                 |                |
+ | DragonFlyBSD |     X     |                 |                |
+ | FreeBSD      |     X     |                 |                |
+ | Linux        |     X     |        X        |        X       |
+ | MacOS        |           |        X        |                |
+ | NetBSD       |     X     |                 |                |
+ | OpenBSD      |     X     |                 |                |
+ | Solaris      |     X     |                 |                |
+ ---------------------------------------------------------------
 
-=head3 Read: bytes per second
+=head3 Read: bytes per second (generic)
 
 Syntax:
 
- IF DISK READ [RATE] <operator> <number> <unit>/S THEN action
+ IF READ [ACTIVITY] <operator> <number> <unit>/S THEN action
 
 I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
 "lt", "eq", "ne" in shell sh notation and "greater", "less",
@@ -2069,13 +2107,36 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check process p...
-       if disk read > 1 MB/s then alert
+       if read activity > 1 MB/s then alert
+
+=head3 Read: bytes per second (physical storage)
+
+Syntax:
+
+ IF DISK READ [ACTIVITY] <operator> <number> <unit>/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<unit> is a choice of "B","KB","MB","GB" or long
+alternatives "byte", "kilobyte", "megabyte", "gigabyte",
+"percent".
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+ check process p...
+       if disk read activity > 1 MB/s then alert
 
 =head3 Read: operations per second
 
 Syntax:
 
- IF DISK READ <operator> <number> operations/S THEN action
+ IF DISK READ [ACTIVITY] <operator> <number> operations/S THEN action
 
 I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
 "lt", "eq", "ne" in shell sh notation and "greater", "less",
@@ -2088,13 +2149,13 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check process p...
-       if disk read rate > 500 operations/s then alert
+       if disk read activity > 500 operations/s then alert
 
-=head3 Write: bytes per second
+=head3 Write: bytes per second (generic)
 
 Syntax:
 
- IF DISK WRITE <operator> <number> <unit>/S THEN action
+ IF WRITE [ACTIVITY] <operator> <number> <unit>/S THEN action
 
 I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
 "lt", "eq", "ne" in shell sh notation and "greater", "less",
@@ -2111,13 +2172,36 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check process p...
-       if disk write rate > 1 MB/s then alert
+       if write activity > 1 MB/s then alert
+
+=head3 Write: bytes per second (physical storage)
+
+Syntax:
+
+ IF DISK WRITE [ACTIVITY] <operator> <number> <unit>/S THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<unit> is a choice of "B","KB","MB","GB" or long
+alternatives "byte", "kilobyte", "megabyte", "gigabyte",
+"percent".
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Example:
+
+ check process p...
+       if disk write activity > 1 MB/s then alert
 
 =head3 Write: operations per second
 
 Syntax:
 
- IF DISK WRITE <operator> <number> operations/S THEN action
+ IF DISK WRITE [ACTIVITY] <operator> <number> operations/S THEN action
 
 I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
 "lt", "eq", "ne" in shell sh notation and "greater", "less",
@@ -2130,7 +2214,7 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 Example:
 
  check process p...
-       if disk write rate > 500 operations/s then alert
+       if disk write activity > 500 operations/s then alert
 
 
 =head2 FILE CHECKSUM TEST
@@ -2720,6 +2804,44 @@ Example for AppArmor:
     if failed security attribute "/usr/sbin/ntpd (enforce)" then alert
 
 
+=head2 SYSTEM AND PER-PROCESS FILEDESCRIPTORS TEST
+
+Monit can test the filedescriptors usage on the system and process level. You can check either
+an absolute value or percent of the system soft/hard limit which is set for the system
+(/proc/sys/fs/file-max) or process (ulimit -n).
+
+Syntax:
+
+ IF FILEDESCRIPTORS <operator> <number> [%] THEN action
+
+For process only, you can also check accumulated number for the process and all its children.
+
+Syntax:
+
+ IF TOTAL FILEDESCRIPTORS <operator> <number> THEN action
+
+I<operator> is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
+I<number> limit.
+
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+Examples:
+
+ check system $HOST
+    if filedescriptors >= 90% then alert
+
+ check process myproc with pidfile /var/run/myproc.pid
+    if filedescriptors >= 90% then alert
+    if filedescriptors >= 99% then restart
+    if total filedescriptors > 5000 then alert
+
+
 =head2 PROGRAM STATUS TEST
 
 You can check the exit status of a program or a script. This test
@@ -3203,6 +3325,7 @@ knows how to speak:
  I<LMTP>
  I<MEMCACHE>
  I<MONGODB>
+ I<MQTT>
  I<MYSQL>
  I<NNTP>
  I<NTP3>
@@ -3462,6 +3585,26 @@ Example:
         dnslimit > 50% or
         waitlimit < 20%
  then alert
+
+
+=head4 MQTT
+
+Syntax:
+
+ PROTOCOL MQTT [USERNAME string PASSWORD string]
+
+I<USERNAME> MQTT username
+
+I<PASSWORD> MQTT password
+
+Username and password (credentials) are B<optional>.
+
+Example:
+
+ check process mosquitto with pidfile /var/run/mosquitto.pid
+     start program = "/sbin/start mosquitto"
+     stop program = "/sbin/stop mosquitto"
+     if failed port 1883 protocol mqtt then alert
 
 
 =head4 MYSQL
@@ -4104,7 +4247,7 @@ of this man page also receive inspiration from the same authors.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2001-2019 by Tildeslash Ltd. All Rights Reserved.
+Copyright (C) 2001-2020 by Tildeslash Ltd. All Rights Reserved.
 This product is distributed in the hope that it will be useful,
 but WITHOUT any warranty; without even the implied warranty of
 MERCHANTABILITY or FITNESS for a particular purpose.

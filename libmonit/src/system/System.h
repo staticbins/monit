@@ -111,7 +111,7 @@ bool System_random(void *buf, size_t nbytes);
  * @param limit The upper boundary of the random number
  * @return a random number between 0 and limit - 1.
  */
-uint64_t System_randomNumber(uint64_t limit);
+unsigned long long System_randomNumber(void);
 
 
 #endif

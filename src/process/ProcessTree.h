@@ -56,22 +56,32 @@ typedef struct ProcessTree_T {
                 int *list;
         } children;
         struct {
-                uint64_t usage;
-                uint64_t usage_total;
+                unsigned long long usage;
+                unsigned long long usage_total;
         } memory;
         struct {
-                uint64_t time;
-                uint64_t bytes;
-                uint64_t operations;
+                unsigned long long time;
+                long long bytes;
+                long long bytesPhysical;
+                long long operations;
         } read;
         struct {
-                uint64_t time;
-                uint64_t bytes;
-                uint64_t operations;
+                unsigned long long time;
+                long long bytes;
+                long long bytesPhysical;
+                long long operations;
         } write;
         time_t uptime;
         char *cmdline;
         char *secattr;
+        struct {
+                long long usage;
+                long long usage_total;
+                struct {
+                        long long soft;
+                        long long hard;
+                } limit;
+        } filedescriptors;
 } ProcessTree_T;
 
 

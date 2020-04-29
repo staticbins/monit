@@ -75,6 +75,7 @@
 #endif
 
 #include "monit.h"
+#include "device.h"
 
 // libmonit
 #include "system/Time.h"
@@ -89,7 +90,7 @@
 
 static struct {
         int generation;     // Increment each time the mount table is changed
-        uint64_t timestamp; // /etc/mnttab timestamp [ms] (changed on mount/unmount)
+        unsigned long long timestamp; // /etc/mnttab timestamp [ms] (changed on mount/unmount)
 } _statistics = {};
 
 
@@ -113,10 +114,10 @@ static bool _getZfsDiskActivity(void *_inf) {
                 if (nvlist_lookup_nvlist(zpoolConfig, ZPOOL_CONFIG_VDEV_TREE, &zpoolVdevTree) == 0) {
                         vdev_stat_t *zpoolStatistics = NULL;
                         uint_t zpoolStatisticsCount = 0;
-                        if (nvlist_lookup_uint64_array(zpoolVdevTree, ZPOOL_CONFIG_VDEV_STATS, (uint64_t **)&zpoolStatistics, &zpoolStatisticsCount) == 0) {
+                        if (nvlist_lookup_uint64_array(zpoolVdevTree, ZPOOL_CONFIG_VDEV_STATS, (unsigned long long **)&zpoolStatistics, &zpoolStatisticsCount) == 0) {
                                 //FIXME: if the zpool state has error, trigger the fs event, can also report number of read/write/checksum errors (see vdev_stat_t in /usr/include/sys/fs/zfs.h)
                                 DEBUG("ZFS pool '%s' state: %s\n", inf->filesystem->object.key, zpool_state_to_name(zpoolStatistics->vs_state, zpoolStatistics->vs_aux));
-                                uint64_t now = Time_milli();
+                                unsigned long long now = Time_milli();
                                 Statistics_update(&(inf->filesystem->read.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_READ]);
                                 Statistics_update(&(inf->filesystem->write.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_WRITE]);
                                 Statistics_update(&(inf->filesystem->read.operations),  now, zpoolStatistics->vs_ops[ZIO_TYPE_READ]);
@@ -143,7 +144,7 @@ static bool _getKstatDiskActivity(void *_inf) {
                                 if (kstat_read(kctl, kstat, &kio) == -1) {
                                         LogError("filesystem statistics error: kstat_read failed -- %s\n", STRERROR);
                                 } else {
-                                        uint64_t now = Time_milli();
+                                        unsigned long long now = Time_milli();
                                         Statistics_update(&(inf->filesystem->read.bytes), now, kio.nread);
                                         Statistics_update(&(inf->filesystem->write.bytes), now, kio.nwritten);
                                         Statistics_update(&(inf->filesystem->read.operations),  now, kio.reads);
@@ -282,7 +283,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
 
 static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct extmnttab *mnt)) {
         struct stat sb;
-        if (stat(MNTTAB, &sb) != 0 || _statistics.timestamp != (uint64_t)((double)sb.st_mtim.tv_sec * 1000. + (double)sb.st_mtim.tv_nsec / 1000000.)) {
+        if (stat(MNTTAB, &sb) != 0 || _statistics.timestamp != (unsigned long long)((double)sb.st_mtim.tv_sec * 1000. + (double)sb.st_mtim.tv_nsec / 1000000.)) {
                 DEBUG("Mount notification: change detected\n");
                 _statistics.timestamp = (double)sb.st_mtim.tv_sec * 1000. + (double)sb.st_mtim.tv_nsec / 1000000.;
                 _statistics.generation++; // Increment, so all other filesystems can see the generation has changed

@@ -58,8 +58,6 @@
 #endif
 
 #include "monit.h"
-#include "net.h"
-#include "socket.h"
 #include "base64.h"
 #include "SMTP.h"
 
@@ -134,7 +132,7 @@ static void _parseFlags(T S, const char *line) {
 }
 
 
-static void _send(T S, const char *data, ...) {
+__attribute__((format (printf, 2, 3))) static void _send(T S, const char *data, ...) {
         va_list ap;
         va_start(ap, data);
         char *msg = Str_vcat(data, ap);

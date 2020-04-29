@@ -145,7 +145,7 @@ time_t InputStream_getTimeout(T S) {
 }
 
 
-int InputStream_isClosed(T S) {
+bool InputStream_isClosed(T S) {
         assert(S);
         return S->isclosed;
 }

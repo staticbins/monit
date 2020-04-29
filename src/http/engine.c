@@ -86,10 +86,9 @@
 
 #include "monit.h"
 #include "engine.h"
-#include "net.h"
 #include "processor.h"
 #include "cervlet.h"
-#include "socket.h"
+#include "net/net.h"
 #include "SslServer.h"
 
 // libmonit
@@ -396,7 +395,7 @@ static bool _authenticateHost(struct sockaddr *addr) {
 }
 
 
-static Socket_T _socketProducer() {
+static Socket_T _socketProducer(void) {
         int r = 0;
         do {
                 r = poll(myServerSockets, myServerSocketsCount, 1000);
@@ -409,7 +408,7 @@ static Socket_T _socketProducer() {
                                         LogError("HTTP server: cannot accept connection -- %s\n", stopped ? "service stopped" : STRERROR);
                                         return NULL;
                                 }
-                                if (Net_setNonBlocking(client) < 0 || ! Net_canRead(client, 500) || ! Net_canWrite(client, 500) || ! _authenticateHost(data[i].addr)) {
+                                if (!Net_setNonBlocking(client) || !Net_canRead(client, 500) || !Net_canWrite(client, 500) || ! _authenticateHost(data[i].addr)) {
                                         Net_abort(client);
                                         return NULL;
                                 }
@@ -485,7 +484,7 @@ error:
 
 void Engine_start() {
         Engine_cleanup();
-        stopped = Run.flags & Run_Stopped;
+        stopped = (Run.flags & Run_Stopped) != 0;
         init_service();
         char error[MAX_SERVER_SOCKETS][STRLEN] = {};
         if (Run.httpd.flags & Httpd_Net) {
@@ -525,7 +524,7 @@ void Engine_stop() {
 
 void Engine_cleanup() {
         myServerSocketsCount = 0;
-        if (Run.httpd.flags & Httpd_Unix)
+        if (Run.httpd.flags & Httpd_Unix && Run.httpd.socket.unix.path)
                 unlink(Run.httpd.socket.unix.path);
 }
 

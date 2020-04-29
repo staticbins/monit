@@ -31,6 +31,7 @@
 #include "xconfig.h"
 
 #include "monit.h"
+#include "device.h"
 
 
 /* ---------------------------------------------------- MARK: - Public */

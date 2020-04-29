@@ -21,7 +21,7 @@ To checkout Monit source code, use `git clone https://tildeslash@bitbucket.org/t
 BOOTSTRAPPING
 =============
 
-If you build Monit from the git repository you should call `./bootstrap` first, before continuing with the installation steps below.
+If you build Monit from the git repository you should call `./bootstrap` first, before continuing with the installation steps below. The `bootstrap` script requires that automake, autoconf and libtool are installed on your system.
 
 
 INSTALLATION

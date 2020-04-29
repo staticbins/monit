@@ -73,6 +73,14 @@
 #include <sys/sysinfo.h>
 #endif
 
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif
+
+#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
+
 #include "monit.h"
 #include "ProcessTree.h"
 #include "process_sysdep.h"
@@ -108,18 +116,33 @@ typedef struct Proc_T {
         int                 item_threads;
         unsigned long       item_utime;
         unsigned long       item_stime;
-        uint64_t  item_starttime;
-        uint64_t            read_bytes;
-        uint64_t            write_bytes;
-        char                name[4096];
+        unsigned long long  item_starttime;
+        struct {
+                unsigned long long    bytes;
+                unsigned long long    bytesPhysical;
+                unsigned long long    operations;
+        } read;
+        struct {
+                unsigned long long    bytes;
+                unsigned long long    bytesPhysical;
+                unsigned long long    operations;
+        } write;
+        struct {
+                long long     open;
+                struct {
+                        long long soft;
+                        long long hard;
+                } limit;
+        } filedescriptors;
         char                secattr[STRLEN];
+        StringBuffer_T      name;
 } *Proc_T;
 
 
 /* --------------------------------------- Static constructor and destructor */
 
 
-static void __attribute__ ((constructor)) _constructor() {
+static void __attribute__ ((constructor)) _constructor(void) {
         struct stat sb;
         _statistics.hasIOStatistics = stat("/proc/self/io", &sb) == 0 ? true : false;
 }
@@ -130,10 +153,10 @@ static void __attribute__ ((constructor)) _constructor() {
 
 #define NSEC_PER_SEC    1000000000L
 
-static uint64_t old_cpu_user     = 0;
-static uint64_t old_cpu_syst     = 0;
-static uint64_t old_cpu_wait     = 0;
-static uint64_t old_cpu_total    = 0;
+static unsigned long long old_cpu_user     = 0;
+static unsigned long long old_cpu_syst     = 0;
+static unsigned long long old_cpu_iowait   = 0;
+static unsigned long long old_cpu_total    = 0;
 
 static long page_size = 0;
 
@@ -143,7 +166,7 @@ static double hz = 0.;
  * Get system start time
  * @return seconds since unix epoch
  */
-static time_t _getStartTime() {
+static time_t _getStartTime(void) {
         struct sysinfo info;
         if (sysinfo(&info) < 0) {
                 LogError("system statistic error -- cannot get system uptime: %s\n", STRERROR);
@@ -153,25 +176,20 @@ static time_t _getStartTime() {
 }
 
 
-// parse /proc/PID/stat 
+// parse /proc/PID/stat
 static bool _parseProcPidStat(Proc_T proc) {
-        char buf[4096];
+        char buf[8192];
         char *tmp = NULL;
         if (! file_readProc(buf, sizeof(buf), "stat", proc->pid, NULL)) {
                 DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->pid);
                 return false;
         }
+        // Skip the process name (can have multiple words)
         if (! (tmp = strrchr(buf, ')'))) {
                 DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
                 return false;
         }
-        *tmp = 0;
-        if (sscanf(buf, "%*d (%255s", proc->name) != 1) {
-                DEBUG("system statistic error -- file /proc/%d/stat process name parse error\n", proc->pid);
-                return false;
-        }
-        tmp += 2;
-        if (sscanf(tmp,
+        if (sscanf(tmp + 2,
                    "%c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %ld %ld %*d %*d %d %*u %llu %*u %ld %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d\n",
                    &(proc->item_state),
                    &(proc->ppid),
@@ -223,22 +241,63 @@ static bool _parseProcPidIO(Proc_T proc) {
         char *tmp = NULL;
         if (_statistics.hasIOStatistics) {
                 if (file_readProc(buf, sizeof(buf), "io", proc->pid, NULL)) {
-                        if (! (tmp = strstr(buf, "read_bytes:"))) {
-                                DEBUG("system statistic error -- cannot find process read_bytes\n");
+                        // read bytes (total)
+                        if (! (tmp = strstr(buf, "rchar:"))) {
+                                DEBUG("system statistic error -- cannot find process read bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 11, "\t%"PRIu64, &(proc->read_bytes)) != 1) {
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->read.bytes)) != 1) {
                                 DEBUG("system statistic error -- cannot get process read bytes\n");
                                 return false;
                         }
-                        if (! (tmp = strstr(buf, "write_bytes:"))) {
-                                DEBUG("system statistic error -- cannot find process write_bytes\n");
+                        // write bytes (total)
+                        if (! (tmp = strstr(tmp, "wchar:"))) {
+                                DEBUG("system statistic error -- cannot find process write bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 12, "\t%"PRIu64, &(proc->write_bytes)) != 1) {
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->write.bytes)) != 1) {
                                 DEBUG("system statistic error -- cannot get process write bytes\n");
                                 return false;
                         }
+                        // read operations
+                        if (! (tmp = strstr(tmp, "syscr:"))) {
+                                DEBUG("system statistic error -- cannot find process read system calls count\n");
+                                return false;
+                        }
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->read.operations)) != 1) {
+                                DEBUG("system statistic error -- cannot get process read system calls count\n");
+                                return false;
+                        }
+                        // write operations
+                        if (! (tmp = strstr(tmp, "syscw:"))) {
+                                DEBUG("system statistic error -- cannot find process write system calls count\n");
+                                return false;
+                        }
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->write.operations)) != 1) {
+                                DEBUG("system statistic error -- cannot get process write system calls count\n");
+                                return false;
+                        }
+                        // read bytes (physical I/O)
+                        if (! (tmp = strstr(tmp, "read_bytes:"))) {
+                                DEBUG("system statistic error -- cannot find process physical read bytes\n");
+                                return false;
+                        }
+                        if (sscanf(tmp + 11, "\t%llu", &(proc->read.bytesPhysical)) != 1) {
+                                DEBUG("system statistic error -- cannot get process physical read bytes\n");
+                                return false;
+                        }
+                        // write bytes (physical I/O)
+                        if (! (tmp = strstr(tmp, "write_bytes:"))) {
+                                DEBUG("system statistic error -- cannot find process physical write bytes\n");
+                                return false;
+                        }
+                        if (sscanf(tmp + 12, "\t%llu", &(proc->write.bytesPhysical)) != 1) {
+                                DEBUG("system statistic error -- cannot get process physical write bytes\n");
+                                return false;
+                        }
+                } else {
+                        // file_readProc() already printed a DEBUG() message
+                        return false;
                 }
         }
         return true;
@@ -248,17 +307,46 @@ static bool _parseProcPidIO(Proc_T proc) {
 // parse /proc/PID/cmdline
 static bool _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
         if (pflags & ProcessEngine_CollectCommandLine) {
-                int bytes = 0;
-                char buf[4096];
-                if (! file_readProc(buf, sizeof(buf), "cmdline", proc->pid, &bytes)) {
-                        DEBUG("system statistic error -- cannot read /proc/%d/cmdline\n", proc->pid);
+                char filename[STRLEN];
+                // Try to collect the command-line from the procfs cmdline (user-space processes)
+                snprintf(filename, sizeof(filename), "/proc/%d/cmdline", proc->pid);
+                FILE *f = fopen(filename, "r");
+                if (! f) {
+                        DEBUG("system statistic error -- cannot open /proc/%d/cmdline: %s\n", proc->pid, STRERROR);
                         return false;
                 }
-                for (int j = 0; j < (bytes - 1); j++) // The cmdline file contains argv elements/strings terminated separated by '\0' => join the string
-                        if (buf[j] == 0)
-                                buf[j] = ' ';
-                if (*buf)
-                        snprintf(proc->name, sizeof(proc->name), "%s", buf);
+                size_t n;
+                char buf[STRLEN] = {};
+                while ((n = fread(buf, 1, sizeof(buf) - 1, f)) > 0) {
+                        // The cmdline file contains argv elements/strings separated by '\0' => join the string
+                        for (size_t i = 0; i < n; i++) {
+                                if (buf[i] == 0)
+                                        StringBuffer_append(proc->name, " ");
+                                else
+                                        StringBuffer_append(proc->name, "%c", buf[i]);
+                        }
+                }
+                fclose(f);
+                // Fallback to procfs stat process name if cmdline was empty (even kernel-space processes have informations here)
+                if (! StringBuffer_length(proc->name)) {
+                        char buffer[8192];
+                        char *tmp = NULL;
+                        char *procname = NULL;
+                        if (! file_readProc(buffer, sizeof(buffer), "stat", proc->pid, NULL)) {
+                                DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->pid);
+                                return false;
+                        }
+                        if (! (tmp = strrchr(buffer, ')'))) {
+                                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
+                                return false;
+                        }
+                        *tmp = 0;
+                        if (! (procname = strchr(buffer, '('))) {
+                                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
+                                return false;
+                        }
+                        StringBuffer_append(proc->name, "%s", procname + 1);
+                }
         }
         return true;
 }
@@ -273,6 +361,55 @@ static bool _parseProcPidAttrCurrent(Proc_T proc) {
         return false;
 }
 
+// count entries in /proc/PID/fd
+static bool _parseProcFdCount(Proc_T proc) {
+        unsigned long long file_count = 0;
+        DIR *dirp;
+        char fd_path[32];
+
+        snprintf(fd_path, sizeof(fd_path), "/proc/%d/fd", proc->pid);
+
+        if (!(dirp = opendir(fd_path))) {
+                DEBUG("system statistic error -- opendir /proc/%d/fd: %s\n", proc->pid, STRERROR);
+                return false;
+        }
+
+        errno = 0;
+        while (readdir(dirp) != NULL) {
+                // count everything
+                file_count++;
+        }
+
+        // do not closedir() until readdir errno has been evaluated
+
+        if (errno) {
+                DEBUG("system statistic error -- cannot iterate /proc/%d/fd: %s\n", proc->pid, STRERROR);
+                closedir(dirp);
+                return false;
+        }
+
+        closedir(dirp);
+
+        // assert at least '.' and '..' have been found
+        if (file_count < 2) {
+                DEBUG("system statistic error -- cannot find basic entries in /proc/%d/fd\n", proc->pid);
+                return false;
+        }
+
+        // subtract entries '.' and '..'
+        proc->filedescriptors.open = file_count - 2;
+
+        // get process' limits
+        struct rlimit limits;
+        if (prlimit(proc->pid, RLIMIT_NOFILE, NULL, &limits) != 0) {
+                DEBUG("prlimit failed: %s\n", STRERROR);
+                return false;
+        }
+        proc->filedescriptors.limit.soft = limits.rlim_cur;
+        proc->filedescriptors.limit.hard = limits.rlim_max;
+
+        return true;
+}
 
 static double _usagePercent(uint64_t previous, uint64_t current, double total) {
         if (current < previous) {
@@ -310,7 +447,7 @@ bool init_process_info_sysdep(void) {
                 char line[STRLEN];
                 systeminfo.memory.size = 0L;
                 while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "MemTotal: %"PRIu64, &systeminfo.memory.size) == 1) {
+                        if (sscanf(line, "MemTotal: %llu", &systeminfo.memory.size) == 1) {
                                 systeminfo.memory.size *= 1024;
                                 break;
                         }
@@ -327,7 +464,7 @@ bool init_process_info_sysdep(void) {
                 char line[STRLEN];
                 systeminfo.booted = 0;
                 while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "btime %"PRIu64, &systeminfo.booted) == 1) {
+                        if (sscanf(line, "btime %llu", &systeminfo.booted) == 1) {
                                 break;
                         }
                 }
@@ -360,12 +497,14 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         }
         ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), globbuf.gl_pathc);
 
+
         int count = 0;
         struct Proc_T proc = {};
+        proc.name = StringBuffer_create(64);
         time_t starttime = _getStartTime();
-        for (int i = 0; i < globbuf.gl_pathc; i++) {
+        for (size_t i = 0; i < globbuf.gl_pathc; i++) {
                 proc.pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
-                if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags)) {
+                if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags) && _parseProcFdCount(&proc)) {
                         // Non-mandatory statistics (may not exist)
                         _parseProcPidAttrCurrent(&proc);
                         // Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting)
@@ -377,16 +516,27 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].threads.self = proc.item_threads;
                         pt[count].uptime = starttime > 0 ? (systeminfo.time / 10. - (starttime + (time_t)(proc.item_starttime / hz))) : 0;
                         pt[count].cpu.time = (double)(proc.item_utime + proc.item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
-                        pt[count].memory.usage = (uint64_t)proc.item_rss * (uint64_t)page_size;
-                        pt[count].read.bytes = proc.read_bytes;
-                        pt[count].write.bytes = proc.write_bytes;
+                        pt[count].memory.usage = (unsigned long long)proc.item_rss * (unsigned long long)page_size;
+                        pt[count].read.bytes = proc.read.bytes;
+                        pt[count].read.bytesPhysical = proc.read.bytesPhysical;
+                        pt[count].read.operations = proc.read.operations;
+                        pt[count].write.bytes = proc.write.bytes;
+                        pt[count].write.bytesPhysical = proc.write.bytesPhysical;
+                        pt[count].write.operations = proc.write.operations;
+                        pt[count].read.time = pt[count].write.time = Time_milli();
                         pt[count].zombie = proc.item_state == 'Z' ? true : false;
-                        pt[count].cmdline = Str_dup(proc.name);
+                        pt[count].cmdline = Str_dup(StringBuffer_toString(proc.name));
                         pt[count].secattr = Str_dup(proc.secattr);
+                        pt[count].filedescriptors.usage = proc.filedescriptors.open;
+                        pt[count].filedescriptors.limit.soft = proc.filedescriptors.limit.soft;
+                        pt[count].filedescriptors.limit.hard = proc.filedescriptors.limit.hard;
                         count++;
-                        memset(&proc, 0, sizeof(struct Proc_T));
+                        // Clear
+                        memset(&proc, 0, sizeof(struct Proc_T) - sizeof(proc.name));
+                        StringBuffer_clear(proc.name);
                 }
         }
+        StringBuffer_free(&(proc.name));
 
         *reference = pt;
         globfree(&globbuf);
@@ -428,53 +578,64 @@ int getloadavg_sysdep(double *loadv, int nelem) {
 bool used_system_memory_sysdep(SystemInfo_T *si) {
         char          *ptr;
         char           buf[2048];
+        unsigned long  mem_available = 0UL;
         unsigned long  mem_free = 0UL;
         unsigned long  buffers = 0UL;
         unsigned long  cached = 0UL;
         unsigned long  slabreclaimable = 0UL;
         unsigned long  swap_total = 0UL;
         unsigned long  swap_free = 0UL;
-        uint64_t       zfsarcsize = 0ULL;
+        unsigned long long       zfsarcsize = 0ULL;
 
         if (! file_readProc(buf, sizeof(buf), "meminfo", -1, NULL)) {
-                LogError("system statistic error -- cannot get real memory free amount\n");
+                LogError("system statistic error -- cannot get system memory info\n");
                 goto error;
         }
 
-        /* Memory */
-        if (! (ptr = strstr(buf, "MemFree:")) || sscanf(ptr + 8, "%ld", &mem_free) != 1) {
-                LogError("system statistic error -- cannot get real memory free amount\n");
-                goto error;
-        }
-        if (! (ptr = strstr(buf, "Buffers:")) || sscanf(ptr + 8, "%ld", &buffers) != 1)
-                DEBUG("system statistic error -- cannot get real memory buffers amount\n");
-        if (! (ptr = strstr(buf, "Cached:")) || sscanf(ptr + 7, "%ld", &cached) != 1)
-                DEBUG("system statistic error -- cannot get real memory cache amount\n");
-        if (! (ptr = strstr(buf, "SReclaimable:")) || sscanf(ptr + 13, "%ld", &slabreclaimable) != 1)
-                DEBUG("system statistic error -- cannot get slab reclaimable memory amount\n");
-        FILE *f = fopen("/proc/spl/kstat/zfs/arcstats", "r");
-        if (f) {
-                char line[STRLEN];
-                while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "size %*d %"PRIu64, &zfsarcsize) == 1) {
-                                break;
-                        }
+        /*
+         * Memory
+         *
+         * First, check if the "MemAvailable" value is available on this system. If it is, we will
+         * use it. Otherwise we will attempt to calculate the amount of available memory ourself.
+         */
+        if ((ptr = strstr(buf, "MemAvailable:")) && sscanf(ptr + 13, "%lu", &mem_available) == 1) {
+                si->memory.usage.bytes = systeminfo.memory.size - (unsigned long long)mem_available * 1024;
+        } else {
+                DEBUG("'MemAvailable' value not available on this system. Attempting to calculate available memory manually...\n");
+                if (! (ptr = strstr(buf, "MemFree:")) || sscanf(ptr + 8, "%lu", &mem_free) != 1) {
+                        LogError("system statistic error -- cannot get real memory free amount\n");
+                        goto error;
                 }
-                fclose(f);
+                if (! (ptr = strstr(buf, "Buffers:")) || sscanf(ptr + 8, "%lu", &buffers) != 1)
+                        DEBUG("system statistic error -- cannot get real memory buffers amount\n");
+                if (! (ptr = strstr(buf, "Cached:")) || sscanf(ptr + 7, "%lu", &cached) != 1)
+                        DEBUG("system statistic error -- cannot get real memory cache amount\n");
+                if (! (ptr = strstr(buf, "SReclaimable:")) || sscanf(ptr + 13, "%lu", &slabreclaimable) != 1)
+                        DEBUG("system statistic error -- cannot get slab reclaimable memory amount\n");
+                FILE *f = fopen("/proc/spl/kstat/zfs/arcstats", "r");
+                if (f) {
+                        char line[STRLEN];
+                        while (fgets(line, sizeof(line), f)) {
+                                if (sscanf(line, "size %*d %llu", &zfsarcsize) == 1) {
+                                        break;
+                                }
+                        }
+                        fclose(f);
+                }
+                si->memory.usage.bytes = systeminfo.memory.size - zfsarcsize - (unsigned long long)(mem_free + buffers + cached + slabreclaimable) * 1024;
         }
-        si->memory.usage.bytes = systeminfo.memory.size - zfsarcsize - (uint64_t)(mem_free + buffers + cached + slabreclaimable) * 1024;
 
         /* Swap */
-        if (! (ptr = strstr(buf, "SwapTotal:")) || sscanf(ptr + 10, "%ld", &swap_total) != 1) {
+        if (! (ptr = strstr(buf, "SwapTotal:")) || sscanf(ptr + 10, "%lu", &swap_total) != 1) {
                 LogError("system statistic error -- cannot get swap total amount\n");
                 goto error;
         }
-        if (! (ptr = strstr(buf, "SwapFree:")) || sscanf(ptr + 9, "%ld", &swap_free) != 1) {
+        if (! (ptr = strstr(buf, "SwapFree:")) || sscanf(ptr + 9, "%lu", &swap_free) != 1) {
                 LogError("system statistic error -- cannot get swap free amount\n");
                 goto error;
         }
-        si->swap.size = (uint64_t)swap_total * 1024;
-        si->swap.usage.bytes = (uint64_t)(swap_total - swap_free) * 1024;
+        si->swap.size = (unsigned long long)swap_total * 1024;
+        si->swap.usage.bytes = (unsigned long long)(swap_total - swap_free) * 1024;
 
         return true;
 
@@ -490,65 +651,112 @@ error:
  * @return: true if successful, false if failed (or not available)
  */
 bool used_system_cpu_sysdep(SystemInfo_T *si) {
-        bool rv;
-        uint64_t cpu_total;
-        uint64_t cpu_user;
-        uint64_t cpu_nice;
-        uint64_t cpu_syst;
-        uint64_t cpu_idle;
-        uint64_t cpu_wait;
-        uint64_t cpu_irq;
-        uint64_t cpu_softirq;
-        char buf[STRLEN];
+        int rv;
+        unsigned long long cpu_total;      // Total CPU time
+        unsigned long long cpu_user;       // Time spent in user mode
+        unsigned long long cpu_nice;       // Time spent in user mode with low priority (nice)
+        unsigned long long cpu_syst;       // Time spent in system mode
+        unsigned long long cpu_idle;       // Time idle
+        unsigned long long cpu_iowait;     // Time waiting for I/O to complete. This value is not reliable
+        unsigned long long cpu_hardirq;    // Time servicing hardware interrupts
+        unsigned long long cpu_softirq;    // Time servicing software interrupts
+        unsigned long long cpu_steal;      // Stolen time, which is the time spent in other operating systems when running in a virtualized environment
+        unsigned long long cpu_guest;      // Time spent running a virtual CPU for guest operating systems under the control of the Linux kernel
+        unsigned long long cpu_guest_nice; // Time spent running a niced guest (virtual CPU for guest operating systems under the control of the Linux kernel)
+        char buf[8192];
 
         if (! file_readProc(buf, sizeof(buf), "stat", -1, NULL)) {
                 LogError("system statistic error -- cannot read /proc/stat\n");
                 goto error;
         }
 
-        rv = sscanf(buf, "cpu %llu %llu %llu %llu %llu %llu %llu",
+        rv = sscanf(buf, "cpu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
                     &cpu_user,
                     &cpu_nice,
                     &cpu_syst,
                     &cpu_idle,
-                    &cpu_wait,
-                    &cpu_irq,
-                    &cpu_softirq);
-        if (rv < 4) {
-                LogError("system statistic error -- cannot read cpu usage\n");
-                goto error;
-        } else if (rv == 4) {
-                /* linux 2.4.x doesn't support these values */
-                cpu_wait    = 0;
-                cpu_irq     = 0;
-                cpu_softirq = 0;
+                    &cpu_iowait,
+                    &cpu_hardirq,
+                    &cpu_softirq,
+                    &cpu_steal,
+                    &cpu_guest,
+                    &cpu_guest_nice);
+        switch (rv) {
+                case 4:
+                        // linux < 2.5.41
+                        cpu_iowait = 0;
+                        // fall through
+                case 5:
+                        // linux >= 2.5.41
+                        cpu_hardirq = 0;
+                        cpu_softirq = 0;
+                        // fall through
+                case 7:
+                        // linux >= 2.6.0-test4
+                        cpu_steal = 0;
+                        // fall through
+                case 8:
+                        // linux 2.6.11
+                        cpu_guest = 0;
+                        // fall through
+                case 9:
+                        // linux >= 2.6.24
+                        cpu_guest_nice = 0;
+                        // fall through
+                case 10:
+                        // linux >= 2.6.33
+                        break;
+                default:
+                        LogError("system statistic error -- cannot read cpu usage\n");
+                        goto error;
         }
 
-        cpu_total = cpu_user + cpu_nice + cpu_syst + cpu_idle + cpu_wait + cpu_irq + cpu_softirq;
+        cpu_total = cpu_user + cpu_nice + cpu_syst + cpu_idle + cpu_iowait + cpu_hardirq + cpu_softirq + cpu_steal + cpu_guest + cpu_guest_nice;
         cpu_user  = cpu_user + cpu_nice;
 
         if (old_cpu_total == 0) {
                 si->cpu.usage.user = -1.;
                 si->cpu.usage.system = -1.;
-                si->cpu.usage.wait = -1.;
+                si->cpu.usage.iowait = -1.;
         } else {
                 double delta = cpu_total - old_cpu_total;
                 si->cpu.usage.user = _usagePercent(old_cpu_user, cpu_user, delta);
                 si->cpu.usage.system = _usagePercent(old_cpu_syst, cpu_syst, delta);
-                si->cpu.usage.wait = _usagePercent(old_cpu_wait, cpu_wait, delta);
+                si->cpu.usage.iowait = _usagePercent(old_cpu_iowait, cpu_iowait, delta);
         }
 
-        old_cpu_user  = cpu_user;
-        old_cpu_syst  = cpu_syst;
-        old_cpu_wait  = cpu_wait;
-        old_cpu_total = cpu_total;
+        old_cpu_user   = cpu_user;
+        old_cpu_syst   = cpu_syst;
+        old_cpu_iowait = cpu_iowait;
+        old_cpu_total  = cpu_total;
         return true;
 
 error:
         si->cpu.usage.user = 0.;
         si->cpu.usage.system = 0.;
-        si->cpu.usage.wait = 0.;
+        si->cpu.usage.iowait = 0.;
         return false;
 }
 
+
+/**
+ * This routine returns filedescriptors statistics
+ * @return: true if successful, false if failed (or not available)
+ */
+bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+        bool rv = false;
+        FILE *f = fopen("/proc/sys/fs/file-nr", "r");
+        if (f) {
+                char line[STRLEN];
+                if (fgets(line, sizeof(line), f)) {
+                        if (sscanf(line, "%lld %lld %lld\n", &(si->filedescriptors.allocated), &(si->filedescriptors.unused), &(si->filedescriptors.maximum)) == 3) {
+                                rv = true;
+                        }
+                }
+                fclose(f);
+        } else {
+                DEBUG("system statistic error -- cannot open /proc/sys/fs/file-nr\n");
+        }
+        return rv;
+}
 

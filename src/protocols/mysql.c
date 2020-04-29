@@ -127,7 +127,7 @@ typedef struct {
         char *cursor;
         char *limit;
         // Header
-        uint32_t len;
+        int32_t len;
         uint8_t seq;
         uint8_t header;
         // Packet specific data

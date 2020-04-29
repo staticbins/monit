@@ -101,7 +101,7 @@ int File_open(const char *file, const char *mode);
  * @param fd An open file descriptor
  * @return true on success or false if an error occurred.
  */
-int File_close(int fd);
+bool File_close(int fd);
 
 
 /**
@@ -110,7 +110,7 @@ int File_close(int fd);
  * @param fd An open file descriptor
  * @return true if success otherwise false and errno is set accordingly
  */
-int File_rewind(int fd);
+bool File_rewind(int fd);
 
 
 /**
@@ -145,7 +145,7 @@ time_t File_atime(const char *file);
  * @param file An absolute file path
  * @return true if file exist and is a regular file, otherwise false
  */
-int File_isFile(const char *file);
+bool File_isFile(const char *file);
 
 
 /**
@@ -153,7 +153,7 @@ int File_isFile(const char *file);
  * @param file An absolute file path
  * @return true if file is a socket file, otherwise false
  */
-int File_isSocket(const char *file);
+bool File_isSocket(const char *file);
 
         
 /**
@@ -161,7 +161,7 @@ int File_isSocket(const char *file);
  * @param file An absolute file path
  * @return true if file exist and is a directory, otherwise false
  */
-int File_isDirectory(const char *file);
+bool File_isDirectory(const char *file);
 
 
 /**
@@ -169,7 +169,7 @@ int File_isDirectory(const char *file);
  * @param file An absolute file path
  * @return true if file exist otherwise false
  */
-int File_exist(const char *file);
+bool File_exist(const char *file);
 
 
 /**
@@ -208,7 +208,7 @@ off_t File_size(const char *file);
  * @return true if success otherwise false if for instance the File does
  * not exist in the file system.
  */
-int File_chmod(const char *file, mode_t perm);
+bool File_chmod(const char *file, mode_t perm);
 
 
 /**
@@ -266,7 +266,7 @@ mode_t File_setUmask(mode_t mask);
  * @param file An absolute path
  * @return true if the file is readable, otherwise false
  */
-int File_isReadable(const char *file);
+bool File_isReadable(const char *file);
 
 
 /**
@@ -275,7 +275,7 @@ int File_isReadable(const char *file);
  * @param file An absolute path
  * @return true if the file is writable, otherwise false
  */
-int File_isWritable(const char *file);
+bool File_isWritable(const char *file);
 
 
 /**
@@ -284,7 +284,7 @@ int File_isWritable(const char *file);
  * @param file An absolute path
  * @return true if the file is executable, otherwise false
  */
-int File_isExecutable(const char *file);
+bool File_isExecutable(const char *file);
 
 
 /**
@@ -292,7 +292,7 @@ int File_isExecutable(const char *file);
  * @param file An absolute path
  * @return true if success otherwise false
  */
-int File_delete(const char *file);
+bool File_delete(const char *file);
 
 
 /**
@@ -302,7 +302,7 @@ int File_delete(const char *file);
  * @param name The new name for the file. 
  * @return true if success otherwise false
  */
-int File_rename(const char *file, const char *name);
+bool File_rename(const char *file, const char *name);
 
 
 /**

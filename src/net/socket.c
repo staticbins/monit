@@ -158,7 +158,7 @@ static int _fill(T S, int timeout) {
 }
 
 
-int _getPort(const struct sockaddr *addr) {
+static int _getPort(const struct sockaddr *addr) {
         if (addr->sa_family == AF_INET)
                 return ntohs(((struct sockaddr_in *)addr)->sin_port);
 #ifdef HAVE_IPV6
@@ -175,7 +175,8 @@ static char *_addressToString(const struct sockaddr *addr, socklen_t addrlen, ch
         if (addr->sa_family == AF_UNIX) {
                 snprintf(buf, buflen, "%s", ((struct sockaddr_un *)addr)->sun_path);
         } else {
-                char ip[46], port[6];
+                char ip[NI_MAXHOST];
+                char port[NI_MAXSERV];
                 int status = getnameinfo(addr, addrlen, ip, sizeof(ip), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
                 if (status) {
                         LogError("Cannot get address string -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
@@ -225,7 +226,7 @@ static bool _doConnect(int s, const struct sockaddr *addr, socklen_t addrlen, in
 }
 
 
-T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrlen, const struct sockaddr *localaddr, socklen_t localaddrlen, int family, int type, int protocol, SslOptions_T options, int timeout) {
+static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrlen, const struct sockaddr *localaddr, socklen_t localaddrlen, int family, int type, int protocol, SslOptions_T options, int timeout) {
         ASSERT(host);
         char error[STRLEN];
         int s = socket(family, type, protocol);
@@ -271,14 +272,14 @@ T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrl
 error:
                 Net_close(s);
         } else {
-                snprintf(error, sizeof(error), "Cannot create socket to %s -- %s", _addressToString(addr, addrlen, (char[STRLEN]){}, STRLEN), STRERROR);
+                snprintf(error, sizeof(error), "Cannot create socket to %s -- %s", _addressToString(addr, addrlen, (char[2048]){}, 2048), STRERROR);
         }
         THROW(IOException, "%s", error);
         return NULL;
 }
 
 
-struct addrinfo *_resolve(const char *hostname, int port, Socket_Type type, Socket_Family family) {
+static struct addrinfo *_resolve(const char *hostname, int port, Socket_Type type, Socket_Family family) {
         ASSERT(hostname);
         struct addrinfo *result, hints = {
                 .ai_socktype = type,
@@ -329,7 +330,7 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
         volatile T S = NULL;
         struct addrinfo *result = _resolve(host, port, type, family);
         if (result) {
-                char error[512];
+                char error[512] = {};
                 // The host may resolve to multiple IPs and if at least one succeeded, we have no problem and don't have to flood the log with partial errors => log only the last error
                 for (struct addrinfo *r = result; r && S == NULL; r = r->ai_next) {
                         TRY
@@ -338,13 +339,14 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
                         }
                         ELSE
                         {
+                                DEBUG("Info: Cannot connect to [%s]:%d -- %s\nTrying next address record\n", host, port, Exception_frame.message);
                                 snprintf(error, sizeof(error), "%s", Exception_frame.message);
                         }
                         END_TRY;
                 }
                 freeaddrinfo(result);
                 if (! S)
-                        LogError("Cannot create socket to [%s]:%d -- %s\n", host, port, error);
+                        LogError("Cannot connect to [%s]:%d -- %s\n", host, port, error);
         }
         return S;
 }
@@ -582,11 +584,10 @@ static void _testIp(Port_T p) {
                 // The host may resolve to multiple IPs and if at least one succeeded, we have no problem and don't have to flood the log with partial errors => log only the last error
                 for (struct addrinfo *r = result; r && is_available != Connection_Ok; r = r->ai_next) {
                         if (p->outgoing.addrlen == 0 || p->outgoing.addrlen == r->ai_addrlen) {
-                                const struct sockaddr *localaddr = p->outgoing.addrlen ? (struct sockaddr *)&(p->outgoing.addr) : NULL;
                                 volatile T S = NULL;
                                 TRY
                                 {
-                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, localaddr, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, &(p->target.net.ssl.options), p->timeout);
+                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, p->outgoing.addrlen ? (struct sockaddr *)&(p->outgoing.addr) : NULL, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, &(p->target.net.ssl.options), p->timeout);
                                         S->Port = p;
                                         TRY
                                         {
@@ -637,7 +638,7 @@ void Socket_test(void *P) {
         Port_T p = P;
         TRY
         {
-                int64_t start = Time_micro();
+                long long start = Time_micro();
                 switch (p->family) {
                         case Socket_Unix:
                                 _testUnix(p);
@@ -688,9 +689,9 @@ int Socket_print(T S, const char *m, ...) {
 }
 
 
-int Socket_write(T S, void *b, size_t size) {
+int Socket_write(T S, const void *b, size_t size) {
         ssize_t n = 0;
-        void *p = b;
+        const void *p = b;
         ASSERT(S);
         while (size > 0) {
 #ifdef HAVE_OPENSSL

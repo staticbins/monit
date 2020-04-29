@@ -53,12 +53,11 @@
 #endif
 
 #include "monit.h"
-#include "net.h"
-#include "socket.h"
 #include "ProcessTree.h"
 #include "device.h"
 #include "Color.h"
 #include "Box.h"
+#include "client.h"
 
 // libmonit
 #include "exceptions/AssertException.h"
@@ -81,7 +80,7 @@ static void _argument(StringBuffer_T data, const char *name, const char *value) 
 }
 
 
-static char *_getBasicAuthHeader() {
+static char *_getBasicAuthHeader(void) {
         Auth_T auth = NULL;
         // Find the first cleartext credential for authorization
         for (Auth_T c = Run.httpd.credentials; c; c = c->next) {
@@ -174,7 +173,7 @@ static void _receive(Socket_T S) {
 
 
 static bool _client(const char *request, StringBuffer_T data) {
-        bool status = false;
+        volatile bool status = false;
         if (! exist_daemon()) {
                 LogError("Monit: the monit daemon is not running\n");
                 return status;

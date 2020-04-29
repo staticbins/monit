@@ -50,7 +50,6 @@
 
 #include "monit.h"
 #include "event.h"
-#include "net.h"
 #include "alert.h"
 #include "SMTP.h"
 
@@ -184,7 +183,7 @@ static void _appendMail(List_T list, Mail_T m, Event_T e, char *host) {
 }
 
 
-static MailServer_T _connectMTA() {
+static MailServer_T _connectMTA(void) {
         if (! Run.mailservers)
                 THROW(IOException, "No mail servers are defined -- please see the 'set mailserver' statement in the manual");
         MailServer_T mta = NULL;
@@ -193,7 +192,7 @@ static MailServer_T _connectMTA() {
                 if (mta->ssl.flags == SSL_Enabled)
                         mta->socket = Socket_create(mta->host, mta->port, Socket_Tcp, Socket_Ip, &(mta->ssl), Run.mailserver_timeout);
                 else
-                        mta->socket = Socket_new(mta->host, mta->port, Socket_Tcp, Socket_Ip, false, Run.mailserver_timeout);
+                        mta->socket = Socket_new(mta->host, mta->port, Socket_Tcp, Socket_Ip, SSL_Disabled, Run.mailserver_timeout);
                 if (mta->socket)
                         break;
                 else
@@ -206,7 +205,7 @@ static MailServer_T _connectMTA() {
 
 
 static bool _send(List_T list) {
-        bool failed = false;
+        volatile bool failed = false;
         if (List_length(list)) {
                 volatile Mail_T m = NULL;
                 volatile SMTP_T smtp = NULL;
@@ -228,28 +227,28 @@ static bool _send(List_T list) {
                                 SMTP_to(smtp, m->to);
                                 SMTP_dataBegin(smtp);
                                 if (
-                                    (m->replyto && ((m->replyto->name ? Socket_print(mta->socket, "Reply-To: \"%s\" <%s>\r\n", m->replyto->name, m->replyto->address) : Socket_print(mta->socket, "Reply-To: %s\r\n", m->replyto->address)) <= 0))
-                                    ||
-                                    ((m->from->name ? Socket_print(mta->socket, "From: \"%s\" <%s>\r\n", m->from->name, m->from->address) : Socket_print(mta->socket, "From: %s\r\n", m->from->address)) <= 0)
-                                    ||
-                                    Socket_print(mta->socket,
-                                                 "To: %s\r\n"
-                                                 "Subject: %s\r\n"
-                                                 "Date: %s\r\n"
-                                                 "X-Mailer: Monit %s\r\n"
-                                                 "MIME-Version: 1.0\r\n"
-                                                 "Content-Type: text/plain; charset=utf-8\r\n"
-                                                 "Content-Transfer-Encoding: 8bit\r\n"
-                                                 "Message-Id: <%lld.%"PRIx64"@%s>\r\n"
-                                                 "\r\n"
-                                                 "%s",
-                                                 m->to,
-                                                 m->subject,
-                                                 now,
-                                                 VERSION,
-                                                 (int64_t)Time_now(), System_randomNumber(UINT64_MAX), Run.mail_hostname ? Run.mail_hostname : Run.system->name,
-                                                 m->message) <= 0
-                                    )
+                                        (m->replyto && ((m->replyto->name ? Socket_print(mta->socket, "Reply-To: \"%s\" <%s>\r\n", m->replyto->name, m->replyto->address) : Socket_print(mta->socket, "Reply-To: %s\r\n", m->replyto->address)) <= 0))
+                                        ||
+                                        ((m->from->name ? Socket_print(mta->socket, "From: \"%s\" <%s>\r\n", m->from->name, m->from->address) : Socket_print(mta->socket, "From: %s\r\n", m->from->address)) <= 0)
+                                        ||
+                                        Socket_print(mta->socket,
+                                                "To: %s\r\n"
+                                                "Subject: %s\r\n"
+                                                "Date: %s\r\n"
+                                                "X-Mailer: Monit %s\r\n"
+                                                "MIME-Version: 1.0\r\n"
+                                                "Content-Type: text/plain; charset=utf-8\r\n"
+                                                "Content-Transfer-Encoding: 8bit\r\n"
+                                                "Message-Id: <%lld.%llx@%s>\r\n"
+                                                "\r\n"
+                                                "%s",
+                                                m->to,
+                                                m->subject,
+                                                now,
+                                                VERSION,
+                                                (long long)Time_now(), System_randomNumber(), Run.mail_hostname ? Run.mail_hostname : Run.system->name,
+                                                m->message) <= 0
+                                   )
                                 {
                                         THROW(IOException, "Error sending data to mail server %s -- %s", mta->host, STRERROR);
                                 }
@@ -278,7 +277,7 @@ static bool _send(List_T list) {
 }
 
 
-bool _hasRecipient(Mail_T list, const char *recipient) {
+static bool _hasRecipient(Mail_T list, const char *recipient) {
         for (Mail_T l = list; l; l = l->next)
                 if (IS(recipient, l->to))
                         return true;

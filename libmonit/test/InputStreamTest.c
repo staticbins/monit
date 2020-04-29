@@ -7,7 +7,6 @@
 #include <time.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <stdint.h>
 
 #include "Bootstrap.h"
 #include "InputStream.h"

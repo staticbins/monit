@@ -98,18 +98,15 @@
 #ifdef HAVE_VM_VM_H
 #include <vm/vm.h>
 #endif
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#else
-#define PRIu64 "llu"
-#endif
+
+#include <stdbool.h>
 
 
 #include "Ssl.h"
 #include "Address.h"
-#include "net/Link.h"
 #include "statistics/Statistics.h"
-
+#include "net/socket.h"
+#include "net/Link.h"
 
 // libmonit
 #include "system/Command.h"
@@ -144,8 +141,6 @@
 
 #define SSL_TIMEOUT        15000
 #define SMTP_TIMEOUT       30000
-
-#define START_DELAY        0
 
 
 /* ------------------------------------------------------ Type definitions */
@@ -326,10 +321,15 @@ typedef enum {
         Resource_SwapKbyte,
         Resource_Threads,
         Resource_ReadBytes,
+        Resource_ReadBytesPhysical,
         Resource_ReadOperations,
         Resource_WriteBytes,
+        Resource_WriteBytesPhysical,
         Resource_WriteOperations,
-        Resource_ServiceTime
+        Resource_ServiceTime,
+        Resource_LoadAveragePerCore1m,
+        Resource_LoadAveragePerCore5m,
+        Resource_LoadAveragePerCore15m
 } __attribute__((__packed__)) Resource_Type;
 
 
@@ -394,8 +394,6 @@ typedef enum {
 #define LIMIT_RESTARTTIMEOUT    30000
 
 
-#include "socket.h"
-
 
 /** ------------------------------------------------- Special purpose macros */
 
@@ -438,10 +436,10 @@ typedef char MD_T[MD_SIZE];
 
 /** Defines monit limits object */
 typedef struct Limits_T {
+        int      programOutput;           /**< Program output truncate limit [B] */
+        size_t   fileContentBuffer;  /**< Maximum tested file content length [B] */
         uint32_t sendExpectBuffer;  /**< Maximum send/expect response length [B] */
-        uint32_t fileContentBuffer;  /**< Maximum tested file content length [B] */
         uint32_t httpContentBuffer;  /**< Maximum tested HTTP content length [B] */
-        uint32_t programOutput;           /**< Program output truncate limit [B] */
         uint32_t networkTimeout;               /**< Default network timeout [ms] */
         uint32_t programTimeout;               /**< Default program timeout [ms] */
         uint32_t stopTimeout;                     /**< Default stop timeout [ms] */
@@ -455,7 +453,7 @@ typedef struct Limits_T {
  * array must be NULL terminated and the first entry is the program
  * itself. In addition, a user and group may be set for the Command
  * which means that the Command should run as a certain user and with
- * certain group. To avoid name collision with Command_T in libmonit 
+ * certain group. To avoid name collision with Command_T in libmonit
  * this structure uses lower case.
  */
 typedef struct command_t {
@@ -465,7 +463,7 @@ typedef struct command_t {
         bool has_gid;      /**< true if a new gid is defined for this Command */
         uid_t uid;         /**< The user id to switch to when running this Command */
         gid_t gid;        /**< The group id to switch to when running this Command */
-        unsigned timeout;     /**< Max seconds which we wait for method to execute */
+        unsigned int timeout;     /**< Max seconds which we wait for method to execute */
 } *command_t;
 
 
@@ -565,30 +563,42 @@ typedef struct SystemInfo_T {
         struct {
                 int count;                                      /**< Number of CPUs */
                 struct {
-                        float user;         /**< Total CPU in use in user space [%] */
-                        float system;     /**< Total CPU in use in kernel space [%] */
-                        float wait;            /**< Total CPU in use in waiting [%] */
+                        float user;       /**< Time in user space [%] */
+                        float nice;       /**< Time in user space with low priority [%] */
+                        float system;     /**< Time in kernel space [%] */
+                        float iowait;     /**< Idle time while waiting for I/O [%] */
+                        float idle;       /**< Idle time [%] */
+                        float hardirq;    /**< Time servicing hardware interrupts [%] */
+                        float softirq;    /**< Time servicing software interrupts [%] */
+                        float steal;      /**< Stolen time, which is the time spent in other operating systems when running in a virtualized environment [%] */
+                        float guest;      /**< Time spent running a virtual CPU for guest operating systems under the control of the kernel [%] */
+                        float guest_nice; /**< Time spent running a niced guest (virtual CPU for guest operating systems under the control of the kernel) [%] */
                 } usage;
         } cpu;
         struct {
-                uint64_t size;                      /**< Maximal system real memory */
+                unsigned long long size;                      /**< Maximal system real memory */
                 struct {
                         float percent;  /**< Total real memory in use in the system */
-                        uint64_t bytes; /**< Total real memory in use in the system */
+                        unsigned long long bytes; /**< Total real memory in use in the system */
                 } usage;
         } memory;
         struct {
-                uint64_t size;                                       /**< Swap size */
+                unsigned long long size;                                       /**< Swap size */
                 struct {
                         float percent;         /**< Total swap in use in the system */
-                        uint64_t bytes;        /**< Total swap in use in the system */
+                        unsigned long long bytes;        /**< Total swap in use in the system */
                 } usage;
         } swap;
+        struct {
+                long long allocated;        /**< Number of allocated filedescriptors */
+                long long unused;              /**< Number of unused filedescriptors */
+                long long maximum;                        /**< Filedescriptors limit */
+        } filedescriptors;
         size_t argmax;                                                   /**< Program arguments maximum [B] */
         double loadavg[3];                                                         /**< Load average triple */
         struct utsname uname;                                 /**< Platform information provided by uname() */
         struct timeval collected;                                             /**< When were data collected */
-        uint64_t booted; /**< System boot time (seconds since UNIX epoch, using platform-agnostic uint64_t) */
+        unsigned long long booted; /**< System boot time (seconds since UNIX epoch, using platform-agnostic unsigned long long) */
         double time;                                                                      /**< 1/10 seconds */
         double time_prev;                                                                 /**< 1/10 seconds */
 } SystemInfo_T;
@@ -689,6 +699,10 @@ typedef struct Port_T {
                 struct {
                         char *username;
                         char *password;
+                } mqtt;
+                struct {
+                        char *username;
+                        char *password;
                 } mysql;
                 struct {
                         char *secret;
@@ -735,6 +749,8 @@ typedef struct Icmp_T {
 
 typedef struct Dependant_T {
         char *dependant;                            /**< name of dependant service */
+        char *dependant_urlescaped;     /**< URL escaped name of dependant service */
+        StringBuffer_T dependant_htmlescaped; /**< HTML escaped name of dependant service */
 
         /** For internal use */
         struct Dependant_T *next;             /**< next dependant service in chain */
@@ -759,7 +775,7 @@ typedef struct Timestamp_T {
         bool test_changes;       /**< true if we only should test for changes */
         Timestamp_Type type;
         Operator_Type operator;                           /**< Comparison operator */
-        uint64_t time;                                    /**< Timestamp watermark */
+        unsigned long long time;                                    /**< Timestamp watermark */
         time_t lastTimestamp;        /**< Last timestamp (context depends on type) */
         EventAction_T action;  /**< Description of the action upon event occurence */
 
@@ -936,6 +952,16 @@ typedef struct SecurityAttribute_T {
         struct SecurityAttribute_T *next;
 } *SecurityAttribute_T;
 
+typedef struct Filedescriptors_T {
+        bool total;             /**<Whether to include filedescriptors of children */
+        long long limit_absolute;                              /**<  Filedescriptors limit */
+        float limit_percent;                                 /**< Filedescriptors limit */
+        Operator_Type operator;                           /**< Comparison operator */
+        EventAction_T action;  /**< Description of the action upon event occurence */
+
+        /** For internal use */
+        struct Filedescriptors_T *next;
+} *Filedescriptors_T;
 
 /** Defines pid object */
 typedef struct Pid_T {
@@ -985,8 +1011,9 @@ typedef struct FileSystem_T {
 
 
 typedef struct IOStatistics_T {
-        struct Statistics_T operations;        /**< Number of operations completed */
-        struct Statistics_T bytes;      /**< Number of bytes handled by operations */
+        struct Statistics_T operations;                                         /**< Number of operations completed */
+        struct Statistics_T bytes;          /**< Number of bytes handled by operations (total including cached I/O) */
+        struct Statistics_T bytesPhysical;           /**< Number of bytes handled by operations (physical I/O only) */
 } *IOStatistics_T;
 
 
@@ -1000,16 +1027,16 @@ typedef struct Device_T {
         char key[PATH_MAX];
         char module[256];
         char type[64];
-        uint64_t flags;
+        unsigned long long flags;
         bool (*getDiskUsage)(void *);
         bool (*getDiskActivity)(void *);
 } *Device_T;
 
 
 typedef struct TimestampInfo_T {
-        uint64_t access;
-        uint64_t change;
-        uint64_t modify;
+        unsigned long long access;
+        unsigned long long change;
+        unsigned long long modify;
 } *TimestampInfo_T;
 
 
@@ -1081,8 +1108,8 @@ typedef struct ProcessInfo_T {
         int gid;                                              /**< Process GID */
         int threads;
         int children;
-        uint64_t mem;
-        uint64_t total_mem;
+        unsigned long long mem;
+        unsigned long long total_mem;
         float mem_percent;                                     /**< percentage */
         float total_mem_percent;                               /**< percentage */
         float cpu_percent;                                     /**< percentage */
@@ -1091,6 +1118,14 @@ typedef struct ProcessInfo_T {
         struct IOStatistics_T read;                       /**< Read statistics */
         struct IOStatistics_T write;                     /**< Write statistics */
         char secattr[STRLEN];                         /**< Security attributes */
+        struct {
+                long long open;                        /**< number of opened files */
+                long long openTotal;             /**< number of total opened files */
+                struct {
+                        long long soft;                 /**< Filedescriptors soft limit */
+                        long long hard;                 /**< Filedescriptors hard limit */
+                } limit;
+        } filedescriptors;
 } *ProcessInfo_T;
 
 
@@ -1117,6 +1152,8 @@ typedef struct Service_T {
 
         /** Common parameters */
         char *name;                                  /**< Service descriptive name */
+        char *name_urlescaped;                       /**< Service name URL escaped */
+        StringBuffer_T name_htmlescaped;            /**< Service name HTML escaped */
         State_Type (*check)(struct Service_T *);/**< Service verification function */
         bool visited; /**< Service visited flag, set if dependencies are used */
         Service_Type type;                             /**< Monitored service type */
@@ -1159,6 +1196,7 @@ typedef struct Service_T {
         Uid_T       euid;                                 /**< Effective Uid check */
         Gid_T       gid;                                            /**< Gid check */
         SecurityAttribute_T secattrlist;             /**< Security attributes list */
+        Filedescriptors_T filedescriptorslist;                   /**< Filedescriptors list */
         LinkStatus_T linkstatuslist;                 /**< Network link status list */
         LinkSpeed_T linkspeedlist;                    /**< Network link speed list */
         LinkSaturation_T linksaturationlist;     /**< Network link saturation list */
@@ -1181,7 +1219,7 @@ typedef struct Service_T {
         int                error;                          /**< Error flags bitmap */
         int                error_hint;   /**< Failed/Changed hint for error bitmap */
         union Info_T       inf;                          /**< Service check result */
-        struct timeval     collected;                /**< When were data collected */ //FIXME: replace with uint64_t? (all places where timeval is used) ... Time_milli()?
+        struct timeval     collected;                /**< When were data collected */ //FIXME: replace with unsigned long long? (all places where timeval is used) ... Time_milli()?
         char              *token;                                /**< Action token */
 
         /** Events */
@@ -1244,7 +1282,7 @@ typedef struct Run_T {
         Limits_T limits;                                       /**< Default limits */
         struct SslOptions_T ssl;                          /**< Default SSL options */
         int  polltime;        /**< In deamon mode, the sleeptime (sec) between run */
-        int  startdelay;                    /**< the sleeptime (sec) after startup */
+        int  startdelay;  /**< the sleeptime [s] on first start after machine boot */
         int  facility;              /** The facility to use when running openlog() */
         int  eventlist_slots;          /**< The event queue size - number of slots */
         int mailserver_timeout; /**< Connect and read timeout ms for a SMTP server */
@@ -1307,19 +1345,18 @@ extern Service_T      servicelist_conf;
 extern ServiceGroup_T servicegrouplist;
 extern SystemInfo_T   systeminfo;
 
-extern char *actionnames[];
-extern char *modenames[];
-extern char *onrebootnames[];
-extern char *checksumnames[];
-extern char *operatornames[];
-extern char *operatorshortnames[];
-extern char *servicetypes[];
-extern char *pathnames[];
-extern char *icmpnames[];
-extern char *sslnames[];
-extern char *socketnames[];
-extern char *timestampnames[];
-extern char *httpmethod[];
+extern const char *actionnames[];
+extern const char *modenames[];
+extern const char *onrebootnames[];
+extern const char *checksumnames[];
+extern const char *operatornames[];
+extern const char *operatorshortnames[];
+extern const char *servicetypes[];
+extern const char *pathnames[];
+extern const char *icmpnames[];
+extern const char *socketnames[];
+extern const char *timestampnames[];
+extern const char *httpmethod[];
 
 
 /* ------------------------------------------------------- Public prototypes */
@@ -1337,6 +1374,32 @@ extern char *httpmethod[];
 bool parse(char *);
 bool control_service(const char *, Action_Type);
 bool control_service_string(List_T, const char *);
+void  spawn(Service_T, command_t, Event_T);
+bool log_init(void);
+void  LogEmergency(const char *, ...) __attribute__((format (printf, 1, 2)));
+void  LogAlert(const char *, ...) __attribute__((format (printf, 1, 2)));
+void  LogCritical(const char *, ...) __attribute__((format (printf, 1, 2)));
+void  LogError(const char *, ...) __attribute__((format (printf, 1, 2)));
+void  LogWarning(const char *, ...) __attribute__((format (printf, 1, 2)));
+void  LogNotice(const char *, ...) __attribute__((format (printf, 1, 2)));
+void  LogInfo(const char *, ...) __attribute__((format (printf, 1, 2)));
+void  LogDebug(const char *, ...) __attribute__((format (printf, 1, 2)));
+void  vLogEmergency(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogAlert(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogCritical(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogError(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogWarning(const char *,va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogNotice(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogInfo(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogDebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void  vLogAbortHandler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
+void  log_close(void);
+#ifndef HAVE_VSYSLOG
+#ifdef HAVE_SYSLOG
+void vsyslog (int, const char *, va_list);
+#endif /* HAVE_SYSLOG */
+#endif /* HAVE_VSYSLOG */
+int   validate(void);
 void  daemonize(void);
 void  gc(void);
 void  gc_mail_list(Mail_T *);

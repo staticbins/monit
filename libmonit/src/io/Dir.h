@@ -52,7 +52,7 @@
  * used to get a description of the error that occurred
  * @see File_umask()
  */
-int Dir_mkdir(const char *dir, int perm);
+bool Dir_mkdir(const char *dir, int perm);
 
 
 /**
@@ -62,7 +62,7 @@ int Dir_mkdir(const char *dir, int perm);
  * @return true if success otherwise false and System_getLastError() can be
  * used to get a description of the error that occurred
  */
-int Dir_delete(const char *dir);
+bool Dir_delete(const char *dir);
 
 
 /**
@@ -72,7 +72,7 @@ int Dir_delete(const char *dir);
  * @return true if success otherwise false and System_getLastError() can be
  * used to get a description of the error that occurred
  */
-int Dir_chdir(const char *path);
+bool Dir_chdir(const char *path);
 
 
 /**

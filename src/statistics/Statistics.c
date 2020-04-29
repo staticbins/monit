@@ -23,13 +23,9 @@
  */
 
 
-#include "xconfig.h"
-
-#include <stdint.h>
+#include "config.h"
 
 #include "monit.h"
-
-#include "Statistics.h"
 
 
 /**
@@ -50,8 +46,8 @@
 /* ---------------------------------------------------------- MARK: - Public */
 
 
-void Statistics_update(T S, uint64_t time, uint64_t value) {
-       uint64_t _value = value;
+void Statistics_update(T S, unsigned long long time, unsigned long long value) {
+       unsigned long long _value = value;
 #ifndef __LP64__
         if (value < S->raw)
                 _value = S->current.value + ULONG_MAX + 1ULL - S->raw + value; // Counter wrapped
@@ -81,12 +77,12 @@ bool Statistics_initialized(T S) {
 }
 
 
-uint64_t Statistics_raw(T S) {
+unsigned long long Statistics_raw(T S) {
         return S->current.value;
 }
 
 
-uint64_t Statistics_delta(T S) {
+unsigned long long Statistics_delta(T S) {
         if (S->last.value > 0 && S->current.value > S->last.value)
                 return S->current.value - S->last.value;
         return 0ULL;
