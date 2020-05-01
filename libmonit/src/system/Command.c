@@ -90,6 +90,12 @@ struct Process_T {
 };
 
 
+struct _usergroups {
+        int ngroups;
+        gid_t groups[NGROUPS_MAX];
+};
+
+
 /* --------------------------------------------------------------- Private */
 
 
@@ -487,17 +493,29 @@ List_T Command_getCommand(T C) {
 /* The Execute function. Note that we use vfork() rather than fork. Vfork has
  a special semantic in that the child process runs in the parent address space
  until exec is called in the child. The child also run first and suspend the
- parent process until exec or exit is called */
+ parent process until exec or exit is called
+ 
+ Note: For possible better error reporting, set exec_error to an enum of possible
+ errors and exit with that error. Return Process_T regardless and introduce a
+ char *Process_getError() which uses waitpid() to get the error status from child exit.
+ I.e. similar to what we do with spawn.c
+ */
 Process_T Command_execute(T C) {
         assert(C);
         assert(_env(C));
         assert(_args(C));
         volatile int exec_error = 0;
         struct passwd *user = NULL;
+        struct _usergroups ug = (struct _usergroups){.groups = {}, .ngroups = NGROUPS_MAX};
         if (C->uid) {
                 user = getpwuid(C->uid);
                 if (!user) {
                         ERROR("Command: uid %d not found on the system -- %s\n", C->uid, System_getLastError());
+                        return NULL;
+                }
+                Command_setEnv(C, "HOME", user->pw_dir);
+                if (getgrouplist(user->pw_name, C->gid, (int*)ug.groups, &ug.ngroups) != 0) {
+                        ERROR("Command: getgrouplist for uid %d -- %s\n", C->uid, System_getLastError());
                         return NULL;
                 }
         }
@@ -513,7 +531,6 @@ Process_T Command_execute(T C) {
                 if (C->working_directory) {
                         if (! Dir_chdir(C->working_directory)) {
                                 exec_error = errno;
-                                ERROR("Command: sub-process cannot change working directory to '%s' -- %s\n", C->working_directory, System_getLastError());
                                 _exit(errno);
                         }
                 }
@@ -529,26 +546,21 @@ Process_T Command_execute(T C) {
                                 P->gid = C->gid;
                         } else {
                                 exec_error = errno;
-                                ERROR("Command: Cannot change process gid to '%d' -- %s\n", C->gid, System_getLastError());
                                 _exit(errno);
                         }
                 }
                 P->uid = getuid();
                 if (C->uid) {
                         assert(user);
-                        // TODO: https://bitbucket.org/tildeslash/monit/issues/278/monit-should-drop-supplementary-groups
-                        if (initgroups(user->pw_name, P->gid) == 0) {
-                                Command_setEnv(C, "HOME", user->pw_dir);
+                        if (setgroups(ug.ngroups, ug.groups) == 0) {
                                 if (setuid(C->uid) == 0) {
                                         P->uid = C->uid;
                                 } else {
                                         exec_error = errno;
-                                        ERROR("Command: Cannot change process uid to '%d' -- %s\n", C->uid, System_getLastError());
                                         _exit(errno);
                                 }
                         } else {
                                 exec_error = errno;
-                                ERROR("Command: initgroups for user %s failed -- %s\n", user->pw_name, System_getLastError());
                                 _exit(errno);
                         }
                 }
@@ -566,9 +578,6 @@ Process_T Command_execute(T C) {
                 signal(SIGHUP, SIG_IGN);  // Ensure future opens won't allocate controlling TTYs
                 // Execute the program
                 execve(_args(C)[0], _args(C), _env(C));
-                // Won't print to error log as descriptor was closed above, but will
-                // print error to stderr which Processor_T can be read
-                ERROR("Command: '%s' failed to execute -- %s", _args(C)[0], System_getLastError());
                 exec_error = errno;
                 _exit(errno);
         }
