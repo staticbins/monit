@@ -320,7 +320,7 @@ static void _responseOk(mysql_t *mysql) {
 }
 
 
-// AuthMoreData packet (we implement just a caching_sha2_password response context, where it's used to signalize the authentication status)
+// AuthMoreData packet
 static void _responseAuthMoreData(mysql_t *mysql) {
         if (mysql->state == MySQL_Handshake) {
                 uint8_t data = _getUInt1(&mysql->response);

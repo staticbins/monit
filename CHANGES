@@ -11,7 +11,7 @@ via the SSL option, example:
         version: tlsv11
      }
 
-New: Added support for MySQL 8.x caching_sha2_password authentication.
+New: Issue #839: Added support for MySQL 8.x caching_sha2_password authentication.
 
 New: Added support for MySQL TLS encryption. Example:
         if failed port 3306 protocol mysqls then alert
