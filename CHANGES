@@ -11,6 +11,11 @@ via the SSL option, example:
         version: tlsv11
      }
 
+New: Added support for MySQL 8.x caching_sha2_password authentication.
+
+New: Added support for MySQL TLS encryption. Example:
+        if failed port 3306 protocol mysqls then alert
+
 New: Linux: Add support for monitoring of filedescriptors usage of a process. Thanks to Marcel Baur and Lutz Mader. Example:
     check process myproc with pidfile /var/run/myproc.pid
         if filedescriptors >= 90% then alert

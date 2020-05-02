@@ -302,6 +302,7 @@ imaps             { return IMAPS; }
 clamav            { return CLAMAV; }
 dns               { return DNS; }
 mysql             { return MYSQL; }
+mysqls            { return MYSQLS; }
 nntp              { return NNTP; }
 ntp3              { return NTP3; }
 ssh               { return SSH; }

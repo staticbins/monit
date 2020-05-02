@@ -3327,6 +3327,7 @@ knows how to speak:
  I<MONGODB>
  I<MQTT>
  I<MYSQL>
+ I<MYSQLS>
  I<NNTP>
  I<NTP3>
  I<PGSQL>
@@ -3611,7 +3612,7 @@ Example:
 
 Syntax:
 
- PROTOCOL MYSQL [USERNAME string PASSWORD string]
+ PROTOCOL MYSQL[S] [USERNAME string PASSWORD string]
 
 I<USERNAME> MySQL username (maximum 16 characters).
 
@@ -3623,10 +3624,9 @@ Monit will perform the test using anonymous login. This can cause an
 authentication error to be logged in your MySQL log, depending on your
 MySQL configuration.
 
-If credentials are set, Monit will login and perform a MySQL ping test.
-Monit does not require any database privileges, it just needs the
-database user. You might want to create standalone user for Monit to
-use when testing, for example:
+If credentials are set, Monit will try to login. Monit does not require any database
+privileges, it just needs the database user. You might want to create standalone user
+for Monit to use when testing, for example:
 
  CREATE USER 'monit'@'host_from_which_monit_performs_testing' IDENTIFIED BY 'mysecretpassword';
  FLUSH PRIVILEGES;
@@ -3649,6 +3649,13 @@ or with unix-socket start/stop commands
      if failed
         unixsocket /tmp/mysql.sock
         protocol mysql username "foo" password "bar"
+     then alert
+
+You can enable the TLS encryption for the test by using MYSQLS as protocol name:
+
+     if failed
+        port 3306
+        protocol mysqls username "foo" password "bar"
      then alert
 
 
