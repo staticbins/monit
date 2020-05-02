@@ -505,10 +505,9 @@ Process_T Command_execute(T C) {
         assert(_env(C));
         assert(_args(C));
         volatile int exec_error = 0;
-        struct passwd *user = NULL;
         struct _usergroups ug = (struct _usergroups){.groups = {}, .ngroups = NGROUPS_MAX};
         if (C->uid) {
-                user = getpwuid(C->uid);
+                struct passwd *user = getpwuid(C->uid);
                 if (!user) {
                         ERROR("Command: uid %d not found on the system -- %s\n", C->uid, System_getLastError());
                         return NULL;
@@ -550,19 +549,15 @@ Process_T Command_execute(T C) {
                         }
                 }
                 P->uid = getuid();
-                if (C->uid) {
-                        assert(user);
+                while (C->uid) {
                         if (setgroups(ug.ngroups, ug.groups) == 0) {
                                 if (setuid(C->uid) == 0) {
                                         P->uid = C->uid;
-                                } else {
-                                        exec_error = errno;
-                                        _exit(errno);
+                                        break;
                                 }
-                        } else {
-                                exec_error = errno;
-                                _exit(errno);
                         }
+                        exec_error = errno;
+                        _exit(errno);
                 }
                 // Unblock any signals and reset signal handlers
                 sigset_t mask;
