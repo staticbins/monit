@@ -727,10 +727,10 @@ void check_mysql(Socket_T S) {
                         if (STR_DEF(mysql.port->parameters.mysql.password)) {
                                 // Resend the password encoded per requested plugin rules
                                 char password[SHA256_DIGEST_LENGTH] = {};
-                                _sendPassword(&mysql, mysql.authentication.getPassword(password, mysql.port->parameters.mysql.password, mysql.salt), mysql.authentication.hashLength);
+                                _sendPassword(&mysql, (unsigned char *)mysql.authentication.getPassword(password, mysql.port->parameters.mysql.password, mysql.salt), mysql.authentication.hashLength);
                         } else {
                                 // Send plain password
-                                _sendPassword(&mysql, "", 0);
+                                _sendPassword(&mysql, (unsigned char *)"", 0);
                         }
                         _readResponse(&mysql);
                 } else if (mysql.state == MySQL_FastAuthSuccess) {
