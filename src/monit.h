@@ -692,6 +692,8 @@ typedef struct Port_T {
                 struct {
                         char *username;
                         char *password;
+                        char *rsaChecksum;
+                        Hash_Type rsaChecksumType;
                 } mysql;
                 struct {
                         char *secret;

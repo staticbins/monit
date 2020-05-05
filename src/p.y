@@ -330,7 +330,7 @@ static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Typ
 %token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL
 %token IDFILE STATEFILE SEND EXPECT CYCLE COUNT REMINDER REPEAT
 %token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT PROGRAMTIMEOUT STARTTIMEOUT STOPTIMEOUT RESTARTTIMEOUT
-%token PIDFILE START STOP PATHTOK
+%token PIDFILE START STOP PATHTOK RSAKEY
 %token HOST HOSTNAME PORT IPV4 IPV6 TYPE UDP TCP TCPSSL PROTOCOL CONNECTION
 %token ALERT NOALERT MAILFORMAT UNIXSOCKET SIGNATURE
 %token TIMEOUT RETRY RESTART CHECKSUM EVERY NOTEVERY
@@ -1759,16 +1759,37 @@ mysqllist       : /* EMPTY */
                 ;
 
 mysql           : username {
-                        if ($<string>1) {
-                                if (strlen($<string>1) > 16)
-                                        yyerror2("Username too long -- Maximum MySQL username length is 16 characters");
-                                else
-                                        portset.parameters.mysql.username = $<string>1;
-                        }
+                        portset.parameters.mysql.username = $<string>1;
                   }
                 | password {
                         portset.parameters.mysql.password = $<string>1;
                   }
+                | RSAKEY CHECKSUM checksumoperator STRING {
+                        portset.parameters.mysql.rsaChecksum = $<string>4;
+                        switch (cleanup_hash_string(portset.parameters.mysql.rsaChecksum)) {
+                                case 32:
+                                        portset.parameters.mysql.rsaChecksumType = Hash_Md5;
+                                        break;
+                                case 40:
+                                        portset.parameters.mysql.rsaChecksumType = Hash_Sha1;
+                                        break;
+                                default:
+                                        yyerror2("Unknown checksum type: [%s] is not MD5 nor SHA1", portset.parameters.mysql.rsaChecksum);
+                        }
+                  }
+                | RSAKEY CHECKSUM MD5HASH checksumoperator STRING {
+                        portset.parameters.mysql.rsaChecksum = $<string>5;
+                        if (cleanup_hash_string(portset.parameters.mysql.rsaChecksum) != 32)
+                                yyerror2("Unknown checksum type: [%s] is not MD5", portset.parameters.mysql.rsaChecksum);
+                        portset.parameters.mysql.rsaChecksumType = Hash_Md5;
+                  }
+                | RSAKEY CHECKSUM SHA1HASH checksumoperator STRING {
+                        portset.parameters.mysql.rsaChecksum = $<string>5;
+                        if (cleanup_hash_string(portset.parameters.mysql.rsaChecksum) != 40)
+                                yyerror2("Unknown checksum type: [%s] is not SHA1", portset.parameters.mysql.rsaChecksum);
+                        portset.parameters.mysql.rsaChecksumType = Hash_Sha1;
+                  }
+                ;
                 ;
 
 target          : TARGET MAILADDR {
@@ -3535,6 +3556,13 @@ static void addport(Port_T *list, Port_T port) {
                         if ((p->url_request && p->url_request->regex) || p->parameters.http.checksum) {
                                 yyerror2("if response content or checksum test is enabled, the HEAD method is not allowed");
                         }
+                }
+        } else if (p->protocol->check == check_mysql) {
+                if (p->parameters.mysql.rsaChecksum) {
+                        if (! p->parameters.mysql.username)
+                                yyerror2("the rsakey checksum test requires credentials to be defined");
+                        if (p->target.net.ssl.options.flags != SSL_Disabled)
+                                yyerror2("the rsakey checksum test can be used just with unsecured mysql protocol");
                 }
         }
 

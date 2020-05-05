@@ -87,6 +87,7 @@
 		9365D2331E28F41500FCF3FB /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9365D2321E28F41500FCF3FB /* CoreFoundation.framework */; };
 		9373D69722A3B5E200CCAC92 /* mqtt.c in Sources */ = {isa = PBXBuildFile; fileRef = 9373D69222A3B5E200CCAC92 /* mqtt.c */; };
 		9378737B1A13907100CF8C5E /* sieve.c in Sources */ = {isa = PBXBuildFile; fileRef = 9378737A1A13907100CF8C5E /* sieve.c */; };
+		937F5ACE24618E2F006D62AF /* checksum.c in Sources */ = {isa = PBXBuildFile; fileRef = 937F5ACD24618E2F006D62AF /* checksum.c */; };
 		93A23ED41C85E6890076FBFE /* Address.c in Sources */ = {isa = PBXBuildFile; fileRef = 93A23ED21C85E6890076FBFE /* Address.c */; };
 		93DE91B01CBAED0400BC8E0C /* client.c in Sources */ = {isa = PBXBuildFile; fileRef = 93DE91AE1CBAED0400BC8E0C /* client.c */; };
 		93F14A6B1EE7002500FF756B /* fail2ban.c in Sources */ = {isa = PBXBuildFile; fileRef = 93F14A691EE7002500FF756B /* fail2ban.c */; };
@@ -348,6 +349,8 @@
 		9365D2321E28F41500FCF3FB /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		9373D69222A3B5E200CCAC92 /* mqtt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mqtt.c; sourceTree = "<group>"; };
 		9378737A1A13907100CF8C5E /* sieve.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sieve.c; sourceTree = "<group>"; };
+		937F5AC824618E2F006D62AF /* checksum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = checksum.h; sourceTree = "<group>"; };
+		937F5ACD24618E2F006D62AF /* checksum.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = checksum.c; sourceTree = "<group>"; };
 		9397E3081D897CCA008CAD1F /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		93A23ED21C85E6890076FBFE /* Address.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Address.c; sourceTree = "<group>"; };
 		93A23ED31C85E6890076FBFE /* Address.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Address.h; sourceTree = "<group>"; };
@@ -625,6 +628,8 @@
 				5295A9F424584C89007E3C4C /* net */,
 				52F6E74413A74F220023F87A /* alert.c */,
 				52F6E74513A74F220023F87A /* alert.h */,
+				937F5ACD24618E2F006D62AF /* checksum.c */,
+				937F5AC824618E2F006D62AF /* checksum.h */,
 				52F6E74913A74F220023F87A /* control.c */,
 				52F6E74A13A74F220023F87A /* daemonize.c */,
 				52F6E75813A74F220023F87A /* env.c */,
@@ -911,6 +916,7 @@
 			files = (
 				5295A9EF245849FF007E3C4C /* Statistics.c in Sources */,
 				52F6E80513A74F220023F87A /* alert.c in Sources */,
+				937F5ACE24618E2F006D62AF /* checksum.c in Sources */,
 				52F6E80713A74F220023F87A /* control.c in Sources */,
 				52F6E80813A74F220023F87A /* daemonize.c in Sources */,
 				52F6E80913A74F220023F87A /* device_common.c in Sources */,

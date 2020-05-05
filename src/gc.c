@@ -411,6 +411,7 @@ static void _gcportlist(Port_T *p) {
         } else if ((*p)->protocol->check == check_mysql) {
                 FREE((*p)->parameters.mysql.username);
                 FREE((*p)->parameters.mysql.password);
+                FREE((*p)->parameters.mysql.rsaChecksum);
         } else if ((*p)->protocol->check == check_sip) {
                 FREE((*p)->parameters.sip.target);
         } else if ((*p)->protocol->check == check_smtp) {

@@ -247,6 +247,7 @@ certmd5           { return CERTMD5; }
 pemfile           { return PEMFILE; }
 pemchain          { return PEMCHAIN; }
 pemkey            { return PEMKEY; }
+rsakey            { return RSAKEY; }
 init              { return INIT; }
 allow             { return ALLOW; }
 reject            { return REJECTOPT; }

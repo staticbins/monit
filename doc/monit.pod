@@ -3614,7 +3614,7 @@ Syntax:
 
  PROTOCOL MYSQL[S] [USERNAME string PASSWORD string]
 
-I<USERNAME> MySQL username (maximum 16 characters).
+I<USERNAME> MySQL username.
 
 I<PASSWORD> MySQL password (special characters can be used, but for non-alphanumerics
 the password has to be quoted).

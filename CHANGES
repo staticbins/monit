@@ -16,6 +16,8 @@ New: Issue #839: Added support for MySQL 8.x caching_sha2_password authenticatio
 New: Added support for MySQL TLS encryption. Example:
         if failed port 3306 protocol mysqls then alert
 
+New: The username in the mysql protocol test was limited to 16 bytes, this, this limit was dropped.
+
 New: Linux: Add support for monitoring of filedescriptors usage of a process. Thanks to Marcel Baur and Lutz Mader. Example:
     check process myproc with pidfile /var/run/myproc.pid
         if filedescriptors >= 90% then alert
