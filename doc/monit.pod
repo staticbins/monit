@@ -3612,12 +3612,16 @@ Example:
 
 Syntax:
 
- PROTOCOL MYSQL[S] [USERNAME string PASSWORD string]
+ PROTOCOL MYSQL[S] [USERNAME string PASSWORD string [RSAKEY CHECKSUM string]]
 
 I<USERNAME> MySQL username.
 
 I<PASSWORD> MySQL password (special characters can be used, but for non-alphanumerics
 the password has to be quoted).
+
+I<RSKEY CHECKSUM> If you use unsecured connection (plain MYSQL without TLS), you can set
+the expected MD5 or SHA1 checksum of the server's RSA key to protect afainst man-in-the-middle
+attacks. Monit will check the key fingerprint before sending the password to the server.
 
 Username and password (credentials) are B<optional> and if not set,
 Monit will perform the test using anonymous login. This can cause an

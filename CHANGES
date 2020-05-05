@@ -11,10 +11,19 @@ via the SSL option, example:
         version: tlsv11
      }
 
-New: Issue #839: Added support for MySQL 8.x caching_sha2_password authentication.
-
 New: Added support for MySQL TLS encryption. Example:
         if failed port 3306 protocol mysqls then alert
+
+New: Issue #839: Added support for MySQL 8.x caching_sha2_password authentication. When unsecured (non-TLS) connection
+is used, it is possible to also verify the server's RSA key checksum to protect against man-in-the-middle attacks. Example:
+    check host mymachine with address 127.0.0.1
+        if failed
+            port 3306
+            protocol mysql
+            username monit
+            password mypassword123
+            rsakey checksum 29e512c06275a1b3f4617f8cb9ca583d642386fe
+        then alert
 
 New: The username in the mysql protocol test was limited to 16 bytes, this, this limit was dropped.
 
