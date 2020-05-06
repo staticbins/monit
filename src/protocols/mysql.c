@@ -477,7 +477,7 @@ static void _greeting(mysql_t *mysql) {
         if (mysql->capabilities & CLIENT_PLUGIN_AUTH) {
                 _parsePlugin(mysql, _getString(&mysql->response));
         }
-        DEBUG("MySQL Server: Protocol: %d, Version: %s, Connection ID: %d, Capabilities: 0x%x, AuthPlugin: %s\n", mysql->response.header, mysql->response.data.handshake.version, mysql->response.data.handshake.connectionid, mysql->response.data.handshake.capabilities, mysql->response.data.handshake.authplugin);
+        DEBUG("MySQL Server: Protocol: %d, Version: %s, Connection ID: %d, Capabilities: 0x%x, AuthPlugin: %s\n", mysql->response.header, mysql->response.data.handshake.version, mysql->response.data.handshake.connectionid, mysql->response.data.handshake.capabilities, *mysql->response.data.handshake.authplugin ? mysql->response.data.handshake.authplugin : "N/A");
 }
 
 
@@ -702,7 +702,15 @@ static void _requestQuery(mysql_t *mysql, const unsigned char *query) {
  */
 void check_mysql(Socket_T S) {
         ASSERT(S);
-        mysql_t mysql = {.state = MySQL_Init, .sequence = 1, .authentication.type = Auth_Native, .socket = S, .port = Socket_getPort(S)};
+        mysql_t mysql = {
+                .state = MySQL_Init,
+                .sequence = 1,
+                .authentication.type = Auth_Native,
+                .authentication.hashLength = SHA1_DIGEST_SIZE,
+                .authentication.getPassword = _getNativePassword,
+                .socket = S,
+                .port = Socket_getPort(S)
+        };
         // Parse the server greeting
         _readResponse(&mysql);
         if (mysql.state != MySQL_Greeting)
