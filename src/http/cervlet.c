@@ -1204,23 +1204,13 @@ static void do_home_system(HttpResponse res) {
                             get_service_status(HTML, s, buf, sizeof(buf)),
                             systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2]);
         if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_User)
-                StringBuffer_append(res->outputbuffer, "%.1f%%usr&nbsp;", systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
+                StringBuffer_append(res->outputbuffer, "%.1f%%us&nbsp;", systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
         if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_System)
-                StringBuffer_append(res->outputbuffer, "%.1f%%sys&nbsp;", systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.);
+                StringBuffer_append(res->outputbuffer, "%.1f%%sy&nbsp;", systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.);
         if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Nice)
-                StringBuffer_append(res->outputbuffer, "%.1f%%nice&nbsp;", systeminfo.cpu.usage.nice > 0. ? systeminfo.cpu.usage.nice : 0.);
+                StringBuffer_append(res->outputbuffer, "%.1f%%ni&nbsp;", systeminfo.cpu.usage.nice > 0. ? systeminfo.cpu.usage.nice : 0.);
         if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_IOWait)
-                StringBuffer_append(res->outputbuffer, "%.1f%%iowait&nbsp;", systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.);
-        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_HardIRQ)
-                StringBuffer_append(res->outputbuffer, "%.1f%%hardirq&nbsp;", systeminfo.cpu.usage.hardirq > 0. ? systeminfo.cpu.usage.hardirq : 0.);
-        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_SoftIRQ)
-                StringBuffer_append(res->outputbuffer, "%.1f%%softirq&nbsp;", systeminfo.cpu.usage.softirq > 0. ? systeminfo.cpu.usage.softirq : 0.);
-        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Steal)
-                StringBuffer_append(res->outputbuffer, "%.1f%%steal&nbsp;", systeminfo.cpu.usage.steal > 0. ? systeminfo.cpu.usage.steal : 0.);
-        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Guest)
-                StringBuffer_append(res->outputbuffer, "%.1f%%guest&nbsp;", systeminfo.cpu.usage.guest > 0. ? systeminfo.cpu.usage.guest : 0.);
-        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_GuestNice)
-                StringBuffer_append(res->outputbuffer, "%.1f%%guestnice&nbsp;", systeminfo.cpu.usage.guest_nice > 0. ? systeminfo.cpu.usage.guest_nice : 0.);
+                StringBuffer_append(res->outputbuffer, "%.1f%%wa&nbsp;", systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.);
         StringBuffer_append(res->outputbuffer,
                             "</td>");
         StringBuffer_append(res->outputbuffer,
