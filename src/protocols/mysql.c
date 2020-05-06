@@ -468,7 +468,7 @@ static void _greeting(mysql_t *mysql) {
         mysql->response.data.handshake.capabilities = _getUInt2(&mysql->response); // capability flags (lower 2 bytes)
         mysql->response.data.handshake.characterset = _getUInt1(&mysql->response);
         mysql->response.data.handshake.status = _getUInt2(&mysql->response);
-        mysql->response.data.handshake.capabilities |= _getUInt2(&mysql->response) << 16; // merge capability flags (lower 2 bytes + upper 2 bytes)
+        mysql->response.data.handshake.capabilities |= ((uint32_t)_getUInt2(&mysql->response) << 16); // merge capability flags (lower 2 bytes + upper 2 bytes)
         mysql->response.data.handshake.authdatalen = _getUInt1(&mysql->response);
         _getPadding(&mysql->response, 10); // reserved bytes
         if (mysql->response.data.handshake.capabilities & CLIENT_SECURE_CONNECTION)
