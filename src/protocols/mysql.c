@@ -666,9 +666,8 @@ static void _getRSAKey(mysql_t *mysql) {
 static void _checkRSAKey(mysql_t *mysql) {
         struct ChecksumContext_T context;
         Checksum_init(&context, mysql->port->parameters.mysql.rsaChecksumType);
-        char *key = Str_dup(mysql->publicKey);
-        Checksum_append(&context, key, (int)strlen(key));
-        FREE(key);
+        Checksum_append(&context, mysql->publicKey, (int)strlen(mysql->publicKey));
+        Checksum_verify(&context, mysql->port->parameters.mysql.rsaChecksum);
         Checksum_verify(&context, mysql->port->parameters.mysql.rsaChecksum);
         DEBUG("MySQL RSA key checksum passed\n");
 }
