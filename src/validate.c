@@ -100,6 +100,9 @@
 #include "net/net.h"
 #include "ProcessTree.h"
 #include "protocol.h"
+#include "md5.h"
+#include "sha1.h"
+#include "checksum.h"
 
 // libmonit
 #include "system/Time.h"
@@ -584,7 +587,7 @@ static State_Type _checkChecksum(Service_T s) {
         State_Type rv = State_Succeeded;
         if (s->checksum) {
                 Checksum_T cs = s->checksum;
-                if (Util_getChecksum(s->path, cs->type, s->inf.file->cs_sum, sizeof(s->inf.file->cs_sum))) {
+                if (Checksum_getChecksum(s->path, cs->type, s->inf.file->cs_sum, sizeof(s->inf.file->cs_sum))) {
                         Event_post(s, Event_Data, State_Succeeded, s->action_DATA, "checksum %s", s->inf.file->cs_sum);
                         if (! cs->initialized) {
                                 cs->initialized = true;

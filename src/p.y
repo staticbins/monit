@@ -128,6 +128,9 @@
 #include "ProcessTree.h"
 #include "device.h"
 #include "processor.h"
+#include "md5.h"
+#include "sha1.h"
+#include "checksum.h"
 
 // libmonit
 #include "io/File.h"
@@ -3792,7 +3795,7 @@ static void addchecksum(Checksum_T cs) {
         if (STR_UNDEF(cs->hash)) {
                 if (cs->type == Hash_Unknown)
                         cs->type = Hash_Default;
-                if (! (Util_getChecksum(current->path, cs->type, cs->hash, sizeof(cs->hash)))) {
+                if (! (Checksum_getChecksum(current->path, cs->type, cs->hash, sizeof(cs->hash)))) {
                         /* If the file doesn't exist, set dummy value */
                         snprintf(cs->hash, sizeof(cs->hash), cs->type == Hash_Md5 ? "00000000000000000000000000000000" : "0000000000000000000000000000000000000000");
                         cs->initialized = false;
