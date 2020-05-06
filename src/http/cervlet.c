@@ -306,24 +306,38 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
         if (Util_hasServiceStatus(s)) {
                 switch (s->type) {
                         case Service_System:
-                                _formatStatus("load average", Event_Resource, type, res, s, true, "[%.2f] [%.2f] [%.2f]", systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2]);
-                                _formatStatus("cpu", Event_Resource, type, res, s, true, "%.1f%%us %.1f%%sy"
-#ifdef HAVE_CPU_WAIT
-                                        " %.1f%%wa"
-#endif
-                                        , systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0., systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.
-#ifdef HAVE_CPU_WAIT
-                                        , systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.
-#endif
-                                );
-                                _formatStatus("memory usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(systeminfo.memory.usage.bytes, (char[10]){}), systeminfo.memory.usage.percent);
-                                _formatStatus("swap usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(systeminfo.swap.usage.bytes, (char[10]){}), systeminfo.swap.usage.percent);
-                                _formatStatus("uptime", Event_Uptime, type, res, s, systeminfo.booted > 0, "%s", _getUptime(Time_now() - systeminfo.booted, (char[256]){}));
-                                _formatStatus("boot time", Event_Null, type, res, s, true, "%s", Time_string(systeminfo.booted, (char[32]){}));
-                                if (systeminfo.filedescriptors.maximum > 0)
-                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "%lld [%.1f%% of %lld limit]", systeminfo.filedescriptors.allocated, (float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum, systeminfo.filedescriptors.maximum);
-                                else
-                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "N/A");
+                                {
+                                        _formatStatus("load average", Event_Resource, type, res, s, true, "[%.2f] [%.2f] [%.2f]", systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2]);
+                                        StringBuffer_T sb = StringBuffer_create(256);
+                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_User)
+                                                StringBuffer_append(sb, "%.1f%%usr ", systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
+                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_System)
+                                                StringBuffer_append(sb, "%.1f%%sys ", systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.);
+                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Nice)
+                                                StringBuffer_append(sb, "%.1f%%nice ", systeminfo.cpu.usage.nice > 0. ? systeminfo.cpu.usage.nice : 0.);
+                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_IOWait)
+                                                StringBuffer_append(sb, "%.1f%%iowait ", systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.);
+                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_HardIRQ)
+                                                StringBuffer_append(sb, "%.1f%%hardirq ", systeminfo.cpu.usage.hardirq > 0. ? systeminfo.cpu.usage.hardirq : 0.);
+                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_SoftIRQ)
+                                                StringBuffer_append(sb, "%.1f%%softirq ", systeminfo.cpu.usage.softirq > 0. ? systeminfo.cpu.usage.softirq : 0.);
+                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Steal)
+                                                StringBuffer_append(sb, "%.1f%%steal ", systeminfo.cpu.usage.steal > 0. ? systeminfo.cpu.usage.steal : 0.);
+                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Guest)
+                                                StringBuffer_append(sb, "%.1f%%guest ", systeminfo.cpu.usage.guest > 0. ? systeminfo.cpu.usage.guest : 0.);
+                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_GuestNice)
+                                                StringBuffer_append(sb, "%.1f%%guestnice ", systeminfo.cpu.usage.guest_nice > 0. ? systeminfo.cpu.usage.guest_nice : 0.);
+                                        _formatStatus("cpu", Event_Resource, type, res, s, true, "%s", StringBuffer_toString(sb));
+                                        StringBuffer_free(&sb);
+                                        _formatStatus("memory usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(systeminfo.memory.usage.bytes, (char[10]){}), systeminfo.memory.usage.percent);
+                                        _formatStatus("swap usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(systeminfo.swap.usage.bytes, (char[10]){}), systeminfo.swap.usage.percent);
+                                        _formatStatus("uptime", Event_Uptime, type, res, s, systeminfo.booted > 0, "%s", _getUptime(Time_now() - systeminfo.booted, (char[256]){}));
+                                        _formatStatus("boot time", Event_Null, type, res, s, true, "%s", Time_string(systeminfo.booted, (char[32]){}));
+                                        if (systeminfo.filedescriptors.maximum > 0)
+                                                _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "%lld [%.1f%% of %lld limit]", systeminfo.filedescriptors.allocated, (float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum, systeminfo.filedescriptors.maximum);
+                                        else
+                                                _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "N/A");
+                                }
                                 break;
 
                         case Service_File:
@@ -1185,21 +1199,30 @@ static void do_home_system(HttpResponse res) {
                             "<td class='left'><a href='%s'>%s</a></td>"
                             "<td class='left'>%s</td>"
                             "<td class='right column'>[%.2f]&nbsp;[%.2f]&nbsp;[%.2f]</td>"
-                            "<td class='right column'>"
-                            "%.1f%%us,&nbsp;%.1f%%sy"
-#ifdef HAVE_CPU_WAIT
-                            ",&nbsp;%.1f%%wa"
-#endif
-                            "</td>",
+                            "<td class='right column'>",
                             s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                             get_service_status(HTML, s, buf, sizeof(buf)),
-                            systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2],
-                            systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.,
-                            systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.
-#ifdef HAVE_CPU_WAIT
-                            , systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.
-#endif
-                            );
+                            systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2]);
+        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_User)
+                StringBuffer_append(res->outputbuffer, "%.1f%%usr&nbsp;", systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
+        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_System)
+                StringBuffer_append(res->outputbuffer, "%.1f%%sys&nbsp;", systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.);
+        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Nice)
+                StringBuffer_append(res->outputbuffer, "%.1f%%nice&nbsp;", systeminfo.cpu.usage.nice > 0. ? systeminfo.cpu.usage.nice : 0.);
+        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_IOWait)
+                StringBuffer_append(res->outputbuffer, "%.1f%%iowait&nbsp;", systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.);
+        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_HardIRQ)
+                StringBuffer_append(res->outputbuffer, "%.1f%%hardirq&nbsp;", systeminfo.cpu.usage.hardirq > 0. ? systeminfo.cpu.usage.hardirq : 0.);
+        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_SoftIRQ)
+                StringBuffer_append(res->outputbuffer, "%.1f%%softirq&nbsp;", systeminfo.cpu.usage.softirq > 0. ? systeminfo.cpu.usage.softirq : 0.);
+        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Steal)
+                StringBuffer_append(res->outputbuffer, "%.1f%%steal&nbsp;", systeminfo.cpu.usage.steal > 0. ? systeminfo.cpu.usage.steal : 0.);
+        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Guest)
+                StringBuffer_append(res->outputbuffer, "%.1f%%guest&nbsp;", systeminfo.cpu.usage.guest > 0. ? systeminfo.cpu.usage.guest : 0.);
+        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_GuestNice)
+                StringBuffer_append(res->outputbuffer, "%.1f%%guestnice&nbsp;", systeminfo.cpu.usage.guest_nice > 0. ? systeminfo.cpu.usage.guest_nice : 0.);
+        StringBuffer_append(res->outputbuffer,
+                            "</td>");
         StringBuffer_append(res->outputbuffer,
                             "<td class='right column'>%.1f%% [%s]</td>",
                             systeminfo.memory.usage.percent, Convert_bytes2str(systeminfo.memory.usage.bytes, buf));

@@ -362,6 +362,19 @@ typedef enum {
 } __attribute__((__packed__)) MmonitCompress_Type;
 
 
+typedef enum {
+        CpuMonitoring_User      = 0x1,
+        CpuMonitoring_Nice      = 0x2,
+        CpuMonitoring_System    = 0x4,
+        CpuMonitoring_IOWait    = 0x8,
+        CpuMonitoring_HardIRQ   = 0x10,
+        CpuMonitoring_SoftIRQ   = 0x20,
+        CpuMonitoring_Steal     = 0x40,
+        CpuMonitoring_Guest     = 0x80,
+        CpuMonitoring_GuestNice = 0x100
+} __attribute__((__packed__)) CpuStatistics_Flags;
+
+
 /* Length of the longest message digest in bytes */
 #define MD_SIZE 65
 
@@ -552,6 +565,7 @@ typedef struct SystemInfo_T {
         struct {
                 int count;                                      /**< Number of CPUs */
                 struct {
+                        CpuStatistics_Flags statisticsAvailable; /**< List of CPU statistics that are available in thi system */
                         float user;       /**< Time in user space [%] */
                         float nice;       /**< Time in user space with low priority [%] */
                         float system;     /**< Time in kernel space [%] */
