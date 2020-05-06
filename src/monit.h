@@ -556,12 +556,12 @@ typedef struct SystemInfo_T {
                         float nice;       /**< Time in user space with low priority [%] */
                         float system;     /**< Time in kernel space [%] */
                         float iowait;     /**< Idle time while waiting for I/O [%] */
-                        float idle;       /**< Idle time [%] */
                         float hardirq;    /**< Time servicing hardware interrupts [%] */
                         float softirq;    /**< Time servicing software interrupts [%] */
                         float steal;      /**< Stolen time, which is the time spent in other operating systems when running in a virtualized environment [%] */
                         float guest;      /**< Time spent running a virtual CPU for guest operating systems under the control of the kernel [%] */
                         float guest_nice; /**< Time spent running a niced guest (virtual CPU for guest operating systems under the control of the kernel) [%] */
+                        float idle;       /**< Idle time [%] */
                 } usage;
         } cpu;
         struct {

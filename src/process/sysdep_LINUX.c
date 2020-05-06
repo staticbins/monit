@@ -153,10 +153,15 @@ static void __attribute__ ((constructor)) _constructor(void) {
 
 #define NSEC_PER_SEC    1000000000L
 
-static unsigned long long old_cpu_user     = 0;
-static unsigned long long old_cpu_syst     = 0;
-static unsigned long long old_cpu_iowait   = 0;
-static unsigned long long old_cpu_total    = 0;
+static unsigned long long old_cpu_user       = 0;
+static unsigned long long old_cpu_syst       = 0;
+static unsigned long long old_cpu_iowait     = 0;
+static unsigned long long old_cpu_hardirq    = 0;
+static unsigned long long old_cpu_softirq    = 0;
+static unsigned long long old_cpu_steal      = 0;
+static unsigned long long old_cpu_guest      = 0;
+static unsigned long long old_cpu_guest_nice = 0;
+static unsigned long long old_cpu_total      = 0;
 
 static long page_size = 0;
 
@@ -715,26 +720,46 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         cpu_user  = cpu_user + cpu_nice;
 
         if (old_cpu_total == 0) {
-                si->cpu.usage.user = -1.;
-                si->cpu.usage.system = -1.;
-                si->cpu.usage.iowait = -1.;
+                si->cpu.usage.user       = -1.;
+                si->cpu.usage.system     = -1.;
+                si->cpu.usage.iowait     = -1.;
+                si->cpu.usage.hardirq    = -1.;
+                si->cpu.usage.softirq    = -1.;
+                si->cpu.usage.steal      = -1.;
+                si->cpu.usage.guest      = -1.;
+                si->cpu.usage.guest_nice = -1.;
         } else {
                 double delta = cpu_total - old_cpu_total;
-                si->cpu.usage.user = _usagePercent(old_cpu_user, cpu_user, delta);
-                si->cpu.usage.system = _usagePercent(old_cpu_syst, cpu_syst, delta);
-                si->cpu.usage.iowait = _usagePercent(old_cpu_iowait, cpu_iowait, delta);
+                si->cpu.usage.user       = _usagePercent(old_cpu_user, cpu_user, delta);
+                si->cpu.usage.system     = _usagePercent(old_cpu_syst, cpu_syst, delta);
+                si->cpu.usage.iowait     = _usagePercent(old_cpu_iowait, cpu_iowait, delta);
+                si->cpu.usage.hardirq    = _usagePercent(old_cpu_hardirq, cpu_hardirq, delta);
+                si->cpu.usage.softirq    = _usagePercent(old_cpu_softirq, cpu_softirq, delta);
+                si->cpu.usage.steal      = _usagePercent(old_cpu_steal, cpu_steal, delta);
+                si->cpu.usage.guest      = _usagePercent(old_cpu_guest, cpu_guest, delta);
+                si->cpu.usage.guest_nice = _usagePercent(old_cpu_guest_nice, cpu_guest_nice, delta);
         }
 
-        old_cpu_user   = cpu_user;
-        old_cpu_syst   = cpu_syst;
-        old_cpu_iowait = cpu_iowait;
-        old_cpu_total  = cpu_total;
+        old_cpu_user       = cpu_user;
+        old_cpu_syst       = cpu_syst;
+        old_cpu_iowait     = cpu_iowait;
+        old_cpu_hardirq    = cpu_hardirq;
+        old_cpu_softirq    = cpu_softirq;
+        old_cpu_steal      = cpu_steal;
+        old_cpu_guest      = cpu_guest;
+        old_cpu_guest_nice = cpu_guest_nice;
+        old_cpu_total      = cpu_total;
         return true;
 
 error:
-        si->cpu.usage.user = 0.;
-        si->cpu.usage.system = 0.;
-        si->cpu.usage.iowait = 0.;
+        si->cpu.usage.user       = 0.;
+        si->cpu.usage.system     = 0.;
+        si->cpu.usage.iowait     = 0.;
+        si->cpu.usage.hardirq    = 0.;
+        si->cpu.usage.softirq    = 0.;
+        si->cpu.usage.steal      = 0.;
+        si->cpu.usage.guest      = 0.;
+        si->cpu.usage.guest_nice = 0.;
         return false;
 }
 
