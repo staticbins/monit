@@ -229,7 +229,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                         case Service_System:
                                 StringBuffer_append(B,
                                         "<filedescriptors>"
-                                        "<allocated>%lld</allocatedopen>"
+                                        "<allocated>%lld</allocated>"
                                         "<unused>%lld</unused>"
                                         "<maximum>%lld</maximum>"
                                         "</filedescriptors>",
