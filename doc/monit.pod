@@ -2005,6 +2005,7 @@ regardless of CPU cores count.
 
 I<CPU([user|system|wait|nice|hardirq|softirq|steal|guest|guestnice])> is the percent
 of time the system spend in given type of task:
+
 =over 4
 
 =item user
