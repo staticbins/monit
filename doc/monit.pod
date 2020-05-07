@@ -2065,16 +2065,16 @@ depends on platform (Linux support depends on kernel version, all statistics are
 2.6.33):
 
  -----------------------------------------------------------------------------------------------
- | Platform     | user | system | wait | nice | hardirq | softirq | steal | guest | guest nice |
+ | Platform     | user | nice | system | wait | hardirq | softirq | steal | guest | guest nice |
  -----------------------------------------------------------------------------------------------
- | AIX          |  X   |   X    |  X   |      |         |         |       |       |            |
- | DragonFlyBSD |  X   |   X    |      |  X   |    X    |         |       |       |            |
- | FreeBSD      |  X   |   X    |      |  X   |    X    |         |       |       |            |
- | Linux        |  X   |   X    |  X   |  X   |    X    |    X    |   X   |   X   |    X       |
- | MacOS        |  X   |   X    |      |      |         |         |       |       |            |
- | NetBSD       |  X   |   X    |      |  X   |    X    |         |       |       |            |
- | OpenBSD      |  X   |   X    |      |  X   |    X    |         |       |       |            |
- | Solaris      |  X   |   X    |  X   |      |         |         |       |       |            |
+ | AIX          |  X   |      |   X    |  X   |         |         |       |       |            |
+ | DragonFlyBSD |  X   |  X   |   X    |      |    X    |         |       |       |            |
+ | FreeBSD      |  X   |  X   |   X    |      |    X    |         |       |       |            |
+ | Linux        |  X   |  X   |   X    |  X   |    X    |    X    |   X   |   X   |    X       |
+ | MacOS        |  X   |  X   |   X    |      |         |         |       |       |            |
+ | NetBSD       |  X   |  X   |   X    |      |    X    |         |       |       |            |
+ | OpenBSD      |  X   |  X   |   X    |      |    X    |         |       |       |            |
+ | Solaris      |  X   |      |   X    |  X   |         |         |       |       |            |
  -----------------------------------------------------------------------------------------------
 
 Example:
