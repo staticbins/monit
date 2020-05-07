@@ -62,7 +62,7 @@ New: Linux: Allow generic per-process I/O activity monitoring. Example:
        if read activity > 1 mb/s then alert
        if write activity > 1 mb/s then alert
 
-New: Linux: Added detailed CPU statistics: "nice", "hardirq", "softirq", "steal", "guest", "guestnice". The statistics
+New: Issue #889: Linux: Added detailed CPU statistics: "nice", "hardirq", "softirq", "steal", "guest", "guestnice". The statistics
 for "nice" was originally included in the "cpu user" statistics - it has now its own counter.
 
 New: Issue #877: Linux: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
