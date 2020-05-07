@@ -65,7 +65,7 @@ New: Linux: Allow generic per-process I/O activity monitoring. Example:
 New: Issue #889: Linux: Added detailed CPU statistics: "nice", "hardirq", "softirq", "steal", "guest", "guestnice". The statistics
 for "nice" was originally included in the "cpu user" statistics - it has now its own counter.
 
-New: FreeBSD: Added CPU nice and interrupt usage statistics.
+New: FreeBSD, OpenBSD: Added CPU nice and interrupt usage statistics.
 
 New: Issue #877: Linux: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
 

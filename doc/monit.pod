@@ -2073,7 +2073,7 @@ depends on platform (Linux support depends on kernel version, all statistics are
  | Linux        |  X   |   X    |  X   |  X   |    X    |    X    |   X   |   X   |    X       |
  | MacOS        |  X   |   X    |      |      |         |         |       |       |            |
  | NetBSD       |  X   |   X    |      |      |         |         |       |       |            |
- | OpenBSD      |  X   |   X    |      |      |         |         |       |       |            |
+ | OpenBSD      |  X   |   X    |      |  X   |    X    |         |       |       |            |
  | Solaris      |  X   |   X    |  X   |      |         |         |       |       |            |
  -----------------------------------------------------------------------------------------------
 
