@@ -94,6 +94,8 @@ Thanks to Hanno Boeck for report.
 
 Fixed: Issue #872: Procmatch PID column show five digits only
 
+Fixed: Issue #891: The action's "repeat" option was limited to 256 cycles.
+
 Fixed: Issue #851: Linux and AIX: The length of the string that describes the process name and its arguments
 was limited to 4kB, so the "procmatch" may not find the process if the pattern is past this limit. The limit
 was removed on Linux. On AIX the limit was rised to 8kB.

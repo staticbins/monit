@@ -478,9 +478,9 @@ typedef struct command_t {
 /** Defines an event action object */
 typedef struct Action_T {
         Action_Type id;                                   /**< Action to be done */
-        uint8_t count;             /**< Event count needed to trigger the action */
-        uint8_t cycles;      /**< Cycles during which count limit can be reached */
-        uint8_t repeat;                         /*< Repeat action each Xth cycle */
+        int count;                 /**< Event count needed to trigger the action */
+        int cycles;          /**< Cycles during which count limit can be reached */
+        int repeat;                             /*< Repeat action each Xth cycle */
         command_t exec;                     /**< Optional command to be executed */
 } *Action_T;
 
