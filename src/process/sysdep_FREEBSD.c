@@ -90,7 +90,9 @@
 static int  pagesize;
 static long total_old    = 0;
 static long cpu_user_old = 0;
+static long cpu_nice_old = 0;
 static long cpu_syst_old = 0;
+static long cpu_intr_old = 0;
 
 
 /* ------------------------------------------------------------------ Public */
@@ -160,23 +162,23 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         if (pflags & ProcessEngine_CollectCommandLine)
                 cmdline = StringBuffer_create(64);
         for (int i = 0; i < treesize; i++) {
-                pt[i].pid                 = pinfo[i].ki_pid;
-                pt[i].ppid                = pinfo[i].ki_ppid;
-                pt[i].cred.uid            = pinfo[i].ki_ruid;
-                pt[i].cred.euid           = pinfo[i].ki_uid;
-                pt[i].cred.gid            = pinfo[i].ki_rgid;
-                pt[i].threads.self        = pinfo[i].ki_numthreads;
-                pt[i].uptime              = systeminfo.time / 10. - pinfo[i].ki_start.tv_sec;
-                pt[i].cpu.time            = (double)pinfo[i].ki_runtime / 100000.;
-                pt[i].memory.usage        = (unsigned long long)pinfo[i].ki_rssize * (unsigned long long)pagesize;
-                pt[i].read.bytes          = -1;
-                pt[i].read.bytesPhysical  = -1;
-                pt[i].read.operations     = pinfo[i].ki_rusage.ru_inblock;
-                pt[i].write.bytes         = -1;
-                pt[i].write.bytesPhysical = -1;
-                pt[i].write.operations    = pinfo[i].ki_rusage.ru_oublock;
-                pt[i].read.time           = pt[i].write.time = now;
-                pt[i].zombie              = pinfo[i].ki_stat == SZOMB ? true : false;
+                pt[i].pid                   = pinfo[i].ki_pid;
+                pt[i].ppid                  = pinfo[i].ki_ppid;
+                pt[i].cred.uid              = pinfo[i].ki_ruid;
+                pt[i].cred.euid             = pinfo[i].ki_uid;
+                pt[i].cred.gid              = pinfo[i].ki_rgid;
+                pt[i].threads.self          = pinfo[i].ki_numthreads;
+                pt[i].uptime                = systeminfo.time / 10. - pinfo[i].ki_start.tv_sec;
+                pt[i].cpu.time              = (double)pinfo[i].ki_runtime / 100000.;
+                pt[i].memory.usage          = (uint64_t)pinfo[i].ki_rssize * (uint64_t)pagesize;
+                pt[i].read.bytes            = -1;
+                pt[i].read.bytesPhysical    = -1;
+                pt[i].read.operations       = pinfo[i].ki_rusage.ru_inblock;
+                pt[i].write.bytes           = -1;
+                pt[i].write.bytesPhysical   = -1;
+                pt[i].write.operations      = pinfo[i].ki_rusage.ru_oublock;
+                pt[i].read.time             = pt[i].write.time = now;
+                pt[i].zombie                = pinfo[i].ki_stat == SZOMB ? true : false;
                 if (pflags & ProcessEngine_CollectCommandLine) {
                         char **args = kvm_getargv(kvm_handle, &pinfo[i], 0);
                         if (args) {
@@ -310,13 +312,17 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         total     = total_new - total_old;
         total_old = total_new;
 
-        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_System;
+        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_System | CpuMonitoring_Nice | CpuMonitoring_HardIRQ; 
 
         si->cpu.usage.user = (total > 0) ? (100. * (double)(cp_time[CP_USER] - cpu_user_old) / total) : -1.;
+        si->cpu.usage.nice = (total > 0) ? (100. * (double)(cp_time[CP_NICE] - cpu_nice_old) / total) : -1.;
         si->cpu.usage.system = (total > 0) ? (100. * (double)(cp_time[CP_SYS] - cpu_syst_old) / total) : -1.;
+        si->cpu.usage.hardirq = (total > 0) ? (100. * (double)(cp_time[CP_INTR] - cpu_intr_old) / total) : -1.;
 
         cpu_user_old = cp_time[CP_USER];
+        cpu_nice_old = cp_time[CP_NICE];
         cpu_syst_old = cp_time[CP_SYS];
+        cpu_intr_old = cp_time[CP_INTR];
 
         return true;
 }

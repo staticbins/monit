@@ -2069,7 +2069,7 @@ depends on platform (Linux support depends on kernel version, all statistics are
  -----------------------------------------------------------------------------------------------
  | AIX          |  X   |   X    |  X   |      |         |         |       |       |            |
  | DragonFlyBSD |  X   |   X    |      |      |         |         |       |       |            |
- | FreeBSD      |  X   |   X    |      |      |         |         |       |       |            |
+ | FreeBSD      |  X   |   X    |      |  X   |    X    |         |       |       |            |
  | Linux        |  X   |   X    |  X   |  X   |    X    |    X    |   X   |   X   |    X       |
  | MacOS        |  X   |   X    |      |      |         |         |       |       |            |
  | NetBSD       |  X   |   X    |      |      |         |         |       |       |            |
