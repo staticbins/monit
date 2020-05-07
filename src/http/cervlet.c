@@ -2246,7 +2246,31 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                                 break;
 
                         case Resource_CpuWait:
-                                key = "CPU wait limit";
+                                key = "CPU I/O wait limit";
+                                break;
+
+                        case Resource_CpuNice:
+                                key = "CPU nice limit";
+                                break;
+
+                        case Resource_CpuHardIRQ:
+                                key = "CPU hardware IRQ limit";
+                                break;
+
+                        case Resource_CpuSoftIRQ:
+                                key = "CPU software IRQ limit";
+                                break;
+
+                        case Resource_CpuSteal:
+                                key = "CPU steal limit";
+                                break;
+
+                        case Resource_CpuGuest:
+                                key = "CPU guest limit";
+                                break;
+
+                        case Resource_CpuGuestNice:
+                                key = "CPU guest nice limit";
                                 break;
 
                         case Resource_MemoryPercent:
@@ -2331,6 +2355,12 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         case Resource_CpuUser:
                         case Resource_CpuSystem:
                         case Resource_CpuWait:
+                        case Resource_CpuNice:
+                        case Resource_CpuHardIRQ:
+                        case Resource_CpuSoftIRQ:
+                        case Resource_CpuSteal:
+                        case Resource_CpuGuest:
+                        case Resource_CpuGuestNice:
                         case Resource_MemoryPercent:
                         case Resource_SwapPercent:
                                 Util_printRule(sb, q->action, "If %s %.1f%%", operatornames[q->operator], q->limit);

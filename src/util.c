@@ -1113,7 +1113,31 @@ void Util_printService(Service_T s) {
                                 break;
 
                         case Resource_CpuWait:
-                                printf(" %-20s = ", "CPU wait limit");
+                                printf(" %-20s = ", "CPU I/O wait limit");
+                                break;
+
+                        case Resource_CpuNice:
+                                printf(" %-20s = ", "CPU nice limit");
+                                break;
+
+                        case Resource_CpuHardIRQ:
+                                printf(" %-20s = ", "CPU hardware IRQ limit");
+                                break;
+
+                        case Resource_CpuSoftIRQ:
+                                printf(" %-20s = ", "CPU software IRQ limit");
+                                break;
+
+                        case Resource_CpuSteal:
+                                printf(" %-20s = ", "CPU steal limit");
+                                break;
+
+                        case Resource_CpuGuest:
+                                printf(" %-20s = ", "CPU guest limit");
+                                break;
+
+                        case Resource_CpuGuestNice:
+                                printf(" %-20s = ", "CPU guest nice limit");
                                 break;
 
                         case Resource_MemoryPercent:
@@ -1206,6 +1230,12 @@ void Util_printService(Service_T s) {
                         case Resource_CpuUser:
                         case Resource_CpuSystem:
                         case Resource_CpuWait:
+                        case Resource_CpuNice:
+                        case Resource_CpuHardIRQ:
+                        case Resource_CpuSoftIRQ:
+                        case Resource_CpuSteal:
+                        case Resource_CpuGuest:
+                        case Resource_CpuGuestNice:
                         case Resource_MemoryPercent:
                         case Resource_SwapPercent:
                                 printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit)));

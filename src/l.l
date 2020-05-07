@@ -129,6 +129,12 @@ loadavg15      load(avg)[ ]*\([ ]*15[ ]*(m|min)?[ ]*\)
 cpuuser        cpu[ ]*(usage)*[ ]*\([ ]*(us|usr|user)?[ ]*\)
 cpusyst        cpu[ ]*(usage)*[ ]*\([ ]*(sy|sys|system)?[ ]*\)
 cpuwait        cpu[ ]*(usage)*[ ]*\([ ]*(wa|wait)?[ ]*\)
+cpunice        cpu[ ]*(usage)*[ ]*\([ ]*nice[ ]*\)
+cpuhardirq     cpu[ ]*(usage)*[ ]*\([ ]*hardirq[ ]*\)
+cpusoftirq     cpu[ ]*(usage)*[ ]*\([ ]*softirq[ ]*\)
+cpusteal       cpu[ ]*(usage)*[ ]*\([ ]*steal[ ]*\)
+cpuguest       cpu[ ]*(usage)*[ ]*\([ ]*guest[ ]*\)
+cpuguestnice   cpu[ ]*(usage)*[ ]*\([ ]*guestnice[ ]*\)
 startarg       start{ws}?(program)?{ws}?([=]{ws})?["]
 stoparg        stop{ws}?(program)?{ws}?([=]{ws})?["]
 restartarg     restart{ws}?(program)?{ws}?([=]{ws})?["]
@@ -453,6 +459,12 @@ filedescriptors   { return FILEDESCRIPTORS; }
 {cpuuser}         { return CPUUSER; }
 {cpusyst}         { return CPUSYSTEM; }
 {cpuwait}         { return CPUWAIT; }
+{cpunice}         { return CPUNICE; }
+{cpuhardirq}      { return CPUHARDIRQ; }
+{cpusoftirq}      { return CPUSOFTIRQ; }
+{cpusteal}        { return CPUSTEAL; }
+{cpuguest}        { return CPUGUEST; }
+{cpuguestnice}    { return CPUGUESTNICE; }
 {greater}         { return GREATER; }
 {greaterorequal}  { return GREATEROREQUAL; }
 {less}            { return LESS; }

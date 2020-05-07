@@ -733,8 +733,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                         goto error;
         }
 
-        cpu_total = cpu_user + cpu_nice + cpu_syst + cpu_idle + cpu_iowait + cpu_hardirq + cpu_softirq + cpu_steal + cpu_guest + cpu_guest_nice;
-        cpu_user  = cpu_user + cpu_nice;
+        cpu_total = cpu_user + cpu_nice + cpu_syst + cpu_idle + cpu_iowait + cpu_hardirq + cpu_softirq + cpu_steal; // Note: cpu_guest and cpu_guest_nice are included in user and nice already
 
         if (old_cpu_total == 0) {
                 si->cpu.usage.user       = -1.;

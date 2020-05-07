@@ -348,7 +348,8 @@ static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Typ
 %token CHECKPROC CHECKFILESYS CHECKFILE CHECKDIR CHECKHOST CHECKSYSTEM CHECKFIFO CHECKPROGRAM CHECKNET
 %token THREADS CHILDREN METHOD GET HEAD STATUS ORIGIN VERSIONOPT READ WRITE OPERATION SERVICETIME DISK
 %token RESOURCE MEMORY TOTALMEMORY LOADAVG1 LOADAVG5 LOADAVG15 SWAP
-%token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CORE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
+%token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE
+%token CORE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT CPUNICE CPUHARDIRQ CPUSOFTIRQ CPUSTEAL CPUGUEST CPUGUESTNICE
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
 %token UID EUID GID MMONIT INSTANCE USERNAME PASSWORD
 %token TIME ATIME CTIME MTIME CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH 
@@ -2279,10 +2280,16 @@ resourcecpu     : resourcecpuid operator value PERCENT {
                   }
                 ;
 
-resourcecpuid   : CPUUSER   { $<number>$ = Resource_CpuUser; }
-                | CPUSYSTEM { $<number>$ = Resource_CpuSystem; }
-                | CPUWAIT   { $<number>$ = Resource_CpuWait; }
-                | CPU       { $<number>$ = Resource_CpuPercent; }
+resourcecpuid   : CPUUSER      { $<number>$ = Resource_CpuUser; }
+                | CPUSYSTEM    { $<number>$ = Resource_CpuSystem; }
+                | CPUWAIT      { $<number>$ = Resource_CpuWait; }
+                | CPUNICE      { $<number>$ = Resource_CpuNice; }
+                | CPUHARDIRQ   { $<number>$ = Resource_CpuHardIRQ; }
+                | CPUSOFTIRQ   { $<number>$ = Resource_CpuSoftIRQ; }
+                | CPUSTEAL     { $<number>$ = Resource_CpuSteal; }
+                | CPUGUEST     { $<number>$ = Resource_CpuGuest; }
+                | CPUGUESTNICE { $<number>$ = Resource_CpuGuestNice; }
+                | CPU          { $<number>$ = Resource_CpuPercent; }
                 ;
 
 resourcemem     : MEMORY operator value unit {
