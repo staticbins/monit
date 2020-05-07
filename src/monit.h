@@ -305,6 +305,12 @@ typedef enum {
         Resource_CpuUser,
         Resource_CpuSystem,
         Resource_CpuWait,
+        Resource_CpuNice,
+        Resource_CpuHardIRQ,
+        Resource_CpuSoftIRQ,
+        Resource_CpuSteal,
+        Resource_CpuGuest,
+        Resource_CpuGuestNice,
         Resource_CpuPercentTotal,
         Resource_SwapPercent,
         Resource_SwapKbyte,
@@ -360,6 +366,19 @@ typedef enum {
         MmonitCompress_No,
         MmonitCompress_Yes
 } __attribute__((__packed__)) MmonitCompress_Type;
+
+
+typedef enum {
+        CpuMonitoring_User      = 0x1,
+        CpuMonitoring_Nice      = 0x2,
+        CpuMonitoring_System    = 0x4,
+        CpuMonitoring_IOWait    = 0x8,
+        CpuMonitoring_HardIRQ   = 0x10,
+        CpuMonitoring_SoftIRQ   = 0x20,
+        CpuMonitoring_Steal     = 0x40,
+        CpuMonitoring_Guest     = 0x80,
+        CpuMonitoring_GuestNice = 0x100
+} __attribute__((__packed__)) CpuStatistics_Flags;
 
 
 /* Length of the longest message digest in bytes */
@@ -459,9 +478,9 @@ typedef struct command_t {
 /** Defines an event action object */
 typedef struct Action_T {
         Action_Type id;                                   /**< Action to be done */
-        uint8_t count;             /**< Event count needed to trigger the action */
-        uint8_t cycles;      /**< Cycles during which count limit can be reached */
-        uint8_t repeat;                         /*< Repeat action each Xth cycle */
+        int count;                 /**< Event count needed to trigger the action */
+        int cycles;          /**< Cycles during which count limit can be reached */
+        int repeat;                             /*< Repeat action each Xth cycle */
         command_t exec;                     /**< Optional command to be executed */
 } *Action_T;
 
@@ -552,16 +571,17 @@ typedef struct SystemInfo_T {
         struct {
                 int count;                                      /**< Number of CPUs */
                 struct {
+                        CpuStatistics_Flags statisticsAvailable; /**< List of CPU statistics that are available in thi system */
                         float user;       /**< Time in user space [%] */
                         float nice;       /**< Time in user space with low priority [%] */
                         float system;     /**< Time in kernel space [%] */
                         float iowait;     /**< Idle time while waiting for I/O [%] */
-                        float idle;       /**< Idle time [%] */
                         float hardirq;    /**< Time servicing hardware interrupts [%] */
                         float softirq;    /**< Time servicing software interrupts [%] */
                         float steal;      /**< Stolen time, which is the time spent in other operating systems when running in a virtualized environment [%] */
                         float guest;      /**< Time spent running a virtual CPU for guest operating systems under the control of the kernel [%] */
                         float guest_nice; /**< Time spent running a niced guest (virtual CPU for guest operating systems under the control of the kernel) [%] */
+                        float idle;       /**< Idle time [%] */
                 } usage;
         } cpu;
         struct {
@@ -692,6 +712,8 @@ typedef struct Port_T {
                 struct {
                         char *username;
                         char *password;
+                        char *rsaChecksum;
+                        Hash_Type rsaChecksumType;
                 } mysql;
                 struct {
                         char *secret;

@@ -91,7 +91,9 @@
 static int  pagesize;
 static long total_old    = 0;
 static long cpu_user_old = 0;
+static long cpu_nice_old = 0;
 static long cpu_syst_old = 0;
+static long cpu_intr_old = 0;
 
 
 /* ------------------------------------------------------------------ Public */
@@ -296,12 +298,17 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         total     = total_new - total_old;
         total_old = total_new;
 
+        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_System | CpuMonitoring_Nice | CpuMonitoring_HardIRQ;
+
         si->cpu.usage.user = (total > 0) ? (100. * (double)(cp_time[CP_USER] - cpu_user_old) / total) : -1.;
+        si->cpu.usage.nice = (total > 0) ? (100. * (double)(cp_time[CP_NICE] - cpu_nice_old) / total) : -1.;
         si->cpu.usage.system = (total > 0) ? (100. * (double)(cp_time[CP_SYS] - cpu_syst_old) / total) : -1.;
-        si->cpu.usage.iowait = 0.; /* there is no wait statistic available */
+        si->cpu.usage.hardirq = (total > 0) ? (100. * (double)(cp_time[CP_INTR] - cpu_intr_old) / total) : -1.;
 
         cpu_user_old = cp_time[CP_USER];
+        cpu_nice_old = cp_time[CP_NICE];
         cpu_syst_old = cp_time[CP_SYS];
+        cpu_intr_old = cp_time[CP_INTR];
 
         return true;
 }

@@ -153,10 +153,15 @@ static void __attribute__ ((constructor)) _constructor(void) {
 
 #define NSEC_PER_SEC    1000000000L
 
-static unsigned long long old_cpu_user     = 0;
-static unsigned long long old_cpu_syst     = 0;
-static unsigned long long old_cpu_iowait   = 0;
-static unsigned long long old_cpu_total    = 0;
+static unsigned long long old_cpu_user       = 0;
+static unsigned long long old_cpu_syst       = 0;
+static unsigned long long old_cpu_iowait     = 0;
+static unsigned long long old_cpu_hardirq    = 0;
+static unsigned long long old_cpu_softirq    = 0;
+static unsigned long long old_cpu_steal      = 0;
+static unsigned long long old_cpu_guest      = 0;
+static unsigned long long old_cpu_guest_nice = 0;
+static unsigned long long old_cpu_total      = 0;
 
 static long page_size = 0;
 
@@ -684,57 +689,93 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         switch (rv) {
                 case 4:
                         // linux < 2.5.41
+                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System;
                         cpu_iowait = 0;
-                        // fall through
-                case 5:
-                        // linux >= 2.5.41
                         cpu_hardirq = 0;
                         cpu_softirq = 0;
-                        // fall through
+                        cpu_steal = 0;
+                        cpu_guest = 0;
+                        cpu_guest_nice = 0;
+                        break;
+                case 5:
+                        // linux >= 2.5.41
+                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System | CpuMonitoring_IOWait;
+                        cpu_hardirq = 0;
+                        cpu_softirq = 0;
+                        cpu_steal = 0;
+                        cpu_guest = 0;
+                        cpu_guest_nice = 0;
+                        break;
                 case 7:
                         // linux >= 2.6.0-test4
+                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System | CpuMonitoring_IOWait | CpuMonitoring_HardIRQ | CpuMonitoring_SoftIRQ;
                         cpu_steal = 0;
-                        // fall through
+                        cpu_guest = 0;
+                        cpu_guest_nice = 0;
+                        break;
                 case 8:
                         // linux 2.6.11
+                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System | CpuMonitoring_IOWait | CpuMonitoring_HardIRQ | CpuMonitoring_SoftIRQ | CpuMonitoring_Steal;
                         cpu_guest = 0;
-                        // fall through
+                        cpu_guest_nice = 0;
+                        break;
                 case 9:
                         // linux >= 2.6.24
+                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System | CpuMonitoring_IOWait | CpuMonitoring_HardIRQ | CpuMonitoring_SoftIRQ | CpuMonitoring_Steal | CpuMonitoring_Guest;
                         cpu_guest_nice = 0;
-                        // fall through
+                        break;
                 case 10:
                         // linux >= 2.6.33
+                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System | CpuMonitoring_IOWait | CpuMonitoring_HardIRQ | CpuMonitoring_SoftIRQ | CpuMonitoring_Steal | CpuMonitoring_Guest | CpuMonitoring_GuestNice;
                         break;
                 default:
                         LogError("system statistic error -- cannot read cpu usage\n");
                         goto error;
         }
 
-        cpu_total = cpu_user + cpu_nice + cpu_syst + cpu_idle + cpu_iowait + cpu_hardirq + cpu_softirq + cpu_steal + cpu_guest + cpu_guest_nice;
-        cpu_user  = cpu_user + cpu_nice;
+        cpu_total = cpu_user + cpu_nice + cpu_syst + cpu_idle + cpu_iowait + cpu_hardirq + cpu_softirq + cpu_steal; // Note: cpu_guest and cpu_guest_nice are included in user and nice already
 
         if (old_cpu_total == 0) {
-                si->cpu.usage.user = -1.;
-                si->cpu.usage.system = -1.;
-                si->cpu.usage.iowait = -1.;
+                si->cpu.usage.user       = -1.;
+                si->cpu.usage.system     = -1.;
+                si->cpu.usage.iowait     = -1.;
+                si->cpu.usage.hardirq    = -1.;
+                si->cpu.usage.softirq    = -1.;
+                si->cpu.usage.steal      = -1.;
+                si->cpu.usage.guest      = -1.;
+                si->cpu.usage.guest_nice = -1.;
         } else {
                 double delta = cpu_total - old_cpu_total;
-                si->cpu.usage.user = _usagePercent(old_cpu_user, cpu_user, delta);
-                si->cpu.usage.system = _usagePercent(old_cpu_syst, cpu_syst, delta);
-                si->cpu.usage.iowait = _usagePercent(old_cpu_iowait, cpu_iowait, delta);
+                si->cpu.usage.user       = _usagePercent(old_cpu_user, cpu_user, delta);
+                si->cpu.usage.system     = _usagePercent(old_cpu_syst, cpu_syst, delta);
+                si->cpu.usage.iowait     = _usagePercent(old_cpu_iowait, cpu_iowait, delta);
+                si->cpu.usage.hardirq    = _usagePercent(old_cpu_hardirq, cpu_hardirq, delta);
+                si->cpu.usage.softirq    = _usagePercent(old_cpu_softirq, cpu_softirq, delta);
+                si->cpu.usage.steal      = _usagePercent(old_cpu_steal, cpu_steal, delta);
+                si->cpu.usage.guest      = _usagePercent(old_cpu_guest, cpu_guest, delta);
+                si->cpu.usage.guest_nice = _usagePercent(old_cpu_guest_nice, cpu_guest_nice, delta);
         }
 
-        old_cpu_user   = cpu_user;
-        old_cpu_syst   = cpu_syst;
-        old_cpu_iowait = cpu_iowait;
-        old_cpu_total  = cpu_total;
+        old_cpu_user       = cpu_user;
+        old_cpu_syst       = cpu_syst;
+        old_cpu_iowait     = cpu_iowait;
+        old_cpu_hardirq    = cpu_hardirq;
+        old_cpu_softirq    = cpu_softirq;
+        old_cpu_steal      = cpu_steal;
+        old_cpu_guest      = cpu_guest;
+        old_cpu_guest_nice = cpu_guest_nice;
+        old_cpu_total      = cpu_total;
         return true;
 
 error:
-        si->cpu.usage.user = 0.;
-        si->cpu.usage.system = 0.;
-        si->cpu.usage.iowait = 0.;
+        si->cpu.usage.user       = 0.;
+        si->cpu.usage.system     = 0.;
+        si->cpu.usage.iowait     = 0.;
+        si->cpu.usage.hardirq    = 0.;
+        si->cpu.usage.softirq    = 0.;
+        si->cpu.usage.steal      = 0.;
+        si->cpu.usage.guest      = 0.;
+        si->cpu.usage.guest_nice = 0.;
         return false;
 }
 

@@ -761,6 +761,7 @@ if test "$use_asan" = "1"; then
         AX_CHECK_COMPILE_FLAG([-fsanitize=bounds-strict], [CFLAGS="$CFLAGS -fsanitize=bounds-strict"])
         AX_CHECK_COMPILE_FLAG([-fsanitize=null], [CFLAGS="$CFLAGS -fsanitize=null "])
         AX_CHECK_COMPILE_FLAG([-fsanitize=object-size], [CFLAGS="$CFLAGS -fsanitize=object-size"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=undefined], [CFLAGS="$CFLAGS -fsanitize=undefined"])
 fi
 
 

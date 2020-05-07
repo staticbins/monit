@@ -31,6 +31,7 @@
 #include "md5.h"
 #include "sha1.h"
 #include "base64.h"
+#include "checksum.h"
 #include "protocol.h"
 #include "httpstatus.h"
 #include "util/Str.h"
@@ -59,12 +60,6 @@
 
 
 #define BUFSIZE 4096
-
-
-typedef union ChecksumContext_T {
-        md5_context_t  md5;
-        sha1_context_t sha1;
-} *ChecksumContext_T;
 
 
 /* ----------------------------------------------------------------- Private */
@@ -100,75 +95,6 @@ static void _contentVerify(Port_T P, const char *data) {
                 }
                 if (! rv)
                         THROW(ProtocolException, "HTTP error: %s", error);
-        }
-}
-
-
-static void _checksumInit(Port_T P, ChecksumContext_T context) {
-        if (P->parameters.http.checksum) {
-                switch (P->parameters.http.hashtype) {
-                        case Hash_Md5:
-                                md5_init(&(context->md5));
-                                break;
-                        case Hash_Sha1:
-                                sha1_init(&(context->sha1));
-                                break;
-                        default:
-                                THROW(ProtocolException, "HTTP checksum error: Unknown hash type");
-                }
-        }
-}
-
-
-static void _checksumFinish(Port_T P, ChecksumContext_T context, MD_T hash) {
-        if (P->parameters.http.checksum) {
-                switch (P->parameters.http.hashtype) {
-                        case Hash_Md5:
-                                md5_finish(&(context->md5), (md5_byte_t *)hash);
-                                break;
-                        case Hash_Sha1:
-                                sha1_finish(&(context->sha1), (unsigned char *)hash);
-                                break;
-                        default:
-                                THROW(ProtocolException, "HTTP checksum error: Unknown hash type");
-                }
-        }
-}
-
-
-static void _checksumAppend(Port_T P, ChecksumContext_T context, const char *input, int inputLength) {
-        if (P->parameters.http.checksum) {
-                switch (P->parameters.http.hashtype) {
-                        case Hash_Md5:
-                                md5_append(&(context->md5), (const md5_byte_t *)input, inputLength);
-                                break;
-                        case Hash_Sha1:
-                                sha1_append(&(context->sha1), (const unsigned char *)input, inputLength);
-                                break;
-                        default:
-                                THROW(ProtocolException, "HTTP checksum error: Unknown hash type");
-                }
-        }
-}
-
-
-static void _checksumVerify(Port_T P, MD_T hash) {
-        if (P->parameters.http.checksum) {
-                int keyLength = 0;
-                switch (P->parameters.http.hashtype) {
-                        case Hash_Md5:
-                                keyLength = 16; /* Raw key bytes not string chars! */
-                                break;
-                        case Hash_Sha1:
-                                keyLength = 20; /* Raw key bytes not string chars! */
-                                break;
-                        default:
-                                THROW(ProtocolException, "HTTP checksum error: Unknown hash type");
-                }
-                MD_T hashString = {};
-                if (strncasecmp(Util_digest2Bytes((unsigned char *)hash, keyLength, hashString), P->parameters.http.checksum, keyLength * 2) != 0)
-                        THROW(ProtocolException, "HTTP checksum error: Data checksum mismatch (expected %s got %s)", P->parameters.http.checksum, hashString);
-                DEBUG("HTTP: Succeeded testing data checksum\n");
         }
 }
 
@@ -220,14 +146,16 @@ static void _readData(Socket_T socket, Port_T P, volatile char **data, unsigned 
                 // The content test is required => cache the whole body
                 *data = realloc((void *)*data, *haveBytes + wantBytes + 1);
                 *haveBytes += _readDataFromSocket(socket, (void *)*data + *haveBytes, wantBytes);
-                _checksumAppend(P, context, (const char *)*data, wantBytes);
+                if (P->parameters.http.checksum)
+                        Checksum_append(context, (const char *)*data, wantBytes);
                 *(*data + *haveBytes) = 0;
         } else {
                 // No content check is required => use small buffer and compute the checksum on the fly
                 *haveBytes = 0;
                 for (int readBytes = (wantBytes < BUFSIZE) ? wantBytes : BUFSIZE; *haveBytes < wantBytes; readBytes = (wantBytes - *haveBytes) < BUFSIZE ? (wantBytes - *haveBytes) : BUFSIZE) {
                         _readDataFromSocket(socket, (void *)*data, readBytes);
-                        _checksumAppend(P, context, (const char *)*data, readBytes);
+                        if (P->parameters.http.checksum)
+                                Checksum_append(context, (const char *)*data, readBytes);
                         *haveBytes += readBytes;
                 }
         }
@@ -271,7 +199,8 @@ static void _processBodyUntilEOF(Socket_T socket, Port_T P, volatile char **data
                 unsigned int haveBytes = 0;
                 unsigned int wantBytes = STRLEN;
                 while (haveBytes < Run.limits.httpContentBuffer && (readBytes = Socket_read(socket, (void *)(*data + haveBytes), wantBytes)) > 0)  {
-                        _checksumAppend(P, context, (const char *)(*data + haveBytes), readBytes);
+                        if (P->parameters.http.checksum)
+                                Checksum_append(context, (const char *)(*data + haveBytes), readBytes);
                         haveBytes += readBytes;
                         if (haveBytes + wantBytes > Run.limits.httpContentBuffer)
                                 wantBytes = Run.limits.httpContentBuffer - haveBytes;
@@ -281,7 +210,8 @@ static void _processBodyUntilEOF(Socket_T socket, Port_T P, volatile char **data
         } else {
                 // No content check is required => use small buffer and compute the checksum on the fly
                 while ((readBytes = Socket_read(socket, (void *)(*data), BUFSIZE)) > 0) {
-                        _checksumAppend(P, context, (const char *)*data, readBytes);
+                        if (P->parameters.http.checksum)
+                                Checksum_append(context, (const char *)*data, readBytes);
                 }
         }
         if (readBytes < 0) {
@@ -339,18 +269,22 @@ static void _checkResponse(Socket_T socket, Port_T P) {
         _processHeaders(socket, &processBody, &contentLength);
         if ((P->url_request && P->url_request->regex) || P->parameters.http.checksum) {
                 if (processBody) {
-                        MD_T hash = {};
                         volatile char *data = CALLOC(1, BUFSIZE);
-                        union ChecksumContext_T context = {};
+                        struct ChecksumContext_T context;
                         TRY
                         {
                                 // Read data
-                                _checksumInit(P, &context);
+                                if (P->parameters.http.checksum)
+                                        Checksum_init(&context, P->parameters.http.hashtype);
                                 processBody(socket, P, &data, &contentLength, &context);
-                                _checksumFinish(P, &context, hash);
                                 // Perform tests
-                                _checksumVerify(P, hash);
+                                if (P->parameters.http.checksum)
+                                        Checksum_verify(&context, P->parameters.http.checksum);
                                 _contentVerify(P, (char *)data);
+                        }
+                        ELSE
+                        {
+                                THROW(ProtocolException, "HTTP error: %s", Exception_frame.message);
                         }
                         FINALLY
                         {

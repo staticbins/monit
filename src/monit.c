@@ -81,6 +81,9 @@
 #include "engine.h"
 #include "client.h"
 #include "MMonit.h"
+#include "md5.h"
+#include "sha1.h"
+#include "checksum.h"
 
 // libmonit
 #include "Bootstrap.h"
@@ -719,9 +722,9 @@ static void handle_options(int argc, char **argv, List_T arguments) {
                                 case 'H':
                                 {
                                         if (argc > optind)
-                                                Util_printHash(argv[optind]);
+                                                Checksum_printHash(argv[optind]);
                                         else
-                                                Util_printHash(NULL);
+                                                Checksum_printHash(NULL);
                                         exit(0);
                                         break;
                                 }

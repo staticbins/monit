@@ -364,6 +364,8 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                 }
         }
 
+        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_System | CpuMonitoring_IOWait;
+
         for (int i = 0; i < ncpu; i++) {
                 if (-1 == kstat_read(kctl, cpu_ks[i], &cpu_stat[i])) {
                         LogError("system statistic -- failed to read cpu_stat kstat for cpu %d\n", i);

@@ -301,10 +301,13 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         unsigned long long cpu_syst      = 0ULL;
         unsigned long long cpu_iowait      = 0ULL;
 
+
         if (perfstat_cpu_total(NULL, &cpu, sizeof(perfstat_cpu_total_t), 1) < 0) {
                 LogError("system statistic error -- perfstat_cpu_total failed: %s\n", STRERROR);
                 return -1;
         }
+
+        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_System | CpuMonitoring_IOWait;
 
         cpu_total_new = (cpu.user + cpu.sys + cpu.wait + cpu.idle) / cpu.ncpus;
         cpu_total     = cpu_total_new - cpu_total_old;

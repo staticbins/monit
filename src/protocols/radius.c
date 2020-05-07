@@ -38,6 +38,8 @@
 #endif
 
 #include "md5.h"
+#include "sha1.h"
+#include "checksum.h"
 #include "protocol.h"
 
 // libmonit
@@ -127,7 +129,7 @@ void check_radius(Socket_T socket) {
         System_random(request + 4, 16);
 
         /* sign the packet */
-        Util_hmacMD5(request, sizeof(request), (const unsigned char *)secret, secret_len, request + 22);
+        Checksum_hmacMD5(request, sizeof(request), (const unsigned char *)secret, secret_len, request + 22);
 
         if (Socket_write(socket, (unsigned char *)request, sizeof(request)) < 0)
                 THROW(IOException, "RADIUS: error sending query -- %s", STRERROR);

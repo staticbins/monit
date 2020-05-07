@@ -119,6 +119,7 @@
 #include "event.h"
 #include "state.h"
 #include "protocol.h"
+#include "checksum.h"
 
 // libmonit
 #include "io/File.h"
@@ -577,187 +578,6 @@ int Util_handle0Escapes(char *buf) {
         }
         *(buf + insertpos) = '\0';
         return insertpos;
-}
-
-
-char *Util_digest2Bytes(unsigned char *digest, int mdlen, MD_T result) {
-        int i;
-        unsigned char *tmp = (unsigned char*)result;
-        static unsigned char hex[] = "0123456789abcdef";
-        ASSERT(mdlen * 2 < MD_SIZE); // Overflow guard
-        for (i = 0; i < mdlen; i++) {
-                *tmp++ = hex[digest[i] >> 4];
-                *tmp++ = hex[digest[i] & 0xf];
-        }
-        *tmp = '\0';
-        return result;
-}
-
-
-bool Util_getStreamDigests(FILE *stream, void *sha1_resblock, void *md5_resblock) {
-#define HASHBLOCKSIZE 4096
-        md5_context_t ctx_md5;
-        sha1_context_t ctx_sha1;
-        unsigned char buffer[HASHBLOCKSIZE + 72];
-        size_t sum;
-
-        /* Initialize the computation contexts */
-        if (md5_resblock)
-                md5_init(&ctx_md5);
-        if (sha1_resblock)
-                sha1_init(&ctx_sha1);
-
-        /* Iterate over full file contents */
-        while (1)  {
-                /* We read the file in blocks of HASHBLOCKSIZE bytes. One call of the computation function processes the whole buffer so that with the next round of the loop another block can be read */
-                size_t n;
-                sum = 0;
-
-                /* Read block. Take care for partial reads */
-                while (1) {
-                        n = fread(buffer + sum, 1, HASHBLOCKSIZE - sum, stream);
-                        sum += n;
-                        if (sum == HASHBLOCKSIZE)
-                                break;
-                        if (n == 0) {
-                                /* Check for the error flag IFF N == 0, so that we don't exit the loop after a partial read due to e.g., EAGAIN or EWOULDBLOCK */
-                                if (ferror(stream))
-                                        return false;
-                                goto process_partial_block;
-                        }
-
-                        /* We've read at least one byte, so ignore errors. But always check for EOF, since feof may be true even though N > 0. Otherwise, we could end up calling fread after EOF */
-                        if (feof(stream))
-                                goto process_partial_block;
-                }
-
-                /* Process buffer with HASHBLOCKSIZE bytes. Note that HASHBLOCKSIZE % 64 == 0 */
-                if (md5_resblock)
-                        md5_append(&ctx_md5, (const md5_byte_t *)buffer, HASHBLOCKSIZE);
-                if (sha1_resblock)
-                        sha1_append(&ctx_sha1, buffer, HASHBLOCKSIZE);
-        }
-
-process_partial_block:
-        /* Process any remaining bytes */
-        if (sum > 0) {
-                if (md5_resblock)
-                        md5_append(&ctx_md5, (const md5_byte_t *)buffer, (int)sum);
-                if (sha1_resblock)
-                        sha1_append(&ctx_sha1, buffer, sum);
-        }
-        /* Construct result in desired memory */
-        if (md5_resblock)
-                md5_finish(&ctx_md5, md5_resblock);
-        if (sha1_resblock)
-                sha1_finish(&ctx_sha1, sha1_resblock);
-        return true;
-}
-
-
-void Util_printHash(char *file) {
-        MD_T hash;
-        unsigned char sha1[STRLEN], md5[STRLEN];
-        FILE *fhandle = NULL;
-
-        if (! (fhandle = file ? fopen(file, "r") : stdin) || ! Util_getStreamDigests(fhandle, sha1, md5) || (file && fclose(fhandle))) {
-                printf("%s: %s\n", file, STRERROR);
-                exit(1);
-        }
-        printf("SHA1(%s) = %s\n", file ? file : "stdin", Util_digest2Bytes(sha1, 20, hash));
-        printf("MD5(%s)  = %s\n", file ? file : "stdin", Util_digest2Bytes(md5, 16, hash));
-}
-
-
-bool Util_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned long bufsize) {
-        int hashlength = 16;
-
-        ASSERT(file);
-        ASSERT(buf);
-        ASSERT(bufsize >= sizeof(MD_T));
-
-        switch (hashtype) {
-                case Hash_Md5:
-                        hashlength = 16;
-                        break;
-                case Hash_Sha1:
-                        hashlength = 20;
-                        break;
-                default:
-                        LogError("checksum: invalid hash type: 0x%x\n", hashtype);
-                        return false;
-        }
-
-        if (File_isFile(file)) {
-                FILE *f = fopen(file, "r");
-                if (f) {
-                        bool fresult = false;
-                        MD_T sum;
-
-                        switch (hashtype) {
-                                case Hash_Md5:
-                                        fresult = Util_getStreamDigests(f, NULL, sum);
-                                        break;
-                                case Hash_Sha1:
-                                        fresult = Util_getStreamDigests(f, sum, NULL);
-                                        break;
-                                default:
-                                        break;
-                        }
-
-                        if (fclose(f))
-                                LogError("checksum: error closing file '%s' -- %s\n", file, STRERROR);
-
-                        if (! fresult) {
-                                LogError("checksum: file %s stream error (0x%x)\n", file, fresult);
-                                return false;
-                        }
-
-                        Util_digest2Bytes((unsigned char *)sum, hashlength, buf);
-                        return true;
-
-                } else
-                        LogError("checksum: failed to open file %s -- %s\n", file, STRERROR);
-        } else
-                LogError("checksum: file %s is not regular file\n", file);
-        return false;
-}
-
-
-void Util_hmacMD5(const unsigned char *data, int datalen, const unsigned char *key, int keylen, unsigned char *digest) {
-        md5_context_t ctx;
-        md5_init(&ctx);
-        unsigned char k_ipad[65] = {};
-        unsigned char k_opad[65] = {};
-        unsigned char tk[16];
-        int i;
-
-        if (keylen > 64) {
-                md5_context_t tctx;
-                md5_init(&tctx);
-                md5_append(&tctx, (const md5_byte_t *)key, keylen);
-                md5_finish(&tctx, tk);
-                key = tk;
-                keylen = 16;
-        }
-
-        memcpy(k_ipad, key, keylen);
-        memcpy(k_opad, key, keylen);
-
-        for (i = 0; i < 64; i++) {
-                k_ipad[i] ^= 0x36;
-                k_opad[i] ^= 0x5c;
-        }
-
-        md5_init(&ctx);
-        md5_append(&ctx, (const md5_byte_t *)k_ipad, 64);
-        md5_append(&ctx, (const md5_byte_t *)data, datalen);
-        md5_finish(&ctx, digest);
-
-        md5_init(&ctx);
-        md5_append(&ctx, (const md5_byte_t *)k_opad, 64);
-        md5_append(&ctx, (const md5_byte_t *)digest, 16);
-        md5_finish(&ctx, digest);
 }
 
 
@@ -1293,7 +1113,31 @@ void Util_printService(Service_T s) {
                                 break;
 
                         case Resource_CpuWait:
-                                printf(" %-20s = ", "CPU wait limit");
+                                printf(" %-20s = ", "CPU I/O wait limit");
+                                break;
+
+                        case Resource_CpuNice:
+                                printf(" %-20s = ", "CPU nice limit");
+                                break;
+
+                        case Resource_CpuHardIRQ:
+                                printf(" %-20s = ", "CPU hardware IRQ limit");
+                                break;
+
+                        case Resource_CpuSoftIRQ:
+                                printf(" %-20s = ", "CPU software IRQ limit");
+                                break;
+
+                        case Resource_CpuSteal:
+                                printf(" %-20s = ", "CPU steal limit");
+                                break;
+
+                        case Resource_CpuGuest:
+                                printf(" %-20s = ", "CPU guest limit");
+                                break;
+
+                        case Resource_CpuGuestNice:
+                                printf(" %-20s = ", "CPU guest nice limit");
                                 break;
 
                         case Resource_MemoryPercent:
@@ -1386,6 +1230,12 @@ void Util_printService(Service_T s) {
                         case Resource_CpuUser:
                         case Resource_CpuSystem:
                         case Resource_CpuWait:
+                        case Resource_CpuNice:
+                        case Resource_CpuHardIRQ:
+                        case Resource_CpuSoftIRQ:
+                        case Resource_CpuSteal:
+                        case Resource_CpuGuest:
+                        case Resource_CpuGuestNice:
                         case Resource_MemoryPercent:
                         case Resource_SwapPercent:
                                 printf("%s", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit)));
@@ -1480,7 +1330,7 @@ char *Util_getToken(MD_T token) {
         md5_init(&ctx);
         md5_append(&ctx, (const md5_byte_t *)buf, STRLEN - 1);
         md5_finish(&ctx, (md5_byte_t *)digest);
-        Util_digest2Bytes((unsigned char *)digest, 16, token);
+        Checksum_digest2Bytes((unsigned char *)digest, 16, token);
         return token;
 }
 
