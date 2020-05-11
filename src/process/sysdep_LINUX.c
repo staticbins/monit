@@ -404,6 +404,7 @@ static bool _parseProcFdCount(Proc_T proc) {
         // subtract entries '.' and '..'
         proc->filedescriptors.open = file_count - 2;
 
+#ifdef HAVE_PRLIMIT
         // get process' limits
         struct rlimit limits;
         if (prlimit(proc->pid, RLIMIT_NOFILE, NULL, &limits) != 0) {
@@ -412,6 +413,7 @@ static bool _parseProcFdCount(Proc_T proc) {
         }
         proc->filedescriptors.limit.soft = limits.rlim_cur;
         proc->filedescriptors.limit.hard = limits.rlim_max;
+#endif
 
         return true;
 }
