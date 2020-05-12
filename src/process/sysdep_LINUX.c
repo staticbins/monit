@@ -863,6 +863,8 @@ bool available_statistics(SystemInfo_T *si) {
                         return false;
         }
 
+        si->statisticsAvailable |= Statistics_FiledescriptorsPerSystem | Statistics_FiledescriptorsPerProcess;
+
 #ifdef HAVE_PRLIMIT
         si->statisticsAvailable |= Statistics_FiledescriptorsPerProcessMax;
 #endif

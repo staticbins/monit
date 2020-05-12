@@ -323,7 +323,7 @@ bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
 
 
 bool available_statistics(SystemInfo_T *si) {
-        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuNice | Statistics_CpuHardIRQ;
+        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuNice | Statistics_CpuHardIRQ | Statistics_FiledescriptorsPerSystem;
         return true;
 }
 

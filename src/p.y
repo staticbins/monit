@@ -423,8 +423,8 @@ optproc         : start
                 | uid
                 | euid
                 | secattr
-                | filedescriptors
-                | filedescriptorstotal
+                | filedescriptorsprocess
+                | filedescriptorsprocesstotal
                 | gid
                 | uptime
                 | connection
@@ -567,7 +567,7 @@ optsystem       : start
                 | depend
                 | resourcesystem
                 | uptime
-                | filedescriptors
+                | filedescriptorssystem
                 ;
 
 optfifolist     : /* EMPTY */
@@ -2906,8 +2906,25 @@ secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recover
                   }
                 ;
 
-filedescriptors : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
-                        addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
+filedescriptorssystem : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
+                                addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
+                        else
+                                yywarning("The per-system filedescriptors statistics is not available on this system\n");
+                  }
+                | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
+                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
+                                addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
+                        else
+                                yywarning("The per-system filedescriptors statistics is not available on this system\n");
+                  }
+                ;
+
+filedescriptorsprocess : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
+                                addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
+                        else
+                                yywarning("The per-process filedescriptors statistics is not available on this system\n");
                   }
                 | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
                         if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcessMax)
@@ -2917,8 +2934,11 @@ filedescriptors : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery
                   }
                 ;
 
-filedescriptorstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
-                        addfiledescriptors($<number>4, true, (long long)$5, -1., $<number>8, $<number>9);
+filedescriptorsprocesstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
+                                addfiledescriptors($<number>4, true, (long long)$5, -1., $<number>8, $<number>9);
+                        else
+                                yywarning("The per-process filedescriptors statistics is not available on this system\n");
                   }
                 ;
 

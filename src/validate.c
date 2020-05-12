@@ -827,23 +827,27 @@ static State_Type _checkSecurityAttribute(Service_T s, char *attribute) {
 static State_Type _checkSystemFiledescriptors(Service_T s) {
         ASSERT(s);
         State_Type rv = State_Succeeded;
-        for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
-                if (o->limit_absolute > -1LL) {
-                        if (Util_evalQExpression(o->operator, systeminfo.filedescriptors.allocated, o->limit_absolute)) {
-                                rv = State_Failed;
-                                Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %lld matches limit [filedescriptors %s %lld]", systeminfo.filedescriptors.allocated, operatorshortnames[o->operator], o->limit_absolute);
+        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem) {
+                for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
+                        if (o->limit_absolute > -1LL) {
+                                if (Util_evalQExpression(o->operator, systeminfo.filedescriptors.allocated, o->limit_absolute)) {
+                                        rv = State_Failed;
+                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %lld matches limit [filedescriptors %s %lld]", systeminfo.filedescriptors.allocated, operatorshortnames[o->operator], o->limit_absolute);
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %lld]", systeminfo.filedescriptors.allocated);
+                                }
                         } else {
-                                Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %lld]", systeminfo.filedescriptors.allocated);
-                        }
-                } else {
-                        float usage = systeminfo.filedescriptors.maximum > 0 ? ((float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum) : 0;
-                        if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
-                                rv = State_Failed;
-                                Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %.1f%% matches limit [filedescriptors %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
-                        } else {
-                                Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors usage test succeeded [current filedescriptors usage = %.1f%%]", usage);
+                                float usage = systeminfo.filedescriptors.maximum > 0 ? ((float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum) : 0;
+                                if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
+                                        rv = State_Failed;
+                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %.1f%% matches limit [filedescriptors %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors usage test succeeded [current filedescriptors usage = %.1f%%]", usage);
+                                }
                         }
                 }
+        } else {
+                LogWarning("Cannot test filesdescriptors usage as the statistics is not available on this system\n");
         }
         return rv;
 }

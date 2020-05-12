@@ -378,7 +378,9 @@ typedef enum {
         Statistics_CpuSteal                     = 0x40,
         Statistics_CpuGuest                     = 0x80,
         Statistics_CpuGuestNice                 = 0x100,
-        Statistics_FiledescriptorsPerProcessMax = 0x200
+        Statistics_FiledescriptorsPerSystem     = 0x200,
+        Statistics_FiledescriptorsPerProcess    = 0x400,
+        Statistics_FiledescriptorsPerProcessMax = 0x800
 } __attribute__((__packed__)) Statistics_Flags;
 
 
