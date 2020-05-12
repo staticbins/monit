@@ -309,23 +309,23 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 {
                                         _formatStatus("load average", Event_Resource, type, res, s, true, "[%.2f] [%.2f] [%.2f]", systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2]);
                                         StringBuffer_T sb = StringBuffer_create(256);
-                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_User)
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuUser)
                                                 StringBuffer_append(sb, "%.1f%%usr ", systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
-                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_System)
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuSystem)
                                                 StringBuffer_append(sb, "%.1f%%sys ", systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.);
-                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Nice)
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuNice)
                                                 StringBuffer_append(sb, "%.1f%%nice ", systeminfo.cpu.usage.nice > 0. ? systeminfo.cpu.usage.nice : 0.);
-                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_IOWait)
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait)
                                                 StringBuffer_append(sb, "%.1f%%iowait ", systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.);
-                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_HardIRQ)
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuHardIRQ)
                                                 StringBuffer_append(sb, "%.1f%%hardirq ", systeminfo.cpu.usage.hardirq > 0. ? systeminfo.cpu.usage.hardirq : 0.);
-                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_SoftIRQ)
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuSoftIRQ)
                                                 StringBuffer_append(sb, "%.1f%%softirq ", systeminfo.cpu.usage.softirq > 0. ? systeminfo.cpu.usage.softirq : 0.);
-                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Steal)
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuSteal)
                                                 StringBuffer_append(sb, "%.1f%%steal ", systeminfo.cpu.usage.steal > 0. ? systeminfo.cpu.usage.steal : 0.);
-                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Guest)
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuGuest)
                                                 StringBuffer_append(sb, "%.1f%%guest ", systeminfo.cpu.usage.guest > 0. ? systeminfo.cpu.usage.guest : 0.);
-                                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_GuestNice)
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuGuestNice)
                                                 StringBuffer_append(sb, "%.1f%%guestnice ", systeminfo.cpu.usage.guest_nice > 0. ? systeminfo.cpu.usage.guest_nice : 0.);
                                         _formatStatus("cpu", Event_Resource, type, res, s, true, "%s", StringBuffer_toString(sb));
                                         StringBuffer_free(&sb);
@@ -1203,13 +1203,13 @@ static void do_home_system(HttpResponse res) {
                             s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                             get_service_status(HTML, s, buf, sizeof(buf)),
                             systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2]);
-        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_User)
+        if (systeminfo.statisticsAvailable & Statistics_CpuUser)
                 StringBuffer_append(res->outputbuffer, "%.1f%%us&nbsp;", systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
-        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_System)
+        if (systeminfo.statisticsAvailable & Statistics_CpuSystem)
                 StringBuffer_append(res->outputbuffer, "%.1f%%sy&nbsp;", systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.);
-        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Nice)
+        if (systeminfo.statisticsAvailable & Statistics_CpuNice)
                 StringBuffer_append(res->outputbuffer, "%.1f%%ni&nbsp;", systeminfo.cpu.usage.nice > 0. ? systeminfo.cpu.usage.nice : 0.);
-        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_IOWait)
+        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait)
                 StringBuffer_append(res->outputbuffer, "%.1f%%wa&nbsp;", systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.);
         StringBuffer_append(res->outputbuffer,
                             "</td>");

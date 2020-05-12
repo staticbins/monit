@@ -307,7 +307,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                 return -1;
         }
 
-        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_System | CpuMonitoring_IOWait;
+        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuIOWait;
 
         cpu_total_new = (cpu.user + cpu.sys + cpu.wait + cpu.idle) / cpu.ncpus;
         cpu_total     = cpu_total_new - cpu_total_old;

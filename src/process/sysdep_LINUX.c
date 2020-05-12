@@ -691,7 +691,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         switch (rv) {
                 case 4:
                         // linux < 2.5.41
-                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System;
+                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem;
                         cpu_iowait = 0;
                         cpu_hardirq = 0;
                         cpu_softirq = 0;
@@ -701,7 +701,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                         break;
                 case 5:
                         // linux >= 2.5.41
-                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System | CpuMonitoring_IOWait;
+                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait;
                         cpu_hardirq = 0;
                         cpu_softirq = 0;
                         cpu_steal = 0;
@@ -710,25 +710,25 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                         break;
                 case 7:
                         // linux >= 2.6.0-test4
-                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System | CpuMonitoring_IOWait | CpuMonitoring_HardIRQ | CpuMonitoring_SoftIRQ;
+                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ;
                         cpu_steal = 0;
                         cpu_guest = 0;
                         cpu_guest_nice = 0;
                         break;
                 case 8:
                         // linux 2.6.11
-                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System | CpuMonitoring_IOWait | CpuMonitoring_HardIRQ | CpuMonitoring_SoftIRQ | CpuMonitoring_Steal;
+                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ | Statistics_CpuSteal;
                         cpu_guest = 0;
                         cpu_guest_nice = 0;
                         break;
                 case 9:
                         // linux >= 2.6.24
-                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System | CpuMonitoring_IOWait | CpuMonitoring_HardIRQ | CpuMonitoring_SoftIRQ | CpuMonitoring_Steal | CpuMonitoring_Guest;
+                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ | Statistics_CpuSteal | Statistics_CpuGuest;
                         cpu_guest_nice = 0;
                         break;
                 case 10:
                         // linux >= 2.6.33
-                        si->cpu.usage.statisticsAvailable = CpuMonitoring_User | CpuMonitoring_Nice | CpuMonitoring_System | CpuMonitoring_IOWait | CpuMonitoring_HardIRQ | CpuMonitoring_SoftIRQ | CpuMonitoring_Steal | CpuMonitoring_Guest | CpuMonitoring_GuestNice;
+                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ | Statistics_CpuSteal | Statistics_CpuGuest | Statistics_CpuGuestNice;
                         break;
                 default:
                         LogError("system statistic error -- cannot read cpu usage\n");
