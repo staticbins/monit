@@ -496,86 +496,114 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                         break;
 
                 case Resource_CpuWait:
-                        if (systeminfo.cpu.usage.iowait < 0.) {
-                                DEBUG("'%s' cpu I/O wait check skipped (initializing)\n", s->name);
-                                return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.iowait, r->limit)) {
-                                rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu I/O wait of %.1f%% matches resource limit [cpu I/O wait %s %.1f%%]", systeminfo.cpu.usage.iowait, operatorshortnames[r->operator], r->limit);
+                        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait) {
+                                if (systeminfo.cpu.usage.iowait < 0.) {
+                                        DEBUG("'%s' cpu I/O wait check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.iowait, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu I/O wait of %.1f%% matches resource limit [cpu I/O wait %s %.1f%%]", systeminfo.cpu.usage.iowait, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu I/O wait check succeeded [current cpu I/O wait = %.1f%%]", systeminfo.cpu.usage.iowait);
+                                }
                         } else {
-                                snprintf(report, STRLEN, "cpu I/O wait check succeeded [current cpu I/O wait = %.1f%%]", systeminfo.cpu.usage.iowait);
+                                LogWarning("Cannot test cpu I/O wait usage as the statistics is not available on this system\n");
                         }
                         break;
 
                 case Resource_CpuNice:
-                        if (systeminfo.cpu.usage.nice < 0.) {
-                                DEBUG("'%s' cpu nice usage check skipped (initializing)\n", s->name);
-                                return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.nice, r->limit)) {
-                                rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu nice usage of %.1f%% matches resource limit [cpu nice usage %s %.1f%%]", systeminfo.cpu.usage.nice, operatorshortnames[r->operator], r->limit);
+                        if (systeminfo.statisticsAvailable & Statistics_CpuNice) {
+                                if (systeminfo.cpu.usage.nice < 0.) {
+                                        DEBUG("'%s' cpu nice usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.nice, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu nice usage of %.1f%% matches resource limit [cpu nice usage %s %.1f%%]", systeminfo.cpu.usage.nice, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu nice usage check succeeded [current cpu nice usage = %.1f%%]", systeminfo.cpu.usage.nice);
+                                }
                         } else {
-                                snprintf(report, STRLEN, "cpu nice usage check succeeded [current cpu nice usage = %.1f%%]", systeminfo.cpu.usage.nice);
+                                LogWarning("Cannot test cpu nice usage as the statistics is not available on this system\n");
                         }
                         break;
 
                 case Resource_CpuHardIRQ:
-                        if (systeminfo.cpu.usage.hardirq < 0.) {
-                                DEBUG("'%s' cpu hardware IRQ usage check skipped (initializing)\n", s->name);
-                                return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.hardirq, r->limit)) {
-                                rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu hardware IRQ usage of %.1f%% matches resource limit [cpu hardware IRQ usage %s %.1f%%]", systeminfo.cpu.usage.hardirq, operatorshortnames[r->operator], r->limit);
+                        if (systeminfo.statisticsAvailable & Statistics_CpuHardIRQ) {
+                                if (systeminfo.cpu.usage.hardirq < 0.) {
+                                        DEBUG("'%s' cpu hardware IRQ usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.hardirq, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu hardware IRQ usage of %.1f%% matches resource limit [cpu hardware IRQ usage %s %.1f%%]", systeminfo.cpu.usage.hardirq, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu hardware IRQ usage check succeeded [current cpu hardware IRQ usage = %.1f%%]", systeminfo.cpu.usage.hardirq);
+                                }
                         } else {
-                                snprintf(report, STRLEN, "cpu hardware IRQ usage check succeeded [current cpu hardware IRQ usage = %.1f%%]", systeminfo.cpu.usage.hardirq);
+                                LogWarning("Cannot test cpu hardware IRQ usage as the statistics is not available on this system\n");
                         }
                         break;
 
                 case Resource_CpuSoftIRQ:
-                        if (systeminfo.cpu.usage.softirq < 0.) {
-                                DEBUG("'%s' cpu software IRQ usage check skipped (initializing)\n", s->name);
-                                return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.softirq, r->limit)) {
-                                rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu software IRQ usage of %.1f%% matches resource limit [cpu software IRQ usage %s %.1f%%]", systeminfo.cpu.usage.softirq, operatorshortnames[r->operator], r->limit);
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSoftIRQ) {
+                                if (systeminfo.cpu.usage.softirq < 0.) {
+                                        DEBUG("'%s' cpu software IRQ usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.softirq, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu software IRQ usage of %.1f%% matches resource limit [cpu software IRQ usage %s %.1f%%]", systeminfo.cpu.usage.softirq, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu software IRQ usage check succeeded [current cpu software IRQ usage = %.1f%%]", systeminfo.cpu.usage.softirq);
+                                }
                         } else {
-                                snprintf(report, STRLEN, "cpu software IRQ usage check succeeded [current cpu software IRQ usage = %.1f%%]", systeminfo.cpu.usage.softirq);
+                                LogWarning("Cannot test cpu software IRQ usage as the statistics is not available on this system\n");
                         }
                         break;
 
                 case Resource_CpuSteal:
-                        if (systeminfo.cpu.usage.steal < 0.) {
-                                DEBUG("'%s' cpu steal usage check skipped (initializing)\n", s->name);
-                                return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.steal, r->limit)) {
-                                rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu steal usage of %.1f%% matches resource limit [cpu steal usage %s %.1f%%]", systeminfo.cpu.usage.steal, operatorshortnames[r->operator], r->limit);
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSteal) {
+                                if (systeminfo.cpu.usage.steal < 0.) {
+                                        DEBUG("'%s' cpu steal usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.steal, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu steal usage of %.1f%% matches resource limit [cpu steal usage %s %.1f%%]", systeminfo.cpu.usage.steal, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu steal usage check succeeded [current cpu steal usage = %.1f%%]", systeminfo.cpu.usage.steal);
+                                }
                         } else {
-                                snprintf(report, STRLEN, "cpu steal usage check succeeded [current cpu steal usage = %.1f%%]", systeminfo.cpu.usage.steal);
+                                LogWarning("Cannot test cpu steal usage as the statistics is not available on this system\n");
                         }
                         break;
 
                 case Resource_CpuGuest:
-                        if (systeminfo.cpu.usage.guest < 0.) {
-                                DEBUG("'%s' cpu guest usage check skipped (initializing)\n", s->name);
-                                return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.guest, r->limit)) {
-                                rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu guest usage of %.1f%% matches resource limit [cpu guest usage %s %.1f%%]", systeminfo.cpu.usage.guest, operatorshortnames[r->operator], r->limit);
+                        if (systeminfo.statisticsAvailable & Statistics_CpuGuest) {
+                                if (systeminfo.cpu.usage.guest < 0.) {
+                                        DEBUG("'%s' cpu guest usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.guest, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu guest usage of %.1f%% matches resource limit [cpu guest usage %s %.1f%%]", systeminfo.cpu.usage.guest, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu guest usage check succeeded [current cpu guest usage = %.1f%%]", systeminfo.cpu.usage.guest);
+                                }
                         } else {
-                                snprintf(report, STRLEN, "cpu guest usage check succeeded [current cpu guest usage = %.1f%%]", systeminfo.cpu.usage.guest);
+                                LogWarning("Cannot test cpu guest usage as the statistics is not available on this system\n");
                         }
                         break;
 
                 case Resource_CpuGuestNice:
-                        if (systeminfo.cpu.usage.guest_nice < 0.) {
-                                DEBUG("'%s' cpu guest nice usage check skipped (initializing)\n", s->name);
-                                return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.guest_nice, r->limit)) {
-                                rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu guest nice usage of %.1f%% matches resource limit [cpu guest nice usage %s %.1f%%]", systeminfo.cpu.usage.guest_nice, operatorshortnames[r->operator], r->limit);
+                        if (systeminfo.statisticsAvailable & Statistics_CpuGuestNice) {
+                                if (systeminfo.cpu.usage.guest_nice < 0.) {
+                                        DEBUG("'%s' cpu guest nice usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.guest_nice, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu guest nice usage of %.1f%% matches resource limit [cpu guest nice usage %s %.1f%%]", systeminfo.cpu.usage.guest_nice, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu guest nice usage check succeeded [current cpu guest nice usage = %.1f%%]", systeminfo.cpu.usage.guest_nice);
+                                }
                         } else {
-                                snprintf(report, STRLEN, "cpu guest nice usage check succeeded [current cpu guest nice usage = %.1f%%]", systeminfo.cpu.usage.guest_nice);
+                                LogWarning("Cannot test cpu guestnice usage as the statistics is not available on this system\n");
                         }
                         break;
 
@@ -833,7 +861,6 @@ static State_Type _checkProcessFiledescriptors(Service_T s) {
                                 Event_post(s, Event_Resource, State_Succeeded, o->action, "total filedescriptors usage test succeeded [current filedescriptors usage = %lld]", s->inf.process->filedescriptors.openTotal);
                         }
                 } else {
-                        long long limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
                         if (o->limit_absolute > -1LL) {
                                 if (Util_evalQExpression(o->operator, s->inf.process->filedescriptors.open, o->limit_absolute)) {
                                         rv = State_Failed;
@@ -842,12 +869,17 @@ static State_Type _checkProcessFiledescriptors(Service_T s) {
                                         Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %lld]", s->inf.process->filedescriptors.open);
                                 }
                         } else {
-                                float usage = limit > 0 ? (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit : 0;
-                                if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
-                                        rv = State_Failed;
-                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %.1f%% matches limit [filedescriptors %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
+                                if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcessMax) {
+                                        long long limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
+                                        float usage = limit > 0 ? (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit : 0;
+                                        if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
+                                                rv = State_Failed;
+                                                Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %.1f%% matches limit [filedescriptors %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
+                                        } else {
+                                                Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors usage test succeeded [current filedescriptors usage = %.1f%%]", usage);
+                                        }
                                 } else {
-                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors usage test succeeded [current filedescriptors usage = %.1f%%]", usage);
+                                        LogWarning("Cannot compute filesdescriptors usage %% as per-process maximum is not exposed on this system -- filesdecriptors usage test skipped, please switch to testing absolute value\n");
                                 }
                         }
                 }

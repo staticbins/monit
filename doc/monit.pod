@@ -2879,8 +2879,8 @@ Example for AppArmor:
 =head2 SYSTEM AND PER-PROCESS FILEDESCRIPTORS TEST
 
 Monit can test the filedescriptors usage on the system and process level. You can check either
-an absolute value or percent of the system soft/hard limit which is set for the system
-(/proc/sys/fs/file-max) or process (ulimit -n).
+an absolute value or percentual usage of the current maximum. The per-process percentual
+usage can be used only if the system exposes per-process maximum.
 
 Syntax:
 

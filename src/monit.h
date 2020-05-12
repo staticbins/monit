@@ -369,15 +369,16 @@ typedef enum {
 
 
 typedef enum {
-        Statistics_CpuUser      = 0x1,
-        Statistics_CpuNice      = 0x2,
-        Statistics_CpuSystem    = 0x4,
-        Statistics_CpuIOWait    = 0x8,
-        Statistics_CpuHardIRQ   = 0x10,
-        Statistics_CpuSoftIRQ   = 0x20,
-        Statistics_CpuSteal     = 0x40,
-        Statistics_CpuGuest     = 0x80,
-        Statistics_CpuGuestNice = 0x100
+        Statistics_CpuUser                      = 0x1,
+        Statistics_CpuNice                      = 0x2,
+        Statistics_CpuSystem                    = 0x4,
+        Statistics_CpuIOWait                    = 0x8,
+        Statistics_CpuHardIRQ                   = 0x10,
+        Statistics_CpuSoftIRQ                   = 0x20,
+        Statistics_CpuSteal                     = 0x40,
+        Statistics_CpuGuest                     = 0x80,
+        Statistics_CpuGuestNice                 = 0x100,
+        Statistics_FiledescriptorsPerProcessMax = 0x200
 } __attribute__((__packed__)) Statistics_Flags;
 
 

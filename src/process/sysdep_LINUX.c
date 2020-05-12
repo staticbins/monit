@@ -154,6 +154,7 @@ static void __attribute__ ((constructor)) _constructor(void) {
 #define NSEC_PER_SEC    1000000000L
 
 static unsigned long long old_cpu_user       = 0;
+static unsigned long long old_cpu_nice       = 0;
 static unsigned long long old_cpu_syst       = 0;
 static unsigned long long old_cpu_iowait     = 0;
 static unsigned long long old_cpu_hardirq    = 0;
@@ -691,7 +692,6 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         switch (rv) {
                 case 4:
                         // linux < 2.5.41
-                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem;
                         cpu_iowait = 0;
                         cpu_hardirq = 0;
                         cpu_softirq = 0;
@@ -701,7 +701,6 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                         break;
                 case 5:
                         // linux >= 2.5.41
-                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait;
                         cpu_hardirq = 0;
                         cpu_softirq = 0;
                         cpu_steal = 0;
@@ -710,25 +709,21 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                         break;
                 case 7:
                         // linux >= 2.6.0-test4
-                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ;
                         cpu_steal = 0;
                         cpu_guest = 0;
                         cpu_guest_nice = 0;
                         break;
                 case 8:
                         // linux 2.6.11
-                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ | Statistics_CpuSteal;
                         cpu_guest = 0;
                         cpu_guest_nice = 0;
                         break;
                 case 9:
                         // linux >= 2.6.24
-                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ | Statistics_CpuSteal | Statistics_CpuGuest;
                         cpu_guest_nice = 0;
                         break;
                 case 10:
                         // linux >= 2.6.33
-                        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ | Statistics_CpuSteal | Statistics_CpuGuest | Statistics_CpuGuestNice;
                         break;
                 default:
                         LogError("system statistic error -- cannot read cpu usage\n");
@@ -739,6 +734,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
         if (old_cpu_total == 0) {
                 si->cpu.usage.user       = -1.;
+                si->cpu.usage.nice       = -1.;
                 si->cpu.usage.system     = -1.;
                 si->cpu.usage.iowait     = -1.;
                 si->cpu.usage.hardirq    = -1.;
@@ -748,7 +744,8 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                 si->cpu.usage.guest_nice = -1.;
         } else {
                 double delta = cpu_total - old_cpu_total;
-                si->cpu.usage.user       = _usagePercent(old_cpu_user, cpu_user, delta);
+                si->cpu.usage.user       = _usagePercent(old_cpu_user - old_cpu_guest, cpu_user - cpu_guest, delta); // the guest (if available) is sub-statistics of user
+                si->cpu.usage.nice       = _usagePercent(old_cpu_nice - old_cpu_guest_nice, cpu_nice - cpu_guest_nice, delta); // the guest_nice (if available) is sub-statistics of nice
                 si->cpu.usage.system     = _usagePercent(old_cpu_syst, cpu_syst, delta);
                 si->cpu.usage.iowait     = _usagePercent(old_cpu_iowait, cpu_iowait, delta);
                 si->cpu.usage.hardirq    = _usagePercent(old_cpu_hardirq, cpu_hardirq, delta);
@@ -759,6 +756,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         }
 
         old_cpu_user       = cpu_user;
+        old_cpu_nice       = cpu_nice;
         old_cpu_syst       = cpu_syst;
         old_cpu_iowait     = cpu_iowait;
         old_cpu_hardirq    = cpu_hardirq;
@@ -771,6 +769,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
 error:
         si->cpu.usage.user       = 0.;
+        si->cpu.usage.nice       = 0.;
         si->cpu.usage.system     = 0.;
         si->cpu.usage.iowait     = 0.;
         si->cpu.usage.hardirq    = 0.;
@@ -801,5 +800,73 @@ bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
                 DEBUG("system statistic error -- cannot open /proc/sys/fs/file-nr\n");
         }
         return rv;
+}
+
+
+bool available_statistics(SystemInfo_T *si) {
+        int rv;
+        unsigned long long cpu_user;       // Time spent in user mode
+        unsigned long long cpu_nice;       // Time spent in user mode with low priority (nice)
+        unsigned long long cpu_syst;       // Time spent in system mode
+        unsigned long long cpu_idle;       // Time idle
+        unsigned long long cpu_iowait;     // Time waiting for I/O to complete. This value is not reliable
+        unsigned long long cpu_hardirq;    // Time servicing hardware interrupts
+        unsigned long long cpu_softirq;    // Time servicing software interrupts
+        unsigned long long cpu_steal;      // Stolen time, which is the time spent in other operating systems when running in a virtualized environment
+        unsigned long long cpu_guest;      // Time spent running a virtual CPU for guest operating systems under the control of the Linux kernel
+        unsigned long long cpu_guest_nice; // Time spent running a niced guest (virtual CPU for guest operating systems under the control of the Linux kernel)
+        char buf[8192];
+
+        if (! file_readProc(buf, sizeof(buf), "stat", -1, NULL)) {
+                LogError("system statistic error -- cannot read /proc/stat\n");
+                return false;
+        }
+
+        rv = sscanf(buf, "cpu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+                    &cpu_user,
+                    &cpu_nice,
+                    &cpu_syst,
+                    &cpu_idle,
+                    &cpu_iowait,
+                    &cpu_hardirq,
+                    &cpu_softirq,
+                    &cpu_steal,
+                    &cpu_guest,
+                    &cpu_guest_nice);
+        switch (rv) {
+                case 4:
+                        // linux < 2.5.41
+                        si->statisticsAvailable |= Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem;
+                        break;
+                case 5:
+                        // linux >= 2.5.41
+                        si->statisticsAvailable |= Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait;
+                        break;
+                case 7:
+                        // linux >= 2.6.0-test4
+                        si->statisticsAvailable |= Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ;
+                        break;
+                case 8:
+                        // linux 2.6.11
+                        si->statisticsAvailable |= Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ | Statistics_CpuSteal;
+                        break;
+                case 9:
+                        // linux >= 2.6.24
+                        si->statisticsAvailable |= Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ | Statistics_CpuSteal | Statistics_CpuGuest;
+                        break;
+                case 10:
+                        // linux >= 2.6.33
+                        si->statisticsAvailable |= Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ | Statistics_CpuSteal | Statistics_CpuGuest | Statistics_CpuGuestNice;
+                        break;
+                default:
+                        LogError("system statistic error -- cannot read cpu usage\n");
+                        return false;
+        }
+
+#ifdef HAVE_PRLIMIT
+        si->statisticsAvailable |= Statistics_FiledescriptorsPerProcessMax;
+#endif
+
+        return true;
 }
 

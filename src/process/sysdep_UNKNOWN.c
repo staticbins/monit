@@ -88,7 +88,11 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
 
 bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
-        // Not implemented
-        return true;
+        return false;
+}
+
+
+bool available_statistics(SystemInfo_T *si) {
+        return false;
 }
 

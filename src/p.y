@@ -131,6 +131,7 @@
 #include "md5.h"
 #include "sha1.h"
 #include "checksum.h"
+#include "process_sysdep.h"
 
 // libmonit
 #include "io/File.h"
@@ -2280,16 +2281,63 @@ resourcecpu     : resourcecpuid operator value PERCENT {
                   }
                 ;
 
-resourcecpuid   : CPUUSER      { $<number>$ = Resource_CpuUser; }
-                | CPUSYSTEM    { $<number>$ = Resource_CpuSystem; }
-                | CPUWAIT      { $<number>$ = Resource_CpuWait; }
-                | CPUNICE      { $<number>$ = Resource_CpuNice; }
-                | CPUHARDIRQ   { $<number>$ = Resource_CpuHardIRQ; }
-                | CPUSOFTIRQ   { $<number>$ = Resource_CpuSoftIRQ; }
-                | CPUSTEAL     { $<number>$ = Resource_CpuSteal; }
-                | CPUGUEST     { $<number>$ = Resource_CpuGuest; }
-                | CPUGUESTNICE { $<number>$ = Resource_CpuGuestNice; }
-                | CPU          { $<number>$ = Resource_CpuPercent; }
+resourcecpuid   : CPUUSER {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuUser)
+                                $<number>$ = Resource_CpuUser;
+                        else
+                                yywarning2("The CPU user usage statistics is not available on this system\n");
+                  }
+                | CPUSYSTEM {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSystem)
+                                $<number>$ = Resource_CpuSystem;
+                        else
+                                yywarning2("The CPU system usage statistics is not available on this system\n");
+                  }
+                | CPUWAIT {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait)
+                                $<number>$ = Resource_CpuWait;
+                        else
+                                yywarning2("The CPU I/O wait usage statistics is not available on this system\n");
+                  }
+                | CPUNICE {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuNice)
+                                $<number>$ = Resource_CpuNice;
+                        else
+                                yywarning2("The CPU nice usage statistics is not available on this system\n");
+                  }
+                | CPUHARDIRQ {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuHardIRQ)
+                                $<number>$ = Resource_CpuHardIRQ;
+                        else
+                                yywarning2("The CPU hardware IRQ usage statistics is not available on this system\n");
+                  }
+                | CPUSOFTIRQ {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSoftIRQ)
+                                $<number>$ = Resource_CpuSoftIRQ;
+                        else
+                                yywarning2("The CPU software IRQ usage statistics is not available on this system\n");
+                  }
+                | CPUSTEAL {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSteal)
+                                $<number>$ = Resource_CpuSteal;
+                        else
+                                yywarning2("The CPU steal usage statistics is not available on this system\n");
+                  }
+                | CPUGUEST {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuGuest)
+                                $<number>$ = Resource_CpuGuest;
+                        else
+                                yywarning2("The CPU guest usage statistics is not available on this system\n");
+                  }
+                | CPUGUESTNICE {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuGuestNice)
+                                $<number>$ = Resource_CpuGuestNice;
+                        else
+                                yywarning2("The CPU guest nice usage statistics is not available on this system\n");
+                  }
+                | CPU {
+                        $<number>$ = Resource_CpuPercent;
+                  }
                 ;
 
 resourcemem     : MEMORY operator value unit {
@@ -2862,7 +2910,10 @@ filedescriptors : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery
                         addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
                   }
                 | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
-                        addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
+                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcessMax)
+                                addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
+                        else
+                                yywarning("The per-process filedescriptors maximum is not exposed on this system, so we cannot compute usage %%, please use the test with absolute value\n");
                   }
                 ;
 
@@ -3094,6 +3145,8 @@ bool parse(char *controlfile) {
         }
 
         currentfile = Str_dup(controlfile);
+
+        available_statistics(&systeminfo);
 
         /*
          * Creation of the global service list is synchronized

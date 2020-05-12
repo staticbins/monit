@@ -300,8 +300,6 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                 total     = total_new - total_old;
                 total_old = total_new;
 
-                si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuNice;
-
                 si->cpu.usage.user = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_USER] - cpu_user_old) / total) : -1.;
                 si->cpu.usage.nice = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_NICE] - cpu_nice_old) / total) : -1.;
                 si->cpu.usage.system = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_SYSTEM] - cpu_syst_old) / total) : -1.;
@@ -330,6 +328,12 @@ bool used_system_filedescriptors_sysdep(__attribute__ ((unused)) SystemInfo_T *s
                 DEBUG("system statistics error -- sysctl kern.maxfiles failed: %s\n", STRERROR);
                 return false;
         }
+        return true;
+}
+
+
+bool available_statistics(SystemInfo_T *si) {
+        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuNice;
         return true;
 }
 

@@ -364,8 +364,6 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                 }
         }
 
-        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuIOWait;
-
         for (int i = 0; i < ncpu; i++) {
                 if (-1 == kstat_read(kctl, cpu_ks[i], &cpu_stat[i])) {
                         LogError("system statistic -- failed to read cpu_stat kstat for cpu %d\n", i);
@@ -408,6 +406,12 @@ error:
 
 bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
         // Not implemented
+        return true;
+}
+
+
+bool available_statistics(SystemInfo_T *si) {
+        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuIOWait;
         return true;
 }
 
