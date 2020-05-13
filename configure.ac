@@ -763,6 +763,7 @@ if test "$use_asan" = "1"; then
         AX_CHECK_COMPILE_FLAG([-fsanitize=null], [CFLAGS="$CFLAGS -fsanitize=null "])
         AX_CHECK_COMPILE_FLAG([-fsanitize=object-size], [CFLAGS="$CFLAGS -fsanitize=object-size"])
         AX_CHECK_COMPILE_FLAG([-fsanitize=undefined], [CFLAGS="$CFLAGS -fsanitize=undefined"])
+        AC_DEFINE([HAVE_ASAN], 1, [Define to 1 if you have address sanitizer.])
 fi
 
 
