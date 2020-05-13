@@ -138,7 +138,7 @@ distclean-local:
 	-rm -f monit-[0-9].*tar.gz
 
 cleanall: clean distclean
-	git clean -fxd
+	test -d .git && git clean -fxd
 
 monit.1: doc/monit.pod
 	$(POD2MAN) $(POD2MANFLAGS) $< > $@
