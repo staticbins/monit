@@ -71,6 +71,8 @@ New: Issue #877: Linux: Add support for VxFS filesystem statistics. Thanks to Lu
 
 New: Enable support for compilation with AddressSanitizer. Use "configure --with-asan" to enable.
 
+New: Issue #894: If monit is logging to a file: add a year to the timestamp.
+
 Fixed: Issue #867: Monit crashed when executing programs when linked with musl libc. Thanks to Rich Felker for report.
 
 Fixed: Monit did incorrectly add the CPU wait% to the system CPU usage, which was wrong (the CPU is idle when it's in the

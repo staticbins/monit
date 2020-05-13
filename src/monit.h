@@ -114,7 +114,7 @@
 
 
 #define MONITRC            "monitrc"
-#define TIMEFORMAT         "%Z %b %e %T"
+#define TIMEFORMAT         "%Z %Y %b %e %T"
 #define STRERROR            strerror(errno)
 #define STRLEN             256
 #ifndef USEC_PER_SEC
