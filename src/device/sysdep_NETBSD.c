@@ -106,7 +106,8 @@ static bool _parseDevice(const char *path, Device_T device) {
         const unsigned char *base = File_basename(path);
         for (int len = strlen(base), i = len - 1; i >= 0; i--) {
                 if (isdigit(*(base + i))) {
-                        strncpy(device->key, base, i + 1 < sizeof(device->key) ? i + 1 : sizeof(device->key) - 1);
+                        unsigned index = i + 1;
+                        strncpy(device->key, base, index < sizeof(device->key) ? index : sizeof(device->key) - 1);
                         return true;
                 }
         }
@@ -138,7 +139,7 @@ static bool _getStatistics(unsigned long long now) {
 }
 
 
-static bool _getDummyDiskActivity(void *_inf) {
+static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
         return true;
 }
 
@@ -148,7 +149,7 @@ static bool _getBlockDiskActivity(void *_inf) {
         unsigned long long now = Time_milli();
         bool rv = _getStatistics(now);
         if (rv) {
-                for (int i = 0; i < _statistics.diskCount; i++)     {
+                for (unsigned i = 0; i < _statistics.diskCount; i++)     {
                         if (Str_isEqual(inf->filesystem->object.key, _statistics.disk[i].name)) {
                                 Statistics_update(&(inf->filesystem->read.bytes), now, _statistics.disk[i].rbytes);
                                 Statistics_update(&(inf->filesystem->write.bytes), now, _statistics.disk[i].wbytes);
@@ -225,7 +226,7 @@ static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
                 {MNT_SYMPERM, "symperm"},
                 {MNT_UNION, "union"}
         };
-        for (int i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
+        for (unsigned i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
                 if (flags & t[i].flag) {
                         snprintf(inf->filesystem->flags + strlen(inf->filesystem->flags), sizeof(inf->filesystem->flags) - strlen(inf->filesystem->flags) - 1, "%s%s", count++ ? ", " : "", t[i].description);
                 }
