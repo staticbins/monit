@@ -755,7 +755,7 @@ int Ssl_read(T C, void *b, int size, int timeout) {
 int Ssl_getCertificateValidDays(T C) {
         if (C && C->certificate) {
                 // Certificates which expired already are catched in preverify => we don't need to handle them here
-                int deltadays = 0;
+                volatile int deltadays = 0;
 #ifdef HAVE_ASN1_TIME_DIFF
                 int deltaseconds;
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
