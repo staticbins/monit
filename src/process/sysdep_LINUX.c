@@ -41,6 +41,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef HAVE_STDDEF_H
+#include <stddef.h>
+#endif
+
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
@@ -104,6 +108,7 @@ static struct {
 
 
 typedef struct Proc_T {
+        StringBuffer_T      name;
         int                 pid;
         int                 ppid;
         int                 uid;
@@ -135,7 +140,6 @@ typedef struct Proc_T {
                 } limit;
         } filedescriptors;
         char                secattr[STRLEN];
-        StringBuffer_T      name;
 } *Proc_T;
 
 
@@ -507,8 +511,9 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
 
 
         int count = 0;
-        struct Proc_T proc = {};
-        proc.name = StringBuffer_create(64);
+        struct Proc_T proc = {
+                .name = StringBuffer_create(64)
+        };
         time_t starttime = _getStartTime();
         for (size_t i = 0; i < globbuf.gl_pathc; i++) {
                 proc.pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
@@ -540,7 +545,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].filedescriptors.limit.hard = proc.filedescriptors.limit.hard;
                         count++;
                         // Clear
-                        memset(&proc, 0, sizeof(struct Proc_T) - sizeof(proc.name));
+                        memset(&proc + offsetof(struct Proc_T, pid), 0, sizeof(struct Proc_T) - offsetof(struct Proc_T, pid));
                         StringBuffer_clear(proc.name);
                 }
         }
