@@ -759,9 +759,9 @@ int Ssl_getCertificateValidDays(T C) {
 #ifdef HAVE_ASN1_TIME_DIFF
                 int deltaseconds;
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-                if (! ASN1_TIME_diff(&deltadays, &deltaseconds, NULL, X509_get_notAfter(C->certificate))) {
+                if (! ASN1_TIME_diff((int *)&deltadays, &deltaseconds, NULL, X509_get_notAfter(C->certificate))) {
 #else
-                if (! ASN1_TIME_diff(&deltadays, &deltaseconds, NULL, X509_get0_notAfter(C->certificate))) {
+                if (! ASN1_TIME_diff((int *)&deltadays, &deltaseconds, NULL, X509_get0_notAfter(C->certificate))) {
 #endif
                         THROW(IOException, "invalid time format in certificate's notAfter field");
                 }
