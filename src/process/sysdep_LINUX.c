@@ -108,38 +108,40 @@ static struct {
 
 
 typedef struct Proc_T {
-        StringBuffer_T      name;
-        int                 pid;
-        int                 ppid;
-        int                 uid;
-        int                 euid;
-        int                 gid;
-        char                item_state;
-        long                item_cutime;
-        long                item_cstime;
-        long                item_rss;
-        int                 item_threads;
-        unsigned long       item_utime;
-        unsigned long       item_stime;
-        unsigned long long  item_starttime;
+        StringBuffer_T name;
         struct {
-                unsigned long long    bytes;
-                unsigned long long    bytesPhysical;
-                unsigned long long    operations;
-        } read;
-        struct {
-                unsigned long long    bytes;
-                unsigned long long    bytesPhysical;
-                unsigned long long    operations;
-        } write;
-        struct {
-                long long     open;
+                int                 pid;
+                int                 ppid;
+                int                 uid;
+                int                 euid;
+                int                 gid;
+                char                item_state;
+                long                item_cutime;
+                long                item_cstime;
+                long                item_rss;
+                int                 item_threads;
+                unsigned long       item_utime;
+                unsigned long       item_stime;
+                unsigned long long  item_starttime;
                 struct {
-                        long long soft;
-                        long long hard;
-                } limit;
-        } filedescriptors;
-        char                secattr[STRLEN];
+                        unsigned long long    bytes;
+                        unsigned long long    bytesPhysical;
+                        unsigned long long    operations;
+                } read;
+                struct {
+                        unsigned long long    bytes;
+                        unsigned long long    bytesPhysical;
+                        unsigned long long    operations;
+                } write;
+                struct {
+                        long long     open;
+                        struct {
+                                long long soft;
+                                long long hard;
+                        } limit;
+                } filedescriptors;
+                char                secattr[STRLEN];
+        } data;
 } *Proc_T;
 
 
@@ -190,27 +192,27 @@ static time_t _getStartTime(void) {
 static bool _parseProcPidStat(Proc_T proc) {
         char buf[8192];
         char *tmp = NULL;
-        if (! file_readProc(buf, sizeof(buf), "stat", proc->pid, NULL)) {
-                DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->pid);
+        if (! file_readProc(buf, sizeof(buf), "stat", proc->data.pid, NULL)) {
+                DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->data.pid);
                 return false;
         }
         // Skip the process name (can have multiple words)
         if (! (tmp = strrchr(buf, ')'))) {
-                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
+                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->data.pid);
                 return false;
         }
         if (sscanf(tmp + 2,
                    "%c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %ld %ld %*d %*d %d %*u %llu %*u %ld %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d\n",
-                   &(proc->item_state),
-                   &(proc->ppid),
-                   &(proc->item_utime),
-                   &(proc->item_stime),
-                   &(proc->item_cutime),
-                   &(proc->item_cstime),
-                   &(proc->item_threads),
-                   &(proc->item_starttime),
-                   &(proc->item_rss)) != 9) {
-                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
+                   &(proc->data.item_state),
+                   &(proc->data.ppid),
+                   &(proc->data.item_utime),
+                   &(proc->data.item_stime),
+                   &(proc->data.item_cutime),
+                   &(proc->data.item_cstime),
+                   &(proc->data.item_threads),
+                   &(proc->data.item_starttime),
+                   &(proc->data.item_rss)) != 9) {
+                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->data.pid);
                 return false;
         }
         return true;
@@ -221,15 +223,15 @@ static bool _parseProcPidStat(Proc_T proc) {
 static bool _parseProcPidStatus(Proc_T proc) {
         char buf[4096];
         char *tmp = NULL;
-        if (! file_readProc(buf, sizeof(buf), "status", proc->pid, NULL)) {
-                DEBUG("system statistic error -- cannot read /proc/%d/status\n", proc->pid);
+        if (! file_readProc(buf, sizeof(buf), "status", proc->data.pid, NULL)) {
+                DEBUG("system statistic error -- cannot read /proc/%d/status\n", proc->data.pid);
                 return false;
         }
         if (! (tmp = strstr(buf, "Uid:"))) {
                 DEBUG("system statistic error -- cannot find process uid\n");
                 return false;
         }
-        if (sscanf(tmp + 4, "\t%d\t%d", &(proc->uid), &(proc->euid)) != 2) {
+        if (sscanf(tmp + 4, "\t%d\t%d", &(proc->data.uid), &(proc->data.euid)) != 2) {
                 DEBUG("system statistic error -- cannot read process uid\n");
                 return false;
         }
@@ -237,7 +239,7 @@ static bool _parseProcPidStatus(Proc_T proc) {
                 DEBUG("system statistic error -- cannot find process gid\n");
                 return false;
         }
-        if (sscanf(tmp + 4, "\t%d", &(proc->gid)) != 1) {
+        if (sscanf(tmp + 4, "\t%d", &(proc->data.gid)) != 1) {
                 DEBUG("system statistic error -- cannot read process gid\n");
                 return false;
         }
@@ -250,13 +252,13 @@ static bool _parseProcPidIO(Proc_T proc) {
         char buf[4096];
         char *tmp = NULL;
         if (_statistics.hasIOStatistics) {
-                if (file_readProc(buf, sizeof(buf), "io", proc->pid, NULL)) {
+                if (file_readProc(buf, sizeof(buf), "io", proc->data.pid, NULL)) {
                         // read bytes (total)
                         if (! (tmp = strstr(buf, "rchar:"))) {
                                 DEBUG("system statistic error -- cannot find process read bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 6, "\t%llu", &(proc->read.bytes)) != 1) {
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->data.read.bytes)) != 1) {
                                 DEBUG("system statistic error -- cannot get process read bytes\n");
                                 return false;
                         }
@@ -265,7 +267,7 @@ static bool _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot find process write bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 6, "\t%llu", &(proc->write.bytes)) != 1) {
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->data.write.bytes)) != 1) {
                                 DEBUG("system statistic error -- cannot get process write bytes\n");
                                 return false;
                         }
@@ -274,7 +276,7 @@ static bool _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot find process read system calls count\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 6, "\t%llu", &(proc->read.operations)) != 1) {
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->data.read.operations)) != 1) {
                                 DEBUG("system statistic error -- cannot get process read system calls count\n");
                                 return false;
                         }
@@ -283,7 +285,7 @@ static bool _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot find process write system calls count\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 6, "\t%llu", &(proc->write.operations)) != 1) {
+                        if (sscanf(tmp + 6, "\t%llu", &(proc->data.write.operations)) != 1) {
                                 DEBUG("system statistic error -- cannot get process write system calls count\n");
                                 return false;
                         }
@@ -292,7 +294,7 @@ static bool _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot find process physical read bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 11, "\t%llu", &(proc->read.bytesPhysical)) != 1) {
+                        if (sscanf(tmp + 11, "\t%llu", &(proc->data.read.bytesPhysical)) != 1) {
                                 DEBUG("system statistic error -- cannot get process physical read bytes\n");
                                 return false;
                         }
@@ -301,7 +303,7 @@ static bool _parseProcPidIO(Proc_T proc) {
                                 DEBUG("system statistic error -- cannot find process physical write bytes\n");
                                 return false;
                         }
-                        if (sscanf(tmp + 12, "\t%llu", &(proc->write.bytesPhysical)) != 1) {
+                        if (sscanf(tmp + 12, "\t%llu", &(proc->data.write.bytesPhysical)) != 1) {
                                 DEBUG("system statistic error -- cannot get process physical write bytes\n");
                                 return false;
                         }
@@ -319,10 +321,10 @@ static bool _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
         if (pflags & ProcessEngine_CollectCommandLine) {
                 char filename[STRLEN];
                 // Try to collect the command-line from the procfs cmdline (user-space processes)
-                snprintf(filename, sizeof(filename), "/proc/%d/cmdline", proc->pid);
+                snprintf(filename, sizeof(filename), "/proc/%d/cmdline", proc->data.pid);
                 FILE *f = fopen(filename, "r");
                 if (! f) {
-                        DEBUG("system statistic error -- cannot open /proc/%d/cmdline: %s\n", proc->pid, STRERROR);
+                        DEBUG("system statistic error -- cannot open /proc/%d/cmdline: %s\n", proc->data.pid, STRERROR);
                         return false;
                 }
                 size_t n;
@@ -342,17 +344,17 @@ static bool _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
                         char buffer[8192];
                         char *tmp = NULL;
                         char *procname = NULL;
-                        if (! file_readProc(buffer, sizeof(buffer), "stat", proc->pid, NULL)) {
-                                DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->pid);
+                        if (! file_readProc(buffer, sizeof(buffer), "stat", proc->data.pid, NULL)) {
+                                DEBUG("system statistic error -- cannot read /proc/%d/stat\n", proc->data.pid);
                                 return false;
                         }
                         if (! (tmp = strrchr(buffer, ')'))) {
-                                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
+                                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->data.pid);
                                 return false;
                         }
                         *tmp = 0;
                         if (! (procname = strchr(buffer, '('))) {
-                                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->pid);
+                                DEBUG("system statistic error -- file /proc/%d/stat parse error\n", proc->data.pid);
                                 return false;
                         }
                         StringBuffer_append(proc->name, "%s", procname + 1);
@@ -364,8 +366,8 @@ static bool _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
 
 // parse /proc/PID/attr/current
 static bool _parseProcPidAttrCurrent(Proc_T proc) {
-        if (file_readProc(proc->secattr, sizeof(proc->secattr), "attr/current", proc->pid, NULL)) {
-                Str_trim(proc->secattr);
+        if (file_readProc(proc->data.secattr, sizeof(proc->data.secattr), "attr/current", proc->data.pid, NULL)) {
+                Str_trim(proc->data.secattr);
                 return true;
         }
         return false;
@@ -377,10 +379,10 @@ static bool _parseProcFdCount(Proc_T proc) {
         DIR *dirp;
         char fd_path[32];
 
-        snprintf(fd_path, sizeof(fd_path), "/proc/%d/fd", proc->pid);
+        snprintf(fd_path, sizeof(fd_path), "/proc/%d/fd", proc->data.pid);
 
         if (!(dirp = opendir(fd_path))) {
-                DEBUG("system statistic error -- opendir /proc/%d/fd: %s\n", proc->pid, STRERROR);
+                DEBUG("system statistic error -- opendir /proc/%d/fd: %s\n", proc->data.pid, STRERROR);
                 return false;
         }
 
@@ -393,7 +395,7 @@ static bool _parseProcFdCount(Proc_T proc) {
         // do not closedir() until readdir errno has been evaluated
 
         if (errno) {
-                DEBUG("system statistic error -- cannot iterate /proc/%d/fd: %s\n", proc->pid, STRERROR);
+                DEBUG("system statistic error -- cannot iterate /proc/%d/fd: %s\n", proc->data.pid, STRERROR);
                 closedir(dirp);
                 return false;
         }
@@ -402,22 +404,22 @@ static bool _parseProcFdCount(Proc_T proc) {
 
         // assert at least '.' and '..' have been found
         if (file_count < 2) {
-                DEBUG("system statistic error -- cannot find basic entries in /proc/%d/fd\n", proc->pid);
+                DEBUG("system statistic error -- cannot find basic entries in /proc/%d/fd\n", proc->data.pid);
                 return false;
         }
 
         // subtract entries '.' and '..'
-        proc->filedescriptors.open = file_count - 2;
+        proc->data.filedescriptors.open = file_count - 2;
 
 #ifdef HAVE_PRLIMIT
         // get process' limits
         struct rlimit limits;
-        if (prlimit(proc->pid, RLIMIT_NOFILE, NULL, &limits) != 0) {
+        if (prlimit(proc->data.pid, RLIMIT_NOFILE, NULL, &limits) != 0) {
                 DEBUG("prlimit failed: %s\n", STRERROR);
                 return false;
         }
-        proc->filedescriptors.limit.soft = limits.rlim_cur;
-        proc->filedescriptors.limit.hard = limits.rlim_max;
+        proc->data.filedescriptors.limit.soft = limits.rlim_cur;
+        proc->data.filedescriptors.limit.hard = limits.rlim_max;
 #endif
 
         return true;
@@ -516,36 +518,36 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         };
         time_t starttime = _getStartTime();
         for (size_t i = 0; i < globbuf.gl_pathc; i++) {
-                proc.pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
+                proc.data.pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
                 if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags) && _parseProcFdCount(&proc)) {
                         // Non-mandatory statistics (may not exist)
                         _parseProcPidAttrCurrent(&proc);
                         // Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting)
-                        pt[count].pid = proc.pid;
-                        pt[count].ppid = proc.ppid;
-                        pt[count].cred.uid = proc.uid;
-                        pt[count].cred.euid = proc.euid;
-                        pt[count].cred.gid = proc.gid;
-                        pt[count].threads.self = proc.item_threads;
-                        pt[count].uptime = starttime > 0 ? (systeminfo.time / 10. - (starttime + (time_t)(proc.item_starttime / hz))) : 0;
-                        pt[count].cpu.time = (double)(proc.item_utime + proc.item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
-                        pt[count].memory.usage = (unsigned long long)proc.item_rss * (unsigned long long)page_size;
-                        pt[count].read.bytes = proc.read.bytes;
-                        pt[count].read.bytesPhysical = proc.read.bytesPhysical;
-                        pt[count].read.operations = proc.read.operations;
-                        pt[count].write.bytes = proc.write.bytes;
-                        pt[count].write.bytesPhysical = proc.write.bytesPhysical;
-                        pt[count].write.operations = proc.write.operations;
+                        pt[count].pid = proc.data.pid;
+                        pt[count].ppid = proc.data.ppid;
+                        pt[count].cred.uid = proc.data.uid;
+                        pt[count].cred.euid = proc.data.euid;
+                        pt[count].cred.gid = proc.data.gid;
+                        pt[count].threads.self = proc.data.item_threads;
+                        pt[count].uptime = starttime > 0 ? (systeminfo.time / 10. - (starttime + (time_t)(proc.data.item_starttime / hz))) : 0;
+                        pt[count].cpu.time = (double)(proc.data.item_utime + proc.data.item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
+                        pt[count].memory.usage = (unsigned long long)proc.data.item_rss * (unsigned long long)page_size;
+                        pt[count].read.bytes = proc.data.read.bytes;
+                        pt[count].read.bytesPhysical = proc.data.read.bytesPhysical;
+                        pt[count].read.operations = proc.data.read.operations;
+                        pt[count].write.bytes = proc.data.write.bytes;
+                        pt[count].write.bytesPhysical = proc.data.write.bytesPhysical;
+                        pt[count].write.operations = proc.data.write.operations;
                         pt[count].read.time = pt[count].write.time = Time_milli();
-                        pt[count].zombie = proc.item_state == 'Z' ? true : false;
+                        pt[count].zombie = proc.data.item_state == 'Z' ? true : false;
                         pt[count].cmdline = Str_dup(StringBuffer_toString(proc.name));
-                        pt[count].secattr = Str_dup(proc.secattr);
-                        pt[count].filedescriptors.usage = proc.filedescriptors.open;
-                        pt[count].filedescriptors.limit.soft = proc.filedescriptors.limit.soft;
-                        pt[count].filedescriptors.limit.hard = proc.filedescriptors.limit.hard;
+                        pt[count].secattr = Str_dup(proc.data.secattr);
+                        pt[count].filedescriptors.usage = proc.data.filedescriptors.open;
+                        pt[count].filedescriptors.limit.soft = proc.data.filedescriptors.limit.soft;
+                        pt[count].filedescriptors.limit.hard = proc.data.filedescriptors.limit.hard;
                         count++;
                         // Clear
-                        memset(&proc + offsetof(struct Proc_T, pid), 0, sizeof(struct Proc_T) - offsetof(struct Proc_T, pid));
+                        memset(&proc.data, 0, sizeof(proc.data));
                         StringBuffer_clear(proc.name);
                 }
         }
