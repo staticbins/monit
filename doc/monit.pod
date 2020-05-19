@@ -3670,7 +3670,8 @@ I<USERNAME> MQTT username
 
 I<PASSWORD> MQTT password
 
-Username and password (credentials) are B<optional>.
+Username and password (credentials) are B<optional>. If not used, Monit will try anonymous connect, which may
+trigger authorization error => credentials are recommended unless your server allows anonymous connect.
 
 Example:
 

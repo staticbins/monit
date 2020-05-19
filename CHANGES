@@ -122,6 +122,8 @@ monit is reloaded.
 
 Fixed: Fix memory leak if "restart program" is defined for a service and monit is reloaded.
 
+Fixed: Fix MQTT protocol test.
+
 
 Version 5.26.0
 
