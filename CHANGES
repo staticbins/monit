@@ -124,6 +124,8 @@ Fixed: Fix memory leak if "restart program" is defined for a service and monit i
 
 Fixed: Fix MQTT protocol test.
 
+Fixed: The PostgreSQL test was flapping if connection via unix socket was used.
+
 
 Version 5.26.0
 
