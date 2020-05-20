@@ -282,10 +282,6 @@ static void _checkResponse(Socket_T socket, Port_T P) {
                                         Checksum_verify(&context, P->parameters.http.checksum);
                                 _contentVerify(P, (char *)data);
                         }
-                        ELSE
-                        {
-                                THROW(ProtocolException, "HTTP error: %s", Exception_frame.message);
-                        }
                         FINALLY
                         {
                                 free((void *)data);
