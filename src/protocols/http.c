@@ -284,7 +284,7 @@ static void _checkResponse(Socket_T socket, Port_T P) {
                         }
                         FINALLY
                         {
-                                FREE((void *)data);
+                                free((void *)data);
                         }
                         END_TRY;
                 } else {
