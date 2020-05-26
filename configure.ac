@@ -531,7 +531,6 @@ then
    AC_CHECK_LIB([zfs], [libzfs_init])
    AC_CHECK_LIB([nvpair], [nvlist_free])
    AC_CHECK_LIB([kstat], [kstat_open])
-   AC_DEFINE([HAVE_CPU_WAIT], [1], [Define to 1 if CPU wait information is available.])
    if test `uname -m` = "i86pc"
    then
       if test "x$GCC" = "xyes"
@@ -557,10 +556,6 @@ then
    ARCH="LINUX"
    CFLAGS="$CFLAGS -D _REENTRANT"
    LDFLAGS="$LDFLAGS -rdynamic"
-   if test `uname -r | awk -F '.' '{print$1$2}'` -ge "26"
-   then
-   	AC_DEFINE([HAVE_CPU_WAIT], [1], [Define to 1 if CPU wait information is available.])
-   fi
 elif test "$architecture" = "OpenBSD"
 then
    ARCH="OPENBSD"
@@ -603,7 +598,6 @@ then
    CFLAGS=`echo $CFLAGS|sed 's/-g//g'`
    CFLAGS="$CFLAGS -D_THREAD_SAFE -D_REENTRANT"
    LIBS="$LIBS -lodm -lperfstat -lm"
-   AC_DEFINE([HAVE_CPU_WAIT], [1], [Define to 1 if CPU wait information is available.])
 else
    AC_MSG_WARN([Architecture not supported: ${architecture}])
    CFLAGS="$CFLAGS -D _REENTRANT"
