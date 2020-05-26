@@ -116,7 +116,7 @@ static bool open_log(void) {
         if (Run.flags & Run_UseSyslog) {
                 openlog(prog, LOG_PID, Run.facility);
         } else {
-                LOG = fopen(Run.files.log, "a+");
+                LOG = fopen(Run.files.log, "a");
                 if (! LOG) {
                         LogError("Error opening the log file '%s' for writing -- %s\n", Run.files.log, STRERROR);
                         return false;
