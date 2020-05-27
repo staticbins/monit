@@ -124,6 +124,9 @@ Fixed: Fix memory leak if "restart program" is defined for a service and monit i
 
 Fixed: Fix MQTT protocol test.
 
+Fixed: Issue #519: Monit may crash if the file check with a restart action on content match is used and
+this file has some dependant services at the same time.
+
 Fixed: The PostgreSQL test was flapping with the following error if connection via unix socket was used:
         PGSQL: connection terminator write error -- Broken pipe
 

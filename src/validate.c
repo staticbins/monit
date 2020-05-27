@@ -1162,7 +1162,11 @@ final1:
                         if (ml->log) {
                                 rv = State_Changed;
                                 Event_post(s, Event_Content, State_Changed, ml->action, "content match:\n%s", StringBuffer_toString(ml->log));
-                                StringBuffer_free(&ml->log);
+                                if (ml->log) {
+                                        // If the service has dependants, the dependant tests if the parent service (file) is running with no errors before it'll be allowed to start. That recursive check_file() call will
+                                        // enter the _checkMatch() too and will free the SringBuffer as part of Event_post => must check ml->log here again before free
+                                        StringBuffer_free(&ml->log);
+                                }
                         } else {
                                 Event_post(s, Event_Content, State_ChangedNot, ml->action, "content doesn't match");
                         }
