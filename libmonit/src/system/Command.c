@@ -36,7 +36,10 @@
 #include <stdlib.h>
 #include <pwd.h>
 #include <grp.h>
-#include <fcntl.h>
+
+#ifdef HAVE_USERSEC_H
+#include <usersec.h>
+#endif
 
 #include "Str.h"
 #include "Dir.h"
@@ -216,6 +219,71 @@ static void _closeStreams(Process_T P) {
         if (P->err) InputStream_free(&P->err);
         if (P->out) OutputStream_free(&P->out);
 }
+
+
+#ifdef AIX
+static int getgrouplist(const char *name, int basegid, int *groups, int *ngroups) {
+        int rv = -1;
+
+        // Open the user database
+        if (setuserdb(S_READ) != 0) {
+                ERROR("Cannot open user database -- %s\n", System_getError(errno));
+                goto error4;
+        }
+
+        // Get administrative domain for the user so we can lookup the group membership in the correct database (files, LDAP, etc).
+        char *registry;
+        if (getuserattr((char *)name, S_REGISTRY, &registry, SEC_CHAR) == 0 && setauthdb(registry, NULL) != 0) {
+                ERROR("Administrative domain switch to %s for user %s failed -- %s\n", registry, name, System_getError(errno));
+                goto error3;
+        }
+
+        // Get the list of groups for the named user
+        char *groupList = getgrset(name);
+        if (! groupList) {
+                ERROR("Cannot get groups for user %s\n", name);
+                goto error2;
+        }
+
+        // Add the base GID
+        int count = 1;
+        groups[0] = basegid;
+
+        // Parse the comma separated list of groups
+        char *lastGroup = NULL;
+        for (char *currentGroup = strtok_r(groupList, ",", &lastGroup); currentGroup; currentGroup = strtok_r(NULL, ",", &lastGroup)) {
+                gid_t gid = (gid_t)Str_parseInt(currentGroup);
+                // Add the GID to the list (unless it's basegid, which we pushed to the beginning of groups list already)
+                if (gid != basegid) {
+                        if (count == *ngroups) {
+                                // Maximum groups reached (error will be indicated by -1 return value, but we return as many groups as possible in the list)
+                                goto error1;
+                        }
+                        groups[count++] = gid;
+                }
+        }
+
+        // Success
+        rv = 0;
+        *ngroups = count;
+
+error1:
+        FREE(groupList);
+
+error2:
+        // Restore the administrative domain
+        setauthdb(NULL, NULL);
+
+error3:
+        // Close the user database
+        if (enduserdb() != 0) {
+                ERROR("Cannot close user database -- %s\n", System_getError(errno));
+        }
+
+error4:
+        return rv;
+}
+#endif
 
 
 /* -------------------------------------------------------------- Process_T */
@@ -513,7 +581,7 @@ Process_T Command_execute(T C) {
                         return NULL;
                 }
                 Command_setEnv(C, "HOME", user->pw_dir);
-                if (getgrouplist(user->pw_name, C->gid, (int*)ug.groups, &ug.ngroups) != 0) {
+                if (getgrouplist(user->pw_name, C->gid, (int *)ug.groups, &ug.ngroups) != 0) {
                         ERROR("Command: getgrouplist for uid %d -- %s\n", C->uid, System_getLastError());
                         return NULL;
                 }
