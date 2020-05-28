@@ -820,6 +820,9 @@ AC_ARG_WITH(ssl-static,
         AC_SUBST(ssllibdir)
         CFLAGS="$CFLAGS -I$sslincldir"
         LIBS="$LIBS $ssllibdir/libssl.a $ssllibdir/libcrypto.a"
+        if test `uname` = "Linux" && test `uname -m` = "aarch64"; then
+            LIBS="$LIBS -ldl"
+        fi
     ],
     [
 	use_sslstatic=0
