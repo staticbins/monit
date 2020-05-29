@@ -513,7 +513,7 @@ Process_T Command_execute(T C) {
                         return NULL;
                 }
                 Command_setEnv(C, "HOME", user->pw_dir);
-                if (getgrouplist(user->pw_name, C->gid, (int*)ug.groups, &ug.ngroups) != 0) {
+                if (getgrouplist(user->pw_name, C->gid, (int*)ug.groups, &ug.ngroups) == -1) {
                         ERROR("Command: getgrouplist for uid %d -- %s\n", C->uid, System_getLastError());
                         return NULL;
                 }
