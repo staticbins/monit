@@ -73,58 +73,6 @@ int Util_handle0Escapes(char *buf);
 
 
 /**
- * Convert a digest buffer to a char string
- * @param digest buffer containing a MD digest
- * @param mdlen digest length
- * @param result buffer to write the result to. Must be at least 41 bytes long.
- * @return pointer to result buffer
- */
-char *Util_digest2Bytes(unsigned char *digest, int mdlen, MD_T result);
-
-
-/**
- * Compute SHA1 and MD5 message digests simultaneously for bytes read
- * from STREAM (suitable for stdin, which is not always rewindable).
- * The resulting message digest numbers will be written into the first
- * bytes of resblock buffers.
- * @param stream The stream from where the digests are computed
- * @param sha_resblock The buffer to write the SHA1 result to or NULL to skip the SHA1
- * @param md5_resblock The buffer to write the MD5 result to or NULL to skip the MD5
- * @return false if failed, otherwise true
- */
-boolean_t Util_getStreamDigests(FILE *stream, void *sha_resblock, void *md5_resblock);
-
-
-/**
- * Print MD5 and SHA1 hashes to standard output for given file or standard input
- * @param file The file for which the hashes will be printed or NULL for stdin
- */
-void Util_printHash(char *file);
-
-
-/**
- * Store the checksum of given file in supplied buffer
- * @param file The file for which to compute the checksum
- * @param hashtype The hash type (Hash_Md5 or Hash_Sha1)
- * @param buf The buffer where the result will be stored
- * @param bufsize The size of the buffer
- * @return false if failed, otherwise true
- */
-boolean_t Util_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned long bufsize);
-
-
-/**
- * Get the HMAC-MD5 signature
- * @param data The data to sign
- * @param datalen The length of the data to sign
- * @param key The key used for the signature
- * @param keylen The length of the key
- * @param digest Buffer containing a signature. Must be at least 16 bytes long.
- */
-void Util_hmacMD5(const unsigned char *data, int datalen, const unsigned char *key, int keylen, unsigned char *digest);
-
-
-/**
  * @param name A service name as stated in the config file
  * @return the named service or NULL if not found
  */
@@ -136,7 +84,7 @@ Service_T Util_getService(const char *name);
  * @return true if the service name exist in the
  * servicelist, otherwise false
  */
-boolean_t Util_existService(const char *name);
+bool Util_existService(const char *name);
 
 
 /**
@@ -197,7 +145,7 @@ pid_t Util_getPid(char *pidfile);
  * @param url an url string to test
  * @return true if url is url safe otherwise false
  */
-boolean_t Util_isurlsafe(const char *url);
+bool Util_isurlsafe(const char *url);
 
 /**
  * Escape an url string converting unsafe characters to a hex (%xx)
@@ -206,7 +154,7 @@ boolean_t Util_isurlsafe(const char *url);
  * @param isParameterValue true if the string is url parameter value
  * @return the escaped string
  */
-char *Util_urlEncode(char *string, boolean_t isParameterValue);
+char *Util_urlEncode(char *string, bool isParameterValue);
 
 
 /**
@@ -253,7 +201,7 @@ Auth_T Util_getUserCredentials(char *uname);
  * @return true if the passwords match for the given uname otherwise
  * false
  */
-boolean_t Util_checkCredentials(char *uname, char *outside);
+bool Util_checkCredentials(char *uname, char *outside);
 
 
 /**
@@ -268,7 +216,7 @@ void Util_resetInfo(Service_T s);
  * @param s The service to test
  * @return true if available otherwise false
  */
-boolean_t Util_hasServiceStatus(Service_T s);
+bool Util_hasServiceStatus(Service_T s);
 
 
 /**
@@ -290,7 +238,7 @@ char *Util_getHTTPHostHeader(Socket_T s, char *hostBuf, int len);
  * @param rightExpression rval
  * @return the boolean value of the expression
  */
-boolean_t Util_evalQExpression(Operator_Type operator, long long left, long long right);
+bool Util_evalQExpression(Operator_Type operator, long long left, long long right);
 
 
 /**
@@ -300,7 +248,7 @@ boolean_t Util_evalQExpression(Operator_Type operator, long long left, long long
  * @param rightExpression rval
  * @return the boolean value of the expression
  */
-boolean_t Util_evalDoubleQExpression(Operator_Type operator, double left, double right);
+bool Util_evalDoubleQExpression(Operator_Type operator, double left, double right);
 
 
 /*

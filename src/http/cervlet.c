@@ -113,7 +113,7 @@ typedef enum {
 
 
 /* Private prototypes */
-static boolean_t is_readonly(HttpRequest);
+static bool is_readonly(HttpRequest);
 static void printFavicon(HttpResponse);
 static void doGet(HttpRequest, HttpResponse);
 static void doPost(HttpRequest, HttpResponse);
@@ -233,7 +233,7 @@ static char *_getUptime(time_t delta, char s[256]) {
 }
 
 
-__attribute__((format (printf, 7, 8))) static void _formatStatus(const char *name, Event_Type errorType, Output_Type type, HttpResponse res, Service_T s, boolean_t validValue, const char *value, ...) {
+__attribute__((format (printf, 7, 8))) static void _formatStatus(const char *name, Event_Type errorType, Output_Type type, HttpResponse res, Service_T s, bool validValue, const char *value, ...) {
         if (type == HTML) {
                 StringBuffer_append(res->outputbuffer, "<tr><td>%c%s</td>", toupper(name[0]), name + 1);
         } else {
@@ -252,7 +252,7 @@ __attribute__((format (printf, 7, 8))) static void _formatStatus(const char *nam
                         StringBuffer_append(res->outputbuffer, type == HTML ? "<td>" : COLOR_DEFAULT);
                 if (type == HTML) {
                         // If the output contains multiple line, wrap use <pre>, otherwise keep as is
-                        boolean_t multiline = strrchr(_value, '\n') ? true : false;
+                        bool multiline = strrchr(_value, '\n') ? true : false;
                         if (multiline)
                                 StringBuffer_append(res->outputbuffer, "<pre>");
                         escapeHTML(res->outputbuffer, _value);
@@ -297,7 +297,7 @@ static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, 
         if (Statistics_initialized(&(io->operations))) {
                 snprintf(header, sizeof(header), "disk %s operations", name);
                 double deltaOpsPerSec = Statistics_deltaNormalize(&(io->operations));
-                _formatStatus(header, Event_Resource, type, res, s, true, "%.1f %ss/s [%"PRIu64" %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
+                _formatStatus(header, Event_Resource, type, res, s, true, "%.1f %ss/s [%llu %ss total]", deltaOpsPerSec, name, Statistics_raw(&(io->operations)), name);
         }
 }
 
@@ -306,24 +306,38 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
         if (Util_hasServiceStatus(s)) {
                 switch (s->type) {
                         case Service_System:
-                                _formatStatus("load average", Event_Resource, type, res, s, true, "[%.2f] [%.2f] [%.2f]", systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2]);
-                                _formatStatus("cpu", Event_Resource, type, res, s, true, "%.1f%%us %.1f%%sy"
-#ifdef HAVE_CPU_WAIT
-                                        " %.1f%%wa"
-#endif
-                                        , systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0., systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.
-#ifdef HAVE_CPU_WAIT
-                                        , systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.
-#endif
-                                );
-                                _formatStatus("memory usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(systeminfo.memory.usage.bytes, (char[10]){}), systeminfo.memory.usage.percent);
-                                _formatStatus("swap usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(systeminfo.swap.usage.bytes, (char[10]){}), systeminfo.swap.usage.percent);
-                                _formatStatus("uptime", Event_Uptime, type, res, s, systeminfo.booted > 0, "%s", _getUptime(Time_now() - systeminfo.booted, (char[256]){}));
-                                _formatStatus("boot time", Event_Null, type, res, s, true, "%s", Time_string(systeminfo.booted, (char[32]){}));
-                                if (systeminfo.filedescriptors.maximum > 0)
-                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "%lld [%.1f%% of %lld limit]", systeminfo.filedescriptors.allocated, (float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum, systeminfo.filedescriptors.maximum);
-                                else
-                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "N/A");
+                                {
+                                        _formatStatus("load average", Event_Resource, type, res, s, true, "[%.2f] [%.2f] [%.2f]", systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2]);
+                                        StringBuffer_T sb = StringBuffer_create(256);
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuUser)
+                                                StringBuffer_append(sb, "%.1f%%usr ", systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuSystem)
+                                                StringBuffer_append(sb, "%.1f%%sys ", systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.);
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuNice)
+                                                StringBuffer_append(sb, "%.1f%%nice ", systeminfo.cpu.usage.nice > 0. ? systeminfo.cpu.usage.nice : 0.);
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait)
+                                                StringBuffer_append(sb, "%.1f%%iowait ", systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.);
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuHardIRQ)
+                                                StringBuffer_append(sb, "%.1f%%hardirq ", systeminfo.cpu.usage.hardirq > 0. ? systeminfo.cpu.usage.hardirq : 0.);
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuSoftIRQ)
+                                                StringBuffer_append(sb, "%.1f%%softirq ", systeminfo.cpu.usage.softirq > 0. ? systeminfo.cpu.usage.softirq : 0.);
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuSteal)
+                                                StringBuffer_append(sb, "%.1f%%steal ", systeminfo.cpu.usage.steal > 0. ? systeminfo.cpu.usage.steal : 0.);
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuGuest)
+                                                StringBuffer_append(sb, "%.1f%%guest ", systeminfo.cpu.usage.guest > 0. ? systeminfo.cpu.usage.guest : 0.);
+                                        if (systeminfo.statisticsAvailable & Statistics_CpuGuestNice)
+                                                StringBuffer_append(sb, "%.1f%%guestnice ", systeminfo.cpu.usage.guest_nice > 0. ? systeminfo.cpu.usage.guest_nice : 0.);
+                                        _formatStatus("cpu", Event_Resource, type, res, s, true, "%s", StringBuffer_toString(sb));
+                                        StringBuffer_free(&sb);
+                                        _formatStatus("memory usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(systeminfo.memory.usage.bytes, (char[10]){}), systeminfo.memory.usage.percent);
+                                        _formatStatus("swap usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(systeminfo.swap.usage.bytes, (char[10]){}), systeminfo.swap.usage.percent);
+                                        _formatStatus("uptime", Event_Uptime, type, res, s, systeminfo.booted > 0, "%s", _getUptime(Time_now() - systeminfo.booted, (char[256]){}));
+                                        _formatStatus("boot time", Event_Null, type, res, s, true, "%s", Time_string(systeminfo.booted, (char[32]){}));
+                                        if (systeminfo.filedescriptors.maximum > 0)
+                                                _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "%lld [%.1f%% of %lld limit]", systeminfo.filedescriptors.allocated, (float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum, systeminfo.filedescriptors.maximum);
+                                        else
+                                                _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "N/A");
+                                }
                                 break;
 
                         case Service_File:
@@ -400,10 +414,10 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 }
                                 _printIOStatistics(type, res, s, &(s->inf.filesystem->read), "read");
                                 _printIOStatistics(type, res, s, &(s->inf.filesystem->write), "write");
-                                boolean_t hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
-                                boolean_t hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
-                                boolean_t hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
-                                boolean_t hasRunTime = Statistics_initialized(&(s->inf.filesystem->time.run));
+                                bool hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
+                                bool hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
+                                bool hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
+                                bool hasRunTime = Statistics_initialized(&(s->inf.filesystem->time.run));
                                 double deltaOperations = Statistics_delta(&(s->inf.filesystem->read.operations)) + Statistics_delta(&(s->inf.filesystem->write.operations));
                                 if (hasReadTime && hasWriteTime) {
                                         double readTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf.filesystem->time.read)) / deltaOperations : 0.;
@@ -438,9 +452,9 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("memory total", Event_Resource, type, res, s, s->inf.process->total_mem_percent >= 0, "%.1f%% [%s]", s->inf.process->total_mem_percent, Convert_bytes2str(s->inf.process->total_mem, (char[10]){}));
 #ifdef LINUX
                                         _formatStatus("security attribute", Event_Invalid, type, res, s, *(s->inf.process->secattr), "%s", s->inf.process->secattr);
-                                        int64_t limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
-                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.open != -1LL, "%ld [%.1f%% of %ld limit]", s->inf.process->filedescriptors.open, (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit, limit);
-                                        _formatStatus("total filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.openTotal != -1LL, "%ld", s->inf.process->filedescriptors.openTotal);
+                                        long long limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
+                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.open != -1LL, "%lld [%.1f%% of %lld limit]", s->inf.process->filedescriptors.open, (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit, limit);
+                                        _formatStatus("total filedescriptors", Event_Resource, type, res, s, s->inf.process->filedescriptors.openTotal != -1LL, "%lld", s->inf.process->filedescriptors.openTotal);
 #endif
                                 }
                                 _printIOStatistics(type, res, s, &(s->inf.process->read), "read");
@@ -485,7 +499,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 }
 
 
-__attribute__((format (printf, 5, 6))) static void _displayTableRow(HttpResponse res, boolean_t escape, const char *class, const char *key, const char *value, ...) {
+__attribute__((format (printf, 5, 6))) static void _displayTableRow(HttpResponse res, bool escape, const char *class, const char *key, const char *value, ...) {
         va_list ap;
         va_start(ap, value);
         char *_value = Str_vcat(value, ap);
@@ -1185,21 +1199,20 @@ static void do_home_system(HttpResponse res) {
                             "<td class='left'><a href='%s'>%s</a></td>"
                             "<td class='left'>%s</td>"
                             "<td class='right column'>[%.2f]&nbsp;[%.2f]&nbsp;[%.2f]</td>"
-                            "<td class='right column'>"
-                            "%.1f%%us,&nbsp;%.1f%%sy"
-#ifdef HAVE_CPU_WAIT
-                            ",&nbsp;%.1f%%wa"
-#endif
-                            "</td>",
+                            "<td class='right column'>",
                             s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped),
                             get_service_status(HTML, s, buf, sizeof(buf)),
-                            systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2],
-                            systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.,
-                            systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.
-#ifdef HAVE_CPU_WAIT
-                            , systeminfo.cpu.usage.wait > 0. ? systeminfo.cpu.usage.wait : 0.
-#endif
-                            );
+                            systeminfo.loadavg[0], systeminfo.loadavg[1], systeminfo.loadavg[2]);
+        if (systeminfo.statisticsAvailable & Statistics_CpuUser)
+                StringBuffer_append(res->outputbuffer, "%.1f%%us&nbsp;", systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
+        if (systeminfo.statisticsAvailable & Statistics_CpuSystem)
+                StringBuffer_append(res->outputbuffer, "%.1f%%sy&nbsp;", systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.);
+        if (systeminfo.statisticsAvailable & Statistics_CpuNice)
+                StringBuffer_append(res->outputbuffer, "%.1f%%ni&nbsp;", systeminfo.cpu.usage.nice > 0. ? systeminfo.cpu.usage.nice : 0.);
+        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait)
+                StringBuffer_append(res->outputbuffer, "%.1f%%wa&nbsp;", systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.);
+        StringBuffer_append(res->outputbuffer,
+                            "</td>");
         StringBuffer_append(res->outputbuffer,
                             "<td class='right column'>%.1f%% [%s]</td>",
                             systeminfo.memory.usage.percent, Convert_bytes2str(systeminfo.memory.usage.bytes, buf));
@@ -1214,8 +1227,8 @@ static void do_home_system(HttpResponse res) {
 
 static void do_home_process(HttpResponse res) {
         char      buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Process)
@@ -1256,8 +1269,8 @@ static void do_home_process(HttpResponse res) {
                 } else {
                         StringBuffer_append(res->outputbuffer, "<td class='right%s'>%.1f%% [%s]</td>", (s->error & Event_Resource) ? " red-text" : "", s->inf.process->total_mem_percent, Convert_bytes2str(s->inf.process->total_mem, buf));
                 }
-                boolean_t hasReadBytes = Statistics_initialized(&(s->inf.process->read.bytes));
-                boolean_t hasReadOperations = Statistics_initialized(&(s->inf.process->read.operations));
+                bool hasReadBytes = Statistics_initialized(&(s->inf.process->read.bytes));
+                bool hasReadOperations = Statistics_initialized(&(s->inf.process->read.operations));
                 if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || (! hasReadBytes && ! hasReadOperations)) {
                         StringBuffer_append(res->outputbuffer, "<td class='right column'>-</td>");
                 } else if (hasReadBytes) {
@@ -1265,8 +1278,8 @@ static void do_home_process(HttpResponse res) {
                 } else if (hasReadOperations) {
                         StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%.1f/s</td>", (s->error & Event_Resource) ? " red-text" : "", Statistics_deltaNormalize(&(s->inf.process->read.operations)));
                 }
-                boolean_t hasWriteBytes = Statistics_initialized(&(s->inf.process->write.bytes));
-                boolean_t hasWriteOperations = Statistics_initialized(&(s->inf.process->write.operations));
+                bool hasWriteBytes = Statistics_initialized(&(s->inf.process->write.bytes));
+                bool hasWriteOperations = Statistics_initialized(&(s->inf.process->write.operations));
                 if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || (! hasWriteBytes && ! hasWriteOperations)) {
                         StringBuffer_append(res->outputbuffer, "<td class='right column'>-</td>");
                 } else if (hasWriteBytes) {
@@ -1284,8 +1297,8 @@ static void do_home_process(HttpResponse res) {
 
 static void do_home_program(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Program)
@@ -1354,8 +1367,8 @@ static void do_home_program(HttpResponse res) {
 
 static void do_home_net(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Net)
@@ -1395,8 +1408,8 @@ static void do_home_net(HttpResponse res) {
 
 static void do_home_filesystem(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Filesystem)
@@ -1461,8 +1474,8 @@ static void do_home_filesystem(HttpResponse res) {
 
 static void do_home_file(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_File)
@@ -1514,8 +1527,8 @@ static void do_home_file(HttpResponse res) {
 
 static void do_home_fifo(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Fifo)
@@ -1561,8 +1574,8 @@ static void do_home_fifo(HttpResponse res) {
 
 static void do_home_directory(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Directory)
@@ -1608,8 +1621,8 @@ static void do_home_directory(HttpResponse res) {
 
 static void do_home_host(HttpResponse res) {
         char buf[STRLEN];
-        boolean_t on = true;
-        boolean_t header = true;
+        bool on = true;
+        bool header = true;
 
         for (Service_T s = servicelist_conf; s; s = s->next_conf) {
                 if (s->type != Service_Host)
@@ -1942,10 +1955,10 @@ static void print_service_rules_filedescriptors(HttpResponse res, Service_T s) {
         for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (o->total) {
-                        _displayTableRow(res, true, "rule", "Total filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %"PRId64, operatornames[o->operator], o->limit_absolute)));
+                        _displayTableRow(res, true, "rule", "Total filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %lld", operatornames[o->operator], o->limit_absolute)));
                 } else {
                         if (o->limit_absolute > -1LL)
-                                _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %"PRId64, operatornames[o->operator], o->limit_absolute)));
+                                _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %lld", operatornames[o->operator], o->limit_absolute)));
                         else
                                 _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %.1f%%", operatornames[o->operator], o->limit_percent)));
                 }
@@ -2233,7 +2246,31 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                                 break;
 
                         case Resource_CpuWait:
-                                key = "CPU wait limit";
+                                key = "CPU I/O wait limit";
+                                break;
+
+                        case Resource_CpuNice:
+                                key = "CPU nice limit";
+                                break;
+
+                        case Resource_CpuHardIRQ:
+                                key = "CPU hardware IRQ limit";
+                                break;
+
+                        case Resource_CpuSoftIRQ:
+                                key = "CPU software IRQ limit";
+                                break;
+
+                        case Resource_CpuSteal:
+                                key = "CPU steal limit";
+                                break;
+
+                        case Resource_CpuGuest:
+                                key = "CPU guest limit";
+                                break;
+
+                        case Resource_CpuGuestNice:
+                                key = "CPU guest nice limit";
                                 break;
 
                         case Resource_MemoryPercent:
@@ -2318,6 +2355,12 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         case Resource_CpuUser:
                         case Resource_CpuSystem:
                         case Resource_CpuWait:
+                        case Resource_CpuNice:
+                        case Resource_CpuHardIRQ:
+                        case Resource_CpuSoftIRQ:
+                        case Resource_CpuSteal:
+                        case Resource_CpuGuest:
+                        case Resource_CpuGuestNice:
                         case Resource_MemoryPercent:
                         case Resource_SwapPercent:
                                 Util_printRule(sb, q->action, "If %s %.1f%%", operatornames[q->operator], q->limit);
@@ -2365,7 +2408,7 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
 }
 
 
-static boolean_t is_readonly(HttpRequest req) {
+static bool is_readonly(HttpRequest req) {
         if (req->remote_user) {
                 Auth_T user_creds = Util_getUserCredentials(req->remote_user);
                 return (user_creds ? user_creds->is_readonly : true);

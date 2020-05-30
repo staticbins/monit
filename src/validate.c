@@ -96,11 +96,13 @@
 #include "monit.h"
 #include "alert.h"
 #include "event.h"
-#include "socket.h"
-#include "net.h"
 #include "device.h"
+#include "net/net.h"
 #include "ProcessTree.h"
 #include "protocol.h"
+#include "md5.h"
+#include "sha1.h"
+#include "checksum.h"
 
 // libmonit
 #include "system/Time.h"
@@ -494,14 +496,114 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                         break;
 
                 case Resource_CpuWait:
-                        if (systeminfo.cpu.usage.wait < 0.) {
-                                DEBUG("'%s' cpu wait usage check skipped (initializing)\n", s->name);
-                                return State_Init;
-                        } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.wait, r->limit)) {
-                                rv = State_Failed;
-                                snprintf(report, STRLEN, "cpu wait usage of %.1f%% matches resource limit [cpu wait usage %s %.1f%%]", systeminfo.cpu.usage.wait, operatorshortnames[r->operator], r->limit);
+                        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait) {
+                                if (systeminfo.cpu.usage.iowait < 0.) {
+                                        DEBUG("'%s' cpu I/O wait check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.iowait, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu I/O wait of %.1f%% matches resource limit [cpu I/O wait %s %.1f%%]", systeminfo.cpu.usage.iowait, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu I/O wait check succeeded [current cpu I/O wait = %.1f%%]", systeminfo.cpu.usage.iowait);
+                                }
                         } else {
-                                snprintf(report, STRLEN, "cpu wait usage check succeeded [current cpu wait usage = %.1f%%]", systeminfo.cpu.usage.wait);
+                                LogWarning("Cannot test cpu I/O wait usage as the statistics is not available on this system\n");
+                        }
+                        break;
+
+                case Resource_CpuNice:
+                        if (systeminfo.statisticsAvailable & Statistics_CpuNice) {
+                                if (systeminfo.cpu.usage.nice < 0.) {
+                                        DEBUG("'%s' cpu nice usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.nice, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu nice usage of %.1f%% matches resource limit [cpu nice usage %s %.1f%%]", systeminfo.cpu.usage.nice, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu nice usage check succeeded [current cpu nice usage = %.1f%%]", systeminfo.cpu.usage.nice);
+                                }
+                        } else {
+                                LogWarning("Cannot test cpu nice usage as the statistics is not available on this system\n");
+                        }
+                        break;
+
+                case Resource_CpuHardIRQ:
+                        if (systeminfo.statisticsAvailable & Statistics_CpuHardIRQ) {
+                                if (systeminfo.cpu.usage.hardirq < 0.) {
+                                        DEBUG("'%s' cpu hardware IRQ usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.hardirq, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu hardware IRQ usage of %.1f%% matches resource limit [cpu hardware IRQ usage %s %.1f%%]", systeminfo.cpu.usage.hardirq, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu hardware IRQ usage check succeeded [current cpu hardware IRQ usage = %.1f%%]", systeminfo.cpu.usage.hardirq);
+                                }
+                        } else {
+                                LogWarning("Cannot test cpu hardware IRQ usage as the statistics is not available on this system\n");
+                        }
+                        break;
+
+                case Resource_CpuSoftIRQ:
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSoftIRQ) {
+                                if (systeminfo.cpu.usage.softirq < 0.) {
+                                        DEBUG("'%s' cpu software IRQ usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.softirq, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu software IRQ usage of %.1f%% matches resource limit [cpu software IRQ usage %s %.1f%%]", systeminfo.cpu.usage.softirq, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu software IRQ usage check succeeded [current cpu software IRQ usage = %.1f%%]", systeminfo.cpu.usage.softirq);
+                                }
+                        } else {
+                                LogWarning("Cannot test cpu software IRQ usage as the statistics is not available on this system\n");
+                        }
+                        break;
+
+                case Resource_CpuSteal:
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSteal) {
+                                if (systeminfo.cpu.usage.steal < 0.) {
+                                        DEBUG("'%s' cpu steal usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.steal, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu steal usage of %.1f%% matches resource limit [cpu steal usage %s %.1f%%]", systeminfo.cpu.usage.steal, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu steal usage check succeeded [current cpu steal usage = %.1f%%]", systeminfo.cpu.usage.steal);
+                                }
+                        } else {
+                                LogWarning("Cannot test cpu steal usage as the statistics is not available on this system\n");
+                        }
+                        break;
+
+                case Resource_CpuGuest:
+                        if (systeminfo.statisticsAvailable & Statistics_CpuGuest) {
+                                if (systeminfo.cpu.usage.guest < 0.) {
+                                        DEBUG("'%s' cpu guest usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.guest, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu guest usage of %.1f%% matches resource limit [cpu guest usage %s %.1f%%]", systeminfo.cpu.usage.guest, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu guest usage check succeeded [current cpu guest usage = %.1f%%]", systeminfo.cpu.usage.guest);
+                                }
+                        } else {
+                                LogWarning("Cannot test cpu guest usage as the statistics is not available on this system\n");
+                        }
+                        break;
+
+                case Resource_CpuGuestNice:
+                        if (systeminfo.statisticsAvailable & Statistics_CpuGuestNice) {
+                                if (systeminfo.cpu.usage.guest_nice < 0.) {
+                                        DEBUG("'%s' cpu guest nice usage check skipped (initializing)\n", s->name);
+                                        return State_Init;
+                                } else if (Util_evalDoubleQExpression(r->operator, systeminfo.cpu.usage.guest_nice, r->limit)) {
+                                        rv = State_Failed;
+                                        snprintf(report, STRLEN, "cpu guest nice usage of %.1f%% matches resource limit [cpu guest nice usage %s %.1f%%]", systeminfo.cpu.usage.guest_nice, operatorshortnames[r->operator], r->limit);
+                                } else {
+                                        snprintf(report, STRLEN, "cpu guest nice usage check succeeded [current cpu guest nice usage = %.1f%%]", systeminfo.cpu.usage.guest_nice);
+                                }
+                        } else {
+                                LogWarning("Cannot test cpu guestnice usage as the statistics is not available on this system\n");
                         }
                         break;
 
@@ -585,7 +687,7 @@ static State_Type _checkChecksum(Service_T s) {
         State_Type rv = State_Succeeded;
         if (s->checksum) {
                 Checksum_T cs = s->checksum;
-                if (Util_getChecksum(s->path, cs->type, s->inf.file->cs_sum, sizeof(s->inf.file->cs_sum))) {
+                if (Checksum_getChecksum(s->path, cs->type, s->inf.file->cs_sum, sizeof(s->inf.file->cs_sum))) {
                         Event_post(s, Event_Data, State_Succeeded, s->action_DATA, "checksum %s", s->inf.file->cs_sum);
                         if (! cs->initialized) {
                                 cs->initialized = true;
@@ -725,23 +827,27 @@ static State_Type _checkSecurityAttribute(Service_T s, char *attribute) {
 static State_Type _checkSystemFiledescriptors(Service_T s) {
         ASSERT(s);
         State_Type rv = State_Succeeded;
-        for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
-                if (o->limit_absolute > -1LL) {
-                        if (Util_evalQExpression(o->operator, systeminfo.filedescriptors.allocated, o->limit_absolute)) {
-                                rv = State_Failed;
-                                Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %lld matches limit [filedescriptors %s %"PRId64"]", systeminfo.filedescriptors.allocated, operatorshortnames[o->operator], o->limit_absolute);
+        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem) {
+                for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
+                        if (o->limit_absolute > -1LL) {
+                                if (Util_evalQExpression(o->operator, systeminfo.filedescriptors.allocated, o->limit_absolute)) {
+                                        rv = State_Failed;
+                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %lld matches limit [filedescriptors %s %lld]", systeminfo.filedescriptors.allocated, operatorshortnames[o->operator], o->limit_absolute);
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %lld]", systeminfo.filedescriptors.allocated);
+                                }
                         } else {
-                                Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %lld]", systeminfo.filedescriptors.allocated);
-                        }
-                } else {
-                        float usage = systeminfo.filedescriptors.maximum > 0 ? ((float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum) : 0;
-                        if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
-                                rv = State_Failed;
-                                Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %.1f%% matches limit [filedescriptors %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
-                        } else {
-                                Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors usage test succeeded [current filedescriptors usage = %.1f%%]", usage);
+                                float usage = systeminfo.filedescriptors.maximum > 0 ? ((float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum) : 0;
+                                if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
+                                        rv = State_Failed;
+                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %.1f%% matches limit [filedescriptors %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors usage test succeeded [current filedescriptors usage = %.1f%%]", usage);
+                                }
                         }
                 }
+        } else {
+                LogWarning("Cannot test filesdescriptors usage as the statistics is not available on this system\n");
         }
         return rv;
 }
@@ -754,26 +860,30 @@ static State_Type _checkProcessFiledescriptors(Service_T s) {
                 if (o->total) {
                         if (Util_evalQExpression(o->operator, s->inf.process->filedescriptors.openTotal, o->limit_absolute)) {
                                 rv = State_Failed;
-                                Event_post(s, Event_Resource, State_Failed, o->action, "total  filedescriptors usage of %"PRId64" matches limit [filedescriptors %s %"PRId64"]", s->inf.process->filedescriptors.openTotal, operatorshortnames[o->operator], o->limit_absolute);
+                                Event_post(s, Event_Resource, State_Failed, o->action, "total  filedescriptors usage of %lld matches limit [filedescriptors %s %lld]", s->inf.process->filedescriptors.openTotal, operatorshortnames[o->operator], o->limit_absolute);
                         } else {
-                                Event_post(s, Event_Resource, State_Succeeded, o->action, "total filedescriptors usage test succeeded [current filedescriptors usage = %"PRId64"]", s->inf.process->filedescriptors.openTotal);
+                                Event_post(s, Event_Resource, State_Succeeded, o->action, "total filedescriptors usage test succeeded [current filedescriptors usage = %lld]", s->inf.process->filedescriptors.openTotal);
                         }
                 } else {
-                        int64_t limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
                         if (o->limit_absolute > -1LL) {
                                 if (Util_evalQExpression(o->operator, s->inf.process->filedescriptors.open, o->limit_absolute)) {
                                         rv = State_Failed;
-                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %"PRId64" matches limit [filedescriptors %s %"PRId64"]", s->inf.process->filedescriptors.open, operatorshortnames[o->operator], o->limit_absolute);
+                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %lld matches limit [filedescriptors %s %lld]", s->inf.process->filedescriptors.open, operatorshortnames[o->operator], o->limit_absolute);
                                 } else {
-                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %"PRId64"]", s->inf.process->filedescriptors.open);
+                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors test succeeded [current filedescriptors usage = %lld]", s->inf.process->filedescriptors.open);
                                 }
                         } else {
-                                float usage = limit > 0 ? (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit : 0;
-                                if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
-                                        rv = State_Failed;
-                                        Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %.1f%% matches limit [filedescriptors %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
+                                if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcessMax) {
+                                        long long limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
+                                        float usage = limit > 0 ? (float)100 * (float)s->inf.process->filedescriptors.open / (float)limit : 0;
+                                        if (Util_evalDoubleQExpression(o->operator, usage, o->limit_percent)) {
+                                                rv = State_Failed;
+                                                Event_post(s, Event_Resource, State_Failed, o->action, "filedescriptors usage of %.1f%% matches limit [filedescriptors %s %.1f%%]", usage, operatorshortnames[o->operator], o->limit_percent);
+                                        } else {
+                                                Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors usage test succeeded [current filedescriptors usage = %.1f%%]", usage);
+                                        }
                                 } else {
-                                        Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors usage test succeeded [current filedescriptors usage = %.1f%%]", usage);
+                                        LogWarning("Cannot compute filesdescriptors usage %% as per-process maximum is not exposed on this system -- filesdecriptors usage test skipped, please switch to testing absolute value\n");
                                 }
                         }
                 }
@@ -1052,7 +1162,11 @@ final1:
                         if (ml->log) {
                                 rv = State_Changed;
                                 Event_post(s, Event_Content, State_Changed, ml->action, "content match:\n%s", StringBuffer_toString(ml->log));
-                                StringBuffer_free(&ml->log);
+                                if (ml->log) {
+                                        // If the service has dependants, the dependant tests if the parent service (file) is running with no errors before it'll be allowed to start. That recursive check_file() call will
+                                        // enter the _checkMatch() too and will free the SringBuffer as part of Event_post => must check ml->log here again before free
+                                        StringBuffer_free(&ml->log);
+                                }
                         } else {
                                 Event_post(s, Event_Content, State_ChangedNot, ml->action, "content doesn't match");
                         }
@@ -1139,7 +1253,7 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                         return State_Failed;
                                 }
                         } else {
-                                int64_t bytesUsed = s->inf.filesystem->f_blocksused * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
+                                long long bytesUsed = s->inf.filesystem->f_blocksused * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
                                 if (Util_evalQExpression(td->operator, bytesUsed, td->limit_absolute)) {
                                         char buf1[10];
                                         char buf2[10];
@@ -1159,7 +1273,7 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                         return State_Failed;
                                 }
                         } else {
-				int64_t bytesFreeTotal = s->inf.filesystem->f_blocksfreetotal * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
+				long long bytesFreeTotal = s->inf.filesystem->f_blocksfreetotal * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
                                 if (Util_evalQExpression(td->operator, bytesFreeTotal, td->limit_absolute)) {
                                         char buf1[10];
                                         char buf2[10];
@@ -1227,10 +1341,10 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                 case Resource_ServiceTime:
                         {
                                 double deltaTime = 0.;
-                                boolean_t hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
-                                boolean_t hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
-                                boolean_t hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
-                                boolean_t hasRunTime = Statistics_initialized(&(s->inf.filesystem->time.run));
+                                bool hasReadTime = Statistics_initialized(&(s->inf.filesystem->time.read));
+                                bool hasWriteTime = Statistics_initialized(&(s->inf.filesystem->time.write));
+                                bool hasWaitTime = Statistics_initialized(&(s->inf.filesystem->time.wait));
+                                bool hasRunTime = Statistics_initialized(&(s->inf.filesystem->time.run));
                                 // Some platforms have detailed R/W time (Linux, MacOS), other just total R/W time (*BSD), Solaris has total R/W time with wait/run granularity. To make the test cross-platform and simple, we operate on sum
                                 if (! hasReadTime && ! hasWriteTime && ! hasWaitTime && ! hasRunTime) {
                                         DEBUG("'%s' warning -- no data are available for service time test\n", s->name);
@@ -1286,7 +1400,7 @@ static void _checkTimeout(Service_T s) {
 }
 
 
-static boolean_t _incron(Service_T s, time_t now) {
+static bool _incron(Service_T s, time_t now) {
         if ((now - s->every.last_run) > 59) { // Minute is the lowest resolution, so only run once per minute
                 if (Time_incron(s->every.spec.cron, now)) {
                         s->every.last_run = now;
@@ -1300,7 +1414,7 @@ static boolean_t _incron(Service_T s, time_t now) {
 /**
  * Returns true if validation should be skiped for this service in this cycle, otherwise false. Handle every statement
  */
-static boolean_t _checkSkip(Service_T s) {
+static bool _checkSkip(Service_T s) {
         ASSERT(s);
         time_t now = Time_now();
         if (s->every.type == Every_SkipCycles) {
@@ -1341,7 +1455,7 @@ static boolean_t _checkSkip(Service_T s) {
 /**
  * Returns true if scheduled action was performed
  */
-static boolean_t _doScheduledAction(Service_T s) {
+static bool _doScheduledAction(Service_T s) {
         int rv = false;
         Action_Type action = s->doaction;
         if (action != Action_Ignored) {
@@ -1403,7 +1517,7 @@ int validate() {
 State_Type check_process(Service_T s) {
         ASSERT(s);
         State_Type rv = State_Succeeded;
-        boolean_t checkResources = false;
+        bool checkResources = false;
         pid_t pid = ProcessTree_findProcess(s);
         if (! pid) {
                 for (NonExist_T l = s->nonexistlist; l; l = l->next) {
@@ -1458,7 +1572,7 @@ State_Type check_process(Service_T s) {
                         if (_checkProcessResources(s, pr) == State_Failed)
                                 rv = State_Failed;
         }
-        int64_t uptimeMilli = (int64_t)(s->inf.process->uptime) * 1000LL;
+        long long uptimeMilli = (long long)(s->inf.process->uptime) * 1000LL;
         for (Port_T pp = s->portlist; pp; pp = pp->next) {
                 //FIXME: instead of pause, try to test, but ignore any errors in the start timeout timeframe ... will allow to display the port response time as soon as available, instead of waiting for 30+ seconds
                 /* pause port tests in the start timeout timeframe while the process is starting (it may take some time to the process before it starts accepting connections) */
@@ -1707,7 +1821,7 @@ State_Type check_program(Service_T s) {
                 _programOutput(Process_getInputStream(P), s->program->inprogressOutput);
                 // Is the program still running?
                 if (Process_exitStatus(P) < 0) {
-                        int64_t execution_time = (now - s->program->started) * 1000;
+                        long long execution_time = (now - s->program->started) * 1000;
                         if (execution_time > s->program->timeout) { // Program timed out
                                 rv = State_Failed;
                                 LogError("'%s' program timed out after %s. Killing program with pid %ld\n", s->name, Convert_time2str(execution_time, (char[11]){}), (long)Process_getPid(P));
@@ -1838,7 +1952,7 @@ State_Type check_system(Service_T s) {
 
 
 State_Type check_net(Service_T s) {
-        volatile boolean_t havedata = true;
+        volatile bool havedata = true;
         volatile State_Type rv = State_Succeeded;
         TRY
         {

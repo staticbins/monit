@@ -120,10 +120,10 @@ static int                cpu_initialized = 0;
 static unsigned long long cpu_total_old = 0ULL;
 static unsigned long long cpu_user_old  = 0ULL;
 static unsigned long long cpu_syst_old  = 0ULL;
-static unsigned long long cpu_wait_old  = 0ULL;
+static unsigned long long cpu_iowait_old  = 0ULL;
 
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         perfstat_memory_total_t mem;
 
         if (perfstat_memory_total(NULL, &mem, sizeof(perfstat_memory_total_t), 1) < 1) {
@@ -132,7 +132,7 @@ boolean_t init_process_info_sysdep(void) {
         }
 
         page_size = getpagesize();
-        systeminfo.memory.size = (uint64_t)mem.real_total * (uint64_t)page_size;
+        systeminfo.memory.size = (unsigned long long)mem.real_total * (unsigned long long)page_size;
         systeminfo.cpu.count = sysconf(_SC_NPROCESSORS_ONLN);
 
         setutxent();
@@ -199,7 +199,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 return 0;
         }
 
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
         for (int i = 0; i < treesize; i++) {
@@ -208,7 +208,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].cred.euid           = procs[i].pi_uid;
                 pt[i].threads.self        = procs[i].pi_thcount;
                 pt[i].uptime              = systeminfo.time / 10. - procs[i].pi_start;
-                pt[i].memory.usage        = (uint64_t)(procs[i].pi_drss + procs[i].pi_trss) * (uint64_t)page_size;
+                pt[i].memory.usage        = (unsigned long long)(procs[i].pi_drss + procs[i].pi_trss) * (unsigned long long)page_size;
                 pt[i].cpu.time            = procs[i].pi_ru.ru_utime.tv_sec * 10 + (double)procs[i].pi_ru.ru_utime.tv_usec / 100000. + procs[i].pi_ru.ru_stime.tv_sec * 10 + (double)procs[i].pi_ru.ru_stime.tv_usec / 100000.;
                 pt[i].read.bytes          = -1;
                 pt[i].read.bytesPhysical  = -1;
@@ -271,7 +271,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
  * This routine returns kbyte of real memory in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         perfstat_memory_total_t  mem;
 
         /* Memory */
@@ -279,11 +279,11 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 LogError("system statistic error -- perfstat_memory_total failed: %s\n", STRERROR);
                 return false;
         }
-        si->memory.usage.bytes = (uint64_t)(mem.real_total - mem.real_free - mem.numperm) * (uint64_t)page_size;
+        si->memory.usage.bytes = (unsigned long long)(mem.real_total - mem.real_free - mem.numperm) * (unsigned long long)page_size;
 
         /* Swap */
-        si->swap.size   = (uint64_t)mem.pgsp_total * 4096;                   /* 4kB blocks */
-        si->swap.usage.bytes = (uint64_t)(mem.pgsp_total - mem.pgsp_free) * 4096; /* 4kB blocks */
+        si->swap.size   = (unsigned long long)mem.pgsp_total * 4096;                   /* 4kB blocks */
+        si->swap.usage.bytes = (unsigned long long)(mem.pgsp_total - mem.pgsp_free) * 4096; /* 4kB blocks */
 
         return true;
 }
@@ -293,13 +293,14 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
         perfstat_cpu_total_t cpu;
         unsigned long long cpu_total;
         unsigned long long cpu_total_new = 0ULL;
         unsigned long long cpu_user      = 0ULL;
         unsigned long long cpu_syst      = 0ULL;
-        unsigned long long cpu_wait      = 0ULL;
+        unsigned long long cpu_iowait      = 0ULL;
+
 
         if (perfstat_cpu_total(NULL, &cpu, sizeof(perfstat_cpu_total_t), 1) < 0) {
                 LogError("system statistic error -- perfstat_cpu_total failed: %s\n", STRERROR);
@@ -311,23 +312,23 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         cpu_total_old = cpu_total_new;
         cpu_user      = cpu.user / cpu.ncpus;
         cpu_syst      = cpu.sys / cpu.ncpus;
-        cpu_wait      = cpu.wait / cpu.ncpus;
+        cpu_iowait      = cpu.wait / cpu.ncpus;
 
         if (cpu_initialized) {
                 if (cpu_total > 0) {
                         si->cpu.usage.user = 100. * ((double)(cpu_user - cpu_user_old) / (double)cpu_total);
                         si->cpu.usage.system = 100. * ((double)(cpu_syst - cpu_syst_old) / (double)cpu_total);
-                        si->cpu.usage.wait = 100. * ((double)(cpu_wait - cpu_wait_old) / (double)cpu_total);
+                        si->cpu.usage.iowait = 100. * ((double)(cpu_iowait - cpu_iowait_old) / (double)cpu_total);
                 } else {
                         si->cpu.usage.user = 0.;
                         si->cpu.usage.system = 0.;
-                        si->cpu.usage.wait = 0.;
+                        si->cpu.usage.iowait = 0.;
                 }
         }
 
         cpu_user_old = cpu_user;
         cpu_syst_old = cpu_syst;
-        cpu_wait_old = cpu_wait;
+        cpu_iowait_old = cpu_iowait;
 
         cpu_initialized = 1;
 
@@ -335,8 +336,14 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 }
 
 
-boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
         // Not implemented
+        return true;
+}
+
+
+bool available_statistics(SystemInfo_T *si) {
+        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuIOWait;
         return true;
 }
 

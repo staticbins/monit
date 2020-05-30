@@ -70,17 +70,17 @@
 /* ---------------------------------------------------------------- Public */
 
 
-int Net_setNonBlocking(int socket) {
+bool Net_setNonBlocking(int socket) {
         return (fcntl(socket, F_SETFL, fcntl(socket, F_GETFL, 0) | O_NONBLOCK) != -1);
 }
 
 
-int Net_setBlocking(int socket) {
+bool Net_setBlocking(int socket) {
         return (fcntl(socket, F_SETFL, fcntl(socket, F_GETFL, 0) & ~O_NONBLOCK) != -1);
 }
 
 
-int Net_canRead(int socket, time_t milliseconds) {
+bool Net_canRead(int socket, time_t milliseconds) {
         int r = 0;
         struct pollfd fds[1];
         fds[0].fd = socket;
@@ -92,7 +92,7 @@ int Net_canRead(int socket, time_t milliseconds) {
 }
 
 
-int Net_canWrite(int socket, time_t milliseconds) {
+bool Net_canWrite(int socket, time_t milliseconds) {
         int r = 0;
         struct pollfd fds[1];
         fds[0].fd = socket;
@@ -142,12 +142,12 @@ ssize_t Net_write(int socket, const void *buffer, size_t size, time_t timeout) {
 }
 
 
-int Net_shutdown(int socket, int how) {
+bool Net_shutdown(int socket, int how) {
         return (shutdown(socket, how) == 0);
 }
 
 
-int Net_close(int socket) {
+bool Net_close(int socket) {
 	int r = 0;
         do {
                 r = close(socket);
@@ -156,7 +156,7 @@ int Net_close(int socket) {
 }
 
 
-int Net_abort(int socket) {
+bool Net_abort(int socket) {
    	int r;
         struct linger linger = {1, 0};
         if (setsockopt(socket, SOL_SOCKET, SO_LINGER, &linger, sizeof linger) < 0) {

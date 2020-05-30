@@ -11,13 +11,29 @@ via the SSL option, example:
         version: tlsv11
      }
 
-New: Add support for monitoring of filedescriptors usage of a process on Linux. Thanks to Marcel Baur and Lutz Mader. Example:
+New: Added support for MySQL TLS encryption. Example:
+        if failed port 3306 protocol mysqls then alert
+
+New: Issue #839: Added support for MySQL 8.x caching_sha2_password authentication. When unsecured (non-TLS) connection
+is used, it is possible to also verify the server's RSA key checksum to protect against man-in-the-middle attacks. Example:
+    check host mymachine with address 127.0.0.1
+        if failed
+            port 3306
+            protocol mysql
+            username monit
+            password mypassword123
+            rsakey checksum 29e512c06275a1b3f4617f8cb9ca583d642386fe
+        then alert
+
+New: The username in the mysql protocol test was limited to 16 bytes, this, this limit was dropped.
+
+New: Linux: Add support for monitoring of filedescriptors usage of a process. Thanks to Marcel Baur and Lutz Mader. Example:
     check process myproc with pidfile /var/run/myproc.pid
         if filedescriptors >= 90% then alert
         if filedescriptors >= 99% then restart
         if total filedescriptors > 5000 then alert
 
-New: Add support for monitoring of system-wide filedescriptors usage on Linux. Example:
+New: Linux, OpenBSD, FreeBSD, DragonflyBSD, MacOS: Add support for monitoring of system-wide filedescriptors usage. Example:
     check system $HOST
         if filedescriptors >= 90% then alert
 
@@ -37,20 +53,30 @@ New: Add support for split certificate chain and key for the monit HTTP interfac
      }
      allow myuser:mypassword
 
-New: Enable monitoring of per-process disk read and write I/O operations count on Linux. Example:
+New: Linux: Enable monitoring of per-process disk read and write I/O operations count. Example:
     check process foobar matching "myprocess"
        if disk read activity > 500 operations/s then alert
        if disk write activity > 500 operations/s then alert
 
-New: Allow generic per-process I/O activity monitoring on Linux. Example:
+New: Linux: Allow generic per-process I/O activity monitoring. Example:
        if read activity > 1 mb/s then alert
        if write activity > 1 mb/s then alert
 
-New: Issue #877: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
+New: Issue #889: Linux: Added detailed CPU statistics: "nice", "hardirq", "softirq", "steal", "guest", "guestnice". The statistics
+for "nice" was originally included in the "cpu user" statistics - it has now its own counter.
+
+New: FreeBSD, OpenBSD, NetBSD, DragonflyBSD MacOS: Added CPU nice and interrupt usage statistics.
+
+New: Issue #877: Linux: Add support for VxFS filesystem statistics. Thanks to Lutz Mader for patch.
 
 New: Enable support for compilation with AddressSanitizer. Use "configure --with-asan" to enable.
 
-Fixed: Monit did add the CPU wait% to the system CPU usage, which was wrong (the cpu was idle and waiting for I/O to complete).
+New: Issue #894: If monit is logging to a file: add a year to the timestamp.
+
+Fixed: Issue #867: Monit crashed when executing programs when linked with musl libc. Thanks to Rich Felker for report.
+
+Fixed: Monit did incorrectly add the CPU wait% to the system CPU usage, which was wrong (the CPU is idle when it's in the
+"wait" state, waiting for the I/O to complete).
 
 Fixed: The per-process I/O statistics on Linux, AIX, DragonflyBSD, NetBSD, Solaris (displayed always 0 activity).
 
@@ -69,6 +95,8 @@ Fixed: Issue #879: The HTML interface didn't escape strings that are part of mon
 Thanks to Hanno Boeck for report.
 
 Fixed: Issue #872: Procmatch PID column show five digits only
+
+Fixed: Issue #891: The action's "repeat" option was limited to 256 cycles.
 
 Fixed: Issue #851: Linux and AIX: The length of the string that describes the process name and its arguments
 was limited to 4kB, so the "procmatch" may not find the process if the pattern is past this limit. The limit
@@ -93,6 +121,14 @@ Fixed: Fix memory leak when no explicit "check system" service entry is present 
 monit is reloaded.
 
 Fixed: Fix memory leak if "restart program" is defined for a service and monit is reloaded.
+
+Fixed: Fix MQTT protocol test.
+
+Fixed: Issue #519: Monit may crash if the file check with a restart action on content match is used and
+this file has some dependant services at the same time.
+
+Fixed: The PostgreSQL test was flapping with the following error if connection via unix socket was used:
+        PGSQL: connection terminator write error -- Broken pipe
 
 
 Version 5.26.0

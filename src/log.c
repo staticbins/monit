@@ -112,11 +112,11 @@ static struct mylogpriority {
 /**
  * Open a log file or syslog
  */
-static boolean_t open_log(void) {
+static bool open_log(void) {
         if (Run.flags & Run_UseSyslog) {
                 openlog(prog, LOG_PID, Run.facility);
         } else {
-                LOG = fopen(Run.files.log, "a+");
+                LOG = fopen(Run.files.log, "a");
                 if (! LOG) {
                         LogError("Error opening the log file '%s' for writing -- %s\n", Run.files.log, STRERROR);
                         return false;
@@ -222,7 +222,7 @@ static void log_backtrace(void) {
  * Initialize the log system and 'log' function
  * @return true if the log system was successfully initialized
  */
-boolean_t log_init() {
+bool log_init() {
         if (! (Run.flags & Run_Log))
                 return true;
         if (! open_log())

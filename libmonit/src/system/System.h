@@ -83,14 +83,14 @@ int System_getDescriptorsGuarded(void);
  * @param nbtyes The target buffer size in bytes
  * @return true on success, otherwise false
  */
-boolean_t System_random(void *buf, size_t nbytes);
+bool System_random(void *buf, size_t nbytes);
 
 
 /**
  * Get random number
  * @return random number
  */
-uint64_t System_randomNumber(void);
+unsigned long long System_randomNumber(void);
 
 
 #endif

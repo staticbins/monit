@@ -40,8 +40,15 @@
 #include <string.h>
 #endif
 
+#ifdef HAVE_OPENSSL
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#endif
+
 #include "protocol.h"
+#include "md5.h"
 #include "sha1.h"
+#include "checksum.h"
 
 // libmonit
 #include "exceptions/IOException.h"
@@ -51,9 +58,10 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-#define MYSQL_OK    0x00
-#define MYSQL_EOF   0xfe
-#define MYSQL_ERROR 0xff
+#define MYSQL_OK           0x00
+#define MYSQL_AUTHMOREDATA 0x01
+#define MYSQL_AUTHSWITCH   0xfe
+#define MYSQL_ERROR        0xff
 
 
 #define COM_QUIT  0x1
@@ -108,11 +116,15 @@
 #define SERVER_SESSION_STATE_CHANGED          0x4000
 
 
+#define MYSQL_REQUEST_BUFFER                  4096
+#define MYSQL_RESPONSE_BUFFER                 4096
+
+
 typedef struct {
         uint32_t len : 24;
         uint32_t seq : 8;
         // Data buffer
-        char buf[STRLEN + 1];
+        char buf[MYSQL_REQUEST_BUFFER];
         // State
         char *cursor;
         char *limit;
@@ -121,7 +133,7 @@ typedef struct {
 
 typedef struct {
         // Data buffer
-        char buf[STRLEN + 4 + 1]; // reserve 4 bytes for header
+        char buf[MYSQL_RESPONSE_BUFFER + 4 + 1]; // reserve 4 bytes for header
         // Parser state
         char *cursor;
         char *limit;
@@ -132,12 +144,7 @@ typedef struct {
         // Packet specific data
         union {
                 struct {
-                        uint16_t  code;
-                        char      sql_state_marker;
-                        char      sql_state[5];
-                        char     *message;
-                } error;
-                struct {
+                        // https://dev.mysql.com/doc/dev/mysql-server/8.0.11/page_protocol_connection_phase_packets_protocol_handshake_v10.html
                         char     *version;
                         uint32_t  connectionid;
                         uint8_t   characterset;
@@ -145,27 +152,58 @@ typedef struct {
                         uint32_t  capabilities;
                         uint8_t   authdatalen;
                         char      authdata[21];
+                        char      authplugin[64];
                 } handshake;
+                struct {
+                        // https://dev.mysql.com/doc/dev/mysql-server/8.0.11/page_protocol_connection_phase_packets_protocol_auth_more_data.html
+                } authmoredata;
+                struct {
+                        // https://dev.mysql.com/doc/dev/mysql-server/8.0.11/page_protocol_basic_err_packet.html
+                        uint16_t  code;
+                        char      sql_state_marker;
+                        char      sql_state[5];
+                        char     *message;
+                } error;
         } data;
 } mysql_response_t;
 
 
 typedef enum {
         MySQL_Init = 0,
+        MySQL_Greeting,
+        MySQL_Ssl,
         MySQL_Handshake,
+        MySQL_FastAuthSuccess,
+        MySQL_FullAuthenticationNeeded,
+        MySQL_FetchRSAKey,
+        MySQL_PasswordSent,
+        MySQL_AuthSwitch,
         MySQL_Ok,
-        MySQL_Eof,
         MySQL_Error
 } __attribute__((__packed__)) mysql_state_t;
 
 
+typedef enum {
+        Auth_Native = 0,
+        Auth_CachingSha2
+} __attribute__((__packed__)) mysql_authentication_t;
+
+
 typedef struct mysql_t {
+        uint8_t sequence;
         mysql_state_t state;
+        struct {
+                mysql_authentication_t type;
+                int hashLength;
+                char *(*getPassword)(char *result, const char *password, const char *salt);
+        } authentication;
         mysql_response_t response;
         mysql_request_t request;
         Socket_T socket;
         Port_T port;
         uint32_t capabilities;
+        char salt[21];
+        char publicKey[4096];
 } mysql_t;
 
 
@@ -284,89 +322,40 @@ static void _responseOk(mysql_t *mysql) {
 }
 
 
-// EOF packet (see http://dev.mysql.com/doc/internals/en/packet-EOF_Packet.html)
-static void _responseEof(mysql_t *mysql) {
-        mysql->state = MySQL_Eof;
-}
-
-
-// ERR packet (see http://dev.mysql.com/doc/internals/en/packet-ERR_Packet.html)
-static void _responseError(mysql_t *mysql) {
-        mysql->state = MySQL_Error;
-        mysql->response.data.error.code = _getUInt2(&mysql->response);
-        if (mysql->capabilities & CLIENT_PROTOCOL_41)
-                _getPadding(&mysql->response, 6); // skip sql_state_marker and sql_state which we don't use
-        mysql->response.data.error.message = _getString(&mysql->response);
-        THROW(ProtocolException, "Server returned error code %d -- %s", mysql->response.data.error.code, mysql->response.data.error.message);
-}
-
-
-// Initial handshake packet (see http://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::Handshake)
-static void _responseHandshake(mysql_t *mysql) {
-        mysql->state = MySQL_Handshake;
-        // Protocol is 10 for MySQL 5.x
-        if (mysql->response.header != 10)
-                THROW(ProtocolException, "Invalid protocol version %d", mysql->response.header);
-        mysql->response.data.handshake.version = _getString(&mysql->response);
-        mysql->response.data.handshake.connectionid = _getUInt4(&mysql->response);
-        snprintf(mysql->response.data.handshake.authdata, 9, "%s", _getString(&mysql->response)); // auth_plugin_data_part_1
-        mysql->response.data.handshake.capabilities = _getUInt2(&mysql->response); // capability flags (lower 2 bytes)
-        mysql->response.data.handshake.characterset = _getUInt1(&mysql->response);
-        mysql->response.data.handshake.status = _getUInt2(&mysql->response);
-        mysql->response.data.handshake.capabilities |= _getUInt2(&mysql->response) << 16; // merge capability flags (lower 2 bytes + upper 2 bytes)
-        mysql->response.data.handshake.authdatalen = _getUInt1(&mysql->response);
-        _getPadding(&mysql->response, 10); // reserved bytes
-        if (mysql->response.data.handshake.capabilities & CLIENT_SECURE_CONNECTION)
-                snprintf(mysql->response.data.handshake.authdata + 8, 13, "%s", _getString(&mysql->response)); // auth_plugin_data_part_2
-        mysql->capabilities = mysql->response.data.handshake.capabilities; // Save capabilities
-        DEBUG("MySQL Server: Protocol: %d, Version: %s, Connection ID: %d\n", mysql->response.header, mysql->response.data.handshake.version, mysql->response.data.handshake.connectionid);
-}
-
-
-// Response handler
-static void _response(mysql_t *mysql) {
-        memset(&mysql->response, 0, sizeof(mysql_response_t));
-        mysql->response.cursor = mysql->response.buf;
-        mysql->response.limit = mysql->response.buf + sizeof(mysql->response.buf);
-        // Read the packet length
-        if (Socket_read(mysql->socket, mysql->response.cursor, 4) < 4)
-                THROW(IOException, "Error receiving server response -- %s", STRERROR);
-        mysql->response.len = _getUInt3(&mysql->response);
-        mysql->response.seq = _getUInt1(&mysql->response);
-        if (mysql->state == MySQL_Init) {
-                if (! mysql->response.len || mysql->response.len > STRLEN)
-                        THROW(ProtocolException, "Invalid handshake packet length -- not MySQL protocol");
-                if (mysql->response.seq != 0)
-                        THROW(ProtocolException, "Invalid handshake packet sequence id -- not MySQL protocol");
-        }
-        mysql->response.len = mysql->response.len > STRLEN ? STRLEN : mysql->response.len; // Adjust packet length for this buffer
-        // Read payload
-        if (Socket_read(mysql->socket, mysql->response.cursor, mysql->response.len) != mysql->response.len)
-                THROW(IOException, "Error receiving server response -- %s", STRERROR);
-        // Packet type router
-        mysql->response.header = _getUInt1(&mysql->response);
-        switch (mysql->response.header) {
-                case MYSQL_OK:
-                        _responseOk(mysql);
-                        break;
-                case MYSQL_EOF:
-                        _responseEof(mysql);
-                        break;
-                case MYSQL_ERROR:
-                        _responseError(mysql);
-                        break;
-                default:
-                        _responseHandshake(mysql);
-                        break;
+// AuthMoreData packet
+static void _responseAuthMoreData(mysql_t *mysql) {
+        if (mysql->state == MySQL_Handshake) {
+                uint8_t data = _getUInt1(&mysql->response);
+                switch (data) {
+                        case 3:
+                                // Success
+                                mysql->state = MySQL_FastAuthSuccess;
+                                DEBUG("MySQL Fast Authentication success\n");
+                                break;
+                        case 4:
+                                // Full authentication is needed
+                                mysql->state = MySQL_FullAuthenticationNeeded;
+                                DEBUG("MySQL Full Authentication required\n");
+                                break;
+                        default:
+                                THROW(ProtocolException, "Unexpected AuthMoreData message as part of caching_sha2_password authentication: 0x%x", data);
+                                break;
+                }
+        } else if (mysql->state == MySQL_FetchRSAKey) {
+                // Fetch the RSA key
+                if ((size_t)mysql->response.len >= sizeof(mysql->publicKey)) {
+                        THROW(ProtocolException, "AuthMoreData response too large: %d", mysql->response.len);
+                } else {
+                        strncpy(mysql->publicKey, _getString(&mysql->response), sizeof(mysql->publicKey) - 1);
+                }
+        } else {
+                THROW(ProtocolException, "Unexpected AuthMoreData message -- current state %d", mysql->state);
         }
 }
 
 
-/* ------------------------------------------------------ Request handlers */
-
-
-// Set the password (see http://dev.mysql.com/doc/internals/en/secure-password-authentication.html):
-static char *_password(char result[SHA1_DIGEST_SIZE], const char *password, const char *salt) {
+// Get the password (see http://dev.mysql.com/doc/internals/en/secure-password-authentication.html):
+static char *_getNativePassword(char result[SHA1_DIGEST_SIZE], const char *password, const char *salt) {
         sha1_context_t ctx;
         // SHA1(password)
         uint8_t stage1[SHA1_DIGEST_SIZE];
@@ -391,60 +380,296 @@ static char *_password(char result[SHA1_DIGEST_SIZE], const char *password, cons
 }
 
 
+// Get the password (see https://dev.mysql.com/doc/internals/en/sha256.html and https://dev.mysql.com/doc/dev/mysql-server/8.0.11/page_caching_sha2_authentication_exchanges.html):
+static char *_getCachingSha2Password(char result[SHA256_DIGEST_LENGTH], const char *password, const char *salt) {
+#ifdef HAVE_OPENSSL
+        // SHA256(password)
+        uint8_t stage1[SHA256_DIGEST_LENGTH];
+        SHA256((const unsigned char *)password, strlen(password), stage1);
+
+        // SHA256(SHA256(password))
+        uint8_t stage2[SHA256_DIGEST_LENGTH];
+        SHA256(stage1, SHA256_DIGEST_LENGTH, stage2);
+
+        // SHA256(SHA256(SHA256(password)), Nonce)
+        uint8_t stage3[SHA256_DIGEST_LENGTH];
+        SHA256_CTX ctx;
+        SHA256_Init(&ctx);
+        SHA256_Update(&ctx, stage2, SHA256_DIGEST_LENGTH);
+        SHA256_Update(&ctx, salt, strlen(salt));
+        SHA256_Final(stage3, &ctx);
+
+        // XOR(SHA256(password), SHA256(SHA256(SHA256(password)), Nonce))
+        for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+                result[i] = stage1[i] ^ stage3[i];
+
+        return result;
+#else
+        THROW(ProtocolException, "MYSQL: caching_sha2_password authentication requires monit to be compiled with SSL library");
+#endif
+}
+
+
+static void _parsePlugin(mysql_t *mysql, const char *plugin) {
+        DEBUG("Server wants %s plugin\n", plugin);
+        if (IS(plugin, "caching_sha2_password")) {
+                mysql->authentication.type = Auth_CachingSha2;
+                mysql->authentication.hashLength = SHA256_DIGEST_LENGTH;
+                mysql->authentication.getPassword = _getCachingSha2Password;
+                snprintf(mysql->response.data.handshake.authplugin, sizeof(mysql->response.data.handshake.authplugin), "%s", plugin);
+                DEBUG("Will use caching_sha2_password plugin\n");
+        } else if (IS(plugin, "mysql_native_password")) {
+                mysql->authentication.type = Auth_Native;
+                mysql->authentication.hashLength = SHA1_DIGEST_SIZE;
+                mysql->authentication.getPassword = _getNativePassword;
+                snprintf(mysql->response.data.handshake.authplugin, sizeof(mysql->response.data.handshake.authplugin), "%s", plugin);
+                DEBUG("Will use mysql_native_password plugin\n");
+        } else {
+                THROW(ProtocolException, "MYSQL: unsupported authentication plugin: %s", plugin);
+        }
+}
+
+
+// AuthSwitchRequest (see https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_connection_phase_packets_protocol_auth_switch_request.html)
+static void _responseAuthSwitch(mysql_t *mysql) {
+        DEBUG("AuthSwitch request from the server\n");
+        mysql->state = MySQL_AuthSwitch;
+        if (mysql->capabilities & CLIENT_PLUGIN_AUTH) {
+                // New plugin name
+                _parsePlugin(mysql, _getString(&mysql->response));
+                // New salt
+                snprintf(mysql->salt, sizeof(mysql->salt), "%s", _getString(&mysql->response));
+        } else {
+                THROW(ProtocolException, "Unexpected AuthSwitchRequest -- the server doesn't support plugin authentication");
+        }
+}
+
+
+// ERR packet (see http://dev.mysql.com/doc/internals/en/packet-ERR_Packet.html)
+static void _responseError(mysql_t *mysql) {
+        mysql->state = MySQL_Error;
+        mysql->response.data.error.code = _getUInt2(&mysql->response);
+        if (mysql->capabilities & CLIENT_PROTOCOL_41)
+                _getPadding(&mysql->response, 6); // skip sql_state_marker and sql_state which we don't use
+        mysql->response.data.error.message = _getString(&mysql->response);
+        THROW(ProtocolException, "Server returned error code %d -- %s", mysql->response.data.error.code, mysql->response.data.error.message);
+}
+
+
+// Initial greeting packet (see http://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::Handshake)
+static void _greeting(mysql_t *mysql) {
+        mysql->state = MySQL_Greeting;
+        // Protocol is 10 for MySQL 5.x
+        if (mysql->response.header != 10)
+                THROW(ProtocolException, "Invalid protocol version %d", mysql->response.header);
+        mysql->response.data.handshake.version = _getString(&mysql->response);
+        mysql->response.data.handshake.connectionid = _getUInt4(&mysql->response);
+        snprintf(mysql->salt, 9, "%s", _getString(&mysql->response)); // auth_plugin_data_part_1
+        mysql->response.data.handshake.capabilities = _getUInt2(&mysql->response); // capability flags (lower 2 bytes)
+        mysql->response.data.handshake.characterset = _getUInt1(&mysql->response);
+        mysql->response.data.handshake.status = _getUInt2(&mysql->response);
+        mysql->response.data.handshake.capabilities |= ((uint32_t)_getUInt2(&mysql->response) << 16); // merge capability flags (lower 2 bytes + upper 2 bytes)
+        mysql->response.data.handshake.authdatalen = _getUInt1(&mysql->response);
+        _getPadding(&mysql->response, 10); // reserved bytes
+        if (mysql->response.data.handshake.capabilities & CLIENT_SECURE_CONNECTION)
+                snprintf(mysql->salt + 8, 13, "%s", _getString(&mysql->response)); // auth_plugin_data_part_2
+        mysql->capabilities = mysql->response.data.handshake.capabilities; // Save capabilities
+        if (mysql->capabilities & CLIENT_PLUGIN_AUTH) {
+                _parsePlugin(mysql, _getString(&mysql->response));
+        }
+        DEBUG("MySQL Server: Protocol: %d, Version: %s, Connection ID: %d, Capabilities: 0x%x, AuthPlugin: %s\n", mysql->response.header, mysql->response.data.handshake.version, mysql->response.data.handshake.connectionid, mysql->response.data.handshake.capabilities, *mysql->response.data.handshake.authplugin ? mysql->response.data.handshake.authplugin : "N/A");
+}
+
+
+// Response handler
+static void _readResponse(mysql_t *mysql) {
+        memset(&mysql->response, 0, sizeof(mysql_response_t));
+        mysql->response.cursor = mysql->response.buf;
+        mysql->response.limit = mysql->response.buf + sizeof(mysql->response.buf);
+        // Read the packet length
+        if (Socket_read(mysql->socket, mysql->response.cursor, 4) < 4)
+                THROW(IOException, "Error receiving server response -- %s", STRERROR);
+        mysql->response.len = _getUInt3(&mysql->response);
+        mysql->response.seq = _getUInt1(&mysql->response);
+        if (mysql->state == MySQL_Init) {
+                if (! mysql->response.len || mysql->response.len > MYSQL_RESPONSE_BUFFER)
+                        THROW(ProtocolException, "Invalid handshake packet length -- not MySQL protocol");
+                if (mysql->response.seq != 0)
+                        THROW(ProtocolException, "Invalid handshake packet sequence id -- not MySQL protocol");
+        }
+        if (mysql->response.len > MYSQL_RESPONSE_BUFFER) {
+                DEBUG("MySQL response: The response length %d is too large for our buffer, will read just %d\n", mysql->response.len, MYSQL_RESPONSE_BUFFER);
+                mysql->response.len = MYSQL_RESPONSE_BUFFER;
+        }
+        mysql->response.len = mysql->response.len > MYSQL_RESPONSE_BUFFER ? MYSQL_RESPONSE_BUFFER : mysql->response.len; // Adjust packet length for this buffer
+        // Read payload
+        if (Socket_read(mysql->socket, mysql->response.cursor, mysql->response.len) != mysql->response.len)
+                THROW(IOException, "Error receiving server response -- %s", STRERROR);
+        // Packet type router
+        mysql->response.header = _getUInt1(&mysql->response);
+        switch (mysql->response.header) {
+                case MYSQL_OK:
+                        _responseOk(mysql);
+                        break;
+                case MYSQL_AUTHMOREDATA:
+                        _responseAuthMoreData(mysql);
+                        break;
+                case MYSQL_AUTHSWITCH:
+                        _responseAuthSwitch(mysql);
+                        break;
+                case MYSQL_ERROR:
+                        _responseError(mysql);
+                        break;
+                default:
+                        _greeting(mysql);
+                        break;
+        }
+        mysql->sequence = mysql->response.seq + 1;
+}
+
+
+/* ------------------------------------------------------ Request handlers */
+
+
 // Initiate the request
-static void _initRequest(mysql_t *mysql, uint8_t sequence) {
+static void _initRequest(mysql_t *mysql) {
         memset(&mysql->request, 0, sizeof(mysql_request_t));
-        mysql->request.seq = sequence;
+        mysql->request.seq = mysql->sequence++;
         mysql->request.cursor = mysql->request.buf;
         mysql->request.limit = mysql->request.buf + sizeof(mysql->request.buf);
 }
 
 
 // Set payload length and send the request to the server
-static void _sendRequest(mysql_t *mysql) {
+static void _sendRequest(mysql_t *mysql, mysql_state_t targetState) {
         mysql->request.len = (uint32_t)(mysql->request.cursor - mysql->request.buf);
         // Send request
         if (Socket_write(mysql->socket, &mysql->request, mysql->request.len + 4) < 0) // Note: mysql->request.len value is just payload size + need to add 4 bytes for the header itself (len + seq)
-                THROW(IOException, "Cannot send handshake response -- %s\n", STRERROR);
+                THROW(IOException, "Cannot send handshake response -- %s", STRERROR);
+        mysql->state = targetState;
 }
 
 
 // Hadshake response packet (see http://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::HandshakeResponse)
-static void _requestHandshake(mysql_t *mysql) {
-        ASSERT(mysql->state == MySQL_Handshake);
-        _initRequest(mysql, 1);
-        _setUInt4(&mysql->request, CLIENT_LONG_PASSWORD | CLIENT_PROTOCOL_41 | CLIENT_SECURE_CONNECTION);                                                                             // capabilities
-        _setUInt4(&mysql->request, 8192);                                                                                                                                             // maxpacketsize
-        _setUInt1(&mysql->request, 8);                                                                                                                                                // characterset
-        _setPadding(&mysql->request, 23);                                                                                                                                             // reserved bytes
+static void _sendHandshake(mysql_t *mysql) {
+        if (mysql->state != MySQL_Greeting && mysql->state != MySQL_Ssl && mysql->state != MySQL_AuthSwitch)
+                THROW(ProtocolException, "Unexpected communication state %d before handshake", mysql->state);
+        _initRequest(mysql);
+        uint32_t capabilities = CLIENT_LONG_PASSWORD | CLIENT_PROTOCOL_41 | CLIENT_SECURE_CONNECTION;
+        if (Socket_isSecure(mysql->socket))
+                capabilities |= CLIENT_SSL;
+        // Does the server support plugin authentication? If yes, we announce we do as well
+        if (mysql->capabilities & CLIENT_PLUGIN_AUTH)
+                capabilities |= CLIENT_PLUGIN_AUTH;
+        _setUInt4(&mysql->request, capabilities);  // capabilities
+        _setUInt4(&mysql->request, 8192);          // maxpacketsize
+        _setUInt1(&mysql->request, 8);             // characterset
+        _setPadding(&mysql->request, 23);          // reserved bytes
         if (mysql->port->parameters.mysql.username)
-                _setData(&mysql->request, mysql->port->parameters.mysql.username, strlen(mysql->port->parameters.mysql.username));                                                    // username
-        _setPadding(&mysql->request, 1);                                                                                                                                              // NUL
-        if (mysql->port->parameters.mysql.password) {
-                _setUInt1(&mysql->request, SHA1_DIGEST_SIZE);                                                                                                                         // authdatalen
-                _setData(&mysql->request, _password((char[SHA1_DIGEST_SIZE]){0}, mysql->port->parameters.mysql.password, mysql->response.data.handshake.authdata), SHA1_DIGEST_SIZE); // password
+                _setData(&mysql->request, mysql->port->parameters.mysql.username, strlen(mysql->port->parameters.mysql.username)); // username
+        _setPadding(&mysql->request, 1);                                                                                           // NUL
+        if (STR_DEF(mysql->port->parameters.mysql.password)) {
+                char password[SHA256_DIGEST_LENGTH] = {};
+                _setUInt1(&mysql->request, mysql->authentication.hashLength); // authdatalen
+                _setData(&mysql->request, mysql->authentication.getPassword(password, mysql->port->parameters.mysql.password, mysql->salt), mysql->authentication.hashLength); // password
         } else {
-                _setUInt1(&mysql->request, 0);                                                                                                                                        // no password
+                // empty password
+                _setUInt1(&mysql->request, 0);
         }
-        _sendRequest(mysql);
+        if (mysql->capabilities & CLIENT_PLUGIN_AUTH) {
+                _setData(&mysql->request, mysql->response.data.handshake.authplugin, strlen(mysql->response.data.handshake.authplugin) + 1); // auth plugin
+        }
+        _sendRequest(mysql, MySQL_Handshake);
+        DEBUG("MySQL handshake sent\n");
+}
+
+
+// SSL request packet (see https://dev.mysql.com/doc/dev/mysql-server/8.0.11/page_protocol_connection_phase_packets_protocol_ssl_request.html)
+static void _sendSSLRequest(mysql_t *mysql) {
+        if (mysql->state != MySQL_Greeting)
+                THROW(ProtocolException, "Unexpected communication state %d before SSL start", mysql->state);
+        _initRequest(mysql);
+        _setUInt4(&mysql->request, CLIENT_LONG_PASSWORD | CLIENT_PROTOCOL_41 | CLIENT_SECURE_CONNECTION | CLIENT_PLUGIN_AUTH | CLIENT_SSL); // capabilities
+        _setUInt4(&mysql->request, 8192);                                                                                                   // maxpacketsize
+        _setUInt1(&mysql->request, 8);                                                                                                      // characterset
+        _setPadding(&mysql->request, 23);                                                                                                   // reserved bytes
+        _sendRequest(mysql, MySQL_Ssl);
+        DEBUG("MySQL SSL request sent\n");
+}
+
+
+// RSA key request (see https://dev.mysql.com/doc/mysql-security-excerpt/8.0/en/caching-sha2-pluggable-authentication.html)
+static void _sendRSAKeyRequest(mysql_t *mysql) {
+        _initRequest(mysql);
+        _setUInt1(&mysql->request, 2);
+        _sendRequest(mysql, MySQL_FetchRSAKey);
+        DEBUG("MySQL RSA key request sent\n");
 }
 
 
 // COM_QUIT packet (see http://dev.mysql.com/doc/internals/en/com-quit.html)
-static void _requestQuit(mysql_t *mysql) {
-        ASSERT(mysql->state == MySQL_Ok);
-        _initRequest(mysql, 0);
+static void _sendQuit(mysql_t *mysql) {
+        if (mysql->state != MySQL_Ok)
+                THROW(ProtocolException, "Unexpected communication state %d before Quit", mysql->state);
+        mysql->sequence = 0;
+        _initRequest(mysql);
         _setUInt1(&mysql->request, COM_QUIT);
-        _sendRequest(mysql);
+        _sendRequest(mysql, MySQL_Ok);
+        DEBUG("MySQL QUIT sent\n");
 }
 
 
-// COM_PING packet (see http://dev.mysql.com/doc/internals/en/com-ping.html)
-static void _requestPing(mysql_t *mysql) {
-        ASSERT(mysql->state == MySQL_Ok);
-        _initRequest(mysql, 0);
-        _setUInt1(&mysql->request, COM_PING);
-        _sendRequest(mysql);
+static void _sendPassword(mysql_t *mysql, const unsigned char *password, int passwordLength) {
+        if (mysql->state != MySQL_FullAuthenticationNeeded && mysql->state != MySQL_FetchRSAKey && mysql->state != MySQL_AuthSwitch)
+                THROW(ProtocolException, "Unexpected communication state %d before password exchange", mysql->state);
+        _initRequest(mysql);
+        _setData(&mysql->request, (char *)password, passwordLength); // password
+        _sendRequest(mysql, MySQL_PasswordSent);
+        DEBUG("MySQL password sent\n");
+}
+
+
+// Send the RSA encrypted password (https://dev.mysql.com/doc/internals/en/not-so-fast-path.html)
+static void _sendEncryptedPassword(mysql_t *mysql) {
+        // Parse the server RSA public key
+        BIO *bio = BIO_new_mem_buf((void *)mysql->publicKey, -1);
+        RSA *rsa = PEM_read_bio_RSA_PUBKEY(bio, NULL, NULL, NULL);
+        BIO_free(bio);
+        if (! rsa)
+                THROW(ProtocolException, "RSA public key load failed -- %s", ERR_error_string(ERR_get_error(), NULL));
+        // XOR the password with the salt
+        unsigned char saltedPassword[STRLEN];
+        size_t saltLength = strlen(mysql->salt);
+        size_t passwordLength = strlen(mysql->port->parameters.mysql.password) + 1; // Include the terminating NUL
+        for (size_t i = 0; i < passwordLength; i++)
+                saltedPassword[i] = mysql->port->parameters.mysql.password[i] ^ mysql->salt[i % saltLength];
+        // RSA encrypt the salted password
+        unsigned char encryptedPassword[RSA_size(rsa)];
+        int encryptedPasswordLength = RSA_public_encrypt((int)passwordLength, saltedPassword, encryptedPassword, rsa, RSA_PKCS1_OAEP_PADDING);
+        RSA_free(rsa);
+        if (encryptedPasswordLength < 0) {
+                THROW(ProtocolException, "RSA public encrypt failed -- %s", ERR_error_string(ERR_get_error(), NULL));
+        }
+        DEBUG("MySQL password encrypted successfully\n");
+        // Send the encrypted password
+        _sendPassword(mysql, encryptedPassword, encryptedPasswordLength);
+}
+
+
+static void _getRSAKey(mysql_t *mysql) {
+        _sendRSAKeyRequest(mysql);
+        _readResponse(mysql);
+        DEBUG("MySQL RSA key retrieved successfully:\n%s\n", mysql->publicKey);
+}
+
+
+static void _checkRSAKey(mysql_t *mysql) {
+        struct ChecksumContext_T context;
+        Checksum_init(&context, mysql->port->parameters.mysql.rsaChecksumType);
+        Checksum_append(&context, mysql->publicKey, (int)strlen(mysql->publicKey));
+        Checksum_verify(&context, mysql->port->parameters.mysql.rsaChecksum);
+        Checksum_verify(&context, mysql->port->parameters.mysql.rsaChecksum);
+        DEBUG("MySQL RSA key checksum passed\n");
 }
 
 
@@ -458,10 +683,10 @@ static void _requestPing(mysql_t *mysql) {
 // COM_QUERY packet (see http://dev.mysql.com/doc/internals/en/com-query.html)
 static void _requestQuery(mysql_t *mysql, const unsigned char *query) {
         ASSERT(mysql->state == MySQL_Ok);
-        _initRequest(mysql, 0);
+        _initRequest(mysql);
         _setUInt1(&mysql->request, COM_QUERY);
         _setData(&mysql->request, query, strlen(query));
-        _sendRequest(mysql);
+        _sendRequest(mysql, MySQL_Ok);
 }
 */
 
@@ -474,29 +699,72 @@ static void _requestQuery(mysql_t *mysql, const unsigned char *query) {
  *
  *  @see http://dev.mysql.com/doc/internals/en/client-server-protocol.html
  */
-void check_mysql(Socket_T socket) {
-        ASSERT(socket);
-        mysql_t mysql = {.state = MySQL_Init, .socket = socket, .port = Socket_getPort(socket)};
-        _response(&mysql);
-        if (mysql.state != MySQL_Handshake)
-                THROW(ProtocolException, "Invalid server greeting, the server didn't sent a handshake packet -- not MySQL protocol\n");
-        _requestHandshake(&mysql);
-        // Check handshake response: if no credentials are set, we allow both Ok/Error as we've sent an anonymous login which may fail, but if credentials are set, we expect Ok only
-        TRY
-        {
-                _response(&mysql);
-        }
-        ELSE
-        {
-                if (mysql.port->parameters.mysql.username)
-                        RETHROW;
-        }
-        END_TRY;
-        // If we're logged in, ping and quit
-        if (mysql.state == MySQL_Ok) {
-                _requestPing(&mysql);
-                _response(&mysql);
-                _requestQuit(&mysql);
+void check_mysql(Socket_T S) {
+        ASSERT(S);
+        mysql_t mysql = {
+                .state = MySQL_Init,
+                .sequence = 1,
+                .authentication.type = Auth_Native,
+                .authentication.hashLength = SHA1_DIGEST_SIZE,
+                .authentication.getPassword = _getNativePassword,
+                .socket = S,
+                .port = Socket_getPort(S)
+        };
+        // Parse the server greeting
+        _readResponse(&mysql);
+        if (mysql.state != MySQL_Greeting)
+                THROW(ProtocolException, "Invalid server greeting, the server didn't sent a handshake packet -- not MySQL protocol");
+        if (mysql.port->parameters.mysql.username) {
+                // If credentials are specified for the test, try to login
+                if (mysql.port->target.net.ssl.options.flags == SSL_StartTLS) {
+                        if (mysql.capabilities & CLIENT_SSL) {
+                                // Send SSL request to the MySQL server (https://dev.mysql.com/doc/dev/mysql-server/8.0.11/page_protocol_connection_phase.html#sect_protocol_connection_phase_initial_handshake_ssl_handshake)
+                                _sendSSLRequest(&mysql);
+                                // Switch to TLS encryption
+                                Socket_enableSsl(S, &(Run.ssl), NULL);
+                        } else {
+                                THROW(ProtocolException, "The MySQL server doesn't support SSL");
+                        }
+                }
+                // Login
+                _sendHandshake(&mysql);
+                // The response to the handshake depends on authentication type. The native authentication sends just the OK message, the caching_sha2_password signalizes status using AuthMoreData
+                _readResponse(&mysql);
+                if (mysql.state == MySQL_AuthSwitch) {
+                        if (STR_DEF(mysql.port->parameters.mysql.password)) {
+                                // Resend the password encoded per requested plugin rules
+                                char password[SHA256_DIGEST_LENGTH] = {};
+                                _sendPassword(&mysql, (unsigned char *)mysql.authentication.getPassword(password, mysql.port->parameters.mysql.password, mysql.salt), mysql.authentication.hashLength);
+                        } else {
+                                // Send plain password
+                                _sendPassword(&mysql, (unsigned char *)"", 0);
+                        }
+                        _readResponse(&mysql);
+                } else if (mysql.state == MySQL_FastAuthSuccess) {
+                        // The server shoud send an OK message immediately after fast auth success
+                        _readResponse(&mysql);
+                } else if (mysql.state == MySQL_FullAuthenticationNeeded) {
+                        if (Socket_isSecure(S)) {
+                                // Send the password to the server including the terminating NUL (plain as we use TLS already)
+                                _sendPassword(&mysql, (unsigned char *)mysql.port->parameters.mysql.password, (int)strlen(mysql.port->parameters.mysql.password) + 1);
+                                _readResponse(&mysql);
+                        } else {
+                                // unsecured channel: This requires encryption of the password with server's RSA public key. The client can:
+                                // 1. either store a copy of server's public RSA key locally (safe) ... not implemented currently
+                                // 2. or retrieve the key from the server (vulnerable to man-in-the-middle attack) => we allow to test the key fingerprint before submitting the password
+
+                                // Get the server key
+                                _getRSAKey(&mysql);
+                                // Test the checksum
+                                if (mysql.port->parameters.mysql.rsaChecksum) {
+                                        _checkRSAKey(&mysql);
+                                }
+                                // Send password
+                                _sendEncryptedPassword(&mysql);
+                                _readResponse(&mysql);
+                        }
+                }
+                _sendQuit(&mysql);
         }
 }
 

@@ -210,10 +210,14 @@ static const char *_describeConnectionCode(int code) {
 
 static void _payload(mqtt_connect_request_t *request, const char *data, MQTT_ConnectRequest_Flags flags) {
         size_t dataLength = strlen(data);
-        mqtt_payload_t payload = (mqtt_payload_t)(request->data + request->header.messageLength);
-        snprintf(payload->data, dataLength, "%s", data);
-        payload->length = htons(dataLength);
-        request->header.messageLength += sizeof(payload->length) + dataLength;
+        uint16_t dataLengthNetworkOrder = htons(dataLength);
+
+        // length
+        memcpy(request->data + request->header.messageLength, &dataLengthNetworkOrder, sizeof(dataLengthNetworkOrder));
+        // data
+        memcpy(request->data + request->header.messageLength + sizeof(uint16_t), data, dataLength);
+
+        request->header.messageLength += sizeof(dataLengthNetworkOrder) + dataLength;
         request->flags |= flags;
 }
 

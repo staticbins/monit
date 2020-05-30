@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS = foreign no-dependencies
 
 LDADD = ../libmonit.la
-AM_CPPFLAGS = -I../src/ -I../src/util -I../src/net -I../src/io -I../src/exceptions -I../src/statistics -I../src/thread 
+AM_CPPFLAGS = -I../src/ -I../src/util -I../src/net -I../src/io -I../src/exceptions -I../src/thread 
 
 noinst_PROGRAMS = StrTest \
                   ConvertTest \
@@ -14,7 +14,6 @@ noinst_PROGRAMS = StrTest \
                   FileTest \
                   ExceptionTest \
                   NetTest \
-                  LinkTest \
                   TimeTest \
                   CommandTest
 
@@ -30,7 +29,6 @@ OutputStreamTest_SOURCES = OutputStreamTest.c
 FileTest_SOURCES = FileTest.c
 ExceptionTest_SOURCES = ExceptionTest.c
 NetTest_SOURCES = NetTest.c
-LinkTest_SOURCES = LinkTest.c
 TimeTest_SOURCES = TimeTest.c
 
 DISTCLEANFILES = *~ 

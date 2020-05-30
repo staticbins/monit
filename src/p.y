@@ -121,7 +121,6 @@
 #include <openssl/ssl.h>
 #endif
 
-#include "net.h"
 #include "monit.h"
 #include "protocol.h"
 #include "engine.h"
@@ -129,6 +128,10 @@
 #include "ProcessTree.h"
 #include "device.h"
 #include "processor.h"
+#include "md5.h"
+#include "sha1.h"
+#include "checksum.h"
+#include "process_sysdep.h"
 
 // libmonit
 #include "io/File.h"
@@ -140,9 +143,9 @@
 
 
 struct precedence_t {
-        boolean_t daemon;
-        boolean_t logfile;
-        boolean_t pidfile;
+        bool daemon;
+        bool logfile;
+        bool pidfile;
 };
 
 struct rate_t {
@@ -220,7 +223,7 @@ static Digest_Type digesttype = Digest_Cleartext;
 
 static void  preparse(void);
 static void  postparse(void);
-static boolean_t _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing);
+static bool _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing);
 static void  addmail(char *, Mail_T, Mail_T *);
 static Service_T createservice(Service_Type, char *, char *, State_Type (*)(Service_T));
 static void  addservice(Service_T);
@@ -249,7 +252,7 @@ static void  addcommand(int, unsigned);
 static void  addargument(char *);
 static void  addmmonit(Mmonit_T);
 static void  addmailserver(MailServer_T);
-static boolean_t addcredentials(char *, char *, Digest_Type, boolean_t);
+static bool addcredentials(char *, char *, Digest_Type, bool);
 #ifdef HAVE_LIBPAM
 static void  addpamauth(char *, int);
 #endif
@@ -305,14 +308,14 @@ static void  check_depend(void);
 static void  setsyslog(char *);
 static command_t copycommand(command_t);
 static int verifyMaxForward(int);
-static void _setPEM(char **store, char *path, const char *description, boolean_t isFile);
+static void _setPEM(char **store, char *path, const char *description, bool isFile);
 static void _setSSLOptions(SslOptions_T options);
 #ifdef HAVE_OPENSSL
 static void _setSSLVersion(short version);
 #endif
 static void _unsetSSLVersion(short version);
 static void addsecurityattribute(char *, Action_Type, Action_Type);
-static void addfiledescriptors(Operator_Type, boolean_t, int64_t, float, Action_Type, Action_Type);
+static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Type, Action_Type);
 
 %}
 
@@ -331,11 +334,11 @@ static void addfiledescriptors(Operator_Type, boolean_t, int64_t, float, Action_
 %token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL
 %token IDFILE STATEFILE SEND EXPECT CYCLE COUNT REMINDER REPEAT
 %token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT PROGRAMTIMEOUT STARTTIMEOUT STOPTIMEOUT RESTARTTIMEOUT
-%token PIDFILE START STOP PATHTOK
+%token PIDFILE START STOP PATHTOK RSAKEY
 %token HOST HOSTNAME PORT IPV4 IPV6 TYPE UDP TCP TCPSSL PROTOCOL CONNECTION
 %token ALERT NOALERT MAILFORMAT UNIXSOCKET SIGNATURE
 %token TIMEOUT RETRY RESTART CHECKSUM EVERY NOTEVERY
-%token DEFAULT HTTP HTTPS APACHESTATUS FTP SMTP SMTPS POP POPS IMAP IMAPS CLAMAV NNTP NTP3 MYSQL DNS WEBSOCKET MQTT
+%token DEFAULT HTTP HTTPS APACHESTATUS FTP SMTP SMTPS POP POPS IMAP IMAPS CLAMAV NNTP NTP3 MYSQL MYSQLS DNS WEBSOCKET MQTT
 %token SSH DWP LDAP2 LDAP3 RDATE RSYNC TNS PGSQL POSTFIXPOLICY SIP LMTP GPS RADIUS MEMCACHE REDIS MONGODB SIEVE SPAMASSASSIN FAIL2BAN
 %token <string> STRING PATH MAILADDR MAILFROM MAILREPLYTO MAILSUBJECT
 %token <string> MAILBODY SERVICENAME STRINGNAME
@@ -346,7 +349,8 @@ static void addfiledescriptors(Operator_Type, boolean_t, int64_t, float, Action_
 %token CHECKPROC CHECKFILESYS CHECKFILE CHECKDIR CHECKHOST CHECKSYSTEM CHECKFIFO CHECKPROGRAM CHECKNET
 %token THREADS CHILDREN METHOD GET HEAD STATUS ORIGIN VERSIONOPT READ WRITE OPERATION SERVICETIME DISK
 %token RESOURCE MEMORY TOTALMEMORY LOADAVG1 LOADAVG5 LOADAVG15 SWAP
-%token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE CORE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT
+%token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE
+%token CORE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT CPUNICE CPUHARDIRQ CPUSOFTIRQ CPUSTEAL CPUGUEST CPUGUESTNICE
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
 %token UID EUID GID MMONIT INSTANCE USERNAME PASSWORD
 %token TIME ATIME CTIME MTIME CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH 
@@ -419,8 +423,8 @@ optproc         : start
                 | uid
                 | euid
                 | secattr
-                | filedescriptors
-                | filedescriptorstotal
+                | filedescriptorsprocess
+                | filedescriptorsprocesstotal
                 | gid
                 | uptime
                 | connection
@@ -563,7 +567,7 @@ optsystem       : start
                 | depend
                 | resourcesystem
                 | uptime
-                | filedescriptors
+                | filedescriptorssystem
                 ;
 
 optfifolist     : /* EMPTY */
@@ -1621,6 +1625,10 @@ protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                 | PROTOCOL MYSQL mysqllist {
                         portset.protocol = Protocol_get(Protocol_MYSQL);
                   }
+                | PROTOCOL MYSQLS mysqllist {
+                        sslset.flags = SSL_StartTLS;
+                        portset.protocol = Protocol_get(Protocol_MYSQL);
+                  }
                 | PROTOCOL SIP siplist {
                         portset.protocol = Protocol_get(Protocol_SIP);
                   }
@@ -1756,16 +1764,37 @@ mysqllist       : /* EMPTY */
                 ;
 
 mysql           : username {
-                        if ($<string>1) {
-                                if (strlen($<string>1) > 16)
-                                        yyerror2("Username too long -- Maximum MySQL username length is 16 characters");
-                                else
-                                        portset.parameters.mysql.username = $<string>1;
-                        }
+                        portset.parameters.mysql.username = $<string>1;
                   }
                 | password {
                         portset.parameters.mysql.password = $<string>1;
                   }
+                | RSAKEY CHECKSUM checksumoperator STRING {
+                        portset.parameters.mysql.rsaChecksum = $<string>4;
+                        switch (cleanup_hash_string(portset.parameters.mysql.rsaChecksum)) {
+                                case 32:
+                                        portset.parameters.mysql.rsaChecksumType = Hash_Md5;
+                                        break;
+                                case 40:
+                                        portset.parameters.mysql.rsaChecksumType = Hash_Sha1;
+                                        break;
+                                default:
+                                        yyerror2("Unknown checksum type: [%s] is not MD5 nor SHA1", portset.parameters.mysql.rsaChecksum);
+                        }
+                  }
+                | RSAKEY CHECKSUM MD5HASH checksumoperator STRING {
+                        portset.parameters.mysql.rsaChecksum = $<string>5;
+                        if (cleanup_hash_string(portset.parameters.mysql.rsaChecksum) != 32)
+                                yyerror2("Unknown checksum type: [%s] is not MD5", portset.parameters.mysql.rsaChecksum);
+                        portset.parameters.mysql.rsaChecksumType = Hash_Md5;
+                  }
+                | RSAKEY CHECKSUM SHA1HASH checksumoperator STRING {
+                        portset.parameters.mysql.rsaChecksum = $<string>5;
+                        if (cleanup_hash_string(portset.parameters.mysql.rsaChecksum) != 40)
+                                yyerror2("Unknown checksum type: [%s] is not SHA1", portset.parameters.mysql.rsaChecksum);
+                        portset.parameters.mysql.rsaChecksumType = Hash_Sha1;
+                  }
+                ;
                 ;
 
 target          : TARGET MAILADDR {
@@ -2252,10 +2281,63 @@ resourcecpu     : resourcecpuid operator value PERCENT {
                   }
                 ;
 
-resourcecpuid   : CPUUSER   { $<number>$ = Resource_CpuUser; }
-                | CPUSYSTEM { $<number>$ = Resource_CpuSystem; }
-                | CPUWAIT   { $<number>$ = Resource_CpuWait; }
-                | CPU       { $<number>$ = Resource_CpuPercent; }
+resourcecpuid   : CPUUSER {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuUser)
+                                $<number>$ = Resource_CpuUser;
+                        else
+                                yywarning2("The CPU user usage statistics is not available on this system\n");
+                  }
+                | CPUSYSTEM {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSystem)
+                                $<number>$ = Resource_CpuSystem;
+                        else
+                                yywarning2("The CPU system usage statistics is not available on this system\n");
+                  }
+                | CPUWAIT {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait)
+                                $<number>$ = Resource_CpuWait;
+                        else
+                                yywarning2("The CPU I/O wait usage statistics is not available on this system\n");
+                  }
+                | CPUNICE {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuNice)
+                                $<number>$ = Resource_CpuNice;
+                        else
+                                yywarning2("The CPU nice usage statistics is not available on this system\n");
+                  }
+                | CPUHARDIRQ {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuHardIRQ)
+                                $<number>$ = Resource_CpuHardIRQ;
+                        else
+                                yywarning2("The CPU hardware IRQ usage statistics is not available on this system\n");
+                  }
+                | CPUSOFTIRQ {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSoftIRQ)
+                                $<number>$ = Resource_CpuSoftIRQ;
+                        else
+                                yywarning2("The CPU software IRQ usage statistics is not available on this system\n");
+                  }
+                | CPUSTEAL {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSteal)
+                                $<number>$ = Resource_CpuSteal;
+                        else
+                                yywarning2("The CPU steal usage statistics is not available on this system\n");
+                  }
+                | CPUGUEST {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuGuest)
+                                $<number>$ = Resource_CpuGuest;
+                        else
+                                yywarning2("The CPU guest usage statistics is not available on this system\n");
+                  }
+                | CPUGUESTNICE {
+                        if (systeminfo.statisticsAvailable & Statistics_CpuGuestNice)
+                                $<number>$ = Resource_CpuGuestNice;
+                        else
+                                yywarning2("The CPU guest nice usage statistics is not available on this system\n");
+                  }
+                | CPU {
+                        $<number>$ = Resource_CpuPercent;
+                  }
                 ;
 
 resourcemem     : MEMORY operator value unit {
@@ -2824,16 +2906,39 @@ secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recover
                   }
                 ;
 
-filedescriptors : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
-                        addfiledescriptors($<number>3, false, (int64_t)$4, -1., $<number>7, $<number>8);
+filedescriptorssystem : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
+                                addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
+                        else
+                                yywarning("The per-system filedescriptors statistics is not available on this system\n");
                   }
                 | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
-                        addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
+                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
+                                addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
+                        else
+                                yywarning("The per-system filedescriptors statistics is not available on this system\n");
                   }
                 ;
 
-filedescriptorstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
-                        addfiledescriptors($<number>4, true, (int64_t)$5, -1., $<number>8, $<number>9);
+filedescriptorsprocess : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
+                                addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
+                        else
+                                yywarning("The per-process filedescriptors statistics is not available on this system\n");
+                  }
+                | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
+                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcessMax)
+                                addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
+                        else
+                                yywarning("The per-process filedescriptors maximum is not exposed on this system, so we cannot compute usage %%, please use the test with absolute value\n");
+                  }
+                ;
+
+filedescriptorsprocesstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
+                                addfiledescriptors($<number>4, true, (long long)$5, -1., $<number>8, $<number>9);
+                        else
+                                yywarning("The per-process filedescriptors statistics is not available on this system\n");
                   }
                 ;
 
@@ -3051,7 +3156,7 @@ void yywarning2(const char *s, ...) {
  * The Parser hook - start parsing the control file
  * Returns true if parsing succeeded, otherwise false
  */
-boolean_t parse(char *controlfile) {
+bool parse(char *controlfile) {
         ASSERT(controlfile);
 
         if ((yyin = fopen(controlfile,"r")) == (FILE *)NULL) {
@@ -3060,6 +3165,8 @@ boolean_t parse(char *controlfile) {
         }
 
         currentfile = Str_dup(controlfile);
+
+        available_statistics(&systeminfo);
 
         /*
          * Creation of the global service list is synchronized
@@ -3236,7 +3343,7 @@ static void postparse() {
 }
 
 
-static boolean_t _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing) {
+static bool _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing) {
         struct addrinfo *result, hints = {.ai_flags = AI_NUMERICHOST};
         int status = getaddrinfo(ip, NULL, &hints, &result);
         if (status == 0) {
@@ -3533,6 +3640,13 @@ static void addport(Port_T *list, Port_T port) {
                                 yyerror2("if response content or checksum test is enabled, the HEAD method is not allowed");
                         }
                 }
+        } else if (p->protocol->check == check_mysql) {
+                if (p->parameters.mysql.rsaChecksum) {
+                        if (! p->parameters.mysql.username)
+                                yyerror2("the rsakey checksum test requires credentials to be defined");
+                        if (p->target.net.ssl.options.flags != SSL_Disabled)
+                                yyerror2("the rsakey checksum test can be used just with unsecured mysql protocol");
+                }
         }
 
         p->next = *list;
@@ -3761,7 +3875,7 @@ static void addchecksum(Checksum_T cs) {
         if (STR_UNDEF(cs->hash)) {
                 if (cs->type == Hash_Unknown)
                         cs->type = Hash_Default;
-                if (! (Util_getChecksum(current->path, cs->type, cs->hash, sizeof(cs->hash)))) {
+                if (! (Checksum_getChecksum(current->path, cs->type, cs->hash, sizeof(cs->hash)))) {
                         /* If the file doesn't exist, set dummy value */
                         snprintf(cs->hash, sizeof(cs->hash), cs->type == Hash_Md5 ? "00000000000000000000000000000000" : "0000000000000000000000000000000000000000");
                         cs->initialized = false;
@@ -4535,14 +4649,14 @@ static void addpamauth(char* groupname, int readonly) {
 /*
  * Add Basic Authentication credentials
  */
-static boolean_t addcredentials(char *uname, char *passwd, Digest_Type dtype, boolean_t readonly) {
+static bool addcredentials(char *uname, char *passwd, Digest_Type dtype, bool readonly) {
         Auth_T c;
 
         ASSERT(uname);
         ASSERT(passwd);
 
-        if (strlen(passwd) > MAX_CONSTANT_TIME_STRING_LENGTH) {
-                yyerror2("Password for user %s is too long, maximum %d allowed", uname, MAX_CONSTANT_TIME_STRING_LENGTH);
+        if (strlen(passwd) > Str_compareConstantTimeStringLength) {
+                yyerror2("Password for user %s is too long, maximum %d allowed", uname, Str_compareConstantTimeStringLength);
                 FREE(uname);
                 FREE(passwd);
                 return false;
@@ -4914,8 +5028,8 @@ static int check_perm(int perm) {
 static void check_depend() {
         Service_T depends_on = NULL;
         Service_T* dlt = &depend_list; /* the current tail of it                                 */
-        boolean_t done;                /* no unvisited nodes left?                               */
-        boolean_t found_some;          /* last iteration found anything new ?                    */
+        bool done;                /* no unvisited nodes left?                               */
+        bool found_some;          /* last iteration found anything new ?                    */
         depend_list = NULL;            /* depend_list will be the topological sorted servicelist */
 
         do {
@@ -5027,7 +5141,7 @@ static command_t copycommand(command_t source) {
 }
 
 
-static void _setPEM(char **store, char *path, const char *description, boolean_t isFile) {
+static void _setPEM(char **store, char *path, const char *description, bool isFile) {
         if (*store) {
                 yyerror2("Duplicate %s", description);
                 FREE(path);
@@ -5091,7 +5205,7 @@ static void addsecurityattribute(char *value, Action_Type failed, Action_Type su
         current->secattrlist = attr;
 }
 
-static void addfiledescriptors(Operator_Type operator, boolean_t total, int64_t value_absolute, float value_percent, Action_Type failed, Action_Type succeeded) {
+static void addfiledescriptors(Operator_Type operator, bool total, long long value_absolute, float value_percent, Action_Type failed, Action_Type succeeded) {
         Filedescriptors_T fds;
         NEW(fds);
         addeventaction(&(fds->action), failed, succeeded);

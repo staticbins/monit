@@ -287,7 +287,7 @@ void ProcessTree_delete() {
 }
 
 
-boolean_t ProcessTree_updateProcess(Service_T s, pid_t pid) {
+bool ProcessTree_updateProcess(Service_T s, pid_t pid) {
         ASSERT(s);
 
         /* save the previous pid and set actual one */
@@ -454,7 +454,7 @@ void ProcessTree_testMatch(char *pattern) {
 
 
 //FIXME: move to standalone system class
-boolean_t init_system_info(void) {
+bool init_system_info(void) {
         memset(&systeminfo, 0, sizeof(SystemInfo_T));
         gettimeofday(&systeminfo.collected, NULL);
         if (uname(&systeminfo.uname) < 0) {
@@ -488,13 +488,13 @@ boolean_t init_system_info(void) {
 #endif
         systeminfo.cpu.usage.user = -1.;
         systeminfo.cpu.usage.system = -1.;
-        systeminfo.cpu.usage.wait = -1.;
+        systeminfo.cpu.usage.iowait = -1.;
         return (init_process_info_sysdep());
 }
 
 
 //FIXME: move to standalone system class
-boolean_t update_system_info() {
+bool update_system_info() {
         if (getloadavg_sysdep(systeminfo.loadavg, 3) == -1) {
                 LogError("'%s' statistic error -- load average data collection failed\n", Run.system->name);
                 goto error1;
@@ -531,7 +531,7 @@ error2:
 error3:
         systeminfo.cpu.usage.user = 0.;
         systeminfo.cpu.usage.system = 0.;
-        systeminfo.cpu.usage.wait = 0.;
+        systeminfo.cpu.usage.iowait = 0.;
 error4:
         systeminfo.filedescriptors.allocated = 0LL;
         systeminfo.filedescriptors.unused = 0LL;

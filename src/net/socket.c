@@ -190,7 +190,7 @@ static char *_addressToString(const struct sockaddr *addr, socklen_t addrlen, ch
 }
 
 
-static boolean_t _doConnect(int s, const struct sockaddr *addr, socklen_t addrlen, int timeout, char *error, int errorlen) {
+static bool _doConnect(int s, const struct sockaddr *addr, socklen_t addrlen, int timeout, char *error, int errorlen) {
         int rv = connect(s, addr, addrlen);
         if (! rv) {
                 return true;
@@ -489,7 +489,7 @@ int Socket_getTimeout(T S) {
 }
 
 
-boolean_t Socket_isSecure(T S) {
+bool Socket_isSecure(T S) {
         ASSERT(S);
 #ifdef HAVE_OPENSSL
         return (S->ssl != NULL);
@@ -638,7 +638,7 @@ void Socket_test(void *P) {
         Port_T p = P;
         TRY
         {
-                int64_t start = Time_micro();
+                long long start = Time_micro();
                 switch (p->family) {
                         case Socket_Unix:
                                 _testUnix(p);

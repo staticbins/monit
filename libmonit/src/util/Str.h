@@ -38,13 +38,6 @@
 
 
 /**
- * Maximum length of input for Str_compareConstantTime() method. We support
- * currently up to 64 characters, which is enough for SHA256 digests.
- */
-#define MAX_CONSTANT_TIME_STRING_LENGTH 64
-
-
-/**
  * Test if the given string is defined. That is; not NULL nor the 
  * empty ("") string
  * @param s The string to test
@@ -131,13 +124,13 @@ int Str_parseInt(const char *s);
 
 
 /**
- * Parses the string argument as a signed long long in base 10. 
+ * Parses the string argument as a signed long long in base 10.
  * @param s A string
  * @return The long long represented by the string argument.
  * @exception NumberFormatException If the String does not contain a
  * parsable long long
  */
-long long int Str_parseLLong(const char *s);
+long long Str_parseLLong(const char *s);
 
 
 /**
@@ -172,7 +165,7 @@ char *Str_replaceChar(char *s, char o, char n);
  * @param b The sub-string to test a against
  * @return true if a starts with b, otherwise false
  */
-int Str_startsWith(const char *a, const char *b);
+bool Str_startsWith(const char *a, const char *b);
 
 
 /**
@@ -183,7 +176,7 @@ int Str_startsWith(const char *a, const char *b);
  * @param b The sub-string to test a against
  * @return true if a ends with b, otherwise false
  */
-int Str_endsWith(const char *a, const char *b);
+bool Str_endsWith(const char *a, const char *b);
 
 
 /**
@@ -218,7 +211,7 @@ char *Str_sub(const char *a, const char *b);
  * @param s The string to test
  * @return true if s contains chars in charset, otherwise false
  */
-int Str_has(const char *charset, const char *s);
+bool Str_has(const char *charset, const char *s);
 
 
 /**
@@ -246,7 +239,7 @@ char *Str_unescape(const char *charset, char *s);
  * @param b The string to test for equality with <code>a</code>
  * @return true if a equals b, otherwise false
  */
-int Str_isEqual(const char *a, const char *b);
+bool Str_isEqual(const char *a, const char *b);
 
 
 /**
@@ -256,7 +249,7 @@ int Str_isEqual(const char *a, const char *b);
  * @param b The string to test for equality with <code>a</code>
  * @return true if a equals b, otherwise false
  */
-int Str_isByteEqual(const char *a, const char *b);
+bool Str_isByteEqual(const char *a, const char *b);
 
 
 /**
@@ -390,7 +383,7 @@ char *Str_curtail(char *s, char *t);
  * @return true if <code>s.length > limit</code> otherwise false
  * @exception AssertException if limit is less than 0
  */
-int Str_lim(const char *s, int limit);
+bool Str_lim(const char *s, int limit);
 
 
 /**
@@ -408,7 +401,7 @@ int Str_lim(const char *s, int limit);
  * @exception AssertException if pattern is invalid or cannot be 
  * compiled. 
  */
-int Str_match(const char *pattern, const char *subject);
+bool Str_match(const char *pattern, const char *subject);
 
 
 /**
@@ -418,7 +411,7 @@ int Str_match(const char *pattern, const char *subject);
  * @return A hash value for the String
  * @see Table.h and Set.h
  */
-unsigned int Str_hash(const void *x);
+int Str_hash(const void *x);
 
 
 /**
@@ -433,8 +426,18 @@ int Str_cmp(const void *x, const void *y);
 
 
 /**
+ * The maximum length of input for the Str_compareConstantTime()
+ * method. We support up to 64 characters, which is enough for
+ * SHA256 digests.
+*/
+#define Str_compareConstantTimeStringLength 64
+
+
+/**
  * Compare case sensitive two strings in constant time. This function
  * can be used for timing-attack resistent comparison of credentials.
+ * Only the first Str_compareConstantTimeStringLength bytes are compared
+ * if the strings are longer.
  * @param x A String
  * @param y A String
  * @return 0 if x and y are equal otherwise a non-zero integer

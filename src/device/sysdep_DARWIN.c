@@ -72,7 +72,7 @@
 /* ----------------------------------------------------------------- Private */
 
 
-static boolean_t _getDiskUsage(void *_inf) {
+static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statfs usage;
         if (statfs(inf->filesystem->object.mountpoint, &usage) != 0) {
@@ -89,12 +89,12 @@ static boolean_t _getDiskUsage(void *_inf) {
 }
 
 
-static boolean_t _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
+static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
         return true;
 }
 
 
-static boolean_t _getBlockDiskActivity(void *_inf) {
+static bool _getBlockDiskActivity(void *_inf) {
         int rv = false;
         Info_T inf = _inf;
         DASessionRef session = DASessionCreate(NULL);
@@ -110,7 +110,7 @@ static boolean_t _getBlockDiskActivity(void *_inf) {
                                         if (statistics) {
                                                 rv = true;
                                                 UInt64 value = 0;
-                                                uint64_t now = Time_milli();
+                                                unsigned long long now = Time_milli();
                                                 // Total read bytes
                                                 CFNumberRef number = CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsBytesReadKey));
                                                 if (number) {
@@ -163,19 +163,19 @@ static boolean_t _getBlockDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _compareMountpoint(const char *mountpoint, struct statfs *mnt) {
+static bool _compareMountpoint(const char *mountpoint, struct statfs *mnt) {
         return IS(mountpoint, mnt->f_mntonname);
 }
 
 
-static boolean_t _compareDevice(const char *device, struct statfs *mnt) {
+static bool _compareDevice(const char *device, struct statfs *mnt) {
         return IS(device, mnt->f_mntfromname);
 }
 
 
-static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
+static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
         struct mystable {
-                uint64_t flag;
+                unsigned long long flag;
                 char *description;
         } t[]= {
                 {MNT_RDONLY, "ro"},
@@ -210,7 +210,7 @@ static void _filesystemFlagsToString(Info_T inf, uint64_t flags) {
 }
 
 
-static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct statfs *mnt)) {
+static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct statfs *mnt)) {
         int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
         if (countfs != -1) {
                 struct statfs *mnt = CALLOC(countfs, sizeof(struct statfs));
@@ -248,7 +248,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 }
 
 
-static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct statfs *mnt)) {
+static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct statfs *mnt)) {
         //FIXME: cache mount informations (register for mount/unmount notification)
         if (_setDevice(inf, path, compare)) {
                 return (inf->filesystem->object.getDiskUsage(inf) && inf->filesystem->object.getDiskActivity(inf));
@@ -260,14 +260,14 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+bool Filesystem_getByMountpoint(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareMountpoint);
 }
 
 
-boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
+bool Filesystem_getByDevice(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareDevice);

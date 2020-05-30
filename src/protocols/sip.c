@@ -99,11 +99,11 @@ void check_sip(Socket_T socket) {
 
         if (Socket_print(socket,
                          "OPTIONS %s:%s SIP/2.0\r\n"
-                         "Via: SIP/2.0/%s %s:%d;branch=z9hG4bKh%"PRIx64"%s\r\n"
+                         "Via: SIP/2.0/%s %s:%d;branch=z9hG4bKh%llx%s\r\n"
                          "Max-Forwards: %d\r\n"
                          "To: <%s:%s>\r\n"
-                         "From: monit <%s:monit@%s>;tag=%"PRIx64"\r\n"
-                         "Call-ID: %"PRIx64"\r\n"
+                         "From: monit <%s:monit@%s>;tag=%llx\r\n"
+                         "Call-ID: %llx\r\n"
                          "CSeq: 63104 OPTIONS\r\n"
                          "Contact: <%s:%s:%d>\r\n"
                          "Accept: application/sdp\r\n"

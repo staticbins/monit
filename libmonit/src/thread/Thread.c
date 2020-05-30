@@ -25,7 +25,7 @@
 
 #include "Config.h"
 
-#include <stdint.h>
+#include <stdlib.h>
 
 #include "system/System.h"
 #include "Thread.h"
@@ -49,9 +49,12 @@ static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 
 /* --------------------------------------------------------------- Private */
 
+/* Called at program termination for cleanup */
+static void _fini(void) { pthread_attr_destroy(&myDetachStateAttribute); }
+
 
 /* Setup common thread attribute */
-static void init_once(void) { 
+static void _once(void) {
         int status = pthread_attr_init(&myDetachStateAttribute);
         if (status != 0)
                 THROW(AssertException, "pthread_attr_init -- %s", System_getError(status));
@@ -60,6 +63,7 @@ static void init_once(void) {
                 pthread_attr_destroy(&myDetachStateAttribute);
                 THROW(AssertException, "pthread_attr_setdetachstate -- %s", System_getError(status));
         }
+        atexit(_fini);
 }
 
 
@@ -67,11 +71,7 @@ static void init_once(void) {
 
 
 /* Called from Bootstrap() */
-void Thread_init(void) { pthread_once(&once_control, init_once); }
-
-
-/* Called at program termination for cleanup */
-void Thread_fini(void) { pthread_attr_destroy(&myDetachStateAttribute); }
+void Thread_init(void) { pthread_once(&once_control, _once); }
 
 
 /* ---------------------------------------------------------------- Public */

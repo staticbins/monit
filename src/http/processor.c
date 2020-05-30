@@ -112,17 +112,17 @@ static char *get_date(char *, int);
 static char *get_server(char *, int);
 static void create_headers(HttpRequest);
 static void send_response(HttpRequest, HttpResponse);
-static boolean_t basic_authenticate(HttpRequest);
+static bool basic_authenticate(HttpRequest);
 static void done(HttpRequest, HttpResponse);
 static void destroy_HttpRequest(HttpRequest);
 static void reset_response(HttpResponse res);
 static HttpParameter parse_parameters(char *);
-static boolean_t create_parameters(HttpRequest req);
+static bool create_parameters(HttpRequest req);
 static void destroy_HttpResponse(HttpResponse);
 static HttpRequest create_HttpRequest(Socket_T);
 static void internal_error(Socket_T, int, const char *);
 static HttpResponse create_HttpResponse(Socket_T);
-static boolean_t is_authenticated(HttpRequest, HttpResponse);
+static bool is_authenticated(HttpRequest, HttpResponse);
 static int get_next_token(char *s, int *cursor, char **r);
 
 
@@ -495,9 +495,9 @@ static void send_response(HttpRequest req, HttpResponse res) {
                 char server[STRLEN];
 #ifdef HAVE_LIBZ
                 const char *acceptEncoding = get_header(req, "Accept-Encoding");
-                boolean_t canCompress = acceptEncoding && Str_sub(acceptEncoding, "gzip") ? true : false;
+                bool canCompress = acceptEncoding && Str_sub(acceptEncoding, "gzip") ? true : false;
 #else
-                boolean_t canCompress = false;
+                bool canCompress = false;
 #endif
                 const void *body = NULL;
                 size_t bodyLength = 0;
@@ -613,7 +613,7 @@ static void create_headers(HttpRequest req) {
  * Create parameters for the given request. Returns false if an error
  * occurs.
  */
-static boolean_t create_parameters(HttpRequest req) {
+static bool create_parameters(HttpRequest req) {
         char *query_string = NULL;
         if (IS(req->method, METHOD_POST)) {
                 int len;
@@ -723,12 +723,12 @@ static void destroy_entry(void *p) {
 /* ----------------------------------------------------- Checkers/Validators */
 
 
-static boolean_t _isCookieSeparator(int c) {
+static bool _isCookieSeparator(int c) {
         return (c == ' ' || c == '\n' || c == ';' || c == ',');
 }
 
 
-static boolean_t is_authenticated(HttpRequest req, HttpResponse res) {
+static bool is_authenticated(HttpRequest req, HttpResponse res) {
         if (Run.httpd.credentials) {
                 if (! basic_authenticate(req)) {
                         // Send just generic error message to the client to not disclose e.g. username existence in case of credentials harvesting attack
@@ -796,7 +796,7 @@ static boolean_t is_authenticated(HttpRequest req, HttpResponse res) {
  * Authenticate the basic-credentials (uname/password) submitted by
  * the user.
  */
-static boolean_t basic_authenticate(HttpRequest req) {
+static bool basic_authenticate(HttpRequest req) {
         const char *credentials = get_header(req, "Authorization");
         if (! (credentials && Str_startsWith(credentials, "Basic "))) {
                 LogDebug("HttpRequest: access denied -- client [%s]: missing or invalid Authorization header\n", NVLSTR(Socket_getRemoteHost(req->S)));

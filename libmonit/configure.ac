@@ -15,9 +15,11 @@ AC_CONFIG_SRCDIR([src])
 AC_PROG_CC
 
 AX_CHECK_COMPILE_FLAG([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
-AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"])
-AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [CFLAGS="$CFLAGS -fcf-protection=full"])
-AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [CFLAGS="$CFLAGS -fstack-clash-protection"])
+if test `uname` != "AIX"; then
+        AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"])
+        AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [CFLAGS="$CFLAGS -fcf-protection=full"])
+        AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [CFLAGS="$CFLAGS -fstack-clash-protection"])
+fi
 
 # ---------------------------------------------------------------------------
 # Libtool 
@@ -153,13 +155,39 @@ AC_CHECK_LIB([m], [round], [], [AC_MSG_ERROR([Math library is required])])
 # ---------------------------------------------------------------------------
 
 AC_HEADER_STDC
-AC_CHECK_HEADERS([ctype.h errno.h fcntl.h limits.h pthread.h setjmp.h \
-                  signal.h stdarg.h stdio.h string.h string.h strings.h \
-                  sys/socket.h sys/time.h sys/types.h unistd.h execinfo.h \
-                  sys/sendfile.h sys/dirent.h poll.h sys/poll.h sys/event.h \
-                  stropts.h sys/ioctl.h sys/filio.h kstat.h ifaddrs.h \
-                  net/if_media.h netinet/in.h sys/sysctl.h net/if_dl.h \
-                  sys/random.h sys/protosw.h mach/boolean.h uvm/uvm_param.h])
+AC_CHECK_HEADERS([ctype.h \
+                  errno.h \
+                  execinfo.h \
+                  fcntl.h \
+                  ifaddrs.h \
+                  kstat.h \
+                  limits.h \
+                  net/if_dl.h \
+                  net/if_media.h\
+                  netinet/in.h \
+                  poll.h \
+                  pthread.h \
+                  setjmp.h \
+                  signal.h \
+                  stdarg.h \
+                  stdio.h \
+                  string.h \
+                  strings.h \
+                  stropts.h \
+                  sys/dirent.h \
+                  sys/event.h \
+                  sys/filio.h \
+                  sys/ioctl.h \
+                  sys/poll.h \
+                  sys/protosw.h \
+                  sys/random.h \
+                  sys/sendfile.h \
+                  sys/socket.h \
+                  sys/sysctl.h \
+                  sys/time.h \
+                  sys/types.h \
+                  unistd.h \
+                  usersec.h])
 AC_CHECK_HEADERS([net/if.h net/route.h], [], [],
         [
          #ifdef HAVE_SYS_TYPES_H
@@ -193,20 +221,7 @@ AC_CHECK_HEADERS([ \
 # Types
 # ------------------------------------------------------------------------
 
-AC_CHECK_TYPES([boolean_t], [], [],
-        [
-         #ifdef HAVE_SYS_TYPES_H
-         #include <sys/types.h>
-         #endif
-         #ifdef HAVE_MACH_BOOLEAN_H
-         #include <mach/boolean.h>
-         #endif
-         #ifdef HAVE_UVM_UVM_PARAM_H
-         #include <uvm/uvm_param.h>
-         #endif
-        ])
 AC_CHECK_TYPES([uchar_t])
-AC_CHECK_TYPES([uint32_t])
 
 # ------------------------------------------------------------------------
 # Functions 
@@ -297,25 +312,36 @@ fi
 # Compiler 
 # ---------------------------------------------------------------------------
 
-# Compiler characteristics
+AC_PROG_CC
+AC_PROG_CXX
 AC_C_CONST
 AC_C_BIGENDIAN
+# Define _GNU_SOURCE so we can have Posix headers etc included. We use the
+# -std=cXX compiler switch which only include a minimum of C headers
+CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
-# If the compiler is gcc, tune warnings and make the char type unsigned 
-# and enable C99 support
-if test "x$GCC" = "xyes"; then
-	CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
-        # Add C99 support
-        CFLAGS="$CFLAGS -D_GNU_SOURCE -std=c99"
-        # does this compiler support -Wno-pointer-sign ?
-        svd_CFLAGS="$CFLAGS"
-        CFLAGS="-Wno-pointer-sign $CFLAGS"
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])        
-        # does this compiler support -Wno-address ?
-        svd_CFLAGS="$CFLAGS"
-        CFLAGS="-Wno-address $CFLAGS"
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
-fi
+# Compiler; tune warnings and make the char type unsigned
+CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
+# does this compiler support -Wno-pointer-sign ?
+svd_CFLAGS="$CFLAGS"
+CFLAGS="-Wno-pointer-sign $CFLAGS"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+# does this compiler support -Wno-address ?
+svd_CFLAGS="$CFLAGS"
+CFLAGS="-Wno-address $CFLAGS"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+
+# Require at least C99 and use C11 if available
+AC_RUN_IFELSE(
+[AC_LANG_PROGRAM([], [dnl
+        #ifdef __STDC_VERSION__
+        #if __STDC_VERSION__ >= 201112L
+        return 0;
+        #endif
+        #endif
+        return 1;
+        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"])
+AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
 
 # ------------------------------------------------------------------------
 # IPv6 Support

@@ -9,7 +9,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdarg.h>
-#include <inttypes.h>
 
 #include "Bootstrap.h"
 #include "Str.h"
@@ -51,7 +50,7 @@ int main(void) {
         {
                 srandom((unsigned)(Time_now() + getpid()));
                 //
-                printf("\tnumber:   %"PRIx64"\n", System_randomNumber());
+                printf("\tnumber:   %llu\n", System_randomNumber());
                 //
                 printf("\t1  byte:  ");
                 char buf0[1];

@@ -90,13 +90,15 @@
 static int  pagesize;
 static long total_old    = 0;
 static long cpu_user_old = 0;
+static long cpu_nice_old = 0;
 static long cpu_syst_old = 0;
+static long cpu_intr_old = 0;
 
 
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
         size_t len = sizeof(systeminfo.cpu.count);
         if (sysctl(mib, 2, &systeminfo.cpu.count, &len, NULL, 0) == -1) {
@@ -152,7 +154,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 kvm_close(kvm_handle);
                 return 0;
         }
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
 
         ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
@@ -160,23 +162,23 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         if (pflags & ProcessEngine_CollectCommandLine)
                 cmdline = StringBuffer_create(64);
         for (int i = 0; i < treesize; i++) {
-                pt[i].pid                 = pinfo[i].ki_pid;
-                pt[i].ppid                = pinfo[i].ki_ppid;
-                pt[i].cred.uid            = pinfo[i].ki_ruid;
-                pt[i].cred.euid           = pinfo[i].ki_uid;
-                pt[i].cred.gid            = pinfo[i].ki_rgid;
-                pt[i].threads.self        = pinfo[i].ki_numthreads;
-                pt[i].uptime              = systeminfo.time / 10. - pinfo[i].ki_start.tv_sec;
-                pt[i].cpu.time            = (double)pinfo[i].ki_runtime / 100000.;
-                pt[i].memory.usage        = (uint64_t)pinfo[i].ki_rssize * (uint64_t)pagesize;
-                pt[i].read.bytes          = -1;
-                pt[i].read.bytesPhysical  = -1;
-                pt[i].read.operations     = pinfo[i].ki_rusage.ru_inblock;
-                pt[i].write.bytes         = -1;
-                pt[i].write.bytesPhysical = -1;
-                pt[i].write.operations    = pinfo[i].ki_rusage.ru_oublock;
-                pt[i].read.time           = pt[i].write.time = now;
-                pt[i].zombie              = pinfo[i].ki_stat == SZOMB ? true : false;
+                pt[i].pid                   = pinfo[i].ki_pid;
+                pt[i].ppid                  = pinfo[i].ki_ppid;
+                pt[i].cred.uid              = pinfo[i].ki_ruid;
+                pt[i].cred.euid             = pinfo[i].ki_uid;
+                pt[i].cred.gid              = pinfo[i].ki_rgid;
+                pt[i].threads.self          = pinfo[i].ki_numthreads;
+                pt[i].uptime                = systeminfo.time / 10. - pinfo[i].ki_start.tv_sec;
+                pt[i].cpu.time              = (double)pinfo[i].ki_runtime / 100000.;
+                pt[i].memory.usage          = (uint64_t)pinfo[i].ki_rssize * (uint64_t)pagesize;
+                pt[i].read.bytes            = -1;
+                pt[i].read.bytesPhysical    = -1;
+                pt[i].read.operations       = pinfo[i].ki_rusage.ru_inblock;
+                pt[i].write.bytes           = -1;
+                pt[i].write.bytesPhysical   = -1;
+                pt[i].write.operations      = pinfo[i].ki_rusage.ru_oublock;
+                pt[i].read.time             = pt[i].write.time = now;
+                pt[i].zombie                = pinfo[i].ki_stat == SZOMB ? true : false;
                 if (pflags & ProcessEngine_CollectCommandLine) {
                         char **args = kvm_getargv(kvm_handle, &pinfo[i], 0);
                         if (args) {
@@ -218,7 +220,7 @@ int getloadavg_sysdep(double *loadv, int nelem) {
  * This routine returns kbyte of real memory in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         /* Memory */
         size_t len = sizeof(unsigned int);
         unsigned int active;
@@ -239,7 +241,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 LogError("system statistics error -- wired memory usage statics error\n");
                 return false;
         }
-        uint64_t arcsize = 0ULL;
+        unsigned long long arcsize = 0ULL;
         len = sizeof(arcsize);
         if (sysctlbyname("kstat.zfs.misc.arcstats.size", &arcsize, &len, NULL, 0) == 0) {
                 if (len != sizeof(arcsize)) {
@@ -247,7 +249,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                         return false;
                 }
         }
-        si->memory.usage.bytes = (uint64_t)(active + wired) * (uint64_t)pagesize - arcsize;
+        si->memory.usage.bytes = (unsigned long long)(active + wired) * (unsigned long long)pagesize - arcsize;
 
         /* Swap */
         int mib[16] = {};
@@ -275,8 +277,8 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 used  += xsw.xsw_used;
                 n++;
         }
-        si->swap.size = (uint64_t)total * (uint64_t)pagesize;
-        si->swap.usage.bytes = (uint64_t)used * (uint64_t)pagesize;
+        si->swap.size = (unsigned long long)total * (unsigned long long)pagesize;
+        si->swap.usage.bytes = (unsigned long long)used * (unsigned long long)pagesize;
         return true;
 }
 
@@ -285,7 +287,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
         int    mib[2];
         long   cp_time[CPUSTATES];
         long   total_new = 0;
@@ -311,18 +313,39 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         total_old = total_new;
 
         si->cpu.usage.user = (total > 0) ? (100. * (double)(cp_time[CP_USER] - cpu_user_old) / total) : -1.;
+        si->cpu.usage.nice = (total > 0) ? (100. * (double)(cp_time[CP_NICE] - cpu_nice_old) / total) : -1.;
         si->cpu.usage.system = (total > 0) ? (100. * (double)(cp_time[CP_SYS] - cpu_syst_old) / total) : -1.;
-        si->cpu.usage.wait = 0.; /* there is no wait statistic available */
+        si->cpu.usage.hardirq = (total > 0) ? (100. * (double)(cp_time[CP_INTR] - cpu_intr_old) / total) : -1.;
 
         cpu_user_old = cp_time[CP_USER];
+        cpu_nice_old = cp_time[CP_NICE];
         cpu_syst_old = cp_time[CP_SYS];
+        cpu_intr_old = cp_time[CP_INTR];
 
         return true;
 }
 
 
-boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
-        // Not implemented
+bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+        // Open files
+        size_t len = sizeof(si->filedescriptors.allocated);
+        if (sysctlbyname("kern.openfiles", &si->filedescriptors.allocated, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.openfiles failed: %s\n", STRERROR);
+                return false;
+        }
+        // Max files
+        int mib[2] = {CTL_KERN, KERN_MAXFILES};
+        len = sizeof(si->filedescriptors.maximum);
+        if (sysctl(mib, 2, &si->filedescriptors.maximum, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.maxfiles failed: %s\n", STRERROR);
+                return false;
+        }
+        return true;
+}
+
+
+bool available_statistics(SystemInfo_T *si) {
+        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuNice | Statistics_CpuHardIRQ | Statistics_FiledescriptorsPerSystem;
         return true;
 }
 

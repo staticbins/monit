@@ -6,7 +6,6 @@
 #include <stdarg.h>
 #include <sys/wait.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <unistd.h>
 
 #include "Bootstrap.h"
@@ -21,7 +20,7 @@
  */
 
 
-boolean_t timeout_called = false;
+bool timeout_called = false;
 
 
 static void onExec(Process_T P) {
@@ -226,7 +225,11 @@ int main(void) {
         {
                 Command_T c = Command_new("/bin/sh", "-c", "echo \"Please enter your name:\";read name;echo \"Hello $name\";", NULL);
                 assert(c);
-                onExec(Command_execute(c));
+                Process_T p = Command_execute(c);
+                if (p)
+                        onExec(p);
+                else
+                        ERROR("Command_execute error: %s\n", System_getLastError());
                 Command_free(&c);
                 assert(!c);
         }

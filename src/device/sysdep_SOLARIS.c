@@ -90,21 +90,21 @@
 
 static struct {
         int generation;     // Increment each time the mount table is changed
-        uint64_t timestamp; // /etc/mnttab timestamp [ms] (changed on mount/unmount)
+        unsigned long long timestamp; // /etc/mnttab timestamp [ms] (changed on mount/unmount)
 } _statistics = {};
 
 
 /* ----------------------------------------------------------------- Private */
 
 
-static boolean_t _getDummyDiskActivity(void *_inf) {
+static bool _getDummyDiskActivity(void *_inf) {
         return true;
 }
 
 
-static boolean_t _getZfsDiskActivity(void *_inf) {
+static bool _getZfsDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        boolean_t rv = false;
+        bool rv = false;
         libzfs_handle_t *z = libzfs_init();
         libzfs_print_on_error(z, 1);
         zpool_handle_t *zp = zpool_open_canfail(z, inf->filesystem->object.key);
@@ -114,10 +114,10 @@ static boolean_t _getZfsDiskActivity(void *_inf) {
                 if (nvlist_lookup_nvlist(zpoolConfig, ZPOOL_CONFIG_VDEV_TREE, &zpoolVdevTree) == 0) {
                         vdev_stat_t *zpoolStatistics = NULL;
                         uint_t zpoolStatisticsCount = 0;
-                        if (nvlist_lookup_uint64_array(zpoolVdevTree, ZPOOL_CONFIG_VDEV_STATS, (uint64_t **)&zpoolStatistics, &zpoolStatisticsCount) == 0) {
+                        if (nvlist_lookup_uint64_array(zpoolVdevTree, ZPOOL_CONFIG_VDEV_STATS, (unsigned long long **)&zpoolStatistics, &zpoolStatisticsCount) == 0) {
                                 //FIXME: if the zpool state has error, trigger the fs event, can also report number of read/write/checksum errors (see vdev_stat_t in /usr/include/sys/fs/zfs.h)
                                 DEBUG("ZFS pool '%s' state: %s\n", inf->filesystem->object.key, zpool_state_to_name(zpoolStatistics->vs_state, zpoolStatistics->vs_aux));
-                                uint64_t now = Time_milli();
+                                unsigned long long now = Time_milli();
                                 Statistics_update(&(inf->filesystem->read.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_READ]);
                                 Statistics_update(&(inf->filesystem->write.bytes), now, zpoolStatistics->vs_bytes[ZIO_TYPE_WRITE]);
                                 Statistics_update(&(inf->filesystem->read.operations),  now, zpoolStatistics->vs_ops[ZIO_TYPE_READ]);
@@ -132,9 +132,9 @@ static boolean_t _getZfsDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _getKstatDiskActivity(void *_inf) {
+static bool _getKstatDiskActivity(void *_inf) {
         Info_T inf = _inf;
-        boolean_t rv = false;
+        bool rv = false;
         kstat_ctl_t *kctl = kstat_open();
         if (kctl) {
                 kstat_t *kstat;
@@ -144,7 +144,7 @@ static boolean_t _getKstatDiskActivity(void *_inf) {
                                 if (kstat_read(kctl, kstat, &kio) == -1) {
                                         LogError("filesystem statistics error: kstat_read failed -- %s\n", STRERROR);
                                 } else {
-                                        uint64_t now = Time_milli();
+                                        unsigned long long now = Time_milli();
                                         Statistics_update(&(inf->filesystem->read.bytes), now, kio.nread);
                                         Statistics_update(&(inf->filesystem->write.bytes), now, kio.nwritten);
                                         Statistics_update(&(inf->filesystem->read.operations),  now, kio.reads);
@@ -161,7 +161,7 @@ static boolean_t _getKstatDiskActivity(void *_inf) {
 }
 
 
-static boolean_t _getDiskUsage(void *_inf) {
+static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
         if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
@@ -179,18 +179,18 @@ static boolean_t _getDiskUsage(void *_inf) {
 }
 
 
-static boolean_t _compareMountpoint(const char *mountpoint, struct extmnttab *mnt) {
+static bool _compareMountpoint(const char *mountpoint, struct extmnttab *mnt) {
         return IS(mountpoint, mnt->mnt_mountp);
 }
 
 
-static boolean_t _compareDevice(const char *device, struct extmnttab *mnt) {
+static bool _compareDevice(const char *device, struct extmnttab *mnt) {
         char target[PATH_MAX] = {};
         return (IS(device, mnt->mnt_special) || (realpath(mnt->mnt_special, target) && IS(device, target)));
 }
 
 
-static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct extmnttab *mnt)) {
+static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct extmnttab *mnt)) {
         FILE *f = fopen(MNTTAB, "r");
         if (! f) {
                 LogError("Cannot open %s\n", MNTTAB);
@@ -198,7 +198,7 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
         }
         resetmnttab(f);
         struct extmnttab mnt;
-        boolean_t rv = false;
+        bool rv = false;
         inf->filesystem->object.generation = _statistics.generation;
         while (getextmntent(f, &mnt, sizeof(struct extmnttab)) == 0) {
                 if (compare(path, &mnt)) {
@@ -281,9 +281,9 @@ static boolean_t _setDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 }
 
 
-static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(const char *path, struct extmnttab *mnt)) {
+static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct extmnttab *mnt)) {
         struct stat sb;
-        if (stat(MNTTAB, &sb) != 0 || _statistics.timestamp != (uint64_t)((double)sb.st_mtim.tv_sec * 1000. + (double)sb.st_mtim.tv_nsec / 1000000.)) {
+        if (stat(MNTTAB, &sb) != 0 || _statistics.timestamp != (unsigned long long)((double)sb.st_mtim.tv_sec * 1000. + (double)sb.st_mtim.tv_nsec / 1000000.)) {
                 DEBUG("Mount notification: change detected\n");
                 _statistics.timestamp = (double)sb.st_mtim.tv_sec * 1000. + (double)sb.st_mtim.tv_nsec / 1000000.;
                 _statistics.generation++; // Increment, so all other filesystems can see the generation has changed
@@ -301,14 +301,14 @@ static boolean_t _getDevice(Info_T inf, const char *path, boolean_t (*compare)(c
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t Filesystem_getByMountpoint(Info_T inf, const char *path) {
+bool Filesystem_getByMountpoint(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareMountpoint);
 }
 
 
-boolean_t Filesystem_getByDevice(Info_T inf, const char *path) {
+bool Filesystem_getByDevice(Info_T inf, const char *path) {
         ASSERT(inf);
         ASSERT(path);
         return _getDevice(inf, path, _compareDevice);

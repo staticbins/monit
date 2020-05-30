@@ -73,13 +73,14 @@
 static int  pagesize;
 static long total_old    = 0;
 static long cpu_user_old = 0;
+static long cpu_nice_old = 0;
 static long cpu_syst_old = 0;
 
 
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         size_t size = sizeof(systeminfo.cpu.count);
         if (sysctlbyname("hw.logicalcpu", &systeminfo.cpu.count, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.logicalcpu failed: %s\n", STRERROR);
@@ -203,7 +204,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         } else if ((unsigned long)rv < sizeof(tinfo)) {
                                 LogError("proc_pidinfo for pid %d -- invalid result size\n", pt[i].pid);
                         } else {
-                                pt[i].memory.usage = (uint64_t)tinfo.pti_resident_size;
+                                pt[i].memory.usage = (unsigned long long)tinfo.pti_resident_size;
                                 pt[i].cpu.time = (double)(tinfo.pti_total_user + tinfo.pti_total_system) / 100000000.; // The time is in nanoseconds, we store it as 1/10s
                                 pt[i].threads.self = tinfo.pti_threadnum;
                         }
@@ -253,7 +254,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
  * This routine returns real memory in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         /* Memory */
         vm_statistics_data_t page_info;
         mach_msg_type_number_t count = HOST_VM_INFO_COUNT;
@@ -262,7 +263,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 DEBUG("system statistic error -- cannot get memory usage\n");
                 return false;
         }
-        si->memory.usage.bytes = (uint64_t)(page_info.wire_count + page_info.active_count) * (uint64_t)pagesize;
+        si->memory.usage.bytes = (unsigned long long)(page_info.wire_count + page_info.active_count) * (unsigned long long)pagesize;
 
         /* Swap */
         int mib[2] = {CTL_VM, VM_SWAPUSAGE};
@@ -273,8 +274,8 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 si->swap.size = 0ULL;
                 return false;
         }
-        si->swap.size = (uint64_t)swap.xsu_total;
-        si->swap.usage.bytes = (uint64_t)swap.xsu_used;
+        si->swap.size = (unsigned long long)swap.xsu_total;
+        si->swap.usage.bytes = (unsigned long long)swap.xsu_used;
 
         return true;
 }
@@ -284,7 +285,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
         long                      total;
         long                      total_new = 0;
         kern_return_t             kret;
@@ -300,10 +301,11 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
                 total_old = total_new;
 
                 si->cpu.usage.user = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_USER] - cpu_user_old) / total) : -1.;
+                si->cpu.usage.nice = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_NICE] - cpu_nice_old) / total) : -1.;
                 si->cpu.usage.system = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_SYSTEM] - cpu_syst_old) / total) : -1.;
-                si->cpu.usage.wait = 0.; /* there is no wait statistic available */
 
                 cpu_user_old = cpu_info.cpu_ticks[CPU_STATE_USER];
+                cpu_nice_old = cpu_info.cpu_ticks[CPU_STATE_NICE];
                 cpu_syst_old = cpu_info.cpu_ticks[CPU_STATE_SYSTEM];
 
                 return true;
@@ -312,8 +314,26 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
 }
 
 
-boolean_t used_system_filedescriptors_sysdep(__attribute__ ((unused)) SystemInfo_T *si) {
-        // Not implemented
+bool used_system_filedescriptors_sysdep(__attribute__ ((unused)) SystemInfo_T *si) {
+        // Open files
+        size_t len = sizeof(si->filedescriptors.allocated);
+        if (sysctlbyname("kern.num_files", &si->filedescriptors.allocated, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.openfiles failed: %s\n", STRERROR);
+                return false;
+        }
+        // Max files
+        int mib[2] = {CTL_KERN, KERN_MAXFILES};
+        len = sizeof(si->filedescriptors.maximum);
+        if (sysctl(mib, 2, &si->filedescriptors.maximum, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.maxfiles failed: %s\n", STRERROR);
+                return false;
+        }
+        return true;
+}
+
+
+bool available_statistics(SystemInfo_T *si) {
+        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuNice | Statistics_FiledescriptorsPerSystem;
         return true;
 }
 

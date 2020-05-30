@@ -54,7 +54,7 @@
  * @param socket A socket
  * @return true if success, otherwise false
  */
-int Net_setNonBlocking(int socket);
+bool Net_setNonBlocking(int socket);
 
 
 /**
@@ -62,7 +62,7 @@ int Net_setNonBlocking(int socket);
  * @param socket A socket
  * @return true if success, otherwise false
  */
-int Net_setBlocking(int socket);
+bool Net_setBlocking(int socket);
 
 
 /**
@@ -72,7 +72,7 @@ int Net_setBlocking(int socket);
  * @param milliseconds How long to wait before timeout
  * @return true if the event occured, otherwise false.
  */
-int Net_canRead(int socket, time_t milliseconds);
+bool Net_canRead(int socket, time_t milliseconds);
 
 
 /**
@@ -82,7 +82,7 @@ int Net_canRead(int socket, time_t milliseconds);
  * @param milliseconds How long to wait before timeout
  * @return true if the event occured, otherwise false.
  */
-int Net_canWrite(int socket, time_t milliseconds);
+bool Net_canWrite(int socket, time_t milliseconds);
 
 
 /**
@@ -118,7 +118,7 @@ ssize_t Net_write(int socket, const void *buffer, size_t size, time_t timeout);
  * @param socket The socket connection to abort and close
  * @return true if success otherwise false
  */
-int Net_abort(int socket);
+bool Net_abort(int socket);
 
 
 
@@ -130,7 +130,7 @@ int Net_abort(int socket);
  * sends and receives will be disallowed
  * @return true if success otherwise false
  */
-int Net_shutdown(int socket, int how);
+bool Net_shutdown(int socket, int how);
 
 
 /**
@@ -138,7 +138,7 @@ int Net_shutdown(int socket, int how);
  * @param socket The socket connection to close
  * @return true if success otherwise false
  */
-int Net_close(int socket);
+bool Net_close(int socket);
 
 
 #endif

@@ -62,9 +62,9 @@ struct T {
         time_t timeout;
         uchar_t *limit;
         uchar_t *length;
-        boolean_t isclosed;
+        bool isclosed;
         int sessionWritten;
-        long long int bytesWritten;
+        long long bytesWritten;
         uchar_t buffer[BUFFER_SIZE + 1];
 };
 
@@ -386,13 +386,13 @@ time_t OutputStream_getTimeout(T S) {
 }
 
 
-int OutputStream_isClosed(T S) {
+bool OutputStream_isClosed(T S) {
         assert(S);
         return S->isclosed;
 }
 
 
-long long int OutputStream_getBytesWritten(T S) {
+long long OutputStream_getBytesWritten(T S) {
         assert(S);
         return S->bytesWritten;
 }

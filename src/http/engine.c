@@ -86,10 +86,9 @@
 
 #include "monit.h"
 #include "engine.h"
-#include "net.h"
 #include "processor.h"
 #include "cervlet.h"
-#include "socket.h"
+#include "net/net.h"
 #include "SslServer.h"
 
 // libmonit
@@ -146,7 +145,7 @@ static struct {
 } data[MAX_SERVER_SOCKETS] = {};
 
 
-static volatile boolean_t stopped = false;
+static volatile bool stopped = false;
 static int myServerSocketsCount = 0;
 static struct pollfd myServerSockets[3] = {};
 static HostsAllow_T allowlist = NULL;
@@ -155,7 +154,7 @@ static HostsAllow_T allowlist = NULL;
 /* ----------------------------------------------------------------- Private */
 
 
-static boolean_t _hasAllow(HostsAllow_T host) {
+static bool _hasAllow(HostsAllow_T host) {
         for (HostsAllow_T p = allowlist; p; p = p->next)
                 if (memcmp(p->address, &(host->address), 16) == 0 && memcmp(p->mask, &(host->mask), 16) == 0)
                         return true;
@@ -184,7 +183,7 @@ static void _pushAllow(HostsAllow_T h, const char *pattern) {
 }
 
 
-static boolean_t _matchAllow(uint32_t address1[4], uint32_t address2[4], uint32_t mask[4]) {
+static bool _matchAllow(uint32_t address1[4], uint32_t address2[4], uint32_t mask[4]) {
         for (int i = 0; i < 4; i++)
                 if ((address1[i] & mask[i]) != (address2[i] & mask[i]))
                         return false;
@@ -192,7 +191,7 @@ static boolean_t _matchAllow(uint32_t address1[4], uint32_t address2[4], uint32_
 }
 
 
-static boolean_t _isAllowed(uint32_t address[4]) {
+static bool _isAllowed(uint32_t address[4]) {
         if (allowlist) {
                 for (HostsAllow_T p = allowlist; p; p = p->next)
                         if (_matchAllow(p->address, address, p->mask))
@@ -220,7 +219,7 @@ static void _mapIPv4toIPv6(uint32_t *address4, uint32_t *address6) {
 }
 
 
-static boolean_t _parseNetwork(char *pattern) {
+static bool _parseNetwork(char *pattern) {
         char *longmask = NULL;
         int shortmask = 0;
         int slashcount = 0;
@@ -338,7 +337,7 @@ static boolean_t _parseNetwork(char *pattern) {
 
 
 //FIXME: don't store the translated hostname->IPaddress on Monit startup to support DHCP hosts ... resolve the hostname in _authenticateHost()
-static boolean_t _parseHost(char *pattern) {
+static bool _parseHost(char *pattern) {
         struct addrinfo *res, hints = {
                 .ai_protocol = IPPROTO_TCP
         };
@@ -370,9 +369,9 @@ static boolean_t _parseHost(char *pattern) {
 }
 
 
-static boolean_t _authenticateHost(struct sockaddr *addr) {
+static bool _authenticateHost(struct sockaddr *addr) {
         if (addr->sa_family == AF_INET) {
-                boolean_t allow = false;
+                bool allow = false;
                 struct sockaddr_in *a = (struct sockaddr_in *)addr;
                 uint32_t address[4];
                 _mapIPv4toIPv6((uint32_t *)&(a->sin_addr), (uint32_t *)&address);
@@ -382,7 +381,7 @@ static boolean_t _authenticateHost(struct sockaddr *addr) {
         }
 #ifdef HAVE_IPV6
         else if (addr->sa_family == AF_INET6) {
-                boolean_t allow = false;
+                bool allow = false;
                 struct sockaddr_in6 *a = (struct sockaddr_in6 *)addr;
                 if (! (allow = _isAllowed((uint32_t *)&(a->sin6_addr))))
                         LogError("Denied connection from non-authorized client [%s]\n", inet_ntop(addr->sa_family, &(a->sin6_addr), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
@@ -409,7 +408,7 @@ static Socket_T _socketProducer(void) {
                                         LogError("HTTP server: cannot accept connection -- %s\n", stopped ? "service stopped" : STRERROR);
                                         return NULL;
                                 }
-                                if (Net_setNonBlocking(client) < 0 || ! Net_canRead(client, 500) || ! Net_canWrite(client, 500) || ! _authenticateHost(data[i].addr)) {
+                                if (!Net_setNonBlocking(client) || !Net_canRead(client, 500) || !Net_canWrite(client, 500) || ! _authenticateHost(data[i].addr)) {
                                         Net_abort(client);
                                         return NULL;
                                 }
@@ -530,7 +529,7 @@ void Engine_cleanup() {
 }
 
 
-boolean_t Engine_addAllow(char *pattern) {
+bool Engine_addAllow(char *pattern) {
         ASSERT(pattern);
         if (_parseNetwork(pattern) || _parseHost(pattern))
                 return true;
@@ -538,7 +537,7 @@ boolean_t Engine_addAllow(char *pattern) {
 }
 
 
-boolean_t Engine_hasAllow() {
+bool Engine_hasAllow() {
         return allowlist ? true : false;
 }
 

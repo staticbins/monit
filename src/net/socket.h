@@ -141,7 +141,7 @@ int Socket_getTimeout(T S);
  * @param S A Socket_T object
  * @return true if SSL is used otherwise false
  */
-boolean_t Socket_isSecure(T S);
+bool Socket_isSecure(T S);
 
 
 /**

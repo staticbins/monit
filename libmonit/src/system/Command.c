@@ -34,10 +34,12 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <pwd.h>
 #include <grp.h>
-#include <fcntl.h>
+
+#ifdef HAVE_USERSEC_H
+#include <usersec.h>
+#endif
 
 #include "Str.h"
 #include "Dir.h"
@@ -88,6 +90,12 @@ struct Process_T {
         InputStream_T err;
         OutputStream_T out;
         char *working_directory;
+};
+
+
+struct _usergroups {
+        int ngroups;
+        gid_t groups[NGROUPS_MAX];
 };
 
 
@@ -213,6 +221,71 @@ static void _closeStreams(Process_T P) {
 }
 
 
+#ifdef AIX
+static int getgrouplist(const char *name, int basegid, int *groups, int *ngroups) {
+        int rv = -1;
+
+        // Open the user database
+        if (setuserdb(S_READ) != 0) {
+                ERROR("Cannot open user database -- %s\n", System_getError(errno));
+                goto error4;
+        }
+
+        // Get administrative domain for the user so we can lookup the group membership in the correct database (files, LDAP, etc).
+        char *registry;
+        if (getuserattr((char *)name, S_REGISTRY, &registry, SEC_CHAR) == 0 && setauthdb(registry, NULL) != 0) {
+                ERROR("Administrative domain switch to %s for user %s failed -- %s\n", registry, name, System_getError(errno));
+                goto error3;
+        }
+
+        // Get the list of groups for the named user
+        char *groupList = getgrset(name);
+        if (! groupList) {
+                ERROR("Cannot get groups for user %s\n", name);
+                goto error2;
+        }
+
+        // Add the base GID
+        int count = 1;
+        groups[0] = basegid;
+
+        // Parse the comma separated list of groups
+        char *lastGroup = NULL;
+        for (char *currentGroup = strtok_r(groupList, ",", &lastGroup); currentGroup; currentGroup = strtok_r(NULL, ",", &lastGroup)) {
+                gid_t gid = (gid_t)Str_parseInt(currentGroup);
+                // Add the GID to the list (unless it's basegid, which we pushed to the beginning of groups list already)
+                if (gid != basegid) {
+                        if (count == *ngroups) {
+                                // Maximum groups reached (error will be indicated by -1 return value, but we return as many groups as possible in the list)
+                                goto error1;
+                        }
+                        groups[count++] = gid;
+                }
+        }
+
+        // Success
+        rv = 0;
+        *ngroups = count;
+
+error1:
+        FREE(groupList);
+
+error2:
+        // Restore the administrative domain
+        setauthdb(NULL, NULL);
+
+error3:
+        // Close the user database
+        if (enduserdb() != 0) {
+                ERROR("Cannot close user database -- %s\n", System_getError(errno));
+        }
+
+error4:
+        return rv;
+}
+#endif
+
+
 /* -------------------------------------------------------------- Process_T */
 
 
@@ -307,7 +380,7 @@ int Process_exitStatus(Process_T P) {
 }
 
 
-int Process_isRunning(Process_T P) {
+bool Process_isRunning(Process_T P) {
         assert(P);
         return Process_exitStatus(P) < 0;
 }
@@ -488,17 +561,28 @@ List_T Command_getCommand(T C) {
 /* The Execute function. Note that we use vfork() rather than fork. Vfork has
  a special semantic in that the child process runs in the parent address space
  until exec is called in the child. The child also run first and suspend the
- parent process until exec or exit is called */
+ parent process until exec or exit is called
+ 
+ Note: For possible better error reporting, set exec_error to an enum of possible
+ errors and exit with that error. Return Process_T regardless and introduce a
+ char *Process_getError() which uses waitpid() to get the error status from child exit.
+ I.e. similar to what we do with spawn.c
+ */
 Process_T Command_execute(T C) {
         assert(C);
         assert(_env(C));
         assert(_args(C));
         volatile int exec_error = 0;
-        struct passwd *user = NULL;
+        struct _usergroups ug = (struct _usergroups){.groups = {}, .ngroups = NGROUPS_MAX};
         if (C->uid) {
-                user = getpwuid(C->uid);
+                struct passwd *user = getpwuid(C->uid);
                 if (!user) {
                         ERROR("Command: uid %d not found on the system -- %s\n", C->uid, System_getLastError());
+                        return NULL;
+                }
+                Command_setEnv(C, "HOME", user->pw_dir);
+                if (getgrouplist(user->pw_name, C->gid, (int*)ug.groups, &ug.ngroups) == -1) {
+                        ERROR("Command: getgrouplist for uid %d -- %s\n", C->uid, System_getLastError());
                         return NULL;
                 }
         }
@@ -514,7 +598,6 @@ Process_T Command_execute(T C) {
                 if (C->working_directory) {
                         if (! Dir_chdir(C->working_directory)) {
                                 exec_error = errno;
-                                ERROR("Command: sub-process cannot change working directory to '%s' -- %s\n", C->working_directory, System_getLastError());
                                 _exit(errno);
                         }
                 }
@@ -530,28 +613,19 @@ Process_T Command_execute(T C) {
                                 P->gid = C->gid;
                         } else {
                                 exec_error = errno;
-                                ERROR("Command: Cannot change process gid to '%d' -- %s\n", C->gid, System_getLastError());
                                 _exit(errno);
                         }
                 }
                 P->uid = getuid();
-                if (C->uid) {
-                        assert(user);
-                        // TODO: https://bitbucket.org/tildeslash/monit/issues/278/monit-should-drop-supplementary-groups
-                        if (initgroups(user->pw_name, P->gid) == 0) {
-                                Command_setEnv(C, "HOME", user->pw_dir);
+                while (C->uid) {
+                        if (setgroups(ug.ngroups, ug.groups) == 0) {
                                 if (setuid(C->uid) == 0) {
                                         P->uid = C->uid;
-                                } else {
-                                        exec_error = errno;
-                                        ERROR("Command: Cannot change process uid to '%d' -- %s\n", C->uid, System_getLastError());
-                                        _exit(errno);
+                                        break;
                                 }
-                        } else {
-                                exec_error = errno;
-                                ERROR("Command: initgroups for user %s failed -- %s\n", user->pw_name, System_getLastError());
-                                _exit(errno);
                         }
+                        exec_error = errno;
+                        _exit(errno);
                 }
                 // Unblock any signals and reset signal handlers
                 sigset_t mask;
@@ -567,9 +641,6 @@ Process_T Command_execute(T C) {
                 signal(SIGHUP, SIG_IGN);  // Ensure future opens won't allocate controlling TTYs
                 // Execute the program
                 execve(_args(C)[0], _args(C), _env(C));
-                // Won't print to error log as descriptor was closed above, but will
-                // print error to stderr which Processor_T can be read
-                ERROR("Command: '%s' failed to execute -- %s", _args(C)[0], System_getLastError());
                 exec_error = errno;
                 _exit(errno);
         }

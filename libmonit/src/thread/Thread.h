@@ -306,13 +306,6 @@
  */
 void Thread_init(void);
 
-
-/**
- * Shutdown and cleanup threads. This method should be called at program termination
- */
-void Thread_fini(void);
-
-
 //>> End filter-out
 
 

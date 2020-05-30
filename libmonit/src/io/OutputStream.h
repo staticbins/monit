@@ -111,7 +111,7 @@ time_t OutputStream_getTimeout(T S);
  * @param S An OutputStream object
  * @return true if the stream is closed, otherwise false
  */
-int OutputStream_isClosed(T S);
+bool OutputStream_isClosed(T S);
 
 
 /**
@@ -120,7 +120,7 @@ int OutputStream_isClosed(T S);
  * @param S An OutputStream object
  * @return The total number of bytes written
  */
-long long int OutputStream_getBytesWritten(T S);
+long long OutputStream_getBytesWritten(T S);
 
 //@}
 

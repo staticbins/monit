@@ -32,7 +32,7 @@
  */
 
 
-static boolean_t _update(T L, const char *interface) {
+static bool _update(T L, const char *interface) {
         char buf[STRLEN];
         char path[PATH_MAX];
         char name[STRLEN];

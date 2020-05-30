@@ -53,6 +53,10 @@
 #include <uvm/uvm.h>
 #endif
 
+#ifdef HAVE_UVM_UVM_EXTERN_H
+#include <uvm/uvm_extern.h>
+#endif
+
 #ifdef HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
 #endif
@@ -65,6 +69,8 @@
 #include "ProcessTree.h"
 #include "process_sysdep.h"
 
+// libmonit
+#include "system/Time.h"
 
 /**
  *  System dependent resource data collecting code for NetBSD.
@@ -79,14 +85,16 @@
 static int      pagesize;
 static long     total_old    = 0;
 static long     cpu_user_old = 0;
+static long     cpu_nice_old = 0;
 static long     cpu_syst_old = 0;
+static long     cpu_intr_old = 0;
 static unsigned int maxslp;
 
 
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
         size_t len = sizeof(systeminfo.cpu.count);
         if (sysctl(mib, 2, &systeminfo.cpu.count, &len, NULL, 0) == -1) {
@@ -165,7 +173,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 return 0;
         }
 
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         StringBuffer_T cmdline = NULL;
         if (pflags & ProcessEngine_CollectCommandLine)
                 cmdline = StringBuffer_create(64);
@@ -178,7 +186,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].threads.self        = pinfo[i].p_nlwps;
                 pt[i].uptime              = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
                 pt[i].cpu.time            = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
-                pt[i].memory.usage        = (uint64_t)pinfo[i].p_vm_rssize * (uint64_t)pagesize;
+                pt[i].memory.usage        = (unsigned long long)pinfo[i].p_vm_rssize * (unsigned long long)pagesize;
                 pt[i].zombie              = pinfo[i].p_stat == SZOMB ? true : false;
                 pt[i].read.bytes          = -1;
                 pt[i].read.bytesPhysical  = -1;
@@ -230,7 +238,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
  * This routine returns kbyte of real memory in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         struct uvmexp_sysctl vm;
         int mib[2] = {CTL_VM, VM_UVMEXP2};
         size_t len = sizeof(struct uvmexp_sysctl);
@@ -239,9 +247,9 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 si->swap.size = 0ULL;
                 return false;
         }
-        si->memory.usage.bytes = (uint64_t)(vm.active + vm.wired) * (uint64_t)vm.pagesize;
-        si->swap.size = (uint64_t)vm.swpages * (uint64_t)vm.pagesize;
-        si->swap.usage.bytes = (uint64_t)vm.swpginuse * (uint64_t)vm.pagesize;
+        si->memory.usage.bytes = (unsigned long long)(vm.active + vm.wired) * (unsigned long long)vm.pagesize;
+        si->swap.size = (unsigned long long)vm.swpages * (unsigned long long)vm.pagesize;
+        si->swap.usage.bytes = (unsigned long long)vm.swpginuse * (unsigned long long)vm.pagesize;
         return true;
 }
 
@@ -250,7 +258,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
         int       mib[] = {CTL_KERN, KERN_CP_TIME};
         long long cp_time[CPUSTATES];
         long      total_new = 0;
@@ -269,18 +277,27 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         total_old = total_new;
 
         si->cpu.usage.user = (total > 0) ? (100. * (double)(cp_time[CP_USER] - cpu_user_old) / total) : -1.;
+        si->cpu.usage.nice = (total > 0) ? (100. * (double)(cp_time[CP_NICE] - cpu_nice_old) / total) : -1.;
         si->cpu.usage.system = (total > 0) ? (100. * (double)(cp_time[CP_SYS] - cpu_syst_old) / total) : -1.;
-        si->cpu.usage.wait = 0; /* there is no wait statistic available */
+        si->cpu.usage.hardirq = (total > 0) ? (100. * (double)(cp_time[CP_INTR] - cpu_intr_old) / total) : -1.;
 
         cpu_user_old = cp_time[CP_USER];
+        cpu_nice_old = cp_time[CP_NICE];
         cpu_syst_old = cp_time[CP_SYS];
+        cpu_intr_old = cp_time[CP_INTR];
 
         return true;
 }
 
 
-boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+bool used_system_filedescriptors_sysdep(__attribute__ ((unused)) SystemInfo_T *si) {
         // Not implemented
+        return true;
+}
+
+
+bool available_statistics(SystemInfo_T *si) {
+        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuNice | Statistics_CpuHardIRQ;
         return true;
 }
 

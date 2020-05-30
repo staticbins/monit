@@ -3,7 +3,7 @@
 AUTOMAKE_OPTIONS = foreign no-dependencies subdir-objects
 ACLOCAL_AMFLAGS	 = -I m4
 
-EXTRA_DIST	= README COPYING CONTRIBUTORS bootstrap doc src config monitrc system libmonit monit.1
+EXTRA_DIST	= COPYING CONTRIBUTORS bootstrap doc src config monitrc system libmonit monit.1
 
 SUBDIRS		= libmonit
 
@@ -33,10 +33,12 @@ monit_SOURCES	= src/y.tab.c \
 		  src/log.c \
 		  src/md5.c \
 		  src/md5_crypt.c \
-		  src/net.c \
+		  src/net/net.c \
+                  src/net/socket.c \
+                  src/net/Link.c \
 		  src/sha1.c \
+		  src/checksum.c \
 		  src/signal.c \
-		  src/socket.c \
 		  src/spawn.c \
 		  src/state.c \
 		  src/util.c \
@@ -91,7 +93,8 @@ monit_SOURCES	= src/y.tab.c \
 		  src/protocols/websocket.c \
 		  src/ssl/Ssl.c \
 		  src/terminal/Box.c \
-		  src/terminal/Color.c
+		  src/terminal/Color.c \
+                  src/statistics/Statistics.c
 
 monit_LDADD 	= libmonit/libmonit.la
 monit_LDFLAGS 	= -static $(EXTLDFLAGS)
@@ -122,6 +125,7 @@ dist-hook::
 	-rm -f $(distdir)/src/stamp-*
 	-rm -f $(distdir)/src/y.output
 	-rm -f $(distdir)/README.md
+	-rm -f $(distdir)/libmonit/README*
 	-mv $(distdir)/doc/CHANGES $(distdir)/
 	-perl -pi -e 's/^Version: .*/Version: '$(VERSION)'/' $(distdir)/system/packages/redhat/monit.spec
 	-chmod 600 monitrc
@@ -134,7 +138,7 @@ distclean-local:
 	-rm -f monit-[0-9].*tar.gz
 
 cleanall: clean distclean
-	git clean -fxd
+	-git clean -fxd
 
 monit.1: doc/monit.pod
 	$(POD2MAN) $(POD2MANFLAGS) $< > $@

@@ -85,7 +85,7 @@ static unsigned char decode(char c) {
 /**
  * Return true if 'c' is a valid base64 character, otherwise false
  */
-static boolean_t is_base64(char c) {
+static bool is_base64(char c) {
         return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || (c == '+') || (c == '/') || (c == '=')) ? true : false;
 }
 

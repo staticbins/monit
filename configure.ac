@@ -48,9 +48,11 @@ else
 fi
 
 AX_CHECK_COMPILE_FLAG([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
-AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"])
-AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [CFLAGS="$CFLAGS -fcf-protection=full"])
-AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [CFLAGS="$CFLAGS -fstack-clash-protection"])
+if test `uname` != "AIX"; then
+        AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"])
+        AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [CFLAGS="$CFLAGS -fcf-protection=full"])
+        AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [CFLAGS="$CFLAGS -fstack-clash-protection"])
+fi
 
 
 # ------------------------------------------------------------------------
@@ -116,7 +118,6 @@ AC_CHECK_HEADERS([ \
 	loadavg.h \
 	locale.h \
 	lvm.h \
-        mach/boolean.h \
         mach/host_info.h \
         mach/mach.h \
         mach/mach_host.h \
@@ -186,7 +187,9 @@ AC_CHECK_HEADERS([ \
         uvm/uvm_extern.h \
         uvm/uvm_param.h \
         vm/vm.h \
-        inttypes.h \
+        net/if_media.h \
+        net/if_dl.h \
+        net/route.h
 	])
 
 AC_CHECK_HEADERS([ \
@@ -240,7 +243,7 @@ AC_CHECK_HEADERS([ \
          #include <netinet/ip.h>
          #endif
         ])
-
+        
 AC_CHECK_HEADERS([ \
 	netinet/icmp6.h \
         ],
@@ -361,25 +364,6 @@ AC_CHECK_HEADERS([ \
 # Types
 # ------------------------------------------------------------------------
 
-AC_CHECK_TYPES([boolean_t], [], [],
-        [
-         #ifdef HAVE_SYS_TYPES_H
-         #include <sys/types.h>
-         #endif
-         #ifdef HAVE_MACH_BOOLEAN_H
-         #include <mach/boolean.h>
-         #endif
-         #ifdef HAVE_UVM_UVM_PARAM_H
-         #include <uvm/uvm_param.h>
-         #endif
-         #ifdef HAVE_VM_VM_H
-         #include <vm/vm.h>
-         #endif
-         #ifdef HAVE_KINFO_H
-         #include <kinfo.h>
-         #endif
-        ])
-
 AC_TYPE_MODE_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
@@ -409,6 +393,7 @@ AC_CHECK_FUNCS(vsyslog)
 AC_CHECK_FUNCS(backtrace)
 AC_CHECK_FUNCS(getloadavg)
 AC_CHECK_FUNCS(getopt_long)
+AC_CHECK_FUNCS(prlimit)
 
 AC_MSG_CHECKING(for va_copy)
 AC_TRY_LINK([
@@ -429,25 +414,36 @@ AC_TRY_LINK([
 # Compiler
 # ------------------------------------------------------------------------
 
-# Compiler characteristics
+AC_PROG_CC
+AC_PROG_CXX
 AC_C_CONST
 AC_C_BIGENDIAN
+# Define _GNU_SOURCE so we can have Posix headers etc included. We use the
+# -std=cXX compiler switch which only include a minimum of C headers
+CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
-# If the compiler is gcc, tune warnings and make the char type unsigned
-# and enable C99 support
-if test "x$GCC" = "xyes"; then
-	CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
-        # Add C99 support
-        CFLAGS="$CFLAGS -D_GNU_SOURCE -std=c99"
-        # does this compiler support -Wno-pointer-sign ?
-        svd_CFLAGS="$CFLAGS"
-        CFLAGS="-Wno-pointer-sign $CFLAGS"
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
-        # does this compiler support -Wno-address ?
-        svd_CFLAGS="$CFLAGS"
-        CFLAGS="-Wno-address $CFLAGS"
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
-fi
+# Compiler; tune warnings and make the char type unsigned
+CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
+# does this compiler support -Wno-pointer-sign ?
+svd_CFLAGS="$CFLAGS"
+CFLAGS="-Wno-pointer-sign $CFLAGS"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+# does this compiler support -Wno-address ?
+svd_CFLAGS="$CFLAGS"
+CFLAGS="-Wno-address $CFLAGS"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+
+# Require at least C99 and use C11 if available
+AC_RUN_IFELSE(
+[AC_LANG_PROGRAM([], [dnl
+        #ifdef __STDC_VERSION__
+        #if __STDC_VERSION__ >= 201112L
+        return 0;
+        #endif
+        #endif
+        return 1;
+        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"])
+AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
 
 
 # ------------------------------------------------------------------------
@@ -543,7 +539,6 @@ then
    AC_CHECK_LIB([zfs], [libzfs_init])
    AC_CHECK_LIB([nvpair], [nvlist_free])
    AC_CHECK_LIB([kstat], [kstat_open])
-   AC_DEFINE([HAVE_CPU_WAIT], [1], [Define to 1 if CPU wait information is available.])
    if test `uname -m` = "i86pc"
    then
       if test "x$GCC" = "xyes"
@@ -569,10 +564,6 @@ then
    ARCH="LINUX"
    CFLAGS="$CFLAGS -D _REENTRANT"
    LDFLAGS="$LDFLAGS -rdynamic"
-   if test `uname -r | awk -F '.' '{print$1$2}'` -ge "26"
-   then
-   	AC_DEFINE([HAVE_CPU_WAIT], [1], [Define to 1 if CPU wait information is available.])
-   fi
 elif test "$architecture" = "OpenBSD"
 then
    ARCH="OPENBSD"
@@ -615,13 +606,13 @@ then
    CFLAGS=`echo $CFLAGS|sed 's/-g//g'`
    CFLAGS="$CFLAGS -D_THREAD_SAFE -D_REENTRANT"
    LIBS="$LIBS -lodm -lperfstat -lm"
-   AC_DEFINE([HAVE_CPU_WAIT], [1], [Define to 1 if CPU wait information is available.])
 else
    AC_MSG_WARN([Architecture not supported: ${architecture}])
    CFLAGS="$CFLAGS -D _REENTRANT"
    ARCH="UNKNOWN"
 fi
 AC_SUBST(ARCH)
+
 
 # ------------------------------------------------------------------------
 # Large files code
@@ -768,6 +759,8 @@ if test "$use_asan" = "1"; then
         AX_CHECK_COMPILE_FLAG([-fsanitize=bounds-strict], [CFLAGS="$CFLAGS -fsanitize=bounds-strict"])
         AX_CHECK_COMPILE_FLAG([-fsanitize=null], [CFLAGS="$CFLAGS -fsanitize=null "])
         AX_CHECK_COMPILE_FLAG([-fsanitize=object-size], [CFLAGS="$CFLAGS -fsanitize=object-size"])
+        AX_CHECK_COMPILE_FLAG([-fsanitize=undefined], [CFLAGS="$CFLAGS -fsanitize=undefined"])
+        AC_DEFINE([HAVE_ASAN], 1, [Define to 1 if you have address sanitizer.])
 fi
 
 
@@ -827,6 +820,9 @@ AC_ARG_WITH(ssl-static,
         AC_SUBST(ssllibdir)
         CFLAGS="$CFLAGS -I$sslincldir"
         LIBS="$LIBS $ssllibdir/libssl.a $ssllibdir/libcrypto.a"
+        if test `uname` = "Linux" && test `uname -m` = "aarch64"; then
+            LIBS="$LIBS -ldl"
+        fi
     ],
     [
 	use_sslstatic=0

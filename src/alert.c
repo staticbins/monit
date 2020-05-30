@@ -50,7 +50,6 @@
 
 #include "monit.h"
 #include "event.h"
-#include "net.h"
 #include "alert.h"
 #include "SMTP.h"
 
@@ -203,8 +202,8 @@ static MailServer_T _connectMTA(void) {
 }
 
 
-static boolean_t _send(List_T list) {
-        volatile boolean_t failed = false;
+static bool _send(List_T list) {
+        volatile bool failed = false;
         if (List_length(list)) {
                 volatile Mail_T m = NULL;
                 volatile SMTP_T smtp = NULL;
@@ -238,7 +237,7 @@ static boolean_t _send(List_T list) {
                                                 "MIME-Version: 1.0\r\n"
                                                 "Content-Type: text/plain; charset=utf-8\r\n"
                                                 "Content-Transfer-Encoding: 8bit\r\n"
-                                                "Message-Id: <%lld.%"PRIx64"@%s>\r\n"
+                                                "Message-Id: <%lld.%llx@%s>\r\n"
                                                 "\r\n"
                                                 "%s",
                                                 m->to,
@@ -276,7 +275,7 @@ static boolean_t _send(List_T list) {
 }
 
 
-static boolean_t _hasRecipient(Mail_T list, const char *recipient) {
+static bool _hasRecipient(Mail_T list, const char *recipient) {
         for (Mail_T l = list; l; l = l->next)
                 if (IS(recipient, l->to))
                         return true;

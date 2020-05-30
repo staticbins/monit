@@ -103,15 +103,15 @@
 static int    page_size;
 static long   old_cpu_user = 0;
 static long   old_cpu_syst = 0;
-static long   old_cpu_wait = 0;
+static long   old_cpu_iowait = 0;
 static long   old_total = 0;
 
 #define MAXSTRSIZE 80
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         systeminfo.cpu.count = sysconf( _SC_NPROCESSORS_ONLN);
         page_size = getpagesize();
-        systeminfo.memory.size = (uint64_t)sysconf(_SC_PHYS_PAGES) * (uint64_t)page_size;
+        systeminfo.memory.size = (unsigned long long)sysconf(_SC_PHYS_PAGES) * (unsigned long long)page_size;
         kstat_ctl_t *kctl = kstat_open();
         if (kctl) {
                 kstat_t *kstat = kstat_lookup(kctl, "unix", 0, "system_misc");
@@ -119,7 +119,7 @@ boolean_t init_process_info_sysdep(void) {
                         if (kstat_read(kctl, kstat, 0) != -1) {
                                 kstat_named_t *knamed = kstat_data_lookup(kstat, "boot_time");
                                 if (knamed)
-                                        systeminfo.booted = (uint64_t)knamed->value.ul;
+                                        systeminfo.booted = (unsigned long long)knamed->value.ul;
                         }
                 }
                 kstat_close(kctl);
@@ -165,7 +165,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[i].cred.gid     = psinfo->pr_gid;
                         pt[i].uptime       = systeminfo.time / 10. - psinfo->pr_start.tv_sec;
                         pt[i].zombie       = psinfo->pr_nlwp == 0 ? true : false; // If we don't have any light-weight processes (LWP) then we are definitely a zombie
-                        pt[i].memory.usage = (uint64_t)psinfo->pr_rssize * 1024;
+                        pt[i].memory.usage = (unsigned long long)psinfo->pr_rssize * 1024;
                         if (pflags & ProcessEngine_CollectCommandLine) {
                                 pt[i].cmdline = Str_dup(psinfo->pr_psargs);
                                 if (STR_UNDEF(pt[i].cmdline)) {
@@ -215,7 +215,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
  * This routine returns kbyte of real memory in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         int                 n, num;
         kstat_ctl_t        *kctl;
         kstat_named_t      *knamed;
@@ -239,7 +239,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                         }
                         kstat_named_t *rss = kstat_data_lookup(kstat, "rss");
                         if (rss)
-                                si->memory.usage.bytes = (uint64_t)rss->value.i64;
+                                si->memory.usage.bytes = (unsigned long long)rss->value.i64;
                 } else {
                         /* Solaris Zone */
                         size_t nres;
@@ -249,7 +249,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                                 kstat_close(kctl);
                                 return false;
                         }
-                        si->memory.usage.bytes = (uint64_t)result.vmu_rss_all;
+                        si->memory.usage.bytes = (unsigned long long)result.vmu_rss_all;
                 }
         } else {
                 kstat = kstat_lookup(kctl, "unix", 0, "system_pages");
@@ -260,11 +260,11 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 }
                 knamed = kstat_data_lookup(kstat, "freemem");
                 if (knamed) {
-                        uint64_t freemem = (uint64_t)knamed->value.ul * (uint64_t)page_size, arcsize = 0ULL;
+                        unsigned long long freemem = (unsigned long long)knamed->value.ul * (unsigned long long)page_size, arcsize = 0ULL;
                         kstat = kstat_lookup(kctl, "zfs", 0, "arcstats");
                         if (kstat_read(kctl, kstat, 0) != -1) {
                                 knamed = kstat_data_lookup(kstat, "size");
-                                arcsize = (uint64_t)knamed->value.ul;
+                                arcsize = (unsigned long long)knamed->value.ul;
                         }
                         si->memory.usage.bytes = systeminfo.memory.size - freemem - arcsize;
                 }
@@ -308,8 +308,8 @@ again:
         }
         FREE(s);
         FREE(strtab);
-        si->swap.size = (uint64_t)total * (uint64_t)page_size;
-        si->swap.usage.bytes = (uint64_t)used * (uint64_t)page_size;
+        si->swap.size = (unsigned long long)total * (unsigned long long)page_size;
+        si->swap.usage.bytes = (unsigned long long)used * (unsigned long long)page_size;
 
         return true;
 }
@@ -319,16 +319,16 @@ again:
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
         int             ncpu = 0, ncpus;
-        long            cpu_user = 0, cpu_syst = 0, cpu_wait = 0, total = 0, diff_total;
+        long            cpu_user = 0, cpu_syst = 0, cpu_iowait = 0, total = 0, diff_total;
         kstat_ctl_t    *kctl;
         kstat_named_t  *knamed;
         kstat_t        *kstat;
         kstat_t       **cpu_ks;
         cpu_stat_t     *cpu_stat;
 
-        si->cpu.usage.user = si->cpu.usage.system = si->cpu.usage.wait = 0;
+        si->cpu.usage.user = si->cpu.usage.system = si->cpu.usage.iowait = 0;
 
         kctl  = kstat_open();
         kstat = kstat_lookup(kctl, "unix", 0, "system_misc");
@@ -371,21 +371,21 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
                 }
                 cpu_user += cpu_stat[i].cpu_sysinfo.cpu[CPU_USER];
                 cpu_syst += cpu_stat[i].cpu_sysinfo.cpu[CPU_KERNEL];
-                cpu_wait += cpu_stat[i].cpu_sysinfo.cpu[CPU_WAIT];
+                cpu_iowait += cpu_stat[i].cpu_sysinfo.cpu[CPU_WAIT];
                 total    += (cpu_stat[i].cpu_sysinfo.cpu[0] + cpu_stat[i].cpu_sysinfo.cpu[1] + cpu_stat[i].cpu_sysinfo.cpu[2] + cpu_stat[i].cpu_sysinfo.cpu[3]);
         }
 
         if (old_total == 0) {
-                si->cpu.usage.user = si->cpu.usage.system = si->cpu.usage.wait = -1.;
+                si->cpu.usage.user = si->cpu.usage.system = si->cpu.usage.iowait = -1.;
         } else if ((diff_total = total - old_total) > 0) {
                 si->cpu.usage.user = (100. * (cpu_user - old_cpu_user)) / diff_total;
                 si->cpu.usage.system = (100. * (cpu_syst - old_cpu_syst)) / diff_total;
-                si->cpu.usage.wait = (100. * (cpu_wait - old_cpu_wait)) / diff_total;
+                si->cpu.usage.iowait = (100. * (cpu_iowait - old_cpu_iowait)) / diff_total;
         }
 
         old_cpu_user = cpu_user;
         old_cpu_syst = cpu_syst;
-        old_cpu_wait = cpu_wait;
+        old_cpu_iowait = cpu_iowait;
         old_total    = total;
 
         FREE(cpu_ks);
@@ -404,8 +404,14 @@ error:
 }
 
 
-boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
         // Not implemented
+        return true;
+}
+
+
+bool available_statistics(SystemInfo_T *si) {
+        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuIOWait;
         return true;
 }
 

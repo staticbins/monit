@@ -2003,9 +2003,81 @@ queue per CPU core, averaged over the specified time period. Example:
 If you'll omit the I<per core> option, the test will check the total load average
 regardless of CPU cores count.
 
-I<CPU([user|system|wait])> is the percent of time the system spend
-in user or kernel space and waiting for I/O. The user/system/wait modifier
-is optional, if not used, the total system cpu usage is tested. Example:
+I<CPU([user|system|wait|nice|hardirq|softirq|steal|guest|guestnice])> is the percent
+of time the system spend in given type of task:
+
+=over 4
+
+=item user
+
+The CPU is running code in user space mode, which includes any process that doesn't belong
+to the kernel, such as webservers, databases, shells and desktop related programs.
+
+=item system
+
+The CPU is running the kernel, which includes drivers and other kernel modules. The kernel
+also handles requests from user space processes like memory allocation, disk and network I/O
+and creating child processes.
+
+=item wait
+
+I/O wait is when the CPU was idle while waiting for an I/O operation from disk or network to
+complete.
+
+=item nice
+
+The nice statistics accounts for user space processes that are running with altered priority
+(higher or lower then normal).
+
+=item hardirq
+
+The kernel is servicing hardware interrupt requests. Hardware interrupts come from peripherals
+like keyboard, network interfaces, disks, system clock, etc.
+
+=item softirq
+
+The kernel is servicing software interrupt requests. Software interrupts come from processes
+running in the system.
+
+=item steal
+
+This applies only to virtual machines on a hypervisor. The steal time shows the percentage of
+time a virtual machine had to wait the real CPU while the hypervisor was servicing another virtual
+machine. If this number remains high, the host system is too busy and may need more physical
+CPUs or offload some virtual machines to another host.
+
+=item guest
+
+This applies only to host machines running a hypervisor. It shows time spent running a virtual CPU
+for guest operating systems under the control of the Linux kernel. This value is already included in
+"user" statistics.
+
+=item guestnice
+
+This applies only to host machines running a hypervisor. It shows time spent running a virtual CPU
+for guest operating systems under the control of the Linux kernel, with altered priority. This value
+is already included in "nice" statistics.
+
+=back
+
+The user/system/wait/nice/hardirq/softirq/steal/guest/guestnice modifier is optional and the support
+depends on platform (Linux support depends on kernel version, all statistics are available since kernel
+2.6.33):
+
+ -----------------------------------------------------------------------------------------------
+ | Platform     | user | nice | system | wait | hardirq | softirq | steal | guest | guest nice |
+ -----------------------------------------------------------------------------------------------
+ | AIX          |  X   |      |   X    |  X   |         |         |       |       |            |
+ | DragonFlyBSD |  X   |  X   |   X    |      |    X    |         |       |       |            |
+ | FreeBSD      |  X   |  X   |   X    |      |    X    |         |       |       |            |
+ | Linux        |  X   |  X   |   X    |  X   |    X    |    X    |   X   |   X   |    X       |
+ | MacOS        |  X   |  X   |   X    |      |         |         |       |       |            |
+ | NetBSD       |  X   |  X   |   X    |      |    X    |         |       |       |            |
+ | OpenBSD      |  X   |  X   |   X    |      |    X    |         |       |       |            |
+ | Solaris      |  X   |      |   X    |  X   |         |         |       |       |            |
+ -----------------------------------------------------------------------------------------------
+
+Example:
 
  if cpu usage > 95% for 10 cycles then alert
 
@@ -2807,8 +2879,8 @@ Example for AppArmor:
 =head2 SYSTEM AND PER-PROCESS FILEDESCRIPTORS TEST
 
 Monit can test the filedescriptors usage on the system and process level. You can check either
-an absolute value or percent of the system soft/hard limit which is set for the system
-(/proc/sys/fs/file-max) or process (ulimit -n).
+an absolute value or percentual usage of the current maximum. The per-process percentual
+usage can be used only if the system exposes per-process maximum.
 
 Syntax:
 
@@ -3327,6 +3399,7 @@ knows how to speak:
  I<MONGODB>
  I<MQTT>
  I<MYSQL>
+ I<MYSQLS>
  I<NNTP>
  I<NTP3>
  I<PGSQL>
@@ -3597,7 +3670,8 @@ I<USERNAME> MQTT username
 
 I<PASSWORD> MQTT password
 
-Username and password (credentials) are B<optional>.
+Username and password (credentials) are B<optional>. If not used, Monit will try anonymous connect, which may
+trigger authorization error => credentials are recommended unless your server allows anonymous connect.
 
 Example:
 
@@ -3611,22 +3685,25 @@ Example:
 
 Syntax:
 
- PROTOCOL MYSQL [USERNAME string PASSWORD string]
+ PROTOCOL MYSQL[S] [USERNAME string PASSWORD string [RSAKEY CHECKSUM string]]
 
-I<USERNAME> MySQL username (maximum 16 characters).
+I<USERNAME> MySQL username.
 
 I<PASSWORD> MySQL password (special characters can be used, but for non-alphanumerics
 the password has to be quoted).
+
+I<RSKEY CHECKSUM> If you use unsecured connection (plain MYSQL without TLS), you can set
+the expected MD5 or SHA1 checksum of the server's RSA key to protect afainst man-in-the-middle
+attacks. Monit will check the key fingerprint before sending the password to the server.
 
 Username and password (credentials) are B<optional> and if not set,
 Monit will perform the test using anonymous login. This can cause an
 authentication error to be logged in your MySQL log, depending on your
 MySQL configuration.
 
-If credentials are set, Monit will login and perform a MySQL ping test.
-Monit does not require any database privileges, it just needs the
-database user. You might want to create standalone user for Monit to
-use when testing, for example:
+If credentials are set, Monit will try to login. Monit does not require any database
+privileges, it just needs the database user. You might want to create standalone user
+for Monit to use when testing, for example:
 
  CREATE USER 'monit'@'host_from_which_monit_performs_testing' IDENTIFIED BY 'mysecretpassword';
  FLUSH PRIVILEGES;
@@ -3649,6 +3726,13 @@ or with unix-socket start/stop commands
      if failed
         unixsocket /tmp/mysql.sock
         protocol mysql username "foo" password "bar"
+     then alert
+
+You can enable the TLS encryption for the test by using MYSQLS as protocol name:
+
+     if failed
+        port 3306
+        protocol mysqls username "foo" password "bar"
      then alert
 
 

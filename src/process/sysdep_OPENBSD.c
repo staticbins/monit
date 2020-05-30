@@ -86,7 +86,9 @@
 static int      pagesize;
 static long     total_old    = 0;
 static long     cpu_user_old = 0;
+static long     cpu_nice_old = 0;
 static long     cpu_syst_old = 0;
+static long     cpu_intr_old = 0;
 static unsigned int maxslp;
 
 
@@ -94,7 +96,7 @@ static unsigned int maxslp;
 /* ------------------------------------------------------------------ Public */
 
 
-boolean_t init_process_info_sysdep(void) {
+bool init_process_info_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
         size_t len = sizeof(systeminfo.cpu.count);
         if (sysctl(mib, 2, &systeminfo.cpu.count, &len, NULL, 0) == -1) {
@@ -102,14 +104,14 @@ boolean_t init_process_info_sysdep(void) {
                 return false;
         }
 
-        int64_t physmem;
+        long long physmem;
         mib[1] = HW_PHYSMEM64;
         len    = sizeof(physmem);
         if (sysctl(mib, 2, &physmem, &len, NULL, 0) == -1) {
                 DEBUG("system statistic error -- cannot get real memory amount: %s\n", STRERROR);
                 return false;
         }
-        systeminfo.memory.size = (uint64_t)physmem;
+        systeminfo.memory.size = (unsigned long long)physmem;
 
         mib[1] = HW_PAGESIZE;
         len    = sizeof(pagesize);
@@ -172,7 +174,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
 
         pt = CALLOC(sizeof(ProcessTree_T), treesize);
 
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         if (! (kvm_handle = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, buf))) {
                 FREE(pinfo);
                 FREE(pt);
@@ -195,7 +197,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[index].cred.gid            = pinfo[i].p_rgid;
                         pt[index].uptime              = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
                         pt[index].cpu.time            = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
-                        pt[index].memory.usage        = (uint64_t)pinfo[i].p_vm_rssize * (uint64_t)pagesize;
+                        pt[index].memory.usage        = (unsigned long long)pinfo[i].p_vm_rssize * (unsigned long long)pagesize;
                         pt[index].zombie              = pinfo[i].p_stat == SZOMB ? true : false;
                         pt[index].read.bytes          = -1;
                         pt[index].read.bytesPhysical  = -1;
@@ -249,7 +251,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
  * This routine returns kbyte of real memory in use.
  * @return: true if successful, false if failed (or not available)
  */
-boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
+bool used_system_memory_sysdep(SystemInfo_T *si) {
         struct uvmexp vm;
         int mib[2] = {CTL_VM, VM_UVMEXP};
         size_t len = sizeof(struct uvmexp);
@@ -258,9 +260,9 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
                 LogError("system statistic error -- cannot get memory usage: %s\n", STRERROR);
                 return false;
         }
-        si->memory.usage.bytes = (uint64_t)(vm.active + vm.wired) * (uint64_t)pagesize;
-        si->swap.size = (uint64_t)vm.swpages * (uint64_t)pagesize;
-        si->swap.usage.bytes = (uint64_t)vm.swpginuse * (uint64_t)pagesize;
+        si->memory.usage.bytes = (unsigned long long)(vm.active + vm.wired) * (unsigned long long)pagesize;
+        si->swap.size = (unsigned long long)vm.swpages * (unsigned long long)pagesize;
+        si->swap.usage.bytes = (unsigned long long)vm.swpginuse * (unsigned long long)pagesize;
         return true;
 }
 
@@ -269,7 +271,7 @@ boolean_t used_system_memory_sysdep(SystemInfo_T *si) {
  * This routine returns system/user CPU time in use.
  * @return: true if successful, false if failed
  */
-boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
+bool used_system_cpu_sysdep(SystemInfo_T *si) {
         int    mib[] = {CTL_KERN, KERN_CPTIME};
         long   cp_time[CPUSTATES];
         long   total_new = 0;
@@ -288,18 +290,40 @@ boolean_t used_system_cpu_sysdep(SystemInfo_T *si) {
         total_old = total_new;
 
         si->cpu.usage.user = (total > 0) ? (100. * (double)(cp_time[CP_USER] - cpu_user_old) / total) : -1.;
+        si->cpu.usage.nice = (total > 0) ? (100. * (double)(cp_time[CP_NICE] - cpu_nice_old) / total) : -1.;
         si->cpu.usage.system = (total > 0) ? (100. * (double)(cp_time[CP_SYS] - cpu_syst_old) / total) : -1.;
-        si->cpu.usage.wait = 0; /* there is no wait statistic available */
+        si->cpu.usage.hardirq = (total > 0) ? (100. * (double)(cp_time[CP_INTR] - cpu_intr_old) / total) : -1.;
 
         cpu_user_old = cp_time[CP_USER];
+        cpu_nice_old = cp_time[CP_NICE];
         cpu_syst_old = cp_time[CP_SYS];
+        cpu_intr_old = cp_time[CP_INTR];
 
         return true;
 }
 
 
-boolean_t used_system_filedescriptors_sysdep(SystemInfo_T *si) {
-        // Not implemented
+bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+        // Open files
+        int mib[2] = {CTL_KERN, KERN_NFILES};
+        size_t len = sizeof(si->filedescriptors.allocated);
+        if (sysctl(mib, 2, &si->filedescriptors.allocated, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.nfiles failed: %s\n", STRERROR);
+                return false;
+        }
+        // Max files
+        mib[1] = KERN_MAXFILES;
+        len = sizeof(si->filedescriptors.maximum);
+        if (sysctl(mib, 2, &si->filedescriptors.maximum, &len, NULL, 0) == -1) {
+                DEBUG("system statistics error -- sysctl kern.maxfiles failed: %s\n", STRERROR);
+                return false;
+        }
+        return true;
+}
+
+
+bool available_statistics(SystemInfo_T *si) {
+        si->statisticsAvailable = Statistics_CpuUser | Statistics_CpuSystem | Statistics_CpuNice | Statistics_CpuHardIRQ | Statistics_FiledescriptorsPerSystem;
         return true;
 }
 

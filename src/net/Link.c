@@ -23,7 +23,7 @@
  */
 
 
-#include "Config.h"
+#include "config.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -60,10 +60,14 @@
 #include <libperfstat.h>
 #endif
 
-#include "system/Link.h"
+#include "monit.h"
+
+// libmonit
 #include "system/Time.h"
 #include "system/System.h"
-#include "Str.h"
+#include "util/Str.h"
+#include "exceptions/AssertException.h"
+
 
 
 /**
@@ -83,7 +87,7 @@
 
 static struct {
         struct ifaddrs *addrs;
-        uint64_t timestamp;
+        unsigned long long timestamp;
 } _stats = {};
 
 
@@ -280,7 +284,7 @@ static void _updateHistory(T L) {
 
 static void _updateCache(void) {
 #ifdef HAVE_IFADDRS_H
-        uint64_t now = Time_milli();
+        unsigned long long now = Time_milli();
         // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
         if (now > _stats.timestamp + 1000 || now < _stats.timestamp - 1000) {
                 _stats.timestamp = now;
@@ -333,7 +337,7 @@ void Link_reset(T L) {
 }
 
 
-int Link_isGetByAddressSupported() {
+bool Link_isGetByAddressSupported(void) {
 #ifdef HAVE_IFADDRS_H
         return true;
 #else
