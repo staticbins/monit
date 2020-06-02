@@ -102,16 +102,15 @@ int main(void) {
         printf("=> Test5: read a large file\n");
         {
                 if ((fd = File_open("/usr/share/dict/words", "r")) >= 0) {
-                        int n = 0;
                         char array[2][STRLEN + 1];
                         in = InputStream_new(fd);
-                        for (int i = 0; ((n = InputStream_readBytes(in, array[i], STRLEN)) > 0); i = i ? 0 : 1)
+                        for (int i = 0; InputStream_readBytes(in, array[i], STRLEN > 0); i = i ? 0 : 1)
                                 assert(strncmp(array[0], array[1], STRLEN/2) != 0); // ensure that InputStream buffer is filled anew
                         File_rewind(fd);
                         // Test read data larger than InputStream's internal buffer
                         int filesize = (int)File_size("/usr/share/dict/words");
                         char *bigarray = CALLOC(1, filesize + 1);
-                        n = InputStream_readBytes(in, bigarray, filesize);
+                        int n = InputStream_readBytes(in, bigarray, filesize);
                         assert(n == filesize);
                         File_close(fd);
                         InputStream_free(&in);
