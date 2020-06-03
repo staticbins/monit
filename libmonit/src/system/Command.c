@@ -221,7 +221,7 @@ static void _closeStreams(Process_T P) {
 }
 
 
-#ifdef AIX
+#ifndef HAVE_GETGROUPLIST
 static int getgrouplist(const char *name, int basegid, int *groups, int *ngroups) {
         int rv = -1;
 
