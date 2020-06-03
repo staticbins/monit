@@ -705,7 +705,7 @@ int Socket_write(T S, const void *b, size_t size) {
 #endif
                 if (n <= 0)
                         break;
-                p += n;
+                p = (unsigned char *)p + n;
                 size -= n;
 
         }
@@ -713,7 +713,7 @@ int Socket_write(T S, const void *b, size_t size) {
                 /* No write or a partial write is an error */
                 return -1;
         }
-        return  (int)(p - b);
+        return  (int)((unsigned char *)p - (unsigned char *)b);
 }
 
 
