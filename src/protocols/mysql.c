@@ -119,6 +119,9 @@
 #define MYSQL_REQUEST_BUFFER                  4096
 #define MYSQL_RESPONSE_BUFFER                 4096
 
+#ifndef HAVE_OPENSSL
+#define SHA256_DIGEST_LENGTH 32
+#endif
 
 typedef struct {
         uint32_t len : 24;
@@ -355,7 +358,7 @@ static void _responseAuthMoreData(mysql_t *mysql) {
 
 
 // Get the password (see http://dev.mysql.com/doc/internals/en/secure-password-authentication.html):
-static char *_getNativePassword(char result[SHA1_DIGEST_SIZE], const char *password, const char *salt) {
+static char *_getNativePassword(char result[static SHA1_DIGEST_SIZE], const char *password, const char *salt) {
         sha1_context_t ctx;
         // SHA1(password)
         uint8_t stage1[SHA1_DIGEST_SIZE];
@@ -381,7 +384,7 @@ static char *_getNativePassword(char result[SHA1_DIGEST_SIZE], const char *passw
 
 
 // Get the password (see https://dev.mysql.com/doc/internals/en/sha256.html and https://dev.mysql.com/doc/dev/mysql-server/8.0.11/page_caching_sha2_authentication_exchanges.html):
-static char *_getCachingSha2Password(char result[SHA256_DIGEST_LENGTH], const char *password, const char *salt) {
+static char *_getCachingSha2Password(char result[static SHA256_DIGEST_LENGTH], const char *password, const char *salt) {
 #ifdef HAVE_OPENSSL
         // SHA256(password)
         uint8_t stage1[SHA256_DIGEST_LENGTH];
@@ -402,11 +405,10 @@ static char *_getCachingSha2Password(char result[SHA256_DIGEST_LENGTH], const ch
         // XOR(SHA256(password), SHA256(SHA256(SHA256(password)), Nonce))
         for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
                 result[i] = stage1[i] ^ stage3[i];
-
-        return result;
 #else
         THROW(ProtocolException, "MYSQL: caching_sha2_password authentication requires monit to be compiled with SSL library");
 #endif
+        return result;
 }
 
 
@@ -631,6 +633,7 @@ static void _sendPassword(mysql_t *mysql, const unsigned char *password, int pas
 
 // Send the RSA encrypted password (https://dev.mysql.com/doc/internals/en/not-so-fast-path.html)
 static void _sendEncryptedPassword(mysql_t *mysql) {
+#ifdef HAVE_OPENSSL
         // Parse the server RSA public key
         BIO *bio = BIO_new_mem_buf((void *)mysql->publicKey, -1);
         RSA *rsa = PEM_read_bio_RSA_PUBKEY(bio, NULL, NULL, NULL);
@@ -653,6 +656,9 @@ static void _sendEncryptedPassword(mysql_t *mysql) {
         DEBUG("MySQL password encrypted successfully\n");
         // Send the encrypted password
         _sendPassword(mysql, encryptedPassword, encryptedPasswordLength);
+#else
+        THROW(ProtocolException, "MYSQL: _sendEncryptedPassword  requires monit to be compiled with SSL library");
+#endif
 }
 
 
