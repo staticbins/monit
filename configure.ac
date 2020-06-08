@@ -462,6 +462,7 @@ AC_ARG_WITH(ipv6,
         fi
     ],
     [
+        # Note inverse test. On by default
         with_ipv6=1
     ]
 )
@@ -703,21 +704,17 @@ AC_ARG_WITH(pam,
     [
         dnl Check the withvalue
         if test "x$withval" = "xno" ; then
-            with_pam=0
-            AC_MSG_RESULT([disabled])
-        fi
-        if test "x$withval" = "xyes" ; then
-            with_pam=1
-            AC_MSG_RESULT([enabled])
+                with_pam=0
+                AC_MSG_RESULT([disabled])
+        else
+                with_pam=1
+                AC_MSG_RESULT([enabled])
         fi
     ],
     [
-        if test $with_pam -eq 0; then
-            AC_MSG_RESULT([disabled])
-        else
-            with_pam=1
-            AC_MSG_RESULT([enabled])
-        fi
+        # Note inverse test. On by default
+        with_pam=1
+        AC_MSG_RESULT([enabled])
     ]
 )
 
@@ -851,8 +848,9 @@ then
             fi
         ],
         [
-            with_ssl=0
-            AC_MSG_RESULT([disabled])
+                # Note inverse test. On by default
+                with_ssl=1
+                AC_MSG_RESULT([enabled])
         ]
     )
 
