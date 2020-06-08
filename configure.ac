@@ -684,9 +684,13 @@ AC_ARG_WITH([zlib],
                         with_zlib=0
                         AC_MSG_ERROR([zlib not found in $withval])
                 fi
+        else
+                with_zlib=0
         fi
      ],[
-        AC_CHECK_LIB([z], [zlibVersion], [], [
+        AC_CHECK_LIB([z], [zlibVersion], [
+                with_zlib=1
+                ], [
                 with_zlib=0
                 AC_MSG_ERROR([libz not found])
         ])
@@ -1061,6 +1065,30 @@ AC_ARG_ENABLE(profiling,
     ]
 )
 
+AC_ARG_ENABLE([codesign],
+        AS_HELP_STRING([--enable-codesign=identity],
+                [Add code signature to the monit binary on macOS]),
+     [
+        if test "x$enableval" = "xno" ; then
+                enable_codesign=0
+        else
+                AC_MSG_CHECKING([for code signing identity])
+                if test "x$enableval" = "xyes"; then
+                        AC_MSG_ERROR([Please provide a signing identity])
+                else
+                        if test -n "$(security find-identity -v|egrep $enableval)"; then
+                                enable_codesign=1
+                                AC_SUBST([CODESIGN_IDENTITY], [$enableval])
+                                AC_MSG_RESULT(ok)
+                        else
+                                AC_MSG_ERROR([Signing identity not found])
+                        fi
+                fi
+        fi
+     ],[enable_codesign=0]
+)
+AM_CONDITIONAL([WITH_CODESIGN], [test $enable_codesign -eq 1])
+
 
 # ------------------------------------------------------------------------
 # Outputs
@@ -1092,6 +1120,10 @@ echo "              Compiler flags: ${CFLAGS}"
 echo "                Linker flags: ${LIBS}"
 echo "           pid file location: ${piddir}"
 echo "           Install directory: ${prefix}"
+if test "x$ARCH" = "xDARWIN"; then
+iscodesignenabledarray=("Disabled" "Enabled")
+echo "          MacOS Code Signing: ${iscodesignenabledarray[[$enable_codesign]]}"
+fi
 echo
 
 AX_INFO_AGPL()
