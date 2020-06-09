@@ -1072,14 +1072,14 @@ AC_ARG_ENABLE([codesign],
         if test "x$enableval" = "xno" ; then
                 enable_codesign=0
         else
-                AC_MSG_CHECKING([for code signing identity])
+                AC_MSG_CHECKING([for validity of signing identity])
                 if test "x$enableval" = "xyes"; then
                         AC_MSG_ERROR([Please provide a signing identity])
                 else
-                        if test -n "$(security find-identity -v|egrep $enableval)"; then
+                        if test -n "$(security find-identity -v|grep $enableval)"; then
                                 enable_codesign=1
                                 AC_SUBST([CODESIGN_IDENTITY], [$enableval])
-                                AC_MSG_RESULT(ok)
+                                AC_MSG_RESULT(yes)
                         else
                                 AC_MSG_ERROR([Signing identity not found])
                         fi
@@ -1120,10 +1120,6 @@ echo "              Compiler flags: ${CFLAGS}"
 echo "                Linker flags: ${LIBS}"
 echo "           pid file location: ${piddir}"
 echo "           Install directory: ${prefix}"
-if test "x$ARCH" = "xDARWIN"; then
-iscodesignenabledarray=("Disabled" "Enabled")
-echo "          MacOS Code Signing: ${iscodesignenabledarray[[$enable_codesign]]}"
-fi
 echo
 
 AX_INFO_AGPL()
@@ -1136,4 +1132,8 @@ AX_INFO_ENABLED([ASAN support:],          [test $with_asan -eq 1])
 AX_INFO_ENABLED([IPv6 support:],          [test $with_ipv6 -eq 1])
 AX_INFO_ENABLED([Optimized:],             [test $enable_optimized -eq 1])
 AX_INFO_ENABLED([Profiling:],             [test $enable_profile -eq 1])
+if test "x$ARCH" = "xDARWIN"; then
+AX_INFO_SEPARATOR()
+AX_INFO_ENABLED([MacOS Code Signing:],    [test $enable_codesign -eq 1])
+fi
 AX_INFO_BREAK()
