@@ -221,6 +221,7 @@ static void _closeStreams(Process_T P) {
 }
 
 
+#ifndef HAVE_GETGROUPLIST
 #ifdef AIX
 static int getgrouplist(const char *name, int basegid, int *groups, int *ngroups) {
         int rv = -1;
@@ -283,6 +284,9 @@ error3:
 error4:
         return rv;
 }
+#else
+#error "getgrouplist missing"
+#endif
 #endif
 
 
@@ -581,7 +585,7 @@ Process_T Command_execute(T C) {
                         return NULL;
                 }
                 Command_setEnv(C, "HOME", user->pw_dir);
-                if (getgrouplist(user->pw_name, C->gid, (int*)ug.groups, &ug.ngroups) == -1) {
+                if (getgrouplist(user->pw_name, C->gid, (int *)ug.groups, &ug.ngroups) == -1) {
                         ERROR("Command: getgrouplist for uid %d -- %s\n", C->uid, System_getLastError());
                         return NULL;
                 }

@@ -495,7 +495,7 @@ static void send_response(HttpRequest req, HttpResponse res) {
                 char server[STRLEN];
 #ifdef HAVE_LIBZ
                 const char *acceptEncoding = get_header(req, "Accept-Encoding");
-                bool canCompress = acceptEncoding && Str_sub(acceptEncoding, "gzip") ? true : false;
+                bool canCompress = acceptEncoding && Str_sub(acceptEncoding, "gzip");
 #else
                 bool canCompress = false;
 #endif

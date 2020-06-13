@@ -144,18 +144,18 @@ static int _readDataFromSocket(Socket_T socket, char *data, int wantBytes) {
 static void _readData(Socket_T socket, Port_T P, char **data, unsigned int wantBytes, unsigned int *haveBytes, ChecksumContext_T context) {
         if (P->url_request && P->url_request->regex) {
                 // The content test is required => cache the whole body
-                *data = realloc((void *)*data, *haveBytes + wantBytes + 1);
-                *haveBytes += _readDataFromSocket(socket, (void *)*data + *haveBytes, wantBytes);
+                *data = realloc(*data, *haveBytes + wantBytes + 1);
+                *haveBytes += _readDataFromSocket(socket, *data + *haveBytes, wantBytes);
                 if (P->parameters.http.checksum)
-                        Checksum_append(context, (const char *)*data, wantBytes);
+                        Checksum_append(context, *data, wantBytes);
                 *(*data + *haveBytes) = 0;
         } else {
                 // No content check is required => use small buffer and compute the checksum on the fly
                 *haveBytes = 0;
                 for (int readBytes = (wantBytes < BUFSIZE) ? wantBytes : BUFSIZE; *haveBytes < wantBytes; readBytes = (wantBytes - *haveBytes) < BUFSIZE ? (wantBytes - *haveBytes) : BUFSIZE) {
-                        _readDataFromSocket(socket, (void *)*data, readBytes);
+                        _readDataFromSocket(socket, *data, readBytes);
                         if (P->parameters.http.checksum)
-                                Checksum_append(context, (const char *)*data, readBytes);
+                                Checksum_append(context, *data, readBytes);
                         *haveBytes += readBytes;
                 }
         }
@@ -198,20 +198,20 @@ static void _processBodyUntilEOF(Socket_T socket, Port_T P, char **data, __attri
                 // The content test is required => cache the whole body
                 unsigned int haveBytes = 0;
                 unsigned int wantBytes = STRLEN;
-                while (haveBytes < Run.limits.httpContentBuffer && (readBytes = Socket_read(socket, (void *)(*data + haveBytes), wantBytes)) > 0)  {
+                while (haveBytes < Run.limits.httpContentBuffer && (readBytes = Socket_read(socket, *data + haveBytes, wantBytes)) > 0)  {
                         if (P->parameters.http.checksum)
-                                Checksum_append(context, (const char *)(*data + haveBytes), readBytes);
+                                Checksum_append(context, *data + haveBytes, readBytes);
                         haveBytes += readBytes;
                         if (haveBytes + wantBytes > Run.limits.httpContentBuffer)
                                 wantBytes = Run.limits.httpContentBuffer - haveBytes;
-                        *data = realloc((void *)*data, haveBytes + wantBytes + 1);
+                        *data = realloc(*data, haveBytes + wantBytes + 1);
                 }
                 *(*data + haveBytes) = 0;
         } else {
                 // No content check is required => use small buffer and compute the checksum on the fly
-                while ((readBytes = Socket_read(socket, (void *)(*data), BUFSIZE)) > 0) {
+                while ((readBytes = Socket_read(socket, *data, BUFSIZE)) > 0) {
                         if (P->parameters.http.checksum)
-                                Checksum_append(context, (const char *)*data, readBytes);
+                                Checksum_append(context, *data, readBytes);
                 }
         }
         if (readBytes < 0) {
@@ -280,7 +280,7 @@ static void _checkResponse(Socket_T socket, Port_T P) {
                                 // Perform tests
                                 if (P->parameters.http.checksum)
                                         Checksum_verify(&context, P->parameters.http.checksum);
-                                _contentVerify(P, (char *)data);
+                                _contentVerify(P, data);
                         }
                         FINALLY
                         {
@@ -334,7 +334,7 @@ static void _sendRequest(Socket_T socket, Port_T P) {
                 }
         }
         StringBuffer_append(sb, "\r\n");
-        int send_status = Socket_write(socket, (void*)StringBuffer_toString(sb), StringBuffer_length(sb));
+        int send_status = Socket_write(socket, StringBuffer_toString(sb), StringBuffer_length(sb));
         StringBuffer_free(&sb);
         if (send_status < 0)
                 THROW(IOException, "HTTP: error sending data -- %s", STRERROR);

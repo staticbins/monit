@@ -272,13 +272,13 @@ int main(void) {
                 sb = StringBuffer_new(input);
                 assert(StringBuffer_length(sb) == 225);
                 size_t compressedLength;
-                const void *compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
+                const unsigned char *compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
                 assert(compressed);
                 assert(compressedLength == 46);
                 for (size_t i = 0; i < compressedLength; i++) {
                         // Skip header OS type as it is platform dependent (see 2.3.1 in https://www.ietf.org/rfc/rfc1952.txt)
                         if (i != 9) {
-                                assert(compressedInput[i] == *(unsigned char *)(compressed + i));
+                                assert(compressedInput[i] == *(compressed + i));
                         }
                 }
                 StringBuffer_free(&sb);
@@ -292,7 +292,7 @@ int main(void) {
                 sb = StringBuffer_new(input);
                 assert(StringBuffer_length(sb) == 0);
                 size_t compressedLength;
-                const void *compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
+                const unsigned char *compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
                 assert(compressed == NULL);
                 assert(compressedLength == 0);
                 StringBuffer_free(&sb);
@@ -323,13 +323,13 @@ int main(void) {
                 sb = StringBuffer_new(input1);
                 assert(StringBuffer_length(sb) == 225);
                 size_t compressedLength;
-                const void *compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
+                const unsigned char *compressed = StringBuffer_toCompressed(sb, 6, &compressedLength);
                 assert(compressed);
                 assert(compressedLength == 46);
                 for (size_t i = 0; i < compressedLength; i++) {
                         // Skip header OS type as it is platform dependent (see 2.3.1 in https://www.ietf.org/rfc/rfc1952.txt)
                         if (i != 9) {
-                                assert(output1[i] == *(unsigned char *)(compressed + i));
+                                assert(output1[i] == *(compressed + i));
                         }
                 }
 
@@ -356,7 +356,7 @@ int main(void) {
                 for (size_t i = 0; i < compressedLength; i++) {
                         // Skip header OS type as it is platform dependent (see 2.3.1 in https://www.ietf.org/rfc/rfc1952.txt)
                         if (i != 9) {
-                                assert(output2[i] == *(unsigned char *)(compressed + i));
+                                assert(output2[i] == *(compressed + i));
                         }
                 }
 
@@ -378,7 +378,7 @@ int main(void) {
                 for (size_t i = 0; i < compressedLength; i++) {
                         // Skip header OS type as it is platform dependent (see 2.3.1 in https://www.ietf.org/rfc/rfc1952.txt)
                         if (i != 9) {
-                                assert(output3[i] == *(unsigned char *)(compressed + i));
+                                assert(output3[i] == *(compressed + i));
                         }
                 }
 
