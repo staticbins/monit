@@ -1,6 +1,6 @@
 Name: monit
 Summary: Process monitor and restart utility
-Version: 5.28.0
+Version: 5.27.0
 Release: 1
 URL: http://mmonit.com/monit/
 Source: http://mmonit.com/monit/dist/%{name}-%{version}.tar.gz
@@ -67,9 +67,6 @@ fi
 %{_mandir}/man1/%{name}.1.gz
 
 %changelog
-* Wed Jun 03 2020 Monit team <support@mmonit.com>
-- Upgraded to monit-5.28.0
-
 * Thu Jan 16 2020 Martin Pala <martinp@tildeslash.com>
 - Upgraded to monit-5.27.0
 
