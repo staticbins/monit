@@ -391,6 +391,7 @@ AC_CHECK_FUNCS(vsyslog)
 AC_CHECK_FUNCS(backtrace)
 AC_CHECK_FUNCS(getloadavg)
 AC_CHECK_FUNCS(getopt_long)
+AC_CHECK_FUNCS(prlimit)
 
 AC_MSG_CHECKING(for va_copy)
 AC_TRY_LINK([

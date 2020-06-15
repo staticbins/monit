@@ -368,43 +368,37 @@ static bool _parseProcPidAttrCurrent(Proc_T proc) {
 
 // count entries in /proc/PID/fd
 static bool _parseProcFdCount(Proc_T proc) {
+        char path[PATH_MAX] = {};
         unsigned long long file_count = 0;
-        DIR *dirp;
-        char fd_path[32];
 
-        snprintf(fd_path, sizeof(fd_path), "/proc/%d/fd", proc->pid);
-
-        if (!(dirp = opendir(fd_path))) {
+        snprintf(path, sizeof(path), "/proc/%d/fd", proc->pid);
+        DIR *dirp = opendir(path);
+        if (! dirp) {
                 DEBUG("system statistic error -- opendir /proc/%d/fd: %s\n", proc->pid, STRERROR);
                 return false;
         }
-
         errno = 0;
         while (readdir(dirp) != NULL) {
                 // count everything
                 file_count++;
         }
-
         // do not closedir() until readdir errno has been evaluated
-
         if (errno) {
                 DEBUG("system statistic error -- cannot iterate /proc/%d/fd: %s\n", proc->pid, STRERROR);
                 closedir(dirp);
                 return false;
         }
-
         closedir(dirp);
-
         // assert at least '.' and '..' have been found
         if (file_count < 2) {
                 DEBUG("system statistic error -- cannot find basic entries in /proc/%d/fd\n", proc->pid);
                 return false;
         }
-
         // subtract entries '.' and '..'
         proc->filedescriptors.open = file_count - 2;
 
         // get process' limits
+#ifdef HAVE_PRLIMIT
         struct rlimit limits;
         if (prlimit(proc->pid, RLIMIT_NOFILE, NULL, &limits) != 0) {
                 DEBUG("prlimit failed: %s\n", STRERROR);
@@ -412,6 +406,27 @@ static bool _parseProcFdCount(Proc_T proc) {
         }
         proc->filedescriptors.limit.soft = limits.rlim_cur;
         proc->filedescriptors.limit.hard = limits.rlim_max;
+#else
+        // Try to collect the command-line from the procfs cmdline (user-space processes)
+        snprintf(path, sizeof(path), "/proc/%d/limits", proc->pid);
+        FILE *f = fopen(path, "r");
+        if (f) {
+                int softLimit;
+                int hardLimit;
+                char line[STRLEN];
+                while (fgets(line, sizeof(line), f)) {
+                        if (sscanf(line, "Max open files %d %d", &softLimit, &hardLimit) == 2) {
+                                proc->filedescriptors.limit.soft = softLimit;
+                                proc->filedescriptors.limit.hard = hardLimit;
+                                break;
+                        }
+                }
+                fclose(f);
+        } else {
+                DEBUG("system statistic error -- cannot open %s\n", path);
+                return false;
+        }
+#endif
 
         return true;
 }
