@@ -511,23 +511,23 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             systeminfo.loadavg[0],
                                             systeminfo.loadavg[1],
                                             systeminfo.loadavg[2]);
-                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_User)
+                        if (systeminfo.statisticsAvailable & Statistics_CpuUser)
                                 StringBuffer_append(B, "<user>%.1f</user>", systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
-                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_System)
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSystem)
                                 StringBuffer_append(B, "<system>%.1f</system>", systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.);
-                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Nice)
+                        if (systeminfo.statisticsAvailable & Statistics_CpuNice)
                                 StringBuffer_append(B, "<nice>%.1f</nice>", systeminfo.cpu.usage.nice > 0. ? systeminfo.cpu.usage.nice : 0.);
-                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_IOWait)
+                        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait)
                                 StringBuffer_append(B, "<wait>%.1f</wait>", systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.);
-                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_HardIRQ)
+                        if (systeminfo.statisticsAvailable & Statistics_CpuHardIRQ)
                                 StringBuffer_append(B, "<hardirq>%.1f</hardirq>", systeminfo.cpu.usage.hardirq > 0. ? systeminfo.cpu.usage.hardirq : 0.);
-                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_SoftIRQ)
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSoftIRQ)
                                 StringBuffer_append(B, "<softirq>%.1f</softirq>", systeminfo.cpu.usage.softirq > 0. ? systeminfo.cpu.usage.softirq : 0.);
-                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Steal)
+                        if (systeminfo.statisticsAvailable & Statistics_CpuSteal)
                                 StringBuffer_append(B, "<steal>%.1f</steal>", systeminfo.cpu.usage.steal > 0. ? systeminfo.cpu.usage.steal : 0.);
-                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_Guest)
+                        if (systeminfo.statisticsAvailable & Statistics_CpuGuest)
                                 StringBuffer_append(B, "<guest>%.1f</guest>", systeminfo.cpu.usage.guest > 0. ? systeminfo.cpu.usage.guest : 0.);
-                        if (systeminfo.cpu.usage.statisticsAvailable & CpuMonitoring_GuestNice)
+                        if (systeminfo.statisticsAvailable & Statistics_CpuGuestNice)
                                 StringBuffer_append(B, "<guestnice>%.1f</guestnice>", systeminfo.cpu.usage.guest_nice > 0. ? systeminfo.cpu.usage.guest_nice : 0.);
                         StringBuffer_append(B,
                                             "</cpu>"

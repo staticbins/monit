@@ -44,6 +44,7 @@
 /* ------------------------------------------------------------------ Public */
 
 
+#if ! defined HAVE_ASAN && ! defined FREEBSD
 /**
  * Replace the standard signal() function, with a more reliable
  * using sigaction. From W. Richard Stevens' "Advanced Programming
@@ -69,6 +70,7 @@ Sigfunc *signal(int signo, Sigfunc *func) {
 
         return(oact.sa_handler);
 }
+#endif
 
 
 /**

@@ -114,7 +114,7 @@
 
 
 #define MONITRC            "monitrc"
-#define TIMEFORMAT         "%Z %b %e %T"
+#define TIMEFORMAT         "%Z %Y %b %e %T"
 #define STRERROR            strerror(errno)
 #define STRLEN             256
 #ifndef USEC_PER_SEC
@@ -369,16 +369,19 @@ typedef enum {
 
 
 typedef enum {
-        CpuMonitoring_User      = 0x1,
-        CpuMonitoring_Nice      = 0x2,
-        CpuMonitoring_System    = 0x4,
-        CpuMonitoring_IOWait    = 0x8,
-        CpuMonitoring_HardIRQ   = 0x10,
-        CpuMonitoring_SoftIRQ   = 0x20,
-        CpuMonitoring_Steal     = 0x40,
-        CpuMonitoring_Guest     = 0x80,
-        CpuMonitoring_GuestNice = 0x100
-} __attribute__((__packed__)) CpuStatistics_Flags;
+        Statistics_CpuUser                      = 0x1,
+        Statistics_CpuNice                      = 0x2,
+        Statistics_CpuSystem                    = 0x4,
+        Statistics_CpuIOWait                    = 0x8,
+        Statistics_CpuHardIRQ                   = 0x10,
+        Statistics_CpuSoftIRQ                   = 0x20,
+        Statistics_CpuSteal                     = 0x40,
+        Statistics_CpuGuest                     = 0x80,
+        Statistics_CpuGuestNice                 = 0x100,
+        Statistics_FiledescriptorsPerSystem     = 0x200,
+        Statistics_FiledescriptorsPerProcess    = 0x400,
+        Statistics_FiledescriptorsPerProcessMax = 0x800
+} __attribute__((__packed__)) Statistics_Flags;
 
 
 /* Length of the longest message digest in bytes */
@@ -568,10 +571,10 @@ typedef struct Auth_T {
 
 /** Defines data for systemwide statistic */
 typedef struct SystemInfo_T {
+        Statistics_Flags statisticsAvailable; /**< List of statistics that are available on this system */
         struct {
                 int count;                                      /**< Number of CPUs */
                 struct {
-                        CpuStatistics_Flags statisticsAvailable; /**< List of CPU statistics that are available in thi system */
                         float user;       /**< Time in user space [%] */
                         float nice;       /**< Time in user space with low priority [%] */
                         float system;     /**< Time in kernel space [%] */

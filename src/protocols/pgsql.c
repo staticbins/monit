@@ -41,8 +41,9 @@
  *  @file
  */
 void check_pgsql(Socket_T socket) {
+        Port_T port = Socket_getPort(socket);
 
-        unsigned char buf[STRLEN];
+        unsigned char buf[STRLEN] = {};
 
         unsigned char requestLogin[33] = {
                 0x00,                              /** Length */
@@ -120,8 +121,8 @@ void check_pgsql(Socket_T socket) {
 
         /** Successful connection */
         if (! memcmp((unsigned char *)buf, (unsigned char *)responseAuthOk, 9)) {
-                /** This is where suspicious people can do SELECT query that I dont */
-                if (Socket_write(socket, (unsigned char *)requestTerm, sizeof(requestTerm)) < 0)
+                /** Terminate the connection if connected via TCP socket */
+                if (port->family != Socket_Unix && Socket_write(socket, (unsigned char *)requestTerm, sizeof(requestTerm)) < 0)
                         THROW(IOException, "PGSQL: connection terminator write error -- %s", STRERROR);
                 return;
         }

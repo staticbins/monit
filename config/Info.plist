@@ -5,7 +5,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>com.tildeslash.monit</string>
 	<key>CFBundleName</key>
-	<string>Monit</string>
+	<string>monit</string>
 	<key>CFBundleShortVersionString</key>
 	<string>5.27.0</string>
 </dict>

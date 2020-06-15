@@ -15,9 +15,11 @@ AC_CONFIG_SRCDIR([src])
 AC_PROG_CC
 
 AX_CHECK_COMPILE_FLAG([-Wextra], [CFLAGS="$CFLAGS -Wextra"])
-AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"])
-AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [CFLAGS="$CFLAGS -fcf-protection=full"])
-AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [CFLAGS="$CFLAGS -fstack-clash-protection"])
+if test `uname` != "AIX"; then
+        AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"])
+        AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [CFLAGS="$CFLAGS -fcf-protection=full"])
+        AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [CFLAGS="$CFLAGS -fstack-clash-protection"])
+fi
 
 # ---------------------------------------------------------------------------
 # Libtool 
@@ -153,13 +155,39 @@ AC_CHECK_LIB([m], [round], [], [AC_MSG_ERROR([Math library is required])])
 # ---------------------------------------------------------------------------
 
 AC_HEADER_STDC
-AC_CHECK_HEADERS([ctype.h errno.h fcntl.h limits.h pthread.h setjmp.h \
-                  signal.h stdarg.h stdio.h string.h string.h strings.h \
-                  sys/socket.h sys/time.h sys/types.h unistd.h execinfo.h \
-                  sys/sendfile.h sys/dirent.h poll.h sys/poll.h sys/event.h \
-                  stropts.h sys/ioctl.h sys/filio.h kstat.h ifaddrs.h \
-                  net/if_media.h netinet/in.h sys/sysctl.h net/if_dl.h \
-                  sys/random.h sys/protosw.h])
+AC_CHECK_HEADERS([ctype.h \
+                  errno.h \
+                  execinfo.h \
+                  fcntl.h \
+                  ifaddrs.h \
+                  kstat.h \
+                  limits.h \
+                  net/if_dl.h \
+                  net/if_media.h\
+                  netinet/in.h \
+                  poll.h \
+                  pthread.h \
+                  setjmp.h \
+                  signal.h \
+                  stdarg.h \
+                  stdio.h \
+                  string.h \
+                  strings.h \
+                  stropts.h \
+                  sys/dirent.h \
+                  sys/event.h \
+                  sys/filio.h \
+                  sys/ioctl.h \
+                  sys/poll.h \
+                  sys/protosw.h \
+                  sys/random.h \
+                  sys/sendfile.h \
+                  sys/socket.h \
+                  sys/sysctl.h \
+                  sys/time.h \
+                  sys/types.h \
+                  unistd.h \
+                  usersec.h])
 AC_CHECK_HEADERS([net/if.h net/route.h], [], [],
         [
          #ifdef HAVE_SYS_TYPES_H
@@ -220,11 +248,7 @@ AC_CACHE_CHECK([vsnprintf is c99 conformant],
                         [AC_MSG_FAILURE([vsnprintf does not conform to c99])],
                         [AC_MSG_ERROR(cross-compiling: please set 'libmonit_cv_vsnprintf_c99_conformant=[yes|no]')])])
 
-AC_CHECK_FUNCS([timegm])
-
-# random number generators
-AC_CHECK_FUNCS([getrandom])
-AC_CHECK_FUNCS([arc4random_buf])
+AC_CHECK_FUNCS([timegm getgrouplist getrandom arc4random_buf])
 
 # ------------------------------------------------------------------------
 # Architecture/OS

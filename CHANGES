@@ -1,6 +1,9 @@
-                     CHANGES version 5.27.0
+                     CHANGES version 5.28.0
 
            This file summarizes changes made since 5.0
+
+Version 5.28.0
+
 
 Version 5.27.0
 
@@ -71,6 +74,8 @@ New: Issue #877: Linux: Add support for VxFS filesystem statistics. Thanks to Lu
 
 New: Enable support for compilation with AddressSanitizer. Use "configure --with-asan" to enable.
 
+New: Issue #894: If monit is logging to a file: add a year to the timestamp.
+
 Fixed: Issue #867: Monit crashed when executing programs when linked with musl libc. Thanks to Rich Felker for report.
 
 Fixed: Monit did incorrectly add the CPU wait% to the system CPU usage, which was wrong (the CPU is idle when it's in the
@@ -119,6 +124,14 @@ Fixed: Fix memory leak when no explicit "check system" service entry is present 
 monit is reloaded.
 
 Fixed: Fix memory leak if "restart program" is defined for a service and monit is reloaded.
+
+Fixed: Fix MQTT protocol test.
+
+Fixed: Issue #519: Monit may crash if the file check with a restart action on content match is used and
+this file has some dependant services at the same time.
+
+Fixed: The PostgreSQL test was flapping with the following error if connection via unix socket was used:
+        PGSQL: connection terminator write error -- Broken pipe
 
 
 Version 5.26.0

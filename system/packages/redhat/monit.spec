@@ -60,7 +60,7 @@ fi
 
 %files
 %defattr(-,root,root)
-%doc COPYING README CHANGES
+%doc COPYING CHANGES
 %config(noreplace) /etc/monitrc
 %config /etc/init.d/%{name}
 %{_bindir}/%{name}
