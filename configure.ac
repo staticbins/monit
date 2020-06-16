@@ -664,12 +664,8 @@ AC_ARG_WITH([zlib],
                 zlib to link with]),
      [
         if test "x$withval" = "xyes"; then
-                AC_CHECK_LIB([z], [zlibVersion], [
-                        with_zlib=1
-                        ], [
-                        with_zlib=0
-                        AC_MSG_ERROR([libz not found])
-                ])
+                AC_CHECK_LIB([z], [zlibVersion], [], [AC_MSG_ERROR([libz not found])])
+                with_zlib=1
                 AC_CHECK_HEADERS([zlib.h])
         elif test "x$withval" != "xno"; then
                 AC_MSG_CHECKING([for zlib in $withval])
@@ -688,12 +684,8 @@ AC_ARG_WITH([zlib],
                 with_zlib=0
         fi
      ],[
-        AC_CHECK_LIB([z], [zlibVersion], [
-                with_zlib=1
-                ], [
-                with_zlib=0
-                AC_MSG_ERROR([libz not found])
-        ])
+        AC_CHECK_LIB([z], [zlibVersion], [], [AC_MSG_ERROR([libz not found])])
+        with_zlib=1
         AC_CHECK_HEADERS([zlib.h])
      ]
 )
