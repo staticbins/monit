@@ -76,6 +76,9 @@ New: Enable support for compilation with AddressSanitizer. Use "configure --with
 
 New: Issue #894: If monit is logging to a file: add a year to the timestamp.
 
+New: Issue #908: Add STARTTLS support to the IMAPS protocol test. Example:
+        if failed port 143 protocol imaps then alert
+
 Fixed: Issue #867: Monit crashed when executing programs when linked with musl libc. Thanks to Rich Felker for report.
 
 Fixed: Monit did incorrectly add the CPU wait% to the system CPU usage, which was wrong (the CPU is idle when it's in the

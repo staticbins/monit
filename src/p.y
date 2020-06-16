@@ -3611,7 +3611,7 @@ static void addport(Port_T *list, Port_T port) {
                 if (sslset.flags) {
 #ifdef HAVE_OPENSSL
                         p->target.net.ssl.certificate.minimumDays = port->target.net.ssl.certificate.minimumDays;
-                        if (sslset.flags && (p->target.net.port == 25 || p->target.net.port == 587))
+                        if (sslset.flags && (p->target.net.port == 25 || p->target.net.port == 143 || p->target.net.port == 587))
                                 sslset.flags = SSL_StartTLS;
                         _setSSLOptions(&(p->target.net.ssl.options));
 #else
