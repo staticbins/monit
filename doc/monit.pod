@@ -769,7 +769,7 @@ usually setup on port 2812. Example:
 You can now use L<http://localhost:2812/|http://localhost:2812/> to
 access Monit's web interface from a browser, after you have entered
 username and password as credentials. You might need to use double
-quotes around the password if it cointains special chars such as
+quotes around the password if it contains special chars such as
 "p@ssw:r#".
 
 B<ADDRESS> make Monit listen on a specific interface only. For example
@@ -922,7 +922,7 @@ server will allow the client access to the requested document.
 
 The biggest weakness with Basic Authentication is that username and
 password is sent in clear-text over the network (i.e. base64 encoded).
-It is therefor recommended that you do not use this authentication
+It is therefore recommended that you do not use this authentication
 method unless you run Monit with I<ssl> support. With ssl, it is safe
 to use Basic Authentication since I<all> HTTP data, including Basic
 Authentication headers will be encrypted.
@@ -1060,8 +1060,8 @@ Monit will raise an alert in the following situations:
  o Permission test failed (e.g. file mode doesn't match)
  o An UID test failed (e.g. file owned by different user)
  o A GID test failed (e.g. file owned by different group)
- o A process' PID changed out of Monit's control
- o A process' PPID changed out of Monit control
+ o A process's PID changed out of Monit's control
+ o A process's PPID changed out of Monit control
  o Too many service recovery attempts failed
  o A file content test found a match
  o Filesystem flags changed
@@ -1482,7 +1482,7 @@ current time match the cron-string pattern. If it does, then the check
 is performed otherwise it is skipped. The cron specification does not
 guarantee when exactly the test will run, this depends on the default
 poll time and the length of the check cycle. In other words, we cannot
-guarantee that Monit will run on a specific time. Therefor we
+guarantee that Monit will run on a specific time. Therefore we
 B<strongly> recommend to use an asterix in the minute field or at
 minimum a range, e..g. 0-15. B<Never> use a specific minute as Monit
 may not run on that minute.
@@ -2131,7 +2131,7 @@ processes in either percent or as an amount [B, kB, MB, GB]. Example:
 
 =head2 PROCESS I/O ACTIVITY TEST
 
-Monit can test process' filesystem read and write activity. This test
+Monit can test process's filesystem read and write activity. This test
 can only be used in the context of a process service type. Monit will
 normally need to run as the root user to access this metrics.
 
@@ -2782,7 +2782,7 @@ Example:
 
 =head2 PID TEST
 
-Monit can test the process' PID. This test is implicit and Monit will
+Monit can test the process's PID. This test is implicit and Monit will
 send an alert in case the PID changed outside of Monit's control.
 
 Syntax:
@@ -2805,7 +2805,7 @@ replaced by a new instance:
 
 =head2 PPID TEST
 
-Monit can test the process' parent PID (PPID) for changes. This
+Monit can test the process's parent PID (PPID) for changes. This
 test is implicit and Monit will send alert in the case that the
 PPID changed outside of Monit control.
 
@@ -3141,7 +3141,7 @@ I<unit> is a choice of "B","KB","MB","GB" or long alternatives
 
 I<time-unit> is a choice of "MINUTE(S)", "HOUR(S)", "DAY".
 NOTE: Monit maintains a rolling count of total uploaded and downloaded
-bytes for the last 24 hours only. The value of time-unit can therefor not
+bytes for the last 24 hours only. The value of time-unit can therefore not
 specify a range wider than one day.
 
 I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
@@ -3184,7 +3184,7 @@ default is EQUAL).
 
 I<time-unit> is a choice of "MINUTE(S)", "HOUR(S)", "DAY".
 NOTE: Monit keeps total upload/download statistics only for the last
-24 hours. The time-unit value cannot therefor span more than one day.
+24 hours. The time-unit value cannot therefore span more than one day.
 
 I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 "EXEC" or "UNMONITOR".

@@ -316,7 +316,7 @@ char *_Str_join(char *dest, int n, ...);
 
 
 /**
- * Creates a new String by merging a formated string and a variable
+ * Creates a new String by merging a formatted string and a variable
  * argument list. The caller must free the returned String.
  * @param s A format string
  * @return The new String or NULL if the string could not be created
@@ -326,11 +326,11 @@ char *Str_cat(const char *s, ...) __attribute__((format (printf, 1, 2)));
 
 
 /**
- * Creates a new String by merging a formated string and a variable
+ * Creates a new String by merging a formatted string and a variable
  * argument list. The caller must free the returned String.
  * @param s A format string
  * @param ap A variable argument lists
- * @return a new String concating s and va_list or NULL on error
+ * @return a new String concatenating s and va_list or NULL on error
  * @exception MemoryException if memory allocation fails
  */
 char *Str_vcat(const char *s, va_list ap) __attribute__((format (printf, 1, 0)));
@@ -396,7 +396,7 @@ bool Str_lim(const char *s, int limit);
  * Str_match("^[^@ ]+@([-a-zA-Z0-9]+\\.)+[a-zA-Z]{2,}$", "foo@bar.baz") -> true
  * </pre>
  * @param pattern the regular expression
- * @param subject the string to match agains pattern
+ * @param subject the string to match against pattern
  * @return true if subject match pattern, otherwise false
  * @exception AssertException if pattern is invalid or cannot be 
  * compiled. 
@@ -435,7 +435,7 @@ int Str_cmp(const void *x, const void *y);
 
 /**
  * Compare case sensitive two strings in constant time. This function
- * can be used for timing-attack resistent comparison of credentials.
+ * can be used for timing-attack resistant comparison of credentials.
  * Only the first Str_compareConstantTimeStringLength bytes are compared
  * if the strings are longer.
  * @param x A String

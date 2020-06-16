@@ -246,7 +246,7 @@ static void _processHeaders(Socket_T socket, void (**processBody)(Socket_T socke
                         if (! sscanf(buf, "%*s%*[: ]%d", contentLength))
                                 THROW(ProtocolException, "HTTP error: Parsing Content-Length response header '%s'", buf);
                         if (*contentLength < 0)
-                                THROW(ProtocolException, "HTTP error: Ilegal Content-Length response header '%s'", buf);
+                                THROW(ProtocolException, "HTTP error: Illegal Content-Length response header '%s'", buf);
                         *processBody = _processBodyContentLength;
                 } else if (Str_startsWith(buf, "Transfer-Encoding")) {
                         if (Str_sub(buf, "chunked")) {

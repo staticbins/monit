@@ -1014,7 +1014,7 @@ mailserverlist  : mailserver
                 ;
 
 mailserver      : STRING mailserveroptlist {
-                        /* Restore the current text overriden by lookahead */
+                        /* Restore the current text overridden by lookahead */
                         FREE(argyytext);
                         argyytext = Str_dup($1);
 
@@ -1023,7 +1023,7 @@ mailserver      : STRING mailserveroptlist {
                         addmailserver(&mailserverset);
                   }
                 | STRING PORT NUMBER mailserveroptlist {
-                        /* Restore the current text overriden by lookahead */
+                        /* Restore the current text overridden by lookahead */
                         FREE(argyytext);
                         argyytext = Str_dup($1);
 
@@ -3752,7 +3752,7 @@ static void addsize(Size_T ss) {
         s->size         = ss->size;
         s->action       = ss->action;
         s->test_changes = ss->test_changes;
-        /* Get the initial size for future comparision, if the file exists */
+        /* Get the initial size for future comparison, if the file exists */
         if (s->test_changes) {
                 s->initialized = ! stat(current->path, &buf);
                 if (s->initialized)
@@ -5090,7 +5090,7 @@ static void check_exec(char *exec) {
 /* Return a valid max forward value for SIP header */
 static int verifyMaxForward(int mf) {
         if (mf == 0) {
-                return INT_MAX; // Differentiate unitialized (0) and explicit zero
+                return INT_MAX; // Differentiate uninitialized (0) and explicit zero
         } else if (mf > 0 && mf <= 255) {
                 return mf;
         }

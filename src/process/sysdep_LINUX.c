@@ -339,7 +339,7 @@ static bool _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
                         }
                 }
                 fclose(f);
-                // Fallback to procfs stat process name if cmdline was empty (even kernel-space processes have informations here)
+                // Fallback to procfs stat process name if cmdline was empty (even kernel-space processes have information here)
                 if (! StringBuffer_length(proc->name)) {
                         char buffer[8192];
                         char *tmp = NULL;
@@ -404,7 +404,7 @@ static bool _parseProcFdCount(Proc_T proc) {
         // subtract entries '.' and '..'
         proc->data.filedescriptors.open = file_count - 2;
 
-        // get process' limits
+        // get process's limits
 #ifdef HAVE_PRLIMIT
         struct rlimit limits;
         if (prlimit(proc->data.pid, RLIMIT_NOFILE, NULL, &limits) != 0) {

@@ -747,7 +747,7 @@ void check_mysql(Socket_T S) {
                         }
                         _readResponse(&mysql);
                 } else if (mysql.state == MySQL_FastAuthSuccess) {
-                        // The server shoud send an OK message immediately after fast auth success
+                        // The server should send an OK message immediately after fast auth success
                         _readResponse(&mysql);
                 } else if (mysql.state == MySQL_FullAuthenticationNeeded) {
                         if (Socket_isSecure(S)) {

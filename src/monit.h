@@ -665,7 +665,7 @@ typedef struct Port_T {
         Socket_Type type;           /**< Socket type used for connection (UDP/TCP) */
         Socket_Family family;    /**< Socket family used for connection (NET/UNIX) */
         Connection_State is_available;               /**< Server/port availability */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
         /** Protocol specific parameters */
         union {
                 struct {
@@ -754,7 +754,7 @@ typedef struct Icmp_T {
         Socket_Family family;                 /**< ICMP family used for connection */
         double response;                         /**< ICMP ECHO response time [ms] */
         Outgoing_T outgoing;                                 /**< Outgoing address */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct Icmp_T *next;                               /**< next icmp in chain */
@@ -776,7 +776,7 @@ typedef struct Resource_T {
         Resource_Type resource_id;                     /**< Which value is checked */
         Operator_Type operator;                           /**< Comparison operator */
         double limit;                                   /**< Limit of the resource */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct Resource_T *next;                       /**< next resource in chain */
@@ -791,7 +791,7 @@ typedef struct Timestamp_T {
         Operator_Type operator;                           /**< Comparison operator */
         unsigned long long time;                                    /**< Timestamp watermark */
         time_t lastTimestamp;        /**< Last timestamp (context depends on type) */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct Timestamp_T *next;                     /**< next timestamp in chain */
@@ -809,7 +809,7 @@ typedef struct ActionRate_T {
 } *ActionRate_T;
 
 
-/** Defines when to run a check for a service. This type suports both the old
+/** Defines when to run a check for a service. This type supports both the old
  cycle based every statement and the new cron-format version */
 typedef struct Every_T {
         Every_Type type; /**< 0 = not set, 1 = cycle, 2 = cron, 3 = negated cron */
@@ -828,7 +828,7 @@ typedef struct Status_T {
         bool initialized;                 /**< true if status was initialized */
         Operator_Type operator;                           /**< Comparison operator */
         int return_value;                /**< Return value of the program to check */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct Status_T *next;                       /**< next exit value in chain */
@@ -853,7 +853,7 @@ typedef struct Size_T {
         bool test_changes;       /**< true if we only should test for changes */
         Operator_Type operator;                           /**< Comparison operator */
         unsigned long long size;                               /**< Size watermark */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct Size_T *next;                               /**< next size in chain */
@@ -864,7 +864,7 @@ typedef struct Size_T {
 typedef struct Uptime_T {
         Operator_Type operator;                           /**< Comparison operator */
         unsigned long long uptime;                           /**< Uptime watermark */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct Uptime_T *next;                           /**< next uptime in chain */
@@ -872,7 +872,7 @@ typedef struct Uptime_T {
 
 
 typedef struct LinkStatus_T {
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct LinkStatus_T *next;                      /**< next link in chain */
@@ -882,7 +882,7 @@ typedef struct LinkStatus_T {
 typedef struct LinkSpeed_T {
         int duplex;                                        /**< Last duplex status */
         long long speed;                                     /**< Last speed [bps] */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct LinkSpeed_T *next;                       /**< next link in chain */
@@ -892,7 +892,7 @@ typedef struct LinkSpeed_T {
 typedef struct LinkSaturation_T {
         Operator_Type operator;                           /**< Comparison operator */
         float limit;                                     /**< Saturation limit [%] */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct LinkSaturation_T *next;                  /**< next link in chain */
@@ -904,7 +904,7 @@ typedef struct Bandwidth_T {
         Time_Type range;                            /**< Time range to watch: unit */
         int rangecount;                            /**< Time range to watch: count */
         unsigned long long limit;                              /**< Data watermark */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct Bandwidth_T *next;                     /**< next bandwidth in chain */
@@ -918,7 +918,7 @@ typedef struct Checksum_T {
         Hash_Type type;                   /**< The type of hash (e.g. md5 or sha1) */
         int   length;                                      /**< Length of the hash */
         MD_T  hash;                     /**< A checksum hash computed for the path */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 } *Checksum_T;
 
 
@@ -926,7 +926,7 @@ typedef struct Checksum_T {
 typedef struct Perm_T {
         bool test_changes;       /**< true if we only should test for changes */
         int perm;                                           /**< Access permission */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 } *Perm_T;
 
 /** Defines match object */
@@ -936,8 +936,8 @@ typedef struct Match_T {
         char    *match_string;                                   /**< Match string */ //FIXME: union?
         char    *match_path;                         /**< File with matching rules */ //FIXME: union?
         regex_t *regex_comp;                                    /**< Match compile */
-        StringBuffer_T log;    /**< The temporary buffer used to record the matches */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        StringBuffer_T log;   /**< The temporary buffer used to record the matches */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct Match_T *next;                             /**< next match in chain */
@@ -947,20 +947,20 @@ typedef struct Match_T {
 /** Defines uid object */
 typedef struct Uid_T {
         uid_t     uid;                                            /**< Owner's uid */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 } *Uid_T;
 
 
 /** Defines gid object */
 typedef struct Gid_T {
         gid_t     gid;                                            /**< Owner's gid */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 } *Gid_T;
 
 
 typedef struct SecurityAttribute_T {
         char *attribute;                                   /**< Security attribute */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct SecurityAttribute_T *next;
@@ -968,10 +968,10 @@ typedef struct SecurityAttribute_T {
 
 typedef struct Filedescriptors_T {
         bool total;             /**<Whether to include filedescriptors of children */
-        long long limit_absolute;                              /**<  Filedescriptors limit */
-        float limit_percent;                                 /**< Filedescriptors limit */
+        long long limit_absolute;                      /**<  Filedescriptors limit */
+        float limit_percent;                            /**< Filedescriptors limit */
         Operator_Type operator;                           /**< Comparison operator */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct Filedescriptors_T *next;
@@ -979,7 +979,7 @@ typedef struct Filedescriptors_T {
 
 /** Defines pid object */
 typedef struct Pid_T {
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct Pid_T *next;                                 /**< next pid in chain */
@@ -987,7 +987,7 @@ typedef struct Pid_T {
 
 
 typedef struct FsFlag_T {
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct FsFlag_T *next;
@@ -995,7 +995,7 @@ typedef struct FsFlag_T {
 
 
 typedef struct NonExist_T {
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct NonExist_T *next;
@@ -1003,7 +1003,7 @@ typedef struct NonExist_T {
 
 
 typedef struct Exist_T {
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct Exist_T *next;
@@ -1017,7 +1017,7 @@ typedef struct FileSystem_T {
         //FIXME: union
         long long limit_absolute;                          /**< Watermark - blocks */
         float limit_percent;                              /**< Watermark - percent */
-        EventAction_T action;  /**< Description of the action upon event occurence */
+        EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
         struct FileSystem_T *next;                   /**< next filesystem in chain */
@@ -1195,7 +1195,7 @@ typedef struct Service_T {
         Perm_T      perm;                                    /**< Permission check */
         Port_T      portlist;                            /**< Portnumbers to check */
         Port_T      socketlist;                         /**< Unix sockets to check */
-        Resource_T  resourcelist;                          /**< Resouce check list */
+        Resource_T  resourcelist;                         /**< Resource check list */
         Size_T      sizelist;                                 /**< Size check list */
         Uptime_T    uptimelist;                             /**< Uptime check list */
         Match_T     matchlist;                             /**< Content Match list */
@@ -1296,7 +1296,7 @@ struct Run_T {
         MD_T id;                                              /**< Unique monit id */
         Limits_T limits;                                       /**< Default limits */
         struct SslOptions_T ssl;                          /**< Default SSL options */
-        int  polltime;        /**< In deamon mode, the sleeptime (sec) between run */
+        int  polltime;        /**< In daemon mode, the sleeptime (sec) between run */
         int  startdelay;  /**< the sleeptime [s] on first start after machine boot */
         int  facility;              /** The facility to use when running openlog() */
         int  eventlist_slots;          /**< The event queue size - number of slots */
@@ -1382,7 +1382,7 @@ extern const char *httpmethod[];
 #include "system/Mem.h"
 
 
-/* FIXME: move remaining prototypes into seperate header-files */
+/* FIXME: move remaining prototypes into separate header-files */
 
 bool parse(char *);
 bool control_service(const char *, Action_Type);

@@ -59,7 +59,7 @@
 
 
 /**
- * Notify registred users about the event
+ * Notify registered users about the event
  * @param E An Event object
  * @return If failed, return Handler_Alert flag or Handler_Succeeded flag if succeeded
  */

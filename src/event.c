@@ -169,7 +169,7 @@ static bool _checkState(Event_T E, State_Type S) {
 
 
 /**
- * Add the partialy handled event to the global queue
+ * Add the partially handled event to the global queue
  * @param E An event object
  */
 static void _queueAdd(Event_T E) {
@@ -238,7 +238,7 @@ error:
 
 
 /**
- * Update the partialy handled event in the global queue
+ * Update the partially handled event in the global queue
  * @param E An event object
  * @param file_name File name
  */
@@ -372,7 +372,7 @@ static void _handleEvent(Service_T S, Event_T E) {
         if (E->state == State_Failed || E->state == State_Changed) {
                 if (E->id != Event_Instance && E->id != Event_Action) { // We are not interested in setting error flag for instance and action events
                         S->error |= E->id;
-                        /* The error hint provides second dimension for error bitmap and differentiates between failed/changed event states (failed=0, chaged=1) */
+                        /* The error hint provides second dimension for error bitmap and differentiates between failed/changed event states (failed=0, changed=1) */
                         if (E->state == State_Changed)
                                 S->error_hint |= E->id;
                         else
@@ -433,8 +433,8 @@ void Event_post(Service_T service, long id, State_Type state, EventAction_T acti
                         FREE(message);
                         return;
                 }
-                /* Initialize the event. The mandatory informations are cloned so the event is as standalone as possible and may be saved
-                 * to the queue without the dependency on the original service, thus persistent and managable across monit restarts */
+                /* Initialize the event. The mandatory information is cloned so the event is as standalone as possible and may be saved
+                 * to the queue without the dependency on the original service, thus persistent and manageable across monit restarts */
                 NEW(e);
                 e->id = id;
                 gettimeofday(&e->collected, NULL);
@@ -523,7 +523,7 @@ Action_Type Event_get_action(Event_T E) {
 
 /**
  * Get a textual description of actual event action. For instance if the
- * event type is possitive Event_NonExist, the textual description of
+ * event type is positive Event_NonExist, the textual description of
  * failed state related action is "restart". Likewise if the event type is
  * negative Event_Checksumthe textual description of recovery related action
  * is "alert" and so on.

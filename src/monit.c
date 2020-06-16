@@ -132,7 +132,7 @@ struct Run_T Run;                      /**< Struct holding runtime constants */
 Service_T servicelist;                /**< The service list (created in p.y) */
 Service_T servicelist_conf;   /**< The service list in conf file (c. in p.y) */
 ServiceGroup_T servicegrouplist;/**< The service group list (created in p.y) */
-SystemInfo_T systeminfo;                              /**< System infomation */
+SystemInfo_T systeminfo;                             /**< System information */
 
 Thread_T heartbeatThread;
 Sem_T    heartbeatCond;
@@ -337,7 +337,7 @@ static void do_reinit() {
          reinitialize any information about children we have setup to wait
          for will be lost. This may create zombie processes until Monit
          itself exit. However, Monit will wait on all children that has exited
-         before it ifself exit. TODO: Later refactored versions will use a
+         before it itself exit. TODO: Later refactored versions will use a
          globale process table which a sigchld handler can check */
         waitforchildren();
 
@@ -527,7 +527,7 @@ static void do_exit(bool saveState) {
 /**
  * Default action - become a daemon if defined in the Run object and
  * run validate() between sleeps. If not, just run validate() once.
- * Also, if specified, start the monit http server if in deamon mode.
+ * Also, if specified, start the monit http server if in daemon mode.
  */
 static void do_default() {
         if (Run.flags & Run_Daemon) {
@@ -829,7 +829,7 @@ static void help() {
                " -v            Verbose mode, work noisy (diagnostic output)\n"
                " -vv           Very verbose mode, same as -v plus log stacktrace on error\n"
                " -H [filename] Print SHA1 and MD5 hashes of the file or of stdin if the\n"
-               "               filename is omited; monit will exit afterwards\n"
+               "               filename is omitted; monit will exit afterwards\n"
                " -V            Print version number and patchlevel\n"
                " -h            Print this text\n"
                "Optional commands are as follows:\n"

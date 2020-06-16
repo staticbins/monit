@@ -27,7 +27,7 @@ int main(void) {
         printf("============> Start Time Tests\n\n");
 
 
-        printf("=> Test1: check string ouput\n");
+        printf("=> Test1: check string output\n");
         {
                 char result[STRLEN];
                 Time_string(1267441200, result); /* 01 Mar 2010 12:00:00 */

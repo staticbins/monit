@@ -60,7 +60,7 @@
  *  The status code must be between 200 and 300.
  *
  *  In this current version, redirection is not supported. This code is
- * a rewrite of a patch we recieved from Pierrick Grasland and Bret McDanel
+ * a rewrite of a patch we received from Pierrick Grasland and Bret McDanel
  * to check the SIP protocol.
  *
  *  @file

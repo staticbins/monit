@@ -360,7 +360,7 @@ char *File_removeTrailingSeparator(char *path);
  * PATH_MAX
  * @param path The file path to normalize
  * @param resolved The buffer to write the real path too
- * @return A pointer to the resolved buffer or NULL if an error occured
+ * @return A pointer to the resolved buffer or NULL if an error occurred
  */
 char *File_getRealPath(const char *path, char *resolved);
 

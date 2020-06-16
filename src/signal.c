@@ -35,7 +35,7 @@
 #include "monit.h"
 
 /**
- *  Signal handeling routines.
+ *  Signal handling routines.
  *
  *  @file
  */

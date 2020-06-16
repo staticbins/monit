@@ -249,7 +249,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
 
 
 static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct statfs *mnt)) {
-        //FIXME: cache mount informations (register for mount/unmount notification)
+        //FIXME: cache mount information (register for mount/unmount notification)
         if (_setDevice(inf, path, compare)) {
                 return (inf->filesystem->object.getDiskUsage(inf) && inf->filesystem->object.getDiskActivity(inf));
         }

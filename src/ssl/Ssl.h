@@ -171,7 +171,7 @@ int Ssl_getCertificateValidDays(T C);
  * @param options SSL options object
  * @param b A string buffer
  * @param size The size of the buffer b
- * @return Buffer with string represantation of SSL options
+ * @return Buffer with string representation of SSL options
  */
 char *Ssl_printOptions(SslOptions_T options, char *b, int size);
 
