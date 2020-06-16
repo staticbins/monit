@@ -596,7 +596,7 @@ static void _testIp(Port_T p) {
                                         FINALLY
                                         {
 #ifdef HAVE_OPENSSL
-                                                // Set the minimum valid days past the protocol check as if the connection uses STARTTLS to switch plain->SSL, we have no SSL certificate informations until the STARTTTLS is performed.
+                                                // Set the minimum valid days past the protocol check as if the connection uses STARTTLS to switch plain->SSL, we have no SSL certificate information until the STARTTTLS is performed.
                                                 // Try to collect the certificate validDays even on protocol exception - the protocol test may fail on higher level (e.g. when HTTP returns 400), but we can still get certificate info
                                                 p->target.net.ssl.certificate.validDays = Ssl_getCertificateValidDays(S->ssl);
 #endif

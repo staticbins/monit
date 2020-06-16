@@ -100,7 +100,7 @@ void ProcessTree_delete(void);
 
 
 /**
- * Update the process infomation.
+ * Update the process information.
  * @param s A Service object
  * @param pid Process PID to update
  * @return true if succeeded otherwise false.

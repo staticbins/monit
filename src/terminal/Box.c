@@ -160,7 +160,7 @@ static bool _printRow(T t) {
                 if (*(t->columns[i]._color))
                         StringBuffer_append(t->b, "%s", t->columns[i]._color);
                 if (! t->columns[i].value || t->columns[i]._cursor > strlen(t->columns[i].value) - 1) {
-                        // Empty column pading
+                        // Empty column padding
                         StringBuffer_append(t->b, "%*s", t->columns[i].width, " ");
                 } else if (strlen(t->columns[i].value + t->columns[i]._cursor) > (unsigned long)t->columns[i].width) {
                         if (t->columns[i].wrap) {

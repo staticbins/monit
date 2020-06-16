@@ -35,7 +35,7 @@
  * restarted or reloaded, it restores the state of the services from this file.
  *
  * The location of the state file defaults to ~/.monit.state and can be
- * overriden on the command line or using the "set statefile" statement in the
+ * overridden on the command line or using the "set statefile" statement in the
  * configuration file.
  *
  *  @file

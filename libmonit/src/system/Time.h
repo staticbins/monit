@@ -235,7 +235,7 @@ char *Time_fmt(char *result, int size, const char *format, time_t time);
 
 
 /**
- * Returns a uptime formated string for the given seconds. That is, convert
+ * Returns a uptime formatted string for the given seconds. That is, convert
  * <code>sec</code> to days, hours and minutes and return a string on the
  * form, <code>7d, 17h, 34m</code>. The submitted result buffer must be
  * large enough to hold at least 24 bytes.

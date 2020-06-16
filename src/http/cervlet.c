@@ -184,7 +184,7 @@ static char *get_service_status(Output_Type, Service_T, char *, int);
 /**
  *  Implementation of doGet and doPost routines used by the cervlet
  *  processor module. This particilary cervlet will provide
- *  information about the monit deamon and programs monitored by
+ *  information about the monit daemon and programs monitored by
  *  monit.
  *
  *  @file
@@ -2656,7 +2656,7 @@ static char *get_service_status(Output_Type type, Service_T s, char *buf, int bu
         } else if (s->error == 0) {
                 snprintf(buf, buflen, type == HTML ? "<span class='green-text'>OK</span>" : Color_lightGreen("OK"));
         } else {
-                // In the case that the service has actualy some failure, the error bitmap will be non zero
+                // In the case that the service has actually some failure, the error bitmap will be non zero
                 char *p = buf;
                 EventTable_T *et = Event_Table;
                 while ((*et).id) {

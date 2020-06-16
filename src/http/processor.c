@@ -83,12 +83,12 @@
  *  requests.
  *
  *  This Processor delegates the actual handling of the request and
- *  reponse to so called cervlets, which must implement two methods;
+ *  response to so called cervlets, which must implement two methods;
  *  doGet and doPost.
  *
  *  NOTES
  *    This Processor is command oriented and if a second slash '/' is
- *    found in the URL it's asumed to be the PATHINFO. In other words
+ *    found in the URL it's assumed to be the PATHINFO. In other words
  *    this processor perceive an URL as:
  *
  *                      /COMMAND?QUERYSTRING/PATHINFO
@@ -485,7 +485,7 @@ static char *get_server(char *result, int size) {
 
 /**
  * Send the response to the client. If the response has already been
- * commited, this function does nothing.
+ * committed, this function does nothing.
  */
 static void send_response(HttpRequest req, HttpResponse res) {
         Socket_T S = res->S;

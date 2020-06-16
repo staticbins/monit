@@ -83,7 +83,7 @@ extern EventTable_T Event_Table[];
 /**
  * This class implements the <b>event</b> processing machinery used by
  * monit. In monit an event is an object containing a Service_T
- * reference indicating the object where the event orginated, an id
+ * reference indicating the object where the event originated, an id
  * specifying the event type, a value representing up or down state
  * and an optional message describing why the event was fired.
  *
@@ -107,7 +107,7 @@ void Event_post(Service_T service, long id, State_Type state, EventAction_T acti
 
 /**
  * Get a textual description of actual event type. For instance if the
- * event type is possitive Event_Timestamp, the textual description is
+ * event type is positive Event_Timestamp, the textual description is
  * "Timestamp error". Likewise if the event type is negative Event_Checksum
  * the textual description is "Checksum recovery" and so on.
  * @param E An event object
@@ -127,7 +127,7 @@ Action_Type Event_get_action(Event_T E);
 
 /**
  * Get a textual description of actual event action. For instance if the
- * event type is possitive Event_NonExist, the textual description of
+ * event type is positive Event_NonExist, the textual description of
  * failed state related action is "restart". Likewise if the event type is
  * negative Event_Checksum the textual description of recovery related action
  * is "alert" and so on.
@@ -139,7 +139,7 @@ const char *Event_get_action_description(Event_T E);
 
 
 /**
- * Reprocess the partialy handled event queue
+ * Reprocess the partially handled event queue
  */
 void Event_queue_process(void);
 

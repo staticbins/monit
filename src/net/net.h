@@ -47,7 +47,7 @@
  * @param address the local address the server will bind to
  * @param port The localhost port number to open
  * @param family The socket family to use
- * @param backlog The maximum queue length for incomming connections
+ * @param backlog The maximum queue length for incoming connections
  * @param error Error buffer
  * @return The socket ready for accept or -1 if failed
  */
@@ -58,7 +58,7 @@ int create_server_socket_tcp(const char *address, int port, Socket_Family family
  * Create a non-blocking server socket and bind it to the specified unix
  * socket path, with the specified backlog.
  * @param address the path to the unix socket
- * @param backlog The maximum queue length for incomming connections
+ * @param backlog The maximum queue length for incoming connections
  * @param error Error buffer
  * @return The socket ready for accept or -1 if failed
  */
@@ -74,7 +74,7 @@ int create_server_socket_unix(const char *path, int backlog, char error[STRLEN])
  * @param size The ping size
  * @param timeout If response will not come within timeout milliseconds abort
  * @param count How many pings to send
- * @return response time on succes, -1 on error
+ * @return response time on success, -1 on error
  */
 double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoing, int size, int timeout, int count);
 

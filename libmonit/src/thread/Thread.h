@@ -105,7 +105,7 @@
 /**
  * Cancel execution of a thread
  * @param thread The thread to cancel
- * @exception AssertException If thread cancelation failed
+ * @exception AssertException If thread cancellation failed
  * @hideinitializer
  */
 #define Thread_cancel(thread) wrapper(pthread_cancel(thread))

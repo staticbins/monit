@@ -246,6 +246,6 @@ fi
 - Fixed the monit homepage URL
 
 * Thu Feb 01 2001 Clinton Work <work@scripty.com>
-- Create the inital spec file
+- Create the initial spec file
 - Created a sample config file and a rc startup script
 

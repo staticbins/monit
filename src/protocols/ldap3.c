@@ -43,7 +43,7 @@
  *  BER encoded strings. To make the test as simple as possible
  *  we work with BER encoded data.
  *
- *  The test checks only if the bind was successfull - in the
+ *  The test checks only if the bind was successful - in the
  *  case of failure it don't provide any erroneous message
  *  analysis.
  *

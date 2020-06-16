@@ -177,7 +177,7 @@ static void *thread(__attribute__ ((unused)) void *args) {
 
 int main(void) {
         Bootstrap(); // Need to initialize library
-        printf("============> Start Exeption Tests\n\n");
+        printf("============> Start Exception Tests\n\n");
 
         printf("=> Test1: TRY-CATCH\n");
         {
