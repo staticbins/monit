@@ -130,6 +130,8 @@ Fixed: Fix MQTT protocol test.
 Fixed: Issue #519: Monit may crash if the file check with a restart action on content match is used and
 this file has some dependant services at the same time.
 
+Fixed: Issue #907: The "onreboot nostart" had no effect when the service was new or statefile was removed.
+
 Fixed: The PostgreSQL test was flapping with the following error if connection via unix socket was used:
         PGSQL: connection terminator write error -- Broken pipe
 

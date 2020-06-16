@@ -3405,6 +3405,7 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
         }
 
         /* Set default values */
+        current->onrebootRestored = false;
         current->mode     = Monitor_Active;
         current->monitor  = Monitor_Init;
         current->onreboot = Run.onreboot;

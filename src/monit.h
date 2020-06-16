@@ -1169,6 +1169,7 @@ typedef struct Service_T {
         char *name_urlescaped;                       /**< Service name URL escaped */
         StringBuffer_T name_htmlescaped;            /**< Service name HTML escaped */
         State_Type (*check)(struct Service_T *);/**< Service verification function */
+        bool onrebootRestored;
         bool visited; /**< Service visited flag, set if dependencies are used */
         Service_Type type;                             /**< Monitored service type */
         Monitor_State monitor;                             /**< Monitor state flag */
