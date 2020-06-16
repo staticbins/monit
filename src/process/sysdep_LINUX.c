@@ -411,8 +411,8 @@ static bool _parseProcFdCount(Proc_T proc) {
                 DEBUG("prlimit failed: %s\n", STRERROR);
                 return false;
         }
-        proc->filedescriptors.limit.soft = limits.rlim_cur;
-        proc->filedescriptors.limit.hard = limits.rlim_max;
+        proc->data.filedescriptors.limit.soft = limits.rlim_cur;
+        proc->data.filedescriptors.limit.hard = limits.rlim_max;
 #else
         // Try to collect the command-line from the procfs cmdline (user-space processes)
         snprintf(path, sizeof(path), "/proc/%d/limits", proc->data.pid);
