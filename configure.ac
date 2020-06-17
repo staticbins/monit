@@ -699,7 +699,7 @@ AC_ARG_WITH(pam,
     [  --without-pam           disable the use of pam (default: enabled)],
     [
         dnl Check the withvalue
-        if test "x$withval" = "xno" ; then
+        if test "x$withval" = "xno" || test "x$with_pam" = "x0"; then
                 with_pam=0
                 AC_MSG_RESULT([disabled])
         else
