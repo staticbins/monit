@@ -2138,7 +2138,7 @@ normally need to run as the root user to access this metrics.
 The OS usually supports the per-process I/O metrics by bytes or by
 operations.
 
-Some platforms allows to differentiate the I/O subset that required physical
+Some platforms allows one to differentiate the I/O subset that required physical
 storage access from generic I/O which was handled by cache. Note that as the
 physical I/O is usually aligned to the filesystem page, there may be difference
 between the total and physical I/O even if the process tried to read just 1 byte.
