@@ -42,6 +42,16 @@ int main(void) {
                 assert(sb);
                 StringBuffer_free(&sb);
                 assert(sb==NULL);
+                TRY
+                {
+                        StringBuffer_create(-1);
+                        assert(false);
+                }
+                CATCH(AssertException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
         }
         printf("=> Test1: OK\n\n");
 
@@ -107,6 +117,26 @@ int main(void) {
         {
                 sb = StringBuffer_new("abcdefgh");
                 assert(sb);
+                TRY
+                {
+                        StringBuffer_delete(sb, -1);
+                        assert(false);
+                }
+                CATCH(AssertException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
+                TRY
+                {
+                        StringBuffer_delete(sb, 9);
+                        assert(false);
+                }
+                CATCH(AssertException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
                 StringBuffer_delete(sb,3);
                 assert(StringBuffer_length(sb)==3);
                 StringBuffer_free(&sb);
@@ -181,6 +211,26 @@ int main(void) {
                 assert(sb);
                 assert(Str_isEqual(StringBuffer_substring(sb, StringBuffer_indexOf(sb, "-")),
                                                  "-henrik haukeland"));
+                TRY
+                {
+                        StringBuffer_substring(sb, -1);
+                        assert(false);
+                }
+                CATCH(AssertException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
+                TRY
+                {
+                        StringBuffer_substring(sb, 1000);
+                        assert(false);
+                }
+                CATCH(AssertException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
                 StringBuffer_free(&sb);
                 assert(sb==NULL);
         }
