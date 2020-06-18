@@ -972,7 +972,7 @@ then
     fi
 fi
 # Check TLS version
-if test $with_sslstatic -eq 1 -o $with_ssl -eq 1; then
+if test $with_sslstatic -eq 1 || test $with_ssl -eq 1; then
         if test "x$sslincldir" != "x"; then
                 CFLAGS="$CFLAGS -I$sslincldir"
         fi
@@ -1104,7 +1104,7 @@ echo
 echo "Monit Build Information:"
 echo
 echo "                Architecture: ${ARCH}"
-if test $with_sslstatic -eq 1 -o $with_ssl -eq 1; then
+if test $with_sslstatic -eq 1 || test $with_ssl -eq 1; then
 echo "       SSL include directory: ${sslincldir}"
 echo "       SSL library directory: ${ssllibdir}"
 fi
@@ -1118,7 +1118,7 @@ AX_INFO_AGPL()
 AX_INFO_TITLE([Monit has been configured with the following options:])
 AX_INFO_ENABLED([Compression:],           [test $with_zlib -eq 1])
 AX_INFO_ENABLED([PAM support:],           [test $with_pam -eq 1])
-AX_INFO_ENABLED([SSL support:],           [test $with_sslstatic -eq 1 -o $with_ssl -eq 1])
+AX_INFO_ENABLED([SSL support:],           [test $with_sslstatic -eq 1 || test $with_ssl -eq 1])
 AX_INFO_ENABLED([Large files support:],   [test $with_largefiles -eq 1])
 AX_INFO_ENABLED([ASAN support:],          [test $with_asan -eq 1])
 AX_INFO_ENABLED([IPv6 support:],          [test $with_ipv6 -eq 1])
