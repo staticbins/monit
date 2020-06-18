@@ -30,6 +30,7 @@ int main(void) {
         printf("=> Test0: create/destroy the stream\n");
         {
                 out = OutputStream_new(STDOUT);
+                assert(OutputStream_getDescriptor(out) == STDOUT);
                 assert(!OutputStream_isClosed(out));
                 OutputStream_free(&out);
                 assert(out == NULL);
