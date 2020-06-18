@@ -32,6 +32,8 @@ int main(void) {
                 assert(Dir_mkdir("Y", 0700));
                 printf("\tResult: Dir Y created with perm = %#o\n", File_mod("Y"));
                 assert(File_mod("Y") & 700);
+                assert(Dir_mkdir("", 0700) == false);
+                assert(Dir_mkdir(NULL, 0700) == false);
         }
         printf("=> Test1: OK\n\n");
 
@@ -41,6 +43,7 @@ int main(void) {
                 assert(Dir_chdir("X"));
                 printf("\tResult: Changing working dir to Y\n");
                 assert(Dir_chdir("../Y"));
+                assert(Dir_chdir(NULL) == false);
         }
         printf("=> Test2: OK\n\n");
 
@@ -53,6 +56,7 @@ int main(void) {
                 assert(Dir_chdir(".."));
                 assert(Dir_cwd(cwd, STRLEN));
                 printf("\tResult: Current working dir is: %s\n", cwd);
+                assert(Dir_cwd(NULL, 0) == false);
         }
         printf("=> Test3: OK\n\n");
 
@@ -63,6 +67,8 @@ int main(void) {
                 printf("ok\n");
                 printf("\tResult: deleting dir Y.. ");
                 assert(Dir_delete("Y"));
+                printf("ok\n");
+                assert(Dir_delete(NULL) == false);
                 printf("ok\n");
         }
         printf("=> Test4: OK\n\n");
