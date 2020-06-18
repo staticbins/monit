@@ -78,7 +78,14 @@ int main(void) {
                 //
                 assert(System_randomNumber() != System_randomNumber());
         }
-        printf("=> Test1: OK\n\n");
+        printf("=> Test2: OK\n\n");
+
+        printf("=> Test3: check System_error\n");
+        {
+                System_error("\thello %s (%d)(%ld)\n", "world", 1, 2L);
+
+        }
+        printf("=> Test3: OK\n\n");
 
         printf("============> System Tests: OK\n\n");
 
