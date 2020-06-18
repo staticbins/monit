@@ -44,6 +44,7 @@ int main(void) {
                 assert((fd = File_open(path, "a+")) != -1);
                 assert(write(fd, "something", sizeof("something") - 1) > 0);
                 assert(File_close(fd) == true);
+                assert((fd = File_open(NULL, NULL)) == -1);
         }
         printf("=> Test1: OK\n\n");
 
@@ -58,19 +59,24 @@ int main(void) {
                 assert((j = File_mtime(path)) > 0);
                 printf("\tmodification time: %ld\n", j);
                 assert(j == s.st_mtime);
+                assert((j = File_mtime(NULL)) == -1);
                 assert((j = File_ctime(path)) > 0);
                 printf("\tchange time: %ld\n", j);
                 assert(j == s.st_ctime);
+                assert((j = File_ctime(NULL)) == -1);
                 assert((j = File_atime(path)) > 0);
                 printf("\taccess time: %ld\n", j);
                 assert(j == s.st_atime);
+                assert((j = File_atime(NULL)) == -1);
                 assert((k = File_size(path)) >= 0);
                 printf("\tsize: %lld B\n", k);
                 assert(k == s.st_size);
                 assert((c = File_isFile(path)) == true);
+                assert((c = File_isFile(NULL)) == false);
                 assert((c = File_type(path)) == 'r');
                 printf("\ttype: regular file\n");
                 assert((File_exist(path)) == true);
+                assert((File_exist(NULL)) == false);
                 printf("\texist: yes\n");
                 assert((i = File_mod(path)) > 0);
                 printf("\tpermission mode: %o\n", i & 07777);
@@ -92,6 +98,7 @@ int main(void) {
         printf("=> Test3: check directory\n");
         {
                 assert(File_isDirectory("/") == true);
+                assert(File_isDirectory(NULL) == false);
                 assert(File_type("/") == 'd');
                 assert(File_isDirectory(path) == false);
         }
@@ -156,6 +163,14 @@ int main(void) {
                 assert(File_removeTrailingSeparator(NULL) == NULL);
         }
         printf("=> Test9: OK\n\n");
+
+        printf("=> Test10: check socket\n");
+        {
+                assert(File_isSocket("/") == false);
+                assert(File_isSocket(NULL) == false);
+                //FIXME: add socket test that'll return true
+        }
+        printf("=> Test10: OK\n\n");
 
         printf("============> File Tests: OK\n\n");
 
