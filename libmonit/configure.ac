@@ -98,7 +98,7 @@ AC_ARG_ENABLE(profiling,
         if test "x$enableval" = "xyes" ; then
    	    	CFLAGS=`echo $CFLAGS|sed 's/-g.//g'`
                 CFLAGS=`echo $CFLAGS|sed 's/-O.//g'`
-                CFLAGS="$CFLAGS -g -pg"
+                CFLAGS="$CFLAGS -g -pg -fprofile-arcs -ftest-coverage"
                 profile="true"
         fi
     ],
