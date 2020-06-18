@@ -27,6 +27,7 @@ int main(void) {
                 assert(Str_isEqual(s3, "The abc"));
                 printf("\tTesting for NULL argument\n");
                 assert(!Str_copy(NULL, NULL, 7));
+                assert(Str_isEqual(Str_copy(s3, NULL, sizeof(s3)), ""));
         }
         printf("=> Test1: OK\n\n");
 
