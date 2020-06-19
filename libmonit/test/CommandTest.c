@@ -27,7 +27,7 @@ static void onExec(Process_T P) {
         assert(P);
         char buf[STRLEN];
         // Child process info
-        printf("\tSubprocess ((pid=%d) created with cwd (%s)\n", Process_getPid(P), Process_getDir(P));
+        printf("\tSubprocess ((pid=%d, uid=%d, gid=%d) created with cwd (%s)\n", Process_getPid(P), Process_getUid(P), Process_getGid(P), Process_getDir(P));
         InputStream_T in = Process_getInputStream(P);
         OutputStream_T out = Process_getOutputStream(P);
         InputStream_T err = Process_getErrorStream(P);
@@ -218,6 +218,14 @@ int main(void) {
                 onExec(Command_execute(c));
                 Command_free(&c);
                 assert(!c);
+                // Nonexistent program
+                TRY
+                {
+                        Command_new("/bla/bla/123", NULL);
+                        exit(1);
+                }
+                CATCH (AssertException)
+                END_TRY;
         }
         printf("=> Test7: OK\n\n");
 
