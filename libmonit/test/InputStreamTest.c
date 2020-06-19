@@ -76,6 +76,8 @@ int main(void) {
                 char content[][STRLEN] = {"line1\n", "line2\n", "line3\n"};
                 assert((fd = File_open(DATA, "r")) >= 0);
                 in = InputStream_new(fd);
+                assert(InputStream_buffered(in) == 0);
+                InputStream_clear(in);
                 while (InputStream_readLine(in, line, sizeof(line))) {
                         assert(Str_isEqual(content[lineno++], line));
                 }
@@ -133,6 +135,19 @@ int main(void) {
                 InputStream_free(&in);
         }
         printf("=> Test6: OK\n\n");
+
+        printf("=> Test7: closed stream\n");
+        {
+                in = InputStream_new(File_open(DATA, "r"));
+                assert(!InputStream_isClosed(in));
+                File_close(InputStream_getDescriptor(in));
+                assert(InputStream_read(in) == -1); // 1st
+                assert(InputStream_read(in) == -1); // 2nd
+                assert(InputStream_isClosed(in));
+                InputStream_free(&in);
+                assert(in == NULL);
+        }
+        printf("=> Test7: OK\n\n");
 
 
         printf("============> InputStream Tests: OK\n\n");
