@@ -6,6 +6,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <stdarg.h>
+#include <unistd.h>
 #include <stdlib.h>
 
 #include "Bootstrap.h"
@@ -46,6 +47,9 @@ int main(void) {
 #else
                 assert(Str_startsWith(result, "03/01/10 +"));
 #endif
+                // Short buffer
+                Time_fmt(result, 1, "%D %T", 1267441200);
+                assert(Str_isEqual(result, ""));
         }
         printf("=> Test1: OK\n\n");
 
@@ -175,6 +179,11 @@ int main(void) {
                 assert(t.tm_year == 2013);
                 assert(t.tm_mon  == 11);
                 assert(t.tm_mday == 14);
+                // Date dd/mm/yyyy
+                assert(Time_toDateTime("14/12/2013", &t));
+                assert(t.tm_year == 2013);
+                assert(t.tm_mon  == 11);
+                assert(t.tm_mday == 14);
                 // Time
                 assert(Time_toDateTime("09:38:08", &t));
                 assert(t.tm_hour == 9);
@@ -198,6 +207,11 @@ int main(void) {
                 assert(t.tm_hour == 9);
                 assert(t.tm_min  == 38);
                 assert(t.tm_sec  == 8);
+                // Time: HH:MM
+                assert(Time_toDateTime("09:38", &t));
+                assert(t.tm_hour == 9);
+                assert(t.tm_min  == 38);
+                assert(t.tm_sec  == 0);
                 // Reverse DateTime
                 assert(Time_toDateTime(" 09:38:08 2013-12-14", &t));
                 assert(t.tm_year == 2013);
@@ -233,6 +247,28 @@ int main(void) {
                 // Invalid date
                 TRY {
                         Time_toDateTime("1901-123-45", &t);
+                        printf("\t Test Failed\n");
+                        exit(1);
+                } CATCH (AssertException) {
+                        // OK
+                } ELSE {
+                        printf("\t Test Failed with wrong exception\n");
+                        exit(1);
+                }
+                END_TRY;
+                TRY {
+                        Time_toDateTime("19", &t);
+                        printf("\t Test Failed\n");
+                        exit(1);
+                } CATCH (AssertException) {
+                        // OK
+                } ELSE {
+                        printf("\t Test Failed with wrong exception\n");
+                        exit(1);
+                }
+                END_TRY;
+                TRY {
+                        Time_toDateTime("", &t);
                         printf("\t Test Failed\n");
                         exit(1);
                 } CATCH (AssertException) {
@@ -278,8 +314,29 @@ int main(void) {
                         exit(1);
                 }
                 END_TRY;
+                // NULL
+                assert(Time_toTimestamp("") == 0);
+                assert(Time_toTimestamp(NULL) == 0);
         }
         printf("=> Test9: OK\n\n");
+
+        printf("=> Test10: Time_milli\n");
+        {
+                long long t1 = Time_milli();
+                usleep(500000);
+                long long t2 = Time_milli();
+                assert(t2 - t1 >= 500LL);
+        }
+        printf("=> Test10: OK\n\n");
+
+        printf("=> Test11: Time_micro\n");
+        {
+                long long t1 = Time_micro();
+                usleep(500);
+                long long t2 = Time_micro();
+                assert(t2 - t1 >= 500LL);
+        }
+        printf("=> Test11: OK\n\n");
 
         printf("============> Time Tests: OK\n\n");
 

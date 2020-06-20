@@ -87,7 +87,9 @@ int main(void) {
                 assert(File_chmod(path, 00640) == true);
                 assert((File_mod(path) & 07777) == 00640);
                 assert(File_isReadable(path) == true);
+                assert(File_isReadable(NULL) == false);
                 assert(File_isWritable(path) == true);
+                assert(File_isWritable(NULL) == false);
                 assert(File_chmod(NULL, 00640) == false);
                 assert(File_delete(NULL) == false);
                 assert(File_rename(NULL, NULL) == false);
@@ -101,6 +103,7 @@ int main(void) {
                 else
 #endif
                 assert(File_isExecutable(path) == false);
+                assert(File_isExecutable(NULL) == false);
         }
         printf("=> Test2: OK\n\n");
 
@@ -137,6 +140,8 @@ int main(void) {
                 snprintf(s, STRLEN, "%s", path);
                 assert(Str_isEqual(File_dirname(s), "/tmp/"));
                 assert(Str_isEqual(File_extension(path), "abcde"));
+                snprintf(s, STRLEN, "tmp");
+                assert(Str_isEqual(File_dirname(s), "."));
                 assert(File_extension(NULL) == NULL);
                 char dir_path[] = "/tmp/";
                 assert(Str_isEqual(File_removeTrailingSeparator(dir_path), "/tmp"));
