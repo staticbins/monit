@@ -944,19 +944,21 @@ yyeof:
 
 
 time_t Time_build(int year, int month, int day, int hour, int min, int sec) {
-        struct tm tm = {.tm_isdst = -1};
         TEST_RANGE(year, 1970, 2037);
         TEST_RANGE(month, 1, 12);
         TEST_RANGE(day, 1, 31);
         TEST_RANGE(hour, 0, 23);
         TEST_RANGE(min, 0, 59);
         TEST_RANGE(sec, 0, 61);
-        tm.tm_year = (year - 1900);
-        tm.tm_mon  = (month - 1);
-        tm.tm_mday = day;
-        tm.tm_hour = hour;
-        tm.tm_min  = min;
-        tm.tm_sec  = sec;
+        struct tm tm = {
+                .tm_isdst = -1,
+                .tm_year = (year - 1900),
+                .tm_mon = (month - 1),
+                .tm_mday = day,
+                .tm_hour = hour,
+                .tm_min  = min,
+                .tm_sec  = sec
+        };
         return mktime(&tm);
 }
 
