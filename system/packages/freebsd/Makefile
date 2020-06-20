@@ -1,5 +1,5 @@
 # New ports collection makefile for:   monit
-# Date created:        11 Januar 2006
+# Date created:        11 January 2006
 # Whom:                Martin Pala <martinp@tildeslash.com>
 #
 # $FreeBSD$

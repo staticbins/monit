@@ -55,7 +55,7 @@ const char *System_getError(int error);
  * Prints the given error message to <code>stderr</code> and 
  * <code>abort(3)</code> the application. If an AbortHandler callback 
  * function is defined for the library, this function is called instead.
- * @param e A formated (printf-style) message string
+ * @param e A formatted (printf-style) message string
  */
 void System_abort(const char *e, ...) __attribute__((format (printf, 1, 2)));
 
@@ -63,7 +63,7 @@ void System_abort(const char *e, ...) __attribute__((format (printf, 1, 2)));
 /**
  * Prints the given error message to <code>stderr</code>. If an ErrorHandler
  * callback function is defined for the library, this function is called instead.
- * @param e A formated (printf-style) message string
+ * @param e A formatted (printf-style) message string
  */
 void System_error(const char *e, ...) __attribute__((format (printf, 1, 2)));
 

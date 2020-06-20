@@ -256,6 +256,7 @@ static void _updateMonitor(Service_T S, Monitor_State monitor) {
                 else
                         S->monitor = Monitor_Init;
         }
+        S->onrebootRestored = true;
 }
 
 

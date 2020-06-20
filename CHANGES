@@ -76,6 +76,9 @@ New: Enable support for compilation with AddressSanitizer. Use "configure --with
 
 New: Issue #894: If monit is logging to a file: add a year to the timestamp.
 
+New: Issue #908: Add STARTTLS support to the IMAPS protocol test. Example:
+        if failed port 143 protocol imaps then alert
+
 Fixed: Issue #867: Monit crashed when executing programs when linked with musl libc. Thanks to Rich Felker for report.
 
 Fixed: Monit did incorrectly add the CPU wait% to the system CPU usage, which was wrong (the CPU is idle when it's in the
@@ -103,7 +106,7 @@ Fixed: Issue #891: The action's "repeat" option was limited to 256 cycles.
 
 Fixed: Issue #851: Linux and AIX: The length of the string that describes the process name and its arguments
 was limited to 4kB, so the "procmatch" may not find the process if the pattern is past this limit. The limit
-was removed on Linux. On AIX the limit was rised to 8kB.
+was removed on Linux. On AIX the limit was raised to 8kB.
 
 Fixed: Issue #840: Network check: superfluous alerts when the link is down. Thanks to Lonnie Abelbeck.
 
@@ -129,6 +132,8 @@ Fixed: Fix MQTT protocol test.
 
 Fixed: Issue #519: Monit may crash if the file check with a restart action on content match is used and
 this file has some dependant services at the same time.
+
+Fixed: Issue #907: The "onreboot nostart" had no effect when the service was new or statefile was removed.
 
 Fixed: The PostgreSQL test was flapping with the following error if connection via unix socket was used:
         PGSQL: connection terminator write error -- Broken pipe
@@ -567,7 +572,7 @@ Basic authentication. Example:
 New: Add support for Basic authentication to the HTTP protocol test. Example:
  if failed port 80 protocol http username myuser password 123456 then alert
 
-Fixed: apache-status protocol test: If the server returned an error (for example because authetication
+Fixed: apache-status protocol test: If the server returned an error (for example because authentication
 is required and no credentials were set), provide the error code rather then confusing error message
 "no scoreboard found".
 
@@ -583,7 +588,7 @@ Fixed: Issue #396: Disable CLI colors if the output is not tty.
 
 Fixed: Issue #400: Clarify network tests documentation.
 
-Fixed: Issue #403: If the sender address for monit alert was overriden by "set mail-format" statement,
+Fixed: Issue #403: If the sender address for monit alert was overridden by "set mail-format" statement,
 don't try to resolve the hostname to FQDN.
 
 Fixed: Issue #420: Monit doesn't check service on startup when "every X cycles" is used.
@@ -812,7 +817,7 @@ Fixed: Issue #214: The process match check had high CPU requirements on low powe
 systems.
 
 Fixed: Issue #230: The process CPU usage calculation now reflects the number of
-process threads. Originally monit showed process' CPU usage as its fraction of
+process threads. Originally monit showed process's CPU usage as its fraction of
 all available CPU resources utilization (number of CPU cores). For single-threaded
 applications that was however tricky, as such process may utilize one CPU core only
 and if it was working on its limits, on 8-CPU-cores machine monit showed 12.5% CPU
@@ -918,7 +923,7 @@ a certificate expiration alert when the certificate is no longer valid.
   Example:
         if failed port 443 protocol https and certificate valid > 30 days then alert
 
-New: Extend the certificate checkum test with SHA1 hash type in addition to existing MD5.
+New: Extend the certificate checksum test with SHA1 hash type in addition to existing MD5.
 The checksum statement will automatically determine the cipher to use based on the hash
 string length. You can also add MD5 or SHA1 options explicitly (for example for self-documenting
 configuration reasons). The checksum syntax has changed to be more general (the "certmd5" statement is still
@@ -944,7 +949,7 @@ New: A new statement for setting global or local SSL/TLS options was added ("SSL
                 CACERTIFICATEPATH: <path>
         }
 The SSL/TLS options can be set either globally (using "SET SSL") or locally (in the context of the port test). The global sets
-default value and can be extended (if global is not set) or overriden locally.
+default value and can be extended (if global is not set) or overridden locally.
 
 New: Issue #233: The content match test will skip existing content of the file
 the first time the file is added to Monit.
@@ -1000,7 +1005,7 @@ Fixed: Slow start/stop/restart/monitor/unmonitor actions on FreeBSD
 
 Fixed: Issue #266: On OS X El Capitan, do not call task_for_pid if System
 Integrity Protection is enabled (which is the default) so as to not uncessary
-fill system logs with errors. This means that Monit cannot check a process'
+fill system logs with errors. This means that Monit cannot check a process's
 memory or CPU usage as task_for_pid was needed to get this information.
 
 
@@ -1503,7 +1508,7 @@ separated strings. For instance:
 New: Implemented restart as an optional service action. When Monit
 is called to restart a service, it previously called the stop
 program registered with the service and then the start program.
-Now, if a restart program is registred with the service, this
+Now, if a restart program is registered with the service, this
 will be called instead, otherwise Monit fall back to its old
 behaviour. Example:
 
@@ -1673,7 +1678,7 @@ BUGFIXES:
   for initial patch.
 
 * When the process is starting/stopping, do the process state check more
-  effectively to not stress the low power devices with aggresive polling.
+  effectively to not stress the low power devices with aggressive polling.
   Thanks to Thomas Petazzoni for initial patch.
 
 * Make the process start/stop wait resistant to large time changes.
@@ -1965,7 +1970,7 @@ NEW FEATURES AND FUNCTIONS:
 BUGFIXES:
 
 * Show real process uptime - formerly the presented uptime was based
-  on create and modify timestamp of process' pidfile which provides
+  on create and modify timestamp of process's pidfile which provides
   invalid uptime if the pidfile is replaced and process keeps running
   with original PID. Thanks to Nima Chavooshi for report.
 
@@ -2055,7 +2060,7 @@ BUGFIXES:
 * Removed warning about missing system service check. Missing system service
   check is not error and it shouldn't be reported as such.
 
-* Fix manual page formating. Thanks to Stefan Alfredsson for report.
+* Fix manual page formatting. Thanks to Stefan Alfredsson for report.
 
 
 
@@ -2249,7 +2254,7 @@ NEW FEATURES AND FUNCTIONS:
   correctly. Services in manual monitoring mode will remember the
   monitoring state across Monit restarts. If Monit is used in a
   cluster, it is recommended to place the state file in a
-  temporary filesystem incase the primary machine will crash and
+  temporary filesystem in case the primary machine will crash and
   the the spare machine takeover, the state will be dropped on
   reboot for the crashed machine and the services in manual
   monitoring mode won't be started on reboot. For example the

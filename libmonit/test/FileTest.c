@@ -44,6 +44,7 @@ int main(void) {
                 assert((fd = File_open(path, "a+")) != -1);
                 assert(write(fd, "something", sizeof("something") - 1) > 0);
                 assert(File_close(fd) == true);
+                assert((fd = File_open(NULL, NULL)) == -1);
         }
         printf("=> Test1: OK\n\n");
 
@@ -58,19 +59,27 @@ int main(void) {
                 assert((j = File_mtime(path)) > 0);
                 printf("\tmodification time: %ld\n", j);
                 assert(j == s.st_mtime);
+                assert((j = File_mtime(NULL)) == -1);
                 assert((j = File_ctime(path)) > 0);
                 printf("\tchange time: %ld\n", j);
                 assert(j == s.st_ctime);
+                assert((j = File_ctime(NULL)) == -1);
                 assert((j = File_atime(path)) > 0);
                 printf("\taccess time: %ld\n", j);
                 assert(j == s.st_atime);
+                assert((j = File_atime(NULL)) == -1);
                 assert((k = File_size(path)) >= 0);
                 printf("\tsize: %lld B\n", k);
                 assert(k == s.st_size);
+                assert(File_size(NULL) == -1);
+                assert(File_size("blabla123") == -1);
                 assert((c = File_isFile(path)) == true);
+                assert((c = File_isFile(NULL)) == false);
                 assert((c = File_type(path)) == 'r');
+                assert(File_type(NULL) == '?');
                 printf("\ttype: regular file\n");
                 assert((File_exist(path)) == true);
+                assert((File_exist(NULL)) == false);
                 printf("\texist: yes\n");
                 assert((i = File_mod(path)) > 0);
                 printf("\tpermission mode: %o\n", i & 07777);
@@ -78,7 +87,15 @@ int main(void) {
                 assert(File_chmod(path, 00640) == true);
                 assert((File_mod(path) & 07777) == 00640);
                 assert(File_isReadable(path) == true);
+                assert(File_isReadable(NULL) == false);
                 assert(File_isWritable(path) == true);
+                assert(File_isWritable(NULL) == false);
+                assert(File_chmod(NULL, 00640) == false);
+                assert(File_delete(NULL) == false);
+                assert(File_rename(NULL, NULL) == false);
+                assert(File_basename(NULL) == NULL);
+                assert(File_extension(NULL) == NULL);
+                assert(File_extension("") == NULL);
 #if defined(SOLARIS) || defined (AIX) || defined(DRAGONFLY)
                 /* Some systems return X_OK if the process has appropriate privilege even if none of the execute file permission bits are set. */
                 if (getuid() == 0)
@@ -86,12 +103,14 @@ int main(void) {
                 else
 #endif
                 assert(File_isExecutable(path) == false);
+                assert(File_isExecutable(NULL) == false);
         }
         printf("=> Test2: OK\n\n");
 
         printf("=> Test3: check directory\n");
         {
                 assert(File_isDirectory("/") == true);
+                assert(File_isDirectory(NULL) == false);
                 assert(File_type("/") == 'd');
                 assert(File_isDirectory(path) == false);
         }
@@ -121,6 +140,9 @@ int main(void) {
                 snprintf(s, STRLEN, "%s", path);
                 assert(Str_isEqual(File_dirname(s), "/tmp/"));
                 assert(Str_isEqual(File_extension(path), "abcde"));
+                snprintf(s, STRLEN, "tmp");
+                assert(Str_isEqual(File_dirname(s), "."));
+                assert(File_extension(NULL) == NULL);
                 char dir_path[] = "/tmp/";
                 assert(Str_isEqual(File_removeTrailingSeparator(dir_path), "/tmp"));
         }
@@ -129,6 +151,9 @@ int main(void) {
         printf("=> Test7: normalize path\n");
         {
                 char s[PATH_MAX];
+                assert(File_getRealPath(NULL, s) == NULL);
+                assert(File_getRealPath(s, NULL) == NULL);
+                assert(File_getRealPath(NULL, NULL) == NULL);
                 assert(File_getRealPath("/././tmp/../tmp", s) != NULL);
 #ifdef DARWIN
                 /* On Darwin /tmp is a link to /private/tmp */
@@ -156,6 +181,14 @@ int main(void) {
                 assert(File_removeTrailingSeparator(NULL) == NULL);
         }
         printf("=> Test9: OK\n\n");
+
+        printf("=> Test10: check socket\n");
+        {
+                assert(File_isSocket("/") == false);
+                assert(File_isSocket(NULL) == false);
+                //FIXME: add socket test that'll return true
+        }
+        printf("=> Test10: OK\n\n");
 
         printf("============> File Tests: OK\n\n");
 

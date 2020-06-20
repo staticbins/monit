@@ -34,9 +34,9 @@ int main(void) {
                 assert(Str_isEqual(str, "2.5 MB"));
                 Convert_bytes2str(9083741824, str);
                 assert(Str_isEqual(str, "8.5 GB"));
-                Convert_bytes2str(9083741824987653, str);
+                Convert_bytes2str((double)9083741824987653, str);
                 assert(Str_isEqual(str, "8.1 PB"));
-                Convert_bytes2str(LLONG_MAX, str);
+                Convert_bytes2str((double)LLONG_MAX, str);
                 assert(Str_isEqual(str, "8 EB"));
                 Convert_bytes2str(-9083741824, str);
                 assert(Str_isEqual(str, "-8.5 GB"));

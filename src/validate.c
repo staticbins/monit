@@ -1076,7 +1076,7 @@ static State_Type _checkMatch(Service_T s) {
                 if (Str_startsWith(s->path, "/proc")) {
                         s->inf.file->readpos = 0;
                 } else {
-                        /* If inode changed or size shrinked -> set read position = 0 */
+                        /* If inode changed or size shrunk -> set read position = 0 */
                         if (s->inf.file->inode != s->inf.file->inode_prev || s->inf.file->readpos > s->inf.file->size)
                                 s->inf.file->readpos = 0;
                         /* Do we need to match? Even if not, go to final, so we can reset the content match error flags in this cycle */
@@ -1412,11 +1412,17 @@ static bool _incron(Service_T s, time_t now) {
 
 
 /**
- * Returns true if validation should be skiped for this service in this cycle, otherwise false. Handle every statement
+ * Returns true if validation should be skipped for this service in this cycle, otherwise false. Handle every statement
  */
 static bool _checkSkip(Service_T s) {
         ASSERT(s);
         time_t now = Time_now();
+        if (! s->onrebootRestored) {
+                // If the service state was not restored (e.g. new service or state file is missing), handle the onreboot flag
+                if (s->onreboot == Onreboot_Nostart)
+                        s->monitor = Monitor_Not;
+                s->onrebootRestored = true;
+        }
         if (s->every.type == Every_SkipCycles) {
                 s->every.spec.cycle.counter++;
                 if (s->every.spec.cycle.counter < s->every.spec.cycle.number) {

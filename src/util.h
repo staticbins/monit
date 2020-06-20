@@ -194,7 +194,7 @@ Auth_T Util_getUserCredentials(char *uname);
 
 
 /**
- * Check if the given password match the registred password for the
+ * Check if the given password match the registered password for the
  * given username.
  * @param uname Username
  * @param outside The password to test
@@ -266,7 +266,7 @@ void Util_monitorUnset(Service_T s);
 
 
 /*
- * Retun appropriate action id for string
+ * Return appropriate action id for string
  * @param action A action string
  * @return the action id
  */

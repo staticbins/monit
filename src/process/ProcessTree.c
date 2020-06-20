@@ -126,7 +126,7 @@ static int _findProcess(int pid, ProcessTree_T *pt, int size) {
 
 
 /**
- * Fill data in the process tree by recusively walking through it
+ * Fill data in the process tree by recursively walking through it
  * @param pt process tree
  * @param i process index
  */
@@ -161,10 +161,10 @@ static void _fillProcessTree(ProcessTree_T *pt, int index) {
 /**
  * Adjust the CPU usage based on the available system resources: number of CPU cores the application may utilize. Single threaded application may utilized only one CPU core, 4 threaded application 4 cores, etc.. If the application
  * has more threads then the machine has cores, it is limited by number of cores, not threads.
- * @param now Current process informations
- * @param prev Process informations from previous cycle
+ * @param now Current process information
+ * @param prev Process information from previous cycle
  * @param delta The delta of system time between current and previous cycle
- * @return Process' CPU usage [%] since last cycle
+ * @return Process's CPU usage [%] since last cycle
  */
 static float _cpuUsage(float rawUsage, unsigned int threads) {
         if (systeminfo.cpu.count > 0 && rawUsage > 0) {
@@ -211,7 +211,7 @@ int ProcessTree_init(ProcessEngine_Flags pflags) {
         if (oldptree) {
                 ptree = NULL;
                 ptreesize = 0;
-                // We need only process' cpu.time from the old ptree, so free dynamically allocated parts which we don't need before initializing new ptree (so the memory can be reused, otherwise the memory footprint will hold two ptrees)
+                // We need only process's cpu.time from the old ptree, so free dynamically allocated parts which we don't need before initializing new ptree (so the memory can be reused, otherwise the memory footprint will hold two ptrees)
                 for (int i = 0; i < oldptreesize; i++) {
                         FREE(oldptree[i].cmdline);
                         FREE(oldptree[i].children.list);
@@ -249,7 +249,7 @@ int ProcessTree_init(ProcessEngine_Flags pflags) {
                 if ((pt[i].pid == pt[i].ppid) || (pt[i].ppid == -1)) {
                         root = pt[i].parent = i;
                 } else {
-                        // Find this process' parent
+                        // Find this process's parent
                         int parent = _findProcess(pt[i].ppid, pt, ptreesize);
                         if (parent == -1) {
                                 /* Parent process wasn't found - on Linux this is normal: main process with PID 0 is not listed, similarly in FreeBSD jail.

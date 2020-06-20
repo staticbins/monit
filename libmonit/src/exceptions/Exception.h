@@ -146,7 +146,7 @@
  * 
  * <p>The Exception stack is stored in a thread-specific variable so Exceptions
  * are made thread-safe. <i>This means that Exceptions are thread local and an
- * Exception thrown in one thread cannot be catched in another thread</i>. 
+ * Exception thrown in one thread cannot be caught in another thread</i>.
  * This also means that clients must handle Exceptions per thread and cannot 
  * use one TRY-ELSE block in the main program to catch all Exceptions. This is
  * only possible if no threads were started. 
@@ -259,7 +259,7 @@ void Exception_throw(const T *e, const char *func, const char *file, int line, c
 /**
  * Defines a block containing code for handling any exception thrown in 
  * the TRY block. An ELSE block catches any exception type not already 
- * catched in a previous CATCH block.
+ * caught in a previous CATCH block.
  * @hideinitializer
  */
 #define ELSE \

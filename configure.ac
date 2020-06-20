@@ -6,7 +6,7 @@ AC_PREREQ([2.53])
 # Note: in  case of beta subversion, use underscore "_" rather then dash "-"
 # since RPM doesn't allow dash in Version
 # Example: 5.0_beta2
-AC_INIT([monit], [5.28.0], [monit-general@nongnu.org])
+AC_INIT([monit], [5.27.0], [monit-general@nongnu.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
@@ -664,12 +664,8 @@ AC_ARG_WITH([zlib],
                 zlib to link with]),
      [
         if test "x$withval" = "xyes"; then
-                AC_CHECK_LIB([z], [zlibVersion], [
-                        with_zlib=1
-                        ], [
-                        with_zlib=0
-                        AC_MSG_ERROR([libz not found])
-                ])
+                AC_CHECK_LIB([z], [zlibVersion], [], [AC_MSG_ERROR([libz not found])])
+                with_zlib=1
                 AC_CHECK_HEADERS([zlib.h])
         elif test "x$withval" != "xno"; then
                 AC_MSG_CHECKING([for zlib in $withval])
@@ -688,12 +684,8 @@ AC_ARG_WITH([zlib],
                 with_zlib=0
         fi
      ],[
-        AC_CHECK_LIB([z], [zlibVersion], [
-                with_zlib=1
-                ], [
-                with_zlib=0
-                AC_MSG_ERROR([libz not found])
-        ])
+        AC_CHECK_LIB([z], [zlibVersion], [], [AC_MSG_ERROR([libz not found])])
+        with_zlib=1
         AC_CHECK_HEADERS([zlib.h])
      ]
 )
@@ -707,7 +699,7 @@ AC_ARG_WITH(pam,
     [  --without-pam           disable the use of pam (default: enabled)],
     [
         dnl Check the withvalue
-        if test "x$withval" = "xno" ; then
+        if test "x$withval" = "xno" || test "x$with_pam" = "x0"; then
                 with_pam=0
                 AC_MSG_RESULT([disabled])
         else
@@ -980,7 +972,7 @@ then
     fi
 fi
 # Check TLS version
-if test $with_sslstatic -eq 1 -o $with_ssl -eq 1; then
+if test $with_sslstatic -eq 1 || test $with_ssl -eq 1; then
         if test "x$sslincldir" != "x"; then
                 CFLAGS="$CFLAGS -I$sslincldir"
         fi
@@ -1054,7 +1046,7 @@ AC_ARG_ENABLE(profiling,
         if test "x$enableval" = "xyes" ; then
                 CFLAGS=`echo $CFLAGS|sed 's/-g.//g'`
                 CFLAGS=`echo $CFLAGS|sed 's/-O.//g'`
-                CFLAGS="$CFLAGS -g -pg"
+                CFLAGS="$CFLAGS -g -pg -fprofile-arcs -ftest-coverage"
                 enable_profile=1
         else
                 enable_profile=0
@@ -1112,7 +1104,7 @@ echo
 echo "Monit Build Information:"
 echo
 echo "                Architecture: ${ARCH}"
-if test $with_sslstatic -eq 1 -o $with_ssl -eq 1; then
+if test $with_sslstatic -eq 1 || test $with_ssl -eq 1; then
 echo "       SSL include directory: ${sslincldir}"
 echo "       SSL library directory: ${ssllibdir}"
 fi
@@ -1126,7 +1118,7 @@ AX_INFO_AGPL()
 AX_INFO_TITLE([Monit has been configured with the following options:])
 AX_INFO_ENABLED([Compression:],           [test $with_zlib -eq 1])
 AX_INFO_ENABLED([PAM support:],           [test $with_pam -eq 1])
-AX_INFO_ENABLED([SSL support:],           [test $with_sslstatic -eq 1 -o $with_ssl -eq 1])
+AX_INFO_ENABLED([SSL support:],           [test $with_sslstatic -eq 1 || test $with_ssl -eq 1])
 AX_INFO_ENABLED([Large files support:],   [test $with_largefiles -eq 1])
 AX_INFO_ENABLED([ASAN support:],          [test $with_asan -eq 1])
 AX_INFO_ENABLED([IPv6 support:],          [test $with_ipv6 -eq 1])

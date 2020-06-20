@@ -36,7 +36,7 @@
 
 
 /**
- *  A simple 'SSH protocol version exchange' implemetation based on RFC (http://www.openssh.com/txt/draft-ietf-secsh-transport-14.txt)
+ *  A simple 'SSH protocol version exchange' implementation based on RFC (http://www.openssh.com/txt/draft-ietf-secsh-transport-14.txt)
  *
  *  @file
  */

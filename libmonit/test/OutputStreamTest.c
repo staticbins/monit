@@ -30,6 +30,7 @@ int main(void) {
         printf("=> Test0: create/destroy the stream\n");
         {
                 out = OutputStream_new(STDOUT);
+                assert(OutputStream_getDescriptor(out) == STDOUT);
                 assert(!OutputStream_isClosed(out));
                 OutputStream_free(&out);
                 assert(out == NULL);
@@ -71,28 +72,56 @@ int main(void) {
                 out = OutputStream_new(STDOUT);
                 // Test supported format specifiers
                 assert(OutputStream_print(out, "%s", "hello") == 5);
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%c", 'h') == 1);
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%d", 12345) == 5);
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%i", -12345) == 6);
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%u", 12345) == 5);
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%o", 8) == 2);          //10
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%x", 255) == 2);        //ff
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%e", 12.34) == 12);     //1.234000e+01
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%f", -12.34) == 10);    //-12.340000
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%g", 12.34) == 6);      //012.34
+                assert(OutputStream_print(out, "\n") == 1);
                 OutputStream_print(out, "%p", out);
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%%hello%%") == 7);
+                assert(OutputStream_print(out, "\n") == 1);
                 // Length modifier
                 assert(OutputStream_print(out, "%ld", 32767L) == 5);
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%li", -32767L) == 6);
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%lu", 32767L) == 5);
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%lo", 32767L) == 5); //77777
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%lx", 32767L) == 4); //7fff
+                assert(OutputStream_print(out, "\n") == 1);
                 // Test width and precision 
                 assert(OutputStream_print(out, "%16.16s\n%16.16s\n", "hello", "world") == 34);
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%-16.16s\n%-16.16s\n", "hello", "world") == 34);
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%.2f", 12.3456789) == 5); //12.35
+                assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%02d", 3) == 2); // 03
+                assert(OutputStream_print(out, "\n") == 1);
+                assert(OutputStream_print(out, "%*d", 2, 3) == 2);
+                assert(OutputStream_print(out, "\n") == 1);
+                assert(OutputStream_print(out, "%*d", -1, 3) == 1);
+                assert(OutputStream_print(out, "\n") == 1);
+                assert(OutputStream_print(out, "%.*d", 2, 3) == 2);
+                assert(OutputStream_print(out, "\n") == 1);
+                OutputStream_flush(out);
                 OutputStream_clear(out);
                 OutputStream_free(&out);
         }

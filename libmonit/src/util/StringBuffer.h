@@ -98,7 +98,7 @@ T StringBuffer_vappend(T S, const char *s, va_list ap) __attribute__((format (pr
 
 
 /**
- * Replace all occurences of <code>a</code> with <code>b</code>. Example: 
+ * Replace all occurrences of <code>a</code> with <code>b</code>. Example:
  * <pre>
  * StringBuffer_T b = StringBuffer_new("foo bar baz foo foo bar baz"); 
  * StringBuffer_replace(b, "baz", "bar") -> "foo bar bar foo foo bar bar"
@@ -150,7 +150,7 @@ T StringBuffer_delete(T S, int index);
  * </pre>
  * @param S StringBuffer object
  * @param s The string to search for in the buffer
- * @return The index of the first occurence of <code>s</code> in the
+ * @return The index of the first occurrence of <code>s</code> in the
  * buffer or -1 if not found.
  */
 int StringBuffer_indexOf(T S, const char *s);
@@ -161,7 +161,7 @@ int StringBuffer_indexOf(T S, const char *s);
  * in the StringBuffer.
  * @param S StringBuffer object
  * @param s The string to search for in the buffer
- * @return The index of the last occurence of <code>s</code> in the
+ * @return The index of the last occurrence of <code>s</code> in the
  * buffer or -1 if not found.
  */
 int StringBuffer_lastIndexOf(T S, const char *s);

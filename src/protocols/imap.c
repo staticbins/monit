@@ -34,6 +34,10 @@
 #include "exceptions/IOException.h"
 #include "exceptions/ProtocolException.h"
 
+
+#define BYE "* BYE"
+
+
 /**
  *  Check the server for greeting code '* OK' and then send LOGOUT and check for code '* BYE'
  *
@@ -41,8 +45,8 @@
  */
 void check_imap(Socket_T socket) {
         char buf[512];
-        const char *ok = "* OK";
-        const char *bye = "* BYE";
+        int sequence = 1;
+        Port_T port = Socket_getPort(socket);
 
         ASSERT(socket);
 
@@ -50,16 +54,34 @@ void check_imap(Socket_T socket) {
         if (! Socket_readLine(socket, buf, sizeof(buf)))
                 THROW(IOException, "IMAP: greeting read error -- %s", errno ? STRERROR : "no data");
         Str_chomp(buf);
-        if (! Str_startsWith(buf, ok))
+        if (! Str_startsWith(buf, "* OK"))
                 THROW(ProtocolException, "IMAP: invalid greeting -- %s", buf);
 
-        // Logout and check response
-        if (Socket_print(socket, "001 LOGOUT\r\n") < 0)
+        if (port->family != Socket_Unix && port->target.net.ssl.options.flags == SSL_StartTLS) {
+                // Send STARTTLS command
+                if (Socket_print(socket, "%03d STARTTLS\r\n", sequence++) < 0)
+                        THROW(IOException, "IMAP: STARTTLS command error -- %s", STRERROR);
+
+                // Parse STARTTLS response
+                if (! Socket_readLine(socket, buf, sizeof(buf)))
+                        THROW(IOException, "IMAP: STARTTLS response read error -- %s", errno ? STRERROR : "no data");
+                Str_chomp(buf);
+                if (! Str_startsWith(buf, "001 OK"))
+                        THROW(ProtocolException, "IMAP: invalid logout response: %s", buf);
+
+                // Switch to TLS
+                Socket_enableSsl(socket, &(Run.ssl), NULL);
+        }
+
+        // Send LOGOUT command
+        if (Socket_print(socket, "%03d LOGOUT\r\n", sequence++) < 0)
                 THROW(IOException, "IMAP: logout command error -- %s", STRERROR);
+
+        // Check LOGOUT response
         if (! Socket_readLine(socket, buf, sizeof(buf)))
                 THROW(IOException, "IMAP: logout response read error -- %s", errno ? STRERROR : "no data");
         Str_chomp(buf);
-        if (strncasecmp(buf, bye, strlen(bye)) != 0)
+        if (strncasecmp(buf, BYE, strlen(BYE)) != 0)
                 THROW(ProtocolException, "IMAP: invalid logout response: %s", buf);
 }
 

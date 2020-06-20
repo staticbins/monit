@@ -21,6 +21,17 @@
  */
 
 
+static void _handler(const char *s, va_list ap) {
+        assert(s);
+        char buf[STRLEN];
+        va_list ap_copy;
+        va_copy(ap_copy, ap);
+        vsnprintf(buf, sizeof(buf), s, ap);
+        va_end(ap_copy);
+        printf("handler: %s", buf);
+        assert(Str_isEqual(buf, "\tyellow submarine (5)(6)\n"));
+}
+
 
 int main(void) {
 
@@ -78,7 +89,22 @@ int main(void) {
                 //
                 assert(System_randomNumber() != System_randomNumber());
         }
-        printf("=> Test1: OK\n\n");
+        printf("=> Test2: OK\n\n");
+
+        printf("=> Test3: check System_error\n");
+        {
+                System_error("\thello %s (%d)(%ld)\n", "world", 1, 2L);
+                Bootstrap_setErrorHandler(_handler);
+                System_error("\tyellow %s (%d)(%ld)\n", "submarine", 5, 6L);
+        }
+        printf("=> Test3: OK\n\n");
+
+        printf("=> Test4: check System_error\n");
+        {
+                Bootstrap_setAbortHandler(_handler);
+                System_abort("\tyellow %s (%d)(%ld)\n", "submarine", 5, 6L);
+        }
+        printf("=> Test4: OK\n\n");
 
         printf("============> System Tests: OK\n\n");
 

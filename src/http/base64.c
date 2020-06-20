@@ -137,7 +137,7 @@ char *encode_base64(size_t size, unsigned char *src) {
  * Decode the base64 encoded string 'src' into the memory pointed to by
  * 'dest'. The dest buffer is <b>not</b> NUL terminated.
  * @param dest Pointer to memory for holding the decoded string.
- * Must be large enough to recieve the decoded string.
+ * Must be large enough to receive the decoded string.
  * @param src A base64 encoded string.
  * @return the length of the decoded string if decode
  * succeeded otherwise 0.

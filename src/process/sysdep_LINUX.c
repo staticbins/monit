@@ -339,7 +339,7 @@ static bool _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
                         }
                 }
                 fclose(f);
-                // Fallback to procfs stat process name if cmdline was empty (even kernel-space processes have informations here)
+                // Fallback to procfs stat process name if cmdline was empty (even kernel-space processes have information here)
                 if (! StringBuffer_length(proc->name)) {
                         char buffer[8192];
                         char *tmp = NULL;
@@ -375,44 +375,37 @@ static bool _parseProcPidAttrCurrent(Proc_T proc) {
 
 // count entries in /proc/PID/fd
 static bool _parseProcFdCount(Proc_T proc) {
+        char path[PATH_MAX] = {};
         unsigned long long file_count = 0;
-        DIR *dirp;
-        char fd_path[32];
 
-        snprintf(fd_path, sizeof(fd_path), "/proc/%d/fd", proc->data.pid);
-
-        if (!(dirp = opendir(fd_path))) {
-                DEBUG("system statistic error -- opendir /proc/%d/fd: %s\n", proc->data.pid, STRERROR);
+        snprintf(path, sizeof(path), "/proc/%d/fd", proc->data.pid);
+        DIR *dirp = opendir(path);
+        if (! dirp) {
+                DEBUG("system statistic error -- opendir %s: %s\n", path, STRERROR);
                 return false;
         }
-
         errno = 0;
         while (readdir(dirp) != NULL) {
                 // count everything
                 file_count++;
         }
-
         // do not closedir() until readdir errno has been evaluated
-
         if (errno) {
-                DEBUG("system statistic error -- cannot iterate /proc/%d/fd: %s\n", proc->data.pid, STRERROR);
+                DEBUG("system statistic error -- cannot iterate %s: %s\n", path, STRERROR);
                 closedir(dirp);
                 return false;
         }
-
         closedir(dirp);
-
         // assert at least '.' and '..' have been found
         if (file_count < 2) {
-                DEBUG("system statistic error -- cannot find basic entries in /proc/%d/fd\n", proc->data.pid);
+                DEBUG("system statistic error -- cannot find basic entries in %s\n", path);
                 return false;
         }
-
         // subtract entries '.' and '..'
         proc->data.filedescriptors.open = file_count - 2;
 
+        // get process's limits
 #ifdef HAVE_PRLIMIT
-        // get process' limits
         struct rlimit limits;
         if (prlimit(proc->data.pid, RLIMIT_NOFILE, NULL, &limits) != 0) {
                 DEBUG("prlimit failed: %s\n", STRERROR);
@@ -420,6 +413,26 @@ static bool _parseProcFdCount(Proc_T proc) {
         }
         proc->data.filedescriptors.limit.soft = limits.rlim_cur;
         proc->data.filedescriptors.limit.hard = limits.rlim_max;
+#else
+        // Try to collect the command-line from the procfs cmdline (user-space processes)
+        snprintf(path, sizeof(path), "/proc/%d/limits", proc->data.pid);
+        FILE *f = fopen(path, "r");
+        if (f) {
+                int softLimit;
+                int hardLimit;
+                char line[STRLEN];
+                while (fgets(line, sizeof(line), f)) {
+                        if (sscanf(line, "Max open files %d %d", &softLimit, &hardLimit) == 2) {
+                                proc->data.filedescriptors.limit.soft = softLimit;
+                                proc->data.filedescriptors.limit.hard = hardLimit;
+                                break;
+                        }
+                }
+                fclose(f);
+        } else {
+                DEBUG("system statistic error -- cannot open %s\n", path);
+                return false;
+        }
 #endif
 
         return true;

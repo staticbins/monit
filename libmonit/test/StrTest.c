@@ -27,6 +27,7 @@ int main(void) {
                 assert(Str_isEqual(s3, "The abc"));
                 printf("\tTesting for NULL argument\n");
                 assert(!Str_copy(NULL, NULL, 7));
+                assert(Str_isEqual(Str_copy(s3, NULL, sizeof(s3)), ""));
         }
         printf("=> Test1: OK\n\n");
 
@@ -153,20 +154,105 @@ int main(void) {
                 char d[STRLEN] = "  2.718281828 this is e";
                 char de[STRLEN] = "1.495E+08 kilometer = An Astronomical Unit";
                 char ie[STRLEN] = " 9999999999999999999999999999999999999999";
+                char ie2[] = " 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999";
                 printf("\tResult:\n");
                 printf("\tParsed int = %d\n", Str_parseInt(i));
                 assert(Str_parseInt(i)==-2812);
+                TRY
+                {
+                        assert(Str_parseInt(NULL) == 0);
+                        assert(false);
+                }
+                CATCH(NumberFormatException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
+                TRY
+                {
+                        assert(Str_parseInt("") == 0);
+                        assert(false);
+                }
+                CATCH(NumberFormatException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
+                TRY
+                {
+                        Str_parseInt(ie);
+                        assert(false);
+                }
+                CATCH(NumberFormatException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
                 printf("\tParsed long long = %lld\n", Str_parseLLong(ll));
                 assert(Str_parseLLong(ll)==2147483642);
+                TRY
+                {
+                        assert(Str_parseLLong(NULL) == 0);
+                        assert(false);
+                }
+                CATCH(NumberFormatException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
+                TRY
+                {
+                        assert(Str_parseLLong("") == 0);
+                        assert(false);
+                }
+                CATCH(NumberFormatException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
+                TRY
+                {
+                        Str_parseLLong(ie2);
+                        assert(false);
+                }
+                CATCH(NumberFormatException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
                 printf("\tParsed double = %.9f\n", Str_parseDouble(d));
                 assert(Str_parseDouble(d)==2.718281828);
                 printf("\tParsed double exp = %.3e\n", Str_parseDouble(de));
                 assert(Str_parseDouble(de)==1.495e+08);
                 TRY
-                        Str_parseInt(ie);
+                {
+                        assert(Str_parseDouble(NULL) == 0);
                         assert(false);
+                }
                 CATCH(NumberFormatException)
-                        printf("=> Test11: OK\n\n");
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
+                TRY
+                {
+                        assert(Str_parseDouble("") == 0);
+                        assert(false);
+                }
+                CATCH(NumberFormatException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
+                TRY
+                {
+                        printf("%lf\n", Str_parseDouble(ie2));
+                        assert(false);
+                }
+                CATCH(NumberFormatException)
+                {
+                        printf("\tok\n");
+                }
                 END_TRY;
         }
         printf("=> Test10: OK\n\n");
@@ -289,6 +375,7 @@ int main(void) {
                 char *invalid_email2 = "";
                 char *invalid_email3 = "hauk@tildeslashcom";
                 char *invalid_email4 = "hauk@æøåtildeslash.com";
+                char *invalid_pattern = "^[[";
                 // phone
                 printf("\tResult: match(%s, %s)\n", phone_pattern, valid_phone1);
                 assert(Str_match(phone_pattern, valid_phone1));
@@ -315,6 +402,17 @@ int main(void) {
                 assert(! Str_match(email_pattern, invalid_email3));
                 printf("\tResult: match(%s, %s)\n", email_pattern, invalid_email4);
                 assert(! Str_match(email_pattern, invalid_email4));
+                // invalid regex
+                TRY
+                {
+                        Str_match(invalid_pattern, valid_email1);
+                        assert(false);
+                }
+                CATCH(AssertException)
+                {
+                        printf("\tok\n");
+                }
+                END_TRY;
         }
         printf("=> Test17: OK\n\n");
 
@@ -386,6 +484,9 @@ int main(void) {
                 assert(Str_isByteEqual(Str_curtail(s, "</text>"), "<text>Hello World"));
                 assert(Str_isByteEqual(Str_curtail(s, ">"), "<text"));
                 assert(Str_isByteEqual(Str_curtail(s, "@"), "<text"));
+                assert(Str_isByteEqual(NULL, "a") == false);
+                assert(Str_isByteEqual("a", NULL) == false);
+                assert(Str_isByteEqual(NULL, NULL) == false);
         }
         printf("=> Test22: OK\n\n");
 
@@ -417,6 +518,14 @@ int main(void) {
                 assert(Str_compareConstantTime(ko, ko) != 0);
         }
         printf("=> Test24: OK\n\n");
+
+        printf("=> Test25: Str_cmp\n");
+        {
+                assert(Str_cmp("foo", "foo") == 0);
+                assert(Str_cmp("foo", "FOO") != 0);
+                assert(Str_cmp("foo", "bar") != 0);
+        }
+        printf("=> Test25: OK\n\n");
 
         printf("============> Str Tests: OK\n\n");
         return 0;

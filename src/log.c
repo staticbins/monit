@@ -149,7 +149,7 @@ static const char *logPriorityDescription(int p) {
 /**
  * Log a message to monits logfile or syslog.
  * @param priority A message priority
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  */
 __attribute__((format (printf, 2, 0)))
 static void log_log(int priority, const char *s, va_list ap) {
@@ -235,7 +235,7 @@ bool log_init() {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  */
 void LogEmergency(const char *s, ...) {
         ASSERT(s);
@@ -249,7 +249,7 @@ void LogEmergency(const char *s, ...) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
 void vLogEmergency(const char *s, va_list ap) {
@@ -264,7 +264,7 @@ void vLogEmergency(const char *s, va_list ap) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  */
 void LogAlert(const char *s, ...) {
         ASSERT(s);
@@ -278,7 +278,7 @@ void LogAlert(const char *s, ...) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
 void vLogAlert(const char *s, va_list ap) {
@@ -293,7 +293,7 @@ void vLogAlert(const char *s, va_list ap) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  */
 void LogCritical(const char *s, ...) {
         ASSERT(s);
@@ -307,7 +307,7 @@ void LogCritical(const char *s, ...) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
 void vLogCritical(const char *s, va_list ap) {
@@ -338,7 +338,7 @@ void vLogAbortHandler(const char *s, va_list ap) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  */
 void LogError(const char *s, ...) {
         ASSERT(s);
@@ -352,7 +352,7 @@ void LogError(const char *s, ...) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
 void vLogError(const char *s, va_list ap) {
@@ -367,7 +367,7 @@ void vLogError(const char *s, va_list ap) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  */
 void LogWarning(const char *s, ...) {
         ASSERT(s);
@@ -380,7 +380,7 @@ void LogWarning(const char *s, ...) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
 void vLogWarning(const char *s, va_list ap) {
@@ -394,7 +394,7 @@ void vLogWarning(const char *s, va_list ap) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  */
 void LogNotice(const char *s, ...) {
         ASSERT(s);
@@ -407,7 +407,7 @@ void LogNotice(const char *s, ...) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
 void vLogNotice(const char *s, va_list ap) {
@@ -421,7 +421,7 @@ void vLogNotice(const char *s, va_list ap) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  */
 void LogInfo(const char *s, ...) {
         ASSERT(s);
@@ -434,7 +434,7 @@ void LogInfo(const char *s, ...) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
 void vLogInfo(const char *s, va_list ap) {
@@ -448,7 +448,7 @@ void vLogInfo(const char *s, va_list ap) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  */
 void LogDebug(const char *s, ...) {
         ASSERT(s);
@@ -463,7 +463,7 @@ void LogDebug(const char *s, ...) {
 
 /**
  * Logging interface with priority support
- * @param s A formated (printf-style) string to log
+ * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
 void vLogDebug(const char *s, va_list ap) {

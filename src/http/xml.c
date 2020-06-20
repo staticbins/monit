@@ -614,7 +614,7 @@ static void status_event(Event_T E, StringBuffer_T B) {
 
 
 /**
- * Get a XML formated message for event notification or general status
+ * Get a XML formatted message for event notification or general status
  * of monitored services and resources.
  * @param E An event object or NULL for general status
  * @param V Format version
