@@ -139,7 +139,7 @@ char *file_findControlFile() {
                 snprintf(rcfile, STRLEN, "%s/%s", Run.Env.cwd, MONITRC);
                 return rcfile;
         }
-        LogError("Cannot find the Monit control file at ~/.%s, /etc/%s, %s/%s, /usr/local/etc/%s or at ./%s \n", MONITRC, MONITRC, SYSCONFDIR, MONITRC, MONITRC, MONITRC);
+        LogError("Cannot find the Monit control file at ~/.%s, /etc/%s, %s/%s, /usr/local/etc/%s, /usr/local/monit/conf/%s or at ./%s \n", MONITRC, MONITRC, SYSCONFDIR, MONITRC, MONITRC, MONITRC, MONITRC);
         exit(1);
 }
 
