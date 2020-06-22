@@ -131,6 +131,10 @@ char *file_findControlFile() {
         if (File_exist(rcfile)) {
                 return rcfile;
         }
+        snprintf(rcfile, STRLEN, "/usr/local/monit/conf/%s", MONITRC);
+        if (File_exist(rcfile)) {
+                return rcfile;
+        }
         if (File_exist(MONITRC)) {
                 snprintf(rcfile, STRLEN, "%s/%s", Run.Env.cwd, MONITRC);
                 return rcfile;
