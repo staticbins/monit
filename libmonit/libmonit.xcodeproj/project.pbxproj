@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		52165FF9245A3FC1003EEE11 /* Thread.c in Sources */ = {isa = PBXBuildFile; fileRef = 52165FF8245A3FC1003EEE11 /* Thread.c */; };
 		521C6648225B7DD7001E8544 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
 		521C664E225B7DF5001E8544 /* FmtTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3B21D85EC100F8045E /* FmtTest.c */; };
 		521ECE3921D85CFE00F8045E /* Fmt.h in Headers */ = {isa = PBXBuildFile; fileRef = 521ECE3721D85CFE00F8045E /* Fmt.h */; };
@@ -155,6 +156,7 @@
 
 /* Begin PBXFileReference section */
 		5205CE261A59FEA500DB6380 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		52165FF8245A3FC1003EEE11 /* Thread.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Thread.c; sourceTree = "<group>"; };
 		521ECE3721D85CFE00F8045E /* Fmt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fmt.h; sourceTree = "<group>"; };
 		521ECE3821D85CFE00F8045E /* Fmt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Fmt.c; sourceTree = "<group>"; };
 		521ECE3B21D85EC100F8045E /* FmtTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FmtTest.c; sourceTree = "<group>"; };
@@ -346,7 +348,6 @@
 				5274580D13A1009C00C422FE /* Makefile.am */,
 				52D7964813A6CE560014CED2 /* src */,
 				5274583A13A1009C00C422FE /* test */,
-				52936F9513A5216B00FC4089 /* config */,
 				52A31C831A6531DF009D3D83 /* Products */,
 				52F8BB431ECE55D60007DF91 /* Frameworks */,
 			);
@@ -438,6 +439,7 @@
 			children = (
 				52DA27A722713A0700C6C67F /* Atomic.h */,
 				52D7967313A6CE560014CED2 /* Thread.h */,
+				52165FF8245A3FC1003EEE11 /* Thread.c */,
 				5280A6D2226674CD00A4C0B3 /* Dispatcher.h */,
 				5280A6D1226674CD00A4C0B3 /* Dispatcher.c */,
 			);
@@ -699,6 +701,7 @@
 				52D7969313A6CE560014CED2 /* Mem.c in Sources */,
 				52D7969513A6CE560014CED2 /* Net.c in Sources */,
 				52D7969813A6CE560014CED2 /* System.c in Sources */,
+				52165FF9245A3FC1003EEE11 /* Thread.c in Sources */,
 				52D7969A13A6CE560014CED2 /* Time.c in Sources */,
 				52D7969F13A6CE560014CED2 /* List.c in Sources */,
 				52D796A113A6CE560014CED2 /* Str.c in Sources */,

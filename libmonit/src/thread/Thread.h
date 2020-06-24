@@ -94,6 +94,15 @@
 #define Thread_create(thread, threadFunc, threadArgs) \
         wrapper(pthread_create(&thread, NULL, threadFunc, (void*)threadArgs))
 /**
+ * Create a new thread in a detached state
+ * @param thread The thread to create
+ * @param threadFunc The thread routine to execute
+ * @param threadArgs Arguments to <code>threadFunc</code>
+ * @exception AssertException If thread creation failed
+ */
+void Thread_createDetached(Thread_T *thread,
+                           void *(*threadFunc)(void *threadArgs), void *threadArgs);
+/**
  * Returns the thread ID of the calling thread
  * @return The id of the calling thread
  * @hideinitializer
