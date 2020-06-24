@@ -54,7 +54,6 @@ bool MonitDebug = false;
 
 void Bootstrap(void) {
         Exception_init();
-        Thread_init();
 }
 
 
