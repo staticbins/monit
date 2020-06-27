@@ -1258,7 +1258,7 @@ time_t Time_build(int year, int month, int day, int hour, int min, int sec) {
         TEST_RANGE(hour, 0, 23);
         TEST_RANGE(min, 0, 59);
         TEST_RANGE(sec, 0, 61);
-        struct tm tm = {
+        return mktime(&(struct tm) {
                 .tm_isdst = -1,
                 .tm_year = (year - 1900),
                 .tm_mon = (month - 1),
@@ -1266,8 +1266,7 @@ time_t Time_build(int year, int month, int day, int hour, int min, int sec) {
                 .tm_hour = hour,
                 .tm_min  = min,
                 .tm_sec  = sec
-        };
-        return mktime(&tm);
+        });
 }
 
 
