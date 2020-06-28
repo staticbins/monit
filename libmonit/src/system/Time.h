@@ -43,20 +43,21 @@
 
 
 /**
- * Returns a Unix timestamp representation of the parsed string in the
- * GMT timezone. If the given string contains timezone offset the time
- * is expected to be in local time and the offset is added to the returned
- * timestamp to make the time UTC. If the string does not contain timezone
- * information, the time is expected and assumed to be in the GTM timezone,
- * i.e. in UTC. Example:
+ * Returns a Unix timestamp representation of an ISO-8601 or RFC 7231 date
+ * string in the GMT timezone. If the given string contains timezone offset
+ * the time is expected to be in local time and the offset is added to the
+ * returned timestamp to make the time UTC. If the string does not contain
+ * timezone information, the time is expected and assumed to be in the GTM
+ * timezone, i.e. in UTC. Example:
  * <pre>
- *  Time_toTimestamp("2013-12-15 00:12:58Z") -> 1387066378
+ *  Time_toTimestamp("2013-12-15 00:12:58") -> 1387066378
  *  Time_toTimestamp("2013-12-14 19:12:58-05:00") -> 1387066378
+ *  Time_toTimestamp("Sun, 15 Dec 2013 00:12:58 GMT") -> 1387066378
  * </pre>
- * @param s The Date String to parse. Time is expected to be in UTC, but
- * local time with timezone information is also allowed.
- * @return A UTC time representation of <code>s</code> or 0 if
- * <code>s</code> is NULL
+ * @param s The Date String to parse. Time is expected to be in UTC,
+ * but local time with timezone information is also allowed. The format
+ * of the date string should be ISO-8601 or RFC 7231 IMF-fixdate
+ * @return A UTC time representation of <code>s</code>
  * @exception AssertException If the parameter value cannot be converted
  * to a valid timestamp
  */
@@ -64,8 +65,8 @@ time_t Time_toTimestamp(const char *s);
 
 
 /**
- * Returns a Date, Time or DateTime representation of the parsed string.
- * Fields follows the convention of the tm structure where,
+ * Returns a Date, Time or DateTime representation of an ISO-8601 or RFC 7231
+ * date string. Fields follows the convention of the tm structure where,
  * tm_hour = hours since midnight [0-23], tm_min = minutes after the hour
  * [0-59], tm_sec = seconds after the minute [0-60], tm_mday = day of the month
  * [1-31] and tm_mon = months since January [0-11]. tm_gmtoff is set to the
@@ -77,7 +78,9 @@ time_t Time_toTimestamp(const char *s);
  * fields in the structure are set to zero. If the given date string
  * <code>s</code> contains both date and time all the fields mentioned above
  * are set, otherwise only the Date or Time fields are set.
- * @param s The Date String to parse
+ * @param s The Date String to parse. Time is expected to be in UTC,
+ * but local time with timezone information is also allowed. The format
+ * of the date string should be ISO-8601 or RFC 7231 IMF-fixdate
  * @param t A pointer to a tm structure
  * @return A pointer to the tm structure representing the date of <code>s</code>
  * @exception AssertException If the parameter value cannot be converted
