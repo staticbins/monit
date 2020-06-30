@@ -469,7 +469,10 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
         ASSERT(hostname);
         ASSERT(size > 0);
         double response = -1.;
-        struct addrinfo *result, hints = {};
+        struct addrinfo *result, hints = {
+                /* filter for only one sockettype to not get back one address multiple times for each protocol and sockettype */
+                .ai_socktype = SOCK_RAW,
+        };
         switch (family) {
                 case Socket_Ip:
                         hints.ai_family = AF_UNSPEC;
