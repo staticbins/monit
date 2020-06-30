@@ -29,7 +29,7 @@
 3.) send the port upgrade (for example using https://bugs.freebsd.org/bugzilla/)
 
     component:  Individual Port(s)
-    summary:    [MAINTAINER] sysutils/monit: Update to <new_version>
+    summary:    sysutils/monit: Update to <new_version>
     severity:   Affects Some People
     Version:    Latest
     HW:         Any
