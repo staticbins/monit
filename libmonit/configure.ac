@@ -336,7 +336,9 @@ AC_RUN_IFELSE(
         #endif
         #endif
         return 1;
-        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"])
+        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"],
+        [AC_MSG_NOTICE([WARNING: result CFLAGS -std=c11 guessed because of cross compilation])
+        CFLAGS="$CFLAGS -std=c11"])
 AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
 
 # ------------------------------------------------------------------------
