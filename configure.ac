@@ -6,7 +6,7 @@ AC_PREREQ([2.53])
 # Note: in  case of beta subversion, use underscore "_" rather then dash "-"
 # since RPM doesn't allow dash in Version
 # Example: 5.0_beta2
-AC_INIT([monit], [5.27.0], [monit-general@nongnu.org])
+AC_INIT([monit], [5.28.0], [monit-general@nongnu.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
@@ -442,7 +442,9 @@ AC_RUN_IFELSE(
         #endif
         #endif
         return 1;
-        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"])
+        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"],
+        [AC_MSG_NOTICE([WARNING: result CFLAGS -std=c11 guessed because of cross compilation])
+        CFLAGS="$CFLAGS -std=c11"])
 AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
 
 
