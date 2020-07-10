@@ -106,6 +106,10 @@ BUILT_SOURCES   = src/lex.yy.c src/y.tab.c src/y.tab.h
 CLEANFILES	= src/y.output
 DISTCLEANFILES	= *~ $(BUILT_SOURCES)
 
+define check-exit
+|| exit 1
+
+endef
 
 # -------
 # Targets
@@ -165,5 +169,7 @@ src/lex.yy.c: src/l.l
 if WITH_CODESIGN
 monit_LDFLAGS   += -sectcreate __TEXT __info_plist config/Info.plist
 all-local: $(bin_PROGRAMS)
-	$(foreach file, $(bin_PROGRAMS), codesign -s $(CODESIGN_IDENTITY) -v --deep --timestamp --options runtime $(file))
+	$(foreach file, $(bin_PROGRAMS), \
+                codesign -s $(CODESIGN_IDENTITY) -v --deep --timestamp --options runtime $(file) \
+        $(check-exit))
 endif
