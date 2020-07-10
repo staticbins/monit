@@ -309,7 +309,9 @@ static bool _parseProcPidIO(Proc_T proc) {
                         }
                 } else {
                         // file_readProc() already printed a DEBUG() message
-                        return false;
+                        // return false;
+			// sometimes no io data is available, this is not a problem.
+                        return true;
                 }
         }
         return true;
@@ -532,8 +534,9 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         time_t starttime = _getStartTime();
         for (size_t i = 0; i < globbuf.gl_pathc; i++) {
                 proc.data.pid = atoi(globbuf.gl_pathv[i] + 6); // skip "/proc/"
-                if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags) && _parseProcFdCount(&proc)) {
+                if (_parseProcPidStat(&proc) && _parseProcPidStatus(&proc) && _parseProcPidIO(&proc) && _parseProcPidCmdline(&proc, pflags)) {
                         // Non-mandatory statistics (may not exist)
+			_parseProcFdCount(&proc);
                         _parseProcPidAttrCurrent(&proc);
                         // Set the data in ptree only if all process related reads succeeded (prevent partial data in the case that continue was called during data collecting)
                         pt[count].pid = proc.data.pid;
