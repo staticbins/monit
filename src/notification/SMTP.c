@@ -136,6 +136,7 @@ __attribute__((format (printf, 2, 3))) static void _send(T S, const char *data, 
         va_start(ap, data);
         char *msg = Str_vcat(data, ap);
         va_end(ap);
+        DEBUG("SMTP -> %s\n", msg);
         int rv = Socket_write(S->socket, msg, strlen(msg));
         FREE(msg);
         if (rv <= 0)
@@ -150,6 +151,7 @@ static void _receive(T S, int code, void (*callback)(T S, const char *line)) {
                 if (! Socket_readLine(S->socket, line, sizeof(line)))
                         THROW(IOException, "Error receiving data from the mailserver -- %s", STRERROR);
                 Str_chomp(line);
+                DEBUG("SMTP <- %s\n", line);
                 if (strlen(line) < 4 || sscanf(line, "%d", &status) != 1 || status != code)
                         THROW(ProtocolException, "Mailserver response error -- %s", line);
                 if (callback)
