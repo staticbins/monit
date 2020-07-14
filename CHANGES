@@ -4,6 +4,9 @@
 
 Version 5.28.0
 
+Fixed: Issue #916: If monit runs as non-root on linux, the promatch fails to find processes that belong to
+other users. Thanks to Lutz Mader for fix.
+
 
 Version 5.27.0
 
