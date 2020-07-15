@@ -407,16 +407,6 @@ static bool _parseProcFdCount(Proc_T proc) {
         proc->data.filedescriptors.open = file_count - 2;
 
         // get process's limits
-#ifdef HAVE_PRLIMIT
-        struct rlimit limits;
-        if (prlimit(proc->data.pid, RLIMIT_NOFILE, NULL, &limits) != 0) {
-                DEBUG("prlimit failed: %s\n", STRERROR);
-                return false;
-        }
-        proc->data.filedescriptors.limit.soft = limits.rlim_cur;
-        proc->data.filedescriptors.limit.hard = limits.rlim_max;
-#else
-        // Try to collect the command-line from the procfs cmdline (user-space processes)
         snprintf(path, sizeof(path), "/proc/%d/limits", proc->data.pid);
         FILE *f = fopen(path, "r");
         if (f) {
@@ -435,7 +425,6 @@ static bool _parseProcFdCount(Proc_T proc) {
                 DEBUG("system statistic error -- cannot open %s\n", path);
                 return false;
         }
-#endif
 
         return true;
 }

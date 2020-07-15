@@ -4,8 +4,11 @@
 
 Version 5.28.0
 
-Fixed: Issue #916: If monit runs as non-root on linux, the promatch fails to find processes that belong to
+Fixed: Issue #916: Linux: If monit runs as non-root user, the promatch fails to find processes that belong to
 other users (monit 5.27.0 regression). Thanks to Lutz Mader for fix.
+
+Fixed: Linux: If monit runs as non-root user, it required the CAP_SYS_RESOURCE capability to be able to monitor
+filedescriptors usage of other processes. Thanks to Lutz Mader for report.
 
 
 Version 5.27.0
