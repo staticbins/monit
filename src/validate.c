@@ -846,7 +846,7 @@ static State_Type _checkSystemFiledescriptors(Service_T s) {
                                 }
                         }
                 }
-        } else {
+        } else if (s->filedescriptorslist) {
                 LogWarning("Cannot test filesdescriptors usage as the statistics is not available on this system\n");
         }
         return rv;
