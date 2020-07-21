@@ -1951,8 +1951,10 @@ State_Type check_system(Service_T s) {
                         rv = State_Failed;
         if (_checkUptime(s, Time_now() - systeminfo.booted) == State_Failed)
                 rv = State_Failed;
-        if (_checkSystemFiledescriptors(s) == State_Failed)
-                rv = State_Failed;
+        if ( systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem ) {
+                if (_checkSystemFiledescriptors(s) == State_Failed)
+                        rv = State_Failed;
+        }
         return rv;
 }
 
