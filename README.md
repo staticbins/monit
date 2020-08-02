@@ -37,6 +37,21 @@ Debian/Ubuntu:
 	  make
 ```
 
+Redhat/Centos/Fedora:
+```
+   yum -y install \
+      zlib-devel \
+  	  pam-devel \
+	  openssl-devel \
+	  libtool \
+	  bison \
+	  flex \
+	  autoconf \
+	  gcc \
+	  make
+```
+
+
 BOOTSTRAPPING
 =============
 
