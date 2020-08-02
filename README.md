@@ -18,6 +18,25 @@ GIT
 To checkout Monit source code, use `git clone https://tildeslash@bitbucket.org/tildeslash/monit.git`.
 
 
+DEVELOPMENT ENVIRONMENT
+=======================
+
+You need to install some packages to be able to compile Monit.
+
+Debian/Ubuntu:
+```
+   apt install \
+      zlib1g-dev \
+  	  libpam0g-dev \
+	  libssl-dev \
+	  libtool \
+	  bison \
+	  flex \
+	  autoconf \
+	  gcc \
+	  make
+```
+
 BOOTSTRAPPING
 =============
 
