@@ -333,10 +333,12 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("swap usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(systeminfo.swap.usage.bytes, (char[10]){}), systeminfo.swap.usage.percent);
                                         _formatStatus("uptime", Event_Uptime, type, res, s, systeminfo.booted > 0, "%s", _getUptime(Time_now() - systeminfo.booted, (char[256]){}));
                                         _formatStatus("boot time", Event_Null, type, res, s, true, "%s", Time_string(systeminfo.booted, (char[32]){}));
-                                        if (systeminfo.filedescriptors.maximum > 0)
-                                                _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "%lld [%.1f%% of %lld limit]", systeminfo.filedescriptors.allocated, (float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum, systeminfo.filedescriptors.maximum);
-                                        else
-                                                _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "N/A");
+                                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem) {
+                                                if (systeminfo.filedescriptors.maximum > 0)
+                                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "%lld [%.1f%% of %lld limit]", systeminfo.filedescriptors.allocated, (float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum, systeminfo.filedescriptors.maximum);
+                                                else
+                                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "N/A");
+                                        }
                                 }
                                 break;
 
