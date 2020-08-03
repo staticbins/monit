@@ -231,15 +231,7 @@ AC_CHECK_TYPES([uchar_t])
 AC_CHECK_DECLS([setjmp], [], [AC_MSG_FAILURE([setjmp is required])], [[#include <setjmp.h>]])
 
 # Require that we have vsnprintf that conforms to c99. I.e. does bounds check
-AC_CACHE_CHECK([vsnprintf is c99 conformant],
-               [libmonit_cv_vsnprintf_c99_conformant],
-               [AC_RUN_IFELSE([AC_LANG_PROGRAM(
-                        [[#include <stdarg.h>
-                          #include <stdio.h>]],
-                        [[char t[1]; va_list ap; int n = vsnprintf(t, 1, "hello", ap); if(n == 5) return 0;return 1;]])],
-                        [AC_MSG_RESULT(yes)],
-                        [AC_MSG_FAILURE([vsnprintf does not conform to c99])],
-                        [AC_MSG_ERROR(cross-compiling: please set 'libmonit_cv_vsnprintf_c99_conformant=[yes|no]')])])
+AC_CHECK_FUNC([vsnprintf], [], [AC_MSG_FAILURE([vsnprintf is required])])
 
 AC_CHECK_FUNCS([timegm getgrouplist getrandom arc4random_buf])
 
