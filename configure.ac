@@ -419,17 +419,7 @@ CFLAGS="-Wno-address $CFLAGS"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
 
 # Require at least C99 and use C11 if available
-AC_RUN_IFELSE(
-[AC_LANG_PROGRAM([], [dnl
-        #ifdef __STDC_VERSION__
-        #if __STDC_VERSION__ >= 201112L
-        return 0;
-        #endif
-        #endif
-        return 1;
-        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"],
-        [AC_MSG_NOTICE([WARNING: result CFLAGS -std=c11 guessed because of cross compilation])
-        CFLAGS="$CFLAGS -std=c11"])
+AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"], [AX_CHECK_COMPILE_FLAG([-std=c99], [CFLAGS="$CFLAGS -std=c99"], [AC_MSG_ERROR([compiler does neither have C99 nor C11 support])])])
 AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
 
 
