@@ -162,7 +162,7 @@ static inline int _a2i(const char *a, int l) {
 
 static inline int _m2i(const char m[static 3]) {
         char month[3] = {[0] = tolower(m[0]), [1] = tolower(m[1]), [2] = tolower(m[2])};
-        static char *months = "janfebmaraprmayjunjulaugsepoctnovdec";
+        static const char *months = "janfebmaraprmayjunjulaugsepoctnovdec";
         for (int i = 0; i < 34; i += 3) {
                 if (memcmp(months + i, month, 3) == 0)
                         return i / 3;
