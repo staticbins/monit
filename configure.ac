@@ -438,7 +438,7 @@ AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not hav
 # ------------------------------------------------------------------------
 
 AC_ARG_WITH(ipv6,
-    AS_HELP_STRING([--without-ipv6], [Disable the IPv6 support (default: enabled)]),
+    AS_HELP_STRING([--without-ipv6], [Disable the IPv6 support (default: check)]),
     [
         if test "x$withval" = "xno"
         then
@@ -446,19 +446,15 @@ AC_ARG_WITH(ipv6,
         elif test "x$withval" = "xyes"
         then
             with_ipv6=1
+            AC_DEFINE([HAVE_IPV6], 1, [Define to 1 if the system supports IPv6])
         fi
     ],
     [
-        # Note inverse test. On by default
-        with_ipv6=1
-    ]
-)
-
-if test $with_ipv6 -eq 1
-then
+        # Note inverse test. Check by default
         AC_MSG_CHECKING(for IPv6 support)
         AC_CACHE_VAL(ac_cv_ipv6,
-                AC_TRY_RUN([
+                AC_RUN_IFELSE([
+                AC_LANG_SOURCE([[
                 #include <sys/types.h>
                 #include <sys/socket.h>
                 #include <netinet/in.h>
@@ -470,19 +466,22 @@ then
                         struct sockaddr_in6 foo;
                         fd = socket(AF_INET6, SOCK_STREAM, 0);
                         exit(fd >= 0 ? 0 : 1);
-                }],
-                ac_cv_ipv6=yes,
-                ac_cv_ipv6=no,
-                ac_cv_ipv6=no))
+                }]])],
+                [ac_cv_ipv6=yes],
+                [ac_cv_ipv6=no],
+                [ac_cv_ipv6=no])
+        )
         AC_MSG_RESULT($ac_cv_ipv6)
 
         if test $ac_cv_ipv6 = yes
         then
+                with_ipv6=1
                 AC_DEFINE([HAVE_IPV6], 1, [Define to 1 if the system supports IPv6])
         else
                 with_ipv6=0
         fi
-fi
+    ]
+)
 
 
 # ------------------------------------------------------------------------
