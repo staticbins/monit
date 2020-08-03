@@ -5,7 +5,7 @@
 Version 5.28.0
 
 Fixed: Issue #916: Linux: If monit 5.27.0 runs as non-root user, the promatch fails to find processes that belong to
-other users. Thanks to Lutz Mader for fix.
+other users and some statistics, such as memory usage, can show 0. Thanks to Lutz Mader for fix.
 
 Fixed: Linux: If monit 5.27.0 runs as non-root user, it required the CAP_SYS_RESOURCE capability to be able to monitor
 filedescriptors usage of other processes. Thanks to Christian Goettsche for report.
