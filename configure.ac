@@ -394,20 +394,6 @@ AC_CHECK_FUNCS(backtrace)
 AC_CHECK_FUNCS(getloadavg)
 AC_CHECK_FUNCS(getopt_long)
 
-AC_MSG_CHECKING(for va_copy)
-AC_TRY_LINK([
-	#include <stdarg.h>
-], [
-	va_list ap;
-	va_list ap_copy;
-	va_copy(ap, ap_copy);
-], [
-	AC_MSG_RESULT(yes)
-	AC_DEFINE([HAVE_VA_COPY], [1], [Define to 1 if VA_COPY is defined.])
-], [
-	AC_MSG_RESULT(no)
-])
-
 
 # ------------------------------------------------------------------------
 # Compiler
