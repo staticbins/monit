@@ -228,14 +228,7 @@ AC_CHECK_TYPES([uchar_t])
 # ------------------------------------------------------------------------
 
 # Require a working setjmp
-AC_CACHE_CHECK([setjmp is available],
-               [libmonit_cv_setjmp_available],
-               [AC_RUN_IFELSE([AC_LANG_PROGRAM(
-                       [[#include <setjmp.h>]],
-                       [[jmp_buf env; setjmp(env);]])],
-                       [AC_MSG_RESULT(yes)],
-                       [AC_MSG_FAILURE([setjmp is required])],
-                       [AC_MSG_ERROR(cross-compiling: please set 'libmonit_cv_setjmp_available=[yes|no]')])])
+AC_CHECK_DECLS([setjmp], [], [AC_MSG_FAILURE([setjmp is required])], [[#include <setjmp.h>]])
 
 # Require that we have vsnprintf that conforms to c99. I.e. does bounds check
 AC_CACHE_CHECK([vsnprintf is c99 conformant],
