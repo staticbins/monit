@@ -920,8 +920,8 @@ then
                                    $maindir/lib64/openssl \
                                    $maindir/lib64/ssl \
                                    $maindir/ssl/lib64 \
-                                   $maindir/lib/${build} \
-                                   $maindir/lib/${build_alias}; do
+                                   $maindir/lib/${host} \
+                                   $maindir/lib/${host_alias}; do
                             checkssllibdirdynamic $dir && break 2
                         done
                     done
