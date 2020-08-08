@@ -341,6 +341,7 @@ static bool _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
                         }
                 }
                 fclose(f);
+                StringBuffer_trim(proc->name);
                 // Fallback to procfs stat process name if cmdline was empty (even kernel-space processes have information here)
                 if (! StringBuffer_length(proc->name)) {
                         char buffer[8192];
