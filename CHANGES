@@ -13,6 +13,8 @@ filedescriptors usage of other processes. Thanks to Christian Goettsche for repo
 Fixed: Issue #920: AIX, NetBSD, Solaris: Monit 5.27.0 logs "Cannot test filesdescriptors usage as the statistics is not available on this system"
 every cycle even if no filedescriptors test was set in monit configuration.
 
+Fixed: Issue #926: Linux: The process-match based check had extra trailing space.
+
 
 Version 5.27.0
 
