@@ -179,8 +179,7 @@ static void log_log(int priority, const char *s, va_list ap) {
                                 vsyslog(priority, s, ap);
 #endif
                         } else if (LOG) {
-                                char datetime[STRLEN];
-                                fprintf(LOG, "[%s] %-8s : ", Time_fmt(datetime, sizeof(datetime), TIMEFORMAT, time(NULL)), logPriorityDescription(priority));
+                                fprintf(LOG, "[%s] %-8s : ", Time_fmt((char[STRLEN]){}, STRLEN, TIMEFORMAT, Time_now()), logPriorityDescription(priority));
 #ifdef HAVE_VA_COPY
                                 va_copy(ap_copy, ap);
                                 vfprintf(LOG, s, ap_copy);
