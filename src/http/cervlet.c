@@ -633,7 +633,7 @@ static void printFavicon(HttpResponse res) {
                 Socket_print(S, "Content-Type: image/x-icon\r\n");
                 Socket_print(S, "Connection: close\r\n\r\n");
                 if (Socket_write(S, favicon, l) < 0) {
-                        LogError("Error sending favicon data -- %s\n", STRERROR);
+                        Log_error("Error sending favicon data -- %s\n", STRERROR);
                 }
         }
 }
@@ -1020,7 +1020,7 @@ static void handle_service_action(HttpRequest req, HttpResponse res) {
                         FREE(s->token);
                         s->token = Str_dup(token);
                 }
-                LogInfo("'%s' %s on user request\n", s->name, action);
+                Log_info("'%s' %s on user request\n", s->name, action);
                 Run.flags |= Run_ActionPending; /* set the global flag */
                 do_wakeupcall();
         }
@@ -1050,7 +1050,7 @@ static void handle_doaction(HttpRequest req, HttpResponse res) {
                                         return;
                                 }
                                 s->doaction = doaction;
-                                LogInfo("'%s' %s on user request\n", s->name, action);
+                                Log_info("'%s' %s on user request\n", s->name, action);
                         }
                 }
                 /* Set token for last service only so we'll get it back after all services were handled */
@@ -1085,10 +1085,10 @@ static void handle_runtime_action(HttpRequest req, HttpResponse res) {
                         return;
                 }
                 if (IS(action, "validate")) {
-                        LogInfo("The Monit http server woke up on user request\n");
+                        Log_info("The Monit http server woke up on user request\n");
                         do_wakeupcall();
                 } else if (IS(action, "stop")) {
-                        LogInfo("The Monit http server stopped on user request\n");
+                        Log_info("The Monit http server stopped on user request\n");
                         send_error(req, res, SC_SERVICE_UNAVAILABLE, "The Monit http server is stopped");
                         Engine_stop();
                         return;

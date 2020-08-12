@@ -121,7 +121,7 @@ static bool _getStatistics(unsigned long long now) {
                 size_t len = 0;
                 int mib[3] = {CTL_HW, HW_IOSTATS, sizeof(struct io_sysctl)};
                 if (sysctl(mib, 3, NULL, &len, NULL, 0) == -1) {
-                        LogError("filesystem statistic error -- cannot get HW_IOSTATS size: %s\n", STRERROR);
+                        Log_error("filesystem statistic error -- cannot get HW_IOSTATS size: %s\n", STRERROR);
                         return false;
                 }
                 if (_statistics.diskLength != len) {
@@ -130,7 +130,7 @@ static bool _getStatistics(unsigned long long now) {
                         RESIZE(_statistics.disk, len);
                 }
                 if (sysctl(mib, 3, _statistics.disk, &(_statistics.diskLength), NULL, 0) == -1) {
-                        LogError("filesystem statistic error -- cannot get HW_IOSTATS: %s\n", STRERROR);
+                        Log_error("filesystem statistic error -- cannot get HW_IOSTATS: %s\n", STRERROR);
                         return false;
                 }
                 _statistics.timestamp = now;
@@ -168,7 +168,7 @@ static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
         if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
+                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
                 return false;
         }
         inf->filesystem->f_bsize = usage.f_frsize;
@@ -272,7 +272,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                 }
                 FREE(mnt);
         }
-        LogError("Lookup for '%s' filesystem failed\n", path);
+        Log_error("Lookup for '%s' filesystem failed\n", path);
 error:
         inf->filesystem->object.mounted = false;
         return false;

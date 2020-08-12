@@ -178,14 +178,14 @@ static unsigned short _checksum(unsigned char *_addr, int count) {
 }
 
 
-__attribute__((format (printf, 3, 4))) static void _LogWarningOrError(int attempt, int maxAttempts, const char *s, ...) {
+__attribute__((format (printf, 3, 4))) static void _log_warningOrError(int attempt, int maxAttempts, const char *s, ...) {
         ASSERT(s);
         va_list ap;
         va_start(ap, s);
         if (attempt < maxAttempts) {
-                vLogWarning(s, ap);
+                Log_vwarning(s, ap);
         } else {
-                vLogError(s, ap);
+                Log_verror(s, ap);
         }
         va_end(ap);
 }
@@ -254,7 +254,7 @@ int create_server_socket_tcp(const char *address, int port, Socket_Family family
                                 snprintf(error, STRLEN, "Cannot set reuseaddr option: %s", STRERROR);
                         }
                         if (close(s) < 0)
-                                LogError("Server socket %d close failed: %s\n", s, STRERROR);
+                                Log_error("Server socket %d close failed: %s\n", s, STRERROR);
                 } else {
                         snprintf(error, STRLEN, "Cannot create socket: %s", STRERROR);
                 }
@@ -292,7 +292,7 @@ int create_server_socket_unix(const char *path, int backlog, char error[STRLEN])
                 snprintf(error, STRLEN, "Cannot set nonblocking socket: %s", STRERROR);
         }
         if (close(s) < 0)
-                LogError("Socket %d close failed -- %s\n", s, STRERROR);
+                Log_error("Socket %d close failed -- %s\n", s, STRERROR);
         return -1;
 }
 
@@ -307,16 +307,16 @@ static void _setPingOptions(int socket, struct addrinfo *addr) {
         switch (addr->ai_family) {
                 case AF_INET:
                         if (setsockopt(socket, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0)
-                                LogError("Ping: setsockopt for TTL failed -- %s\n", System_getLastError());
+                                Log_error("Ping: setsockopt for TTL failed -- %s\n", System_getLastError());
                         break;
 #ifdef HAVE_IPV6
                 case AF_INET6:
                         if (setsockopt(socket, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &ttl, sizeof(ttl)) < 0)
-                                LogError("Ping: setsockopt for multicast hops failed -- %s\n", System_getLastError());
+                                Log_error("Ping: setsockopt for multicast hops failed -- %s\n", System_getLastError());
                         if (setsockopt(socket, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &ttl, sizeof(ttl)) < 0)
-                                LogError("Ping: setsockopt for unicast hops failed -- %s\n", System_getLastError());
+                                Log_error("Ping: setsockopt for unicast hops failed -- %s\n", System_getLastError());
                         if (setsockopt(socket, IPPROTO_ICMPV6, ICMP6_FILTER, &filter, sizeof(struct icmp6_filter)) < 0)
-                                LogError("Ping: setsockopt for filter failed -- %s\n", System_getLastError());
+                                Log_error("Ping: setsockopt for filter failed -- %s\n", System_getLastError());
                         break;
 #endif
                 default:
@@ -366,7 +366,7 @@ static bool _sendPing(const char *hostname, int socket, struct addrinfo *addr, i
                         break;
         }
         if (out_len > sizeof(buf)) {
-                _LogWarningOrError(retry, maxretries, "Ping request for %s %d/%d failed -- too large (%d vs. maximum %lu bytes)\n", hostname, retry, maxretries, size, (unsigned long)(sizeof(buf) - header_len));
+                _log_warningOrError(retry, maxretries, "Ping request for %s %d/%d failed -- too large (%d vs. maximum %lu bytes)\n", hostname, retry, maxretries, size, (unsigned long)(sizeof(buf) - header_len));
                 return false;
         }
         ssize_t n;
@@ -374,7 +374,7 @@ static bool _sendPing(const char *hostname, int socket, struct addrinfo *addr, i
                 n = sendto(socket, out_icmp, out_len, 0, addr->ai_addr, addr->ai_addrlen);
         } while (n == -1 && errno == EINTR);
         if (n < 0) {
-                _LogWarningOrError(retry, maxretries, "Ping request for %s %d/%d failed -- %s\n", hostname, retry, maxretries, STRERROR);
+                _log_warningOrError(retry, maxretries, "Ping request for %s %d/%d failed -- %s\n", hostname, retry, maxretries, STRERROR);
                 return false;
         }
         return true;
@@ -416,7 +416,7 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                         n = recvfrom(socket, buf, sizeof(buf), 0, (struct sockaddr *)&in_addr, &addrlen);
                 } while (n == -1 && errno == EINTR);
                 if (n < 0) {
-                        _LogWarningOrError(retry, maxretries, "Ping response from %s %d/%d failed -- %s\n", hostname, retry, maxretries, STRERROR);
+                        _log_warningOrError(retry, maxretries, "Ping response from %s %d/%d failed -- %s\n", hostname, retry, maxretries, STRERROR);
                         return -1.;
                 } else if (n >= in_len) {
                         /* read from raw socket via recvfrom() provides messages regardless of origin, we have to check the IP and skip responses belonging to other conversations or different ICMP types (n < in_len) */
@@ -441,7 +441,7 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                                         break;
 #endif
                                 default:
-                                        LogError("Invalid address family: %d\n", in_addr.ss_family);
+                                        Log_error("Invalid address family: %d\n", in_addr.ss_family);
                                         return -1.;
                         }
                 }
@@ -460,7 +460,7 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                         return response; // Wait for one response only
                 }
         }
-        _LogWarningOrError(retry, maxretries, "Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Convert_time2str(timeout, (char[11]){}));
+        _log_warningOrError(retry, maxretries, "Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Convert_time2str(timeout, (char[11]){}));
         return -1.;
 }
 
@@ -486,12 +486,12 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
                         break;
 #endif
                 default:
-                        LogError("Invalid socket family %d\n", family);
+                        Log_error("Invalid socket family %d\n", family);
                         return response;
         }
         int status = getaddrinfo(hostname, NULL, &hints, &result);
         if (status) {
-                LogError("Ping for %s -- getaddrinfo failed: %s\n", hostname, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                Log_error("Ping for %s -- getaddrinfo failed: %s\n", hostname, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
                 return response;
         }
         int s = -1;
@@ -507,12 +507,12 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
                                         break;
 #endif
                                 default:
-                                        LogError("Ping for %s -- unknown address family: %d\n", hostname, addr->ai_family);
+                                        Log_error("Ping for %s -- unknown address family: %d\n", hostname, addr->ai_family);
                                         continue;
                         }
                         if (s >= 0) {
                                 if (outgoing->ip && bind(s, (struct sockaddr *)&(outgoing->addr), outgoing->addrlen) < 0) {
-                                        LogError("Cannot bind to outgoing address -- %s\n", STRERROR);
+                                        Log_error("Cannot bind to outgoing address -- %s\n", STRERROR);
                                 } else {
                                         _setPingOptions(s, addr);
                                         uint16_t id = getpid() & 0xFFFF;
@@ -531,7 +531,7 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
                                         DEBUG("Ping for %s -- cannot create socket: %s\n", hostname, STRERROR);
                                         response = -2.;
                                 } else {
-                                        LogError("Ping for %s -- cannot create socket: %s\n", hostname, STRERROR);
+                                        Log_error("Ping for %s -- cannot create socket: %s\n", hostname, STRERROR);
                                 }
                                 goto error;
                         }

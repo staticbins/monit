@@ -184,6 +184,6 @@ void check_radius(Socket_T socket) {
         md5_finish(&ctx, response + 4);
 
         if (memcmp(digest, response + 4, 16) != 0)
-                LogInfo("RADIUS: message fails authentication");
+                Log_info("RADIUS: message fails authentication");
 }
 

@@ -239,7 +239,7 @@ static bool _doStart(Service_T s) {
         if (rv) {
                 if (s->start) {
                         if (s->type != Service_Process || ! ProcessTree_findProcess(s)) {
-                                LogInfo("'%s' start: '%s'\n", s->name, Util_commandDescription(s->start, (char[STRLEN]){}));
+                                Log_info("'%s' start: '%s'\n", s->name, Util_commandDescription(s->start, (char[STRLEN]){}));
                                 char msg[1024];
                                 long long timeout = s->start->timeout * USEC_PER_MSEC;
                                 int status = _commandExecute(s, s->start, msg, sizeof(msg), &timeout);
@@ -251,7 +251,7 @@ static bool _doStart(Service_T s) {
                                 }
                         }
                 } else {
-                        LogDebug("'%s' start method not defined\n", s->name);
+                        Log_debug("'%s' start method not defined\n", s->name);
                         Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "monitoring enabled");
                 }
         } else {
@@ -265,7 +265,7 @@ static bool _doStart(Service_T s) {
 
 
 static int _executeStop(Service_T s, char *msg, int msglen, long long *timeout) {
-        LogInfo("'%s' stop: '%s'\n", s->name, Util_commandDescription(s->stop, (char[STRLEN]){}));
+        Log_info("'%s' stop: '%s'\n", s->name, Util_commandDescription(s->stop, (char[STRLEN]){}));
         return _commandExecute(s, s->stop, msg, msglen, timeout);
 }
 
@@ -306,7 +306,7 @@ static bool _doStop(Service_T s, bool unmonitor) {
                         }
                 }
         } else {
-                LogDebug("'%s' stop skipped -- method not defined\n", s->name);
+                Log_debug("'%s' stop skipped -- method not defined\n", s->name);
         }
         if (unmonitor) {
                 Util_monitorUnset(s);
@@ -326,7 +326,7 @@ static bool _doRestart(Service_T s) {
         ASSERT(s);
         bool rv = true;
         if (s->restart) {
-                LogInfo("'%s' restart: '%s'\n", s->name, Util_commandDescription(s->restart, (char[STRLEN]){}));
+                Log_info("'%s' restart: '%s'\n", s->name, Util_commandDescription(s->restart, (char[STRLEN]){}));
                 Util_resetInfo(s);
                 char msg[1024];
                 long long timeout = s->restart->timeout * USEC_PER_MSEC;
@@ -338,7 +338,7 @@ static bool _doRestart(Service_T s) {
                         Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "restarted");
                 }
         } else {
-                LogDebug("'%s' restart skipped -- method not defined\n", s->name);
+                Log_debug("'%s' restart skipped -- method not defined\n", s->name);
         }
         Util_monitorSet(s);
         return rv;
@@ -432,7 +432,7 @@ bool control_service_string(List_T services, const char *action) {
         ASSERT(action);
         Action_Type a = Util_getAction(action);
         if (a == Action_Ignored) {
-                LogError("invalid action %s\n", action);
+                Log_error("invalid action %s\n", action);
                 return 1;
         }
         int errors = 0;
@@ -454,7 +454,7 @@ bool control_service(const char *S, Action_Type A) {
         bool rv = true;
         ASSERT(S);
         if (! (s = Util_getService(S))) {
-                LogError("Service '%s' -- doesn't exist\n", S);
+                Log_error("Service '%s' -- doesn't exist\n", S);
                 return false;
         }
         switch (A) {
@@ -469,7 +469,7 @@ bool control_service(const char *S, Action_Type A) {
                         break;
 
                 case Action_Restart:
-                        LogInfo("'%s' trying to restart\n", s->name);
+                        Log_info("'%s' trying to restart\n", s->name);
                         // Restart this service only if all children that depend on it were stopped
                         if (_doDepend(s, Action_Stop, false)) {
                                 if (s->restart) {
@@ -499,7 +499,7 @@ bool control_service(const char *S, Action_Type A) {
                         break;
 
                 default:
-                        LogError("Service '%s' -- invalid action %d\n", S, A);
+                        Log_error("Service '%s' -- invalid action %d\n", S, A);
                         rv = false;
         }
         if (s->doaction == A) {

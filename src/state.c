@@ -494,7 +494,7 @@ static void _restoreV0(int services) {
 bool State_open() {
         State_close();
         if ((file = open(Run.files.state, O_RDWR | O_CREAT, 0600)) == -1) {
-                LogError("State file '%s': cannot open for write -- %s\n", Run.files.state, STRERROR);
+                Log_error("State file '%s': cannot open for write -- %s\n", Run.files.state, STRERROR);
                 return false;
         }
         atexit(State_close);
@@ -505,7 +505,7 @@ bool State_open() {
 void State_close() {
         if (file != -1) {
                 if (close(file) == -1)
-                        LogError("State file '%s': close error -- %s\n", Run.files.state, STRERROR);
+                        Log_error("State file '%s': close error -- %s\n", Run.files.state, STRERROR);
                 else
                         file = -1;
         }
@@ -592,7 +592,7 @@ void State_save() {
         }
         ELSE
         {
-                LogError("State file '%s': %s\n", Run.files.state, Exception_frame.message);
+                Log_error("State file '%s': %s\n", Run.files.state, Exception_frame.message);
         }
         END_TRY;
 }
@@ -647,7 +647,7 @@ void State_restore() {
                                         _restoreV4();
                                         break;
                                 default:
-                                        LogWarning("State file '%s': incompatible version %d\n", Run.files.state, version);
+                                        Log_warning("State file '%s': incompatible version %d\n", Run.files.state, version);
                                         break;
                         }
                         if (version != StateVersionLatest || booted != systeminfo.booted) {
@@ -657,7 +657,7 @@ void State_restore() {
         }
         ELSE
         {
-                LogError("State file '%s': %s\n", Run.files.state, Exception_frame.message);
+                Log_error("State file '%s': %s\n", Run.files.state, Exception_frame.message);
         }
         END_TRY;
 }

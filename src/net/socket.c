@@ -179,7 +179,7 @@ static char *_addressToString(const struct sockaddr *addr, socklen_t addrlen, ch
                 char port[NI_MAXSERV];
                 int status = getnameinfo(addr, addrlen, ip, sizeof(ip), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
                 if (status) {
-                        LogError("Cannot get address string -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                        Log_error("Cannot get address string -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
                         *buf = 0;
                 } else {
                         snprintf(buf, buflen, "[%s]:%s", ip, port);
@@ -301,14 +301,14 @@ static struct addrinfo *_resolve(const char *hostname, int port, Socket_Type typ
                         break;
 #endif
                 default:
-                        LogError("Invalid socket family %d\n", family);
+                        Log_error("Invalid socket family %d\n", family);
                         return NULL;
         }
         char _port[6];
         snprintf(_port, sizeof(_port), "%d", port);
         int status = getaddrinfo(hostname, _port, &hints, &result);
         if (status != 0) {
-                LogError("Cannot translate '%s' to IP address -- %s\n", hostname, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                Log_error("Cannot translate '%s' to IP address -- %s\n", hostname, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
                 return NULL;
         }
         return result;
@@ -346,7 +346,7 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
                 }
                 freeaddrinfo(result);
                 if (! S)
-                        LogError("Cannot connect to [%s]:%d -- %s\n", host, port, error);
+                        Log_error("Cannot connect to [%s]:%d -- %s\n", host, port, error);
         }
         return S;
 }
@@ -362,7 +362,7 @@ T Socket_createUnix(const char *path, Socket_Type type, int timeout) {
                         unixsocket_client.sun_family = AF_UNIX;
                         snprintf(unixsocket_client.sun_path, sizeof(unixsocket_client.sun_path), "/tmp/monit_%p.sock", &unixsocket_client);
                         if (bind(s, (struct sockaddr *) &unixsocket_client, sizeof(unixsocket_client)) != 0) {
-                                LogError("Unix socket %s bind error -- %s\n", unixsocket_client.sun_path, STRERROR);
+                                Log_error("Unix socket %s bind error -- %s\n", unixsocket_client.sun_path, STRERROR);
                                 goto error;
                         }
                 }
@@ -382,16 +382,16 @@ T Socket_createUnix(const char *path, Socket_Type type, int timeout) {
                                 S->host = Str_dup(LOCALHOST);
                                 return S;
                         }
-                        LogError("Unix socket %s connection error -- %s\n", path, error);
+                        Log_error("Unix socket %s connection error -- %s\n", path, error);
                 } else {
-                        LogError("Cannot set nonblocking unix socket %s -- %s\n", path, STRERROR);
+                        Log_error("Cannot set nonblocking unix socket %s -- %s\n", path, STRERROR);
                 }
 error:
                 Net_close(s);
                 if (type == Socket_Udp)
                         unlink(unixsocket_client.sun_path);
         } else {
-                LogError("Cannot create unix socket %s -- %s\n", path, STRERROR);
+                Log_error("Cannot create unix socket %s -- %s\n", path, STRERROR);
         }
         return NULL;
 }
@@ -455,7 +455,7 @@ void Socket_free(T *S) {
                 socklen_t length = sizeof(type);
                 int rv = getsockopt((*S)->socket, SOL_SOCKET, SO_TYPE, &type, &length);
                 if (rv) {
-                        LogError("Freeing socket -- getsockopt failed: %s\n", STRERROR);
+                        Log_error("Freeing socket -- getsockopt failed: %s\n", STRERROR);
                 } else if (type == SOCK_DGRAM) {
                         struct sockaddr_storage addr;
                         socklen_t addrlen = sizeof(addr);
@@ -549,9 +549,9 @@ const char *Socket_getLocalHost(T S, char *host, int hostlen) {
                 int status = getnameinfo((struct sockaddr *)&addr, addrlen, host, hostlen, NULL, 0, NI_NUMERICHOST);
                 if (! status)
                         return host;
-                LogError("Cannot translate address to hostname -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                Log_error("Cannot translate address to hostname -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
         } else {
-                LogError("Cannot translate address to hostname -- getsockname failed: %s\n", STRERROR);
+                Log_error("Cannot translate address to hostname -- getsockname failed: %s\n", STRERROR);
         }
         return NULL;
 }

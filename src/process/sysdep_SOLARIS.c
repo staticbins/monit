@@ -145,7 +145,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         glob_t globbuf;
         int rv = glob("/proc/[0-9]*", 0, NULL, &globbuf);
         if (rv != 0) {
-                LogError("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
+                Log_error("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
                 return 0;
         }
 
@@ -233,7 +233,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 if ((kstat = kstat_lookup(kctl, "memory_cap", -1, NULL))) {
                         /* Joyent SmartOS zone: reports wrong unix::system_pages:freemem in the zone - shows global zone freemem, switch to SmartOS specific memory_cap kstat, which is more effective then common getvmusage() */
                         if (kstat_read(kctl, kstat, NULL) == -1) {
-                                LogError("system statistic error -- memory_cap usage data collection failed\n");
+                                Log_error("system statistic error -- memory_cap usage data collection failed\n");
                                 kstat_close(kctl);
                                 return false;
                         }
@@ -245,7 +245,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                         size_t nres;
                         vmusage_t result;
                         if (getvmusage(VMUSAGE_ZONE, Run.polltime, &result, &nres) != 0) {
-                                LogError("system statistic error -- getvmusage failed\n");
+                                Log_error("system statistic error -- getvmusage failed\n");
                                 kstat_close(kctl);
                                 return false;
                         }
@@ -254,7 +254,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         } else {
                 kstat = kstat_lookup(kctl, "unix", 0, "system_pages");
                 if (kstat_read(kctl, kstat, 0) == -1) {
-                        LogError("system statistic error -- memory usage data collection failed\n");
+                        Log_error("system statistic error -- memory usage data collection failed\n");
                         kstat_close(kctl);
                         return false;
                 }
@@ -274,7 +274,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         /* Swap */
 again:
         if ((num = swapctl(SC_GETNSWP, 0)) == -1) {
-                LogError("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
+                Log_error("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
                 return false;
         }
         if (num == 0) {
@@ -288,7 +288,7 @@ again:
                 s->swt_ent[i].ste_path = strtab + (i * MAXSTRSIZE);
         s->swt_n = num + 1;
         if ((n = swapctl(SC_LIST, s)) < 0) {
-                LogError("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
+                Log_error("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
                 si->swap.size = 0ULL;
                 FREE(s);
                 FREE(strtab);
@@ -333,17 +333,17 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         kctl  = kstat_open();
         kstat = kstat_lookup(kctl, "unix", 0, "system_misc");
         if (kstat_read(kctl, kstat, 0) == -1) {
-                LogError("system statistic -- failed to lookup unix::system_misc kstat\n");
+                Log_error("system statistic -- failed to lookup unix::system_misc kstat\n");
                 goto error;
         }
 
         if (NULL == (knamed = kstat_data_lookup(kstat, "ncpus"))) {
-                LogError("system statistic -- ncpus kstat lookup failed\n");
+                Log_error("system statistic -- ncpus kstat lookup failed\n");
                 goto error;
         }
 
         if ((ncpus = knamed->value.ui32) == 0) {
-                LogError("system statistic -- ncpus is 0\n");
+                Log_error("system statistic -- ncpus is 0\n");
                 goto error;
         }
 
@@ -353,12 +353,12 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         for (kstat = kctl->kc_chain; kstat; kstat = kstat->ks_next) {
                 if (strncmp(kstat->ks_name, "cpu_stat", 8) == 0) {
                         if (-1 == kstat_read(kctl, kstat, NULL)) {
-                                LogError("system statistic -- failed to read cpu_stat kstat\n");
+                                Log_error("system statistic -- failed to read cpu_stat kstat\n");
                                 goto error2;
                         }
                         cpu_ks[ncpu] = kstat;
                         if (++ncpu > ncpus) {
-                                LogError("system statistic -- cpu count mismatch\n");
+                                Log_error("system statistic -- cpu count mismatch\n");
                                 goto error2;
                         }
                 }
@@ -366,7 +366,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
         for (int i = 0; i < ncpu; i++) {
                 if (-1 == kstat_read(kctl, cpu_ks[i], &cpu_stat[i])) {
-                        LogError("system statistic -- failed to read cpu_stat kstat for cpu %d\n", i);
+                        Log_error("system statistic -- failed to read cpu_stat kstat for cpu %d\n", i);
                         goto error2;
                 }
                 cpu_user += cpu_stat[i].cpu_sysinfo.cpu[CPU_USER];

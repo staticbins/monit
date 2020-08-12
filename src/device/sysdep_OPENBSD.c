@@ -116,7 +116,7 @@ static bool _getStatistics(unsigned long long now) {
                 ssize_t len = sizeof(_statistics.diskCount);
                 int mib[2] = {CTL_HW, HW_DISKCOUNT};
                 if (sysctl(mib, 2, &(_statistics.diskCount), &len, NULL, 0) == -1) {
-                        LogError("filesystem statistic error -- cannot get disks count: %s\n", STRERROR);
+                        Log_error("filesystem statistic error -- cannot get disks count: %s\n", STRERROR);
                         return false;
                 }
                 len = _statistics.diskCount * sizeof(struct diskstats);
@@ -126,7 +126,7 @@ static bool _getStatistics(unsigned long long now) {
                 }
                 mib[1] = HW_DISKSTATS;
                 if (sysctl(mib, 2, _statistics.disk, &(_statistics.diskLength), NULL, 0) == -1) {
-                        LogError("filesystem statistic error -- cannot get disks statistics: %s\n", STRERROR);
+                        Log_error("filesystem statistic error -- cannot get disks statistics: %s\n", STRERROR);
                         return false;
                 }
                 _statistics.timestamp = now;
@@ -164,7 +164,7 @@ static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statfs usage;
         if (statfs(inf->filesystem->object.mountpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
+                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
                 return false;
         }
         inf->filesystem->f_bsize = usage.f_bsize;
@@ -253,7 +253,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                 }
                 FREE(mnt);
         }
-        LogError("Lookup for '%s' filesystem failed\n", path);
+        Log_error("Lookup for '%s' filesystem failed\n", path);
 error:
         inf->filesystem->object.mounted = false;
         return false;

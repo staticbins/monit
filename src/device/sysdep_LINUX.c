@@ -107,7 +107,7 @@ static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
         if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
+                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
                 return false;
         }
         inf->filesystem->f_bsize = usage.f_frsize;
@@ -129,7 +129,7 @@ static bool _getCifsDiskActivity(void *_inf) {
         Info_T inf = _inf;
         FILE *f = fopen(CIFSSTAT, "r");
         if (! f) {
-                LogError("Cannot open %s\n", CIFSSTAT);
+                Log_error("Cannot open %s\n", CIFSSTAT);
                 return false;
         }
         unsigned long long now = Time_milli();
@@ -168,7 +168,7 @@ static bool _getNfsDiskActivity(void *_inf) {
         Info_T inf = _inf;
         FILE *f = fopen(NFSSTAT, "r");
         if (! f) {
-                LogError("Cannot open %s\n", NFSSTAT);
+                Log_error("Cannot open %s\n", NFSSTAT);
                 return false;
         }
         unsigned long long now = Time_milli();
@@ -229,7 +229,7 @@ static bool _getZfsDiskActivity(void *_inf) {
                 fclose(f);
                 return true;
         }
-        LogError("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
+        Log_error("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
         return false;
 }
 
@@ -257,7 +257,7 @@ static bool _getVxfsDiskActivity(void *_inf) {
                 unsigned long long readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
                 unsigned long long writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
                 if (fscanf(f, "%llu %*u %llu %llu %llu %*u %llu %llu %*u %*u %*u", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
-                        LogError("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
+                        Log_error("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
                         fclose(f);
                         return false;
                 }
@@ -317,7 +317,7 @@ static bool _getSysfsBlockDiskActivity(void *_inf) {
                 unsigned long long writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
                 if (fscanf(f, "%llu %*u %llu %llu %llu %*u %llu %llu %*u %*u %*u", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
                         fclose(f);
-                        LogError("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
+                        Log_error("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
                         return false;
                 }
                 Statistics_update(&(inf->filesystem->time.read), now, readTime);
@@ -329,7 +329,7 @@ static bool _getSysfsBlockDiskActivity(void *_inf) {
                 fclose(f);
                 return true;
         }
-        LogError("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
+        Log_error("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
         return false;
 }
 
@@ -358,7 +358,7 @@ static bool _getProcfsBlockDiskActivity(void *_inf) {
                 fclose(f);
                 return true;
         }
-        LogError("filesystem statistic error: cannot read %s -- %s\n", DISKSTAT, STRERROR);
+        Log_error("filesystem statistic error: cannot read %s -- %s\n", DISKSTAT, STRERROR);
         return false;
 }
 
@@ -378,7 +378,7 @@ static bool _compareDevice(const char *device, struct mntent *mnt) {
 static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct mntent *mnt)) {
         FILE *f = setmntent(MOUNTS, "r");
         if (! f) {
-                LogError("Cannot open %s\n", MOUNTS);
+                Log_error("Cannot open %s\n", MOUNTS);
                 return false;
         }
         inf->filesystem->object.generation = _statistics.generation;
@@ -431,7 +431,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
         endmntent(f);
         inf->filesystem->object.mounted = mounted;
         if (! mounted) {
-                LogError("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MOUNTS);
+                Log_error("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MOUNTS);
         } else {
                 // Evaluate filesystem flags for the last matching mount (overlay mounts for the same filesystem may have different mount flags)
                 if (! IS(flags, inf->filesystem->flags)) {
@@ -460,7 +460,7 @@ static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char 
                                 _statistics.generation++;
                         }
                 } else {
-                        LogError("Mount table polling failed -- %s\n", STRERROR);
+                        Log_error("Mount table polling failed -- %s\n", STRERROR);
                 }
         }
         if (inf->filesystem->object.generation != _statistics.generation || _statistics.fd == -1) {

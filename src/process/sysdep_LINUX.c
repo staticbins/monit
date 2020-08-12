@@ -181,7 +181,7 @@ static double hz = 0.;
 static time_t _getStartTime(void) {
         struct sysinfo info;
         if (sysinfo(&info) < 0) {
-                LogError("system statistic error -- cannot get system uptime: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get system uptime: %s\n", STRERROR);
                 return 0;
         }
         return Time_now() - info.uptime;
@@ -511,7 +511,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         glob_t globbuf;
         int rv = glob("/proc/[0-9]*", 0, NULL, &globbuf);
         if (rv) {
-                LogError("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
+                Log_error("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
                 return 0;
         }
         ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), globbuf.gl_pathc);
@@ -609,7 +609,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         unsigned long long       zfsarcsize = 0ULL;
 
         if (! file_readProc(buf, sizeof(buf), "meminfo", -1, NULL)) {
-                LogError("system statistic error -- cannot get system memory info\n");
+                Log_error("system statistic error -- cannot get system memory info\n");
                 goto error;
         }
 
@@ -624,7 +624,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         } else {
                 DEBUG("'MemAvailable' value not available on this system. Attempting to calculate available memory manually...\n");
                 if (! (ptr = strstr(buf, "MemFree:")) || sscanf(ptr + 8, "%lu", &mem_free) != 1) {
-                        LogError("system statistic error -- cannot get real memory free amount\n");
+                        Log_error("system statistic error -- cannot get real memory free amount\n");
                         goto error;
                 }
                 if (! (ptr = strstr(buf, "Buffers:")) || sscanf(ptr + 8, "%lu", &buffers) != 1)
@@ -648,11 +648,11 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
 
         /* Swap */
         if (! (ptr = strstr(buf, "SwapTotal:")) || sscanf(ptr + 10, "%lu", &swap_total) != 1) {
-                LogError("system statistic error -- cannot get swap total amount\n");
+                Log_error("system statistic error -- cannot get swap total amount\n");
                 goto error;
         }
         if (! (ptr = strstr(buf, "SwapFree:")) || sscanf(ptr + 9, "%lu", &swap_free) != 1) {
-                LogError("system statistic error -- cannot get swap free amount\n");
+                Log_error("system statistic error -- cannot get swap free amount\n");
                 goto error;
         }
         si->swap.size = (unsigned long long)swap_total * 1024;
@@ -687,7 +687,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         char buf[8192];
 
         if (! file_readProc(buf, sizeof(buf), "stat", -1, NULL)) {
-                LogError("system statistic error -- cannot read /proc/stat\n");
+                Log_error("system statistic error -- cannot read /proc/stat\n");
                 goto error;
         }
 
@@ -739,7 +739,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                         // linux >= 2.6.33
                         break;
                 default:
-                        LogError("system statistic error -- cannot read cpu usage\n");
+                        Log_error("system statistic error -- cannot read cpu usage\n");
                         goto error;
         }
 
@@ -831,7 +831,7 @@ bool available_statistics(SystemInfo_T *si) {
         char buf[8192];
 
         if (! file_readProc(buf, sizeof(buf), "stat", -1, NULL)) {
-                LogError("system statistic error -- cannot read /proc/stat\n");
+                Log_error("system statistic error -- cannot read /proc/stat\n");
                 return false;
         }
 
@@ -872,7 +872,7 @@ bool available_statistics(SystemInfo_T *si) {
                         si->statisticsAvailable |= Statistics_CpuUser | Statistics_CpuNice | Statistics_CpuSystem | Statistics_CpuIOWait | Statistics_CpuHardIRQ | Statistics_CpuSoftIRQ | Statistics_CpuSteal | Statistics_CpuGuest | Statistics_CpuGuestNice;
                         break;
                 default:
-                        LogError("system statistic error -- cannot read cpu usage\n");
+                        Log_error("system statistic error -- cannot read cpu usage\n");
                         return false;
         }
 

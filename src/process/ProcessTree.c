@@ -458,7 +458,7 @@ bool init_system_info(void) {
         memset(&systeminfo, 0, sizeof(SystemInfo_T));
         gettimeofday(&systeminfo.collected, NULL);
         if (uname(&systeminfo.uname) < 0) {
-                LogError("'%s' resource monitoring initialization error -- uname failed: %s\n", Run.system->name, STRERROR);
+                Log_error("'%s' resource monitoring initialization error -- uname failed: %s\n", Run.system->name, STRERROR);
                 return false;
         }
 #ifdef HAVE_COREFOUNDATION_COREFOUNDATION_H
@@ -496,24 +496,24 @@ bool init_system_info(void) {
 //FIXME: move to standalone system class
 bool update_system_info() {
         if (getloadavg_sysdep(systeminfo.loadavg, 3) == -1) {
-                LogError("'%s' statistic error -- load average data collection failed\n", Run.system->name);
+                Log_error("'%s' statistic error -- load average data collection failed\n", Run.system->name);
                 goto error1;
         }
 
         if (! used_system_memory_sysdep(&systeminfo)) {
-                LogError("'%s' statistic error -- memory usage data collection failed\n", Run.system->name);
+                Log_error("'%s' statistic error -- memory usage data collection failed\n", Run.system->name);
                 goto error2;
         }
         systeminfo.memory.usage.percent  = systeminfo.memory.size > 0ULL ? (100. * (double)systeminfo.memory.usage.bytes / (double)systeminfo.memory.size) : 0.;
         systeminfo.swap.usage.percent = systeminfo.swap.size > 0ULL ? (100. * (double)systeminfo.swap.usage.bytes / (double)systeminfo.swap.size) : 0.;
 
         if (! used_system_cpu_sysdep(&systeminfo)) {
-                LogError("'%s' statistic error -- cpu usage data collection failed\n", Run.system->name);
+                Log_error("'%s' statistic error -- cpu usage data collection failed\n", Run.system->name);
                 goto error3;
         }
 
         if (! used_system_filedescriptors_sysdep(&systeminfo)) {
-                LogError("'%s' statistic error -- filedescriptors usage data collection failed\n", Run.system->name);
+                Log_error("'%s' statistic error -- filedescriptors usage data collection failed\n", Run.system->name);
                 goto error4;
         }
 

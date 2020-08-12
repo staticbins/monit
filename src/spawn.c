@@ -163,7 +163,7 @@ void spawn(Service_T S, command_t C, Event_T E) {
         ASSERT(C);
 
         if (access(C->arg[0], X_OK) != 0) {
-                LogError("Error: Could not execute %s\n", C->arg[0]);
+                Log_error("Error: Could not execute %s\n", C->arg[0]);
                 return;
         }
 
@@ -177,7 +177,7 @@ void spawn(Service_T S, command_t C, Event_T E) {
         Time_string(Time_now(), date);
         pid = fork();
         if (pid < 0) {
-                LogError("Cannot fork a new process -- %s\n", STRERROR);
+                Log_error("Cannot fork a new process -- %s\n", STRERROR);
                 pthread_sigmask(SIG_SETMASK, &save, NULL);
                 return;
         }
@@ -245,22 +245,22 @@ void spawn(Service_T S, command_t C, Event_T E) {
 
         /* Wait for first child - aka second parent, to exit */
         if (waitpid(pid, &stat_loc, 0) != pid) {
-                LogError("Waitpid error\n");
+                Log_error("Waitpid error\n");
         }
 
         exit_status = WEXITSTATUS(stat_loc);
         if (exit_status & setgid_ERROR)
-                LogError("Failed to change gid to '%d' for '%s'\n", C->gid, C->arg[0]);
+                Log_error("Failed to change gid to '%d' for '%s'\n", C->gid, C->arg[0]);
         if (exit_status & setuid_ERROR)
-                LogError("Failed to change uid to '%d' for '%s'\n", C->uid, C->arg[0]);
+                Log_error("Failed to change uid to '%d' for '%s'\n", C->uid, C->arg[0]);
         if (exit_status & initgroups_ERROR)
-                LogError("initgroups for UID %d failed when executing '%s'\n", C->uid, C->arg[0]);
+                Log_error("initgroups for UID %d failed when executing '%s'\n", C->uid, C->arg[0]);
         if (exit_status & fork_ERROR)
-                LogError("Cannot fork a new process for '%s'\n", C->arg[0]);
+                Log_error("Cannot fork a new process for '%s'\n", C->arg[0]);
         if (exit_status & redirect_ERROR)
-                LogError("Cannot redirect IO to /dev/null for '%s'\n", C->arg[0]);
+                Log_error("Cannot redirect IO to /dev/null for '%s'\n", C->arg[0]);
         if (exit_status & getpwuid_ERROR)
-                LogError("UID %d not found on the system when executing '%s'\n", C->uid, C->arg[0]);
+                Log_error("UID %d not found on the system when executing '%s'\n", C->uid, C->arg[0]);
 
         /*
          * Restore the signal mask

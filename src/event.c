@@ -177,12 +177,12 @@ static void _queueAdd(Event_T E) {
         ASSERT(E->flag != Handler_Succeeded);
 
         if (! file_checkQueueDirectory(Run.eventlist_dir)) {
-                LogError("Aborting event - cannot access the event queue directory %s\n", Run.eventlist_dir);
+                Log_error("Aborting event - cannot access the event queue directory %s\n", Run.eventlist_dir);
                 return;
         }
 
         if (! file_checkQueueLimit(Run.eventlist_dir, Run.eventlist_slots)) {
-                LogError("Aborting event - queue over quota\n");
+                Log_error("Aborting event - queue over quota\n");
                 return;
         }
 
@@ -190,11 +190,11 @@ static void _queueAdd(Event_T E) {
         char file_name[PATH_MAX];
         snprintf(file_name, PATH_MAX, "%s/%lld_%lx", Run.eventlist_dir, (long long)Time_now(), (long unsigned)E->source->name);
 
-        LogInfo("Adding event to the queue file %s for later delivery\n", file_name);
+        Log_info("Adding event to the queue file %s for later delivery\n", file_name);
 
         FILE *file = fopen(file_name, "w");
         if (! file) {
-                LogError("Aborting event - cannot create event file %s -- %s\n", file_name, STRERROR);
+                Log_error("Aborting event - cannot create event file %s -- %s\n", file_name, STRERROR);
                 return;
         }
 
@@ -225,9 +225,9 @@ static void _queueAdd(Event_T E) {
 error:
         fclose(file);
         if (! rv) {
-                LogError("Aborting event - unable to save event information to %s\n",  file_name);
+                Log_error("Aborting event - unable to save event information to %s\n",  file_name);
                 if (unlink(file_name) < 0)
-                        LogError("Failed to remove event file '%s' -- %s\n", file_name, STRERROR);
+                        Log_error("Failed to remove event file '%s' -- %s\n", file_name, STRERROR);
         } else {
                 if (! (Run.flags & Run_HandlerInit) && E->flag & Handler_Alert)
                         Run.handler_queue[Handler_Alert]++;
@@ -251,7 +251,7 @@ static void _queueUpdate(Event_T E, const char *file_name) {
         ASSERT(E->flag != Handler_Succeeded);
 
         if (! file_checkQueueDirectory(Run.eventlist_dir)) {
-                LogError("Aborting event - cannot access the event queue directory %s\n", Run.eventlist_dir);
+                Log_error("Aborting event - cannot access the event queue directory %s\n", Run.eventlist_dir);
                 return;
         }
 
@@ -259,7 +259,7 @@ static void _queueUpdate(Event_T E, const char *file_name) {
 
         FILE *file = fopen(file_name, "w");
         if (! file) {
-                LogError("Aborting event - cannot open the event file %s -- %s\n", file_name, STRERROR);
+                Log_error("Aborting event - cannot open the event file %s -- %s\n", file_name, STRERROR);
                 return;
         }
 
@@ -286,9 +286,9 @@ static void _queueUpdate(Event_T E, const char *file_name) {
 error:
         fclose(file);
         if (! rv) {
-                LogError("Aborting event - unable to update event information in '%s'\n", file_name);
+                Log_error("Aborting event - unable to update event information in '%s'\n", file_name);
                 if (unlink(file_name) < 0)
-                        LogError("Failed to remove event file '%s' -- %s\n", file_name, STRERROR);
+                        Log_error("Failed to remove event file '%s' -- %s\n", file_name, STRERROR);
         }
 }
 
@@ -308,14 +308,14 @@ static void _handleAction(Event_T E, Action_T A) {
                         if (Run.eventlist_dir)
                                 _queueAdd(E);
                         else
-                                LogError("Aborting event\n");
+                                Log_error("Aborting event\n");
                 }
                 /* Action event is handled already. For Instance events we don't want actions like stop to be executed to prevent the disabling of system service monitoring */
                 if (A->id == Action_Alert || E->id == Event_Instance) {
                         return;
                 } else if (A->id == Action_Exec) {
                         if (E->state_changed || (E->state && A->repeat && E->count % A->repeat == 0)) {
-                                LogInfo("'%s' exec: '%s'\n", E->source->name, Util_commandDescription(A->exec, (char[STRLEN]){}));
+                                Log_info("'%s' exec: '%s'\n", E->source->name, Util_commandDescription(A->exec, (char[STRLEN]){}));
                                 spawn(E->source, A->exec, E);
                                 return;
                         }
@@ -349,23 +349,23 @@ static void _handleEvent(Service_T S, Event_T E) {
         if (E->message) {
                 if (E->id == Event_Instance || E->id == Event_Action) {
                         // Instance and action events are logged always with priority info
-                        LogInfo("'%s' %s\n", S->name, E->message);
+                        Log_info("'%s' %s\n", S->name, E->message);
                 } else if (E->state == State_Succeeded || E->state == State_ChangedNot) {
                         if (E->state_map & 0x1) {
                                 // Failure, but didn't reach the error threshold yet
-                                LogWarning("'%s' %s\n", S->name, E->message);
+                                Log_warning("'%s' %s\n", S->name, E->message);
                         } else {
                                 // Success
-                                LogInfo("'%s' %s\n", S->name, E->message);
+                                Log_info("'%s' %s\n", S->name, E->message);
                         }
                 } else if (E->state == State_Init) {
                         if (E->state_map & 0x1) {
                                 // Log error which occur while the service is initializing as warnings, success is not logged in the initializing state
-                                LogWarning("'%s' %s\n", S->name, E->message);
+                                Log_warning("'%s' %s\n", S->name, E->message);
                         }
                         return;
                 } else {
-                        LogError("'%s' %s\n", S->name, E->message);
+                        Log_error("'%s' %s\n", S->name, E->message);
                 }
         }
 
@@ -511,7 +511,7 @@ Action_Type Event_get_action(Event_T E) {
                         A = E->action->failed;
                         break;
                 default:
-                        LogError("Invalid event state: %d\n", E->state);
+                        Log_error("Invalid event state: %d\n", E->state);
                         return Action_Ignored;
         }
         if (! A)
@@ -548,7 +548,7 @@ void Event_queue_process() {
         DIR *dir = opendir(Run.eventlist_dir);
         if (! dir) {
                 if (errno != ENOENT)
-                        LogError("Cannot open the directory %s -- %s\n", Run.eventlist_dir, STRERROR);
+                        Log_error("Cannot open the directory %s -- %s\n", Run.eventlist_dir, STRERROR);
                 return;
         }
 
@@ -577,7 +577,7 @@ void Event_queue_process() {
 
                         FILE *file = fopen(file_name, "r");
                         if (! file) {
-                                LogError("Queued event processing failed - cannot open the file '%s' -- %s\n", file_name, STRERROR);
+                                Log_error("Queued event processing failed - cannot open the file '%s' -- %s\n", file_name, STRERROR);
                                 goto error1;
                         }
 
@@ -590,11 +590,11 @@ void Event_queue_process() {
                                 goto error2;
                         }
                         if (size != sizeof(int)) {
-                                LogError("Aborting queued event %s - invalid size %lu\n", file_name, (unsigned long)size);
+                                Log_error("Aborting queued event %s - invalid size %lu\n", file_name, (unsigned long)size);
                                 goto error3;
                         }
                         if (*version != EVENT_VERSION) {
-                                LogError("Aborting queued event %s - incompatible data format version %d\n", file_name, *version);
+                                Log_error("Aborting queued event %s - incompatible data format version %d\n", file_name, *version);
                                 goto error3;
                         }
 
@@ -610,7 +610,7 @@ void Event_queue_process() {
                         if (! service)
                                 goto error4;
                         if (! (e->source = Util_getService(service))) {
-                                LogError("Aborting queued event '%s' - service %s not found in monit configuration\n", file_name, service);
+                                Log_error("Aborting queued event '%s' - service %s not found in monit configuration\n", file_name, service);
                                 FREE(service);
                                 goto error4;
                         }
@@ -638,7 +638,7 @@ void Event_queue_process() {
                                         ea->failed = a;
                                         break;
                                 default:
-                                        LogError("Aborting queue event %s -- invalid state: %d\n", file_name, e->state);
+                                        Log_error("Aborting queue event %s -- invalid state: %d\n", file_name, e->state);
                                         goto error6;
                         }
                         e->action = ea;
@@ -655,7 +655,7 @@ void Event_queue_process() {
                                                 Run.handler_queue[Handler_Alert]--;
                                                 handlers_passed++;
                                         } else {
-                                                LogError("Alert handler failed, retry scheduled for next cycle\n");
+                                                Log_error("Alert handler failed, retry scheduled for next cycle\n");
                                                 Run.handler_flag |= Handler_Alert;
                                         }
                                 }
@@ -671,7 +671,7 @@ void Event_queue_process() {
                                                 Run.handler_queue[Handler_Mmonit]--;
                                                 handlers_passed++;
                                         } else {
-                                                LogError("M/Monit handler failed, retry scheduled for next cycle\n");
+                                                Log_error("M/Monit handler failed, retry scheduled for next cycle\n");
                                                 Run.handler_flag |= Handler_Mmonit;
                                         }
                                 }
@@ -681,7 +681,7 @@ void Event_queue_process() {
                         if (e->flag == Handler_Succeeded) {
                                 DEBUG("Removing queued event %s\n", file_name);
                                 if (unlink(file_name) < 0)
-                                        LogError("Failed to remove queued event file '%s' -- %s\n", file_name, STRERROR);
+                                        Log_error("Failed to remove queued event file '%s' -- %s\n", file_name, STRERROR);
                         } else if (handlers_passed > 0) {
                                 DEBUG("Updating queued event %s (some handlers passed)\n", file_name);
                                 _queueUpdate(e, file_name);
