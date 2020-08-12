@@ -173,10 +173,10 @@ static void _log(int priority, const char *s, va_list ap) {
                         if (Run.flags & Run_UseSyslog) {
 #ifdef HAVE_VA_COPY
                                 va_copy(ap_copy, ap);
-                                Log_syslog(priority, s, ap_copy);
+                                vsyslog(priority, s, ap_copy);
                                 va_end(ap_copy);
 #else
-                                Log_syslog(priority, s, ap);
+                                vsyslog(priority, s, ap);
 #endif
                         } else if (_LOG) {
                                 fprintf(_LOG, "[%s] %-8s : ", Time_fmt((char[STRLEN]){}, STRLEN, TIMEFORMAT, Time_now()), _priorityDescription(priority));
@@ -212,6 +212,20 @@ static void _backtrace(void) {
         }
 #endif
 }
+
+
+/* ------------------------------------------------------------------------- */
+
+
+#ifndef HAVE_VSYSLOG
+#ifdef HAVE_SYSLOG
+void vsyslog(int facility_priority, const char *format, va_list arglist) {
+        char msg[STRLEN+1];
+        vsnprintf(msg, STRLEN, format, arglist);
+        syslog(facility_priority, "%s", msg);
+}
+#endif /* HAVE_SYSLOG */
+#endif /* HAVE_VSYSLOG */
 
 
 /* ------------------------------------------------------------------ Public */
@@ -488,15 +502,3 @@ void Log_close() {
         }
         _LOG = NULL;
 }
-
-
-#ifndef HAVE_log_syslog
-#ifdef HAVE_SYSLOG
-void Log_syslog(int facility_priority, const char *format, va_list arglist) {
-        char msg[STRLEN+1];
-        vsnprintf(msg, STRLEN, format, arglist);
-        syslog(facility_priority, "%s", msg);
-}
-#endif /* HAVE_SYSLOG */
-#endif /* HAVE_log_syslog */
-

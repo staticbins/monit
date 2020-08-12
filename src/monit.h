@@ -1407,11 +1407,6 @@ void Log_vinfo(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
 void Log_vdebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
 void Log_abort_handler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
 void Log_close(void);
-#ifndef HAVE_log_syslog
-#ifdef HAVE_SYSLOG
-void Log_syslog (int, const char *, va_list);
-#endif /* HAVE_SYSLOG */
-#endif /* HAVE_log_syslog */
 int   validate(void);
 void  daemonize(void);
 void  gc(void);
