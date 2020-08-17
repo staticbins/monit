@@ -121,6 +121,7 @@ void monit_http(Httpd_Action action) {
                                 Log_debug("Starting Monit HTTP server at [%s]:%d\n", Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "*", Run.httpd.socket.net.port);
                         if (Run.httpd.flags & Httpd_Unix)
                                 Log_debug("Starting Monit HTTP server at %s\n", Run.httpd.socket.unix.path);
+                        Engine_setStopped(false);
                         Thread_create(thread, thread_wrapper, NULL);
                         Log_debug("Monit HTTP server started\n");
                         running = true;

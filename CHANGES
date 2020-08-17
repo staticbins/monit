@@ -15,6 +15,8 @@ every cycle even if no filedescriptors test was set in monit configuration.
 
 Fixed: Issue #926: Linux: The process-match based check had extra trailing space.
 
+Fixed: Issue #928: Fixed race condition in HTTP interface reload on fast consecutive SIGHUP. Thanks to Andy Spitzer for patch.
+
 New: Changed log file timestamp format to ISO 8601
 
 

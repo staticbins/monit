@@ -34,6 +34,12 @@ void Engine_start(void);
 
 
 /**
+ * Set the stopped flag
+ */
+void Engine_setStopped(bool stop);
+
+
+/**
  * Stop the HTTPD server.
  */
 void Engine_stop(void);

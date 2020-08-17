@@ -483,8 +483,10 @@ error:
 
 
 void Engine_start() {
+        if (Run.flags & Run_Stopped) {
+                return;
+        }
         Engine_cleanup();
-        stopped = (Run.flags & Run_Stopped) != 0;
         init_service();
         char error[MAX_SERVER_SOCKETS][STRLEN] = {};
         if (Run.httpd.flags & Httpd_Net) {
@@ -517,8 +519,13 @@ void Engine_start() {
 }
 
 
+void Engine_setStopped(bool stop) {
+        stopped = stop;
+}
+
+
 void Engine_stop() {
-        stopped = true;
+        Engine_setStopped(true);
 }
 
 
