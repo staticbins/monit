@@ -154,40 +154,25 @@ static const char *_priorityDescription(int p) {
 __attribute__((format (printf, 2, 0)))
 static void _log(int priority, const char *s, va_list ap) {
         ASSERT(s);
-#ifdef HAVE_VA_COPY
         va_list ap_copy;
-#endif
         LOCK(_mutex)
         {
 
                 FILE *output = priority < LOG_INFO ? stderr : stdout;
-#ifdef HAVE_VA_COPY
                 va_copy(ap_copy, ap);
                 vfprintf(output, s, ap_copy);
                 va_end(ap_copy);
-#else
-                vfprintf(output, s, ap);
-#endif
                 fflush(output);
                 if (Run.flags & Run_Log) {
                         if (Run.flags & Run_UseSyslog) {
-#ifdef HAVE_VA_COPY
                                 va_copy(ap_copy, ap);
                                 vsyslog(priority, s, ap_copy);
                                 va_end(ap_copy);
-#else
-                                vsyslog(priority, s, ap);
-#endif
                         } else if (_LOG) {
                                 fprintf(_LOG, "[%s] %-8s : ", Time_fmt((char[STRLEN]){}, STRLEN, TIMEFORMAT, Time_now()), _priorityDescription(priority));
-#ifdef HAVE_VA_COPY
                                 va_copy(ap_copy, ap);
                                 vfprintf(_LOG, s, ap_copy);
                                 va_end(ap_copy);
-#else
-                                vfprintf(_LOG, s, ap);
-#endif
-
                         }
                 }
         }

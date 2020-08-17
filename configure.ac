@@ -60,7 +60,7 @@ fi
 # ------------------------------------------------------------------------
 
 AC_DISABLE_STATIC
-AC_PROG_LIBTOOL
+LT_INIT
 
 
 # ------------------------------------------------------------------------
@@ -368,7 +368,6 @@ AC_TYPE_MODE_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_PID_T
-AC_TYPE_SIGNAL
 
 # Check for structures.
 AC_STRUCT_TM
@@ -393,20 +392,6 @@ AC_CHECK_FUNCS(vsyslog)
 AC_CHECK_FUNCS(backtrace)
 AC_CHECK_FUNCS(getloadavg)
 AC_CHECK_FUNCS(getopt_long)
-
-AC_MSG_CHECKING(for va_copy)
-AC_TRY_LINK([
-	#include <stdarg.h>
-], [
-	va_list ap;
-	va_list ap_copy;
-	va_copy(ap, ap_copy);
-], [
-	AC_MSG_RESULT(yes)
-	AC_DEFINE([HAVE_VA_COPY], [1], [Define to 1 if VA_COPY is defined.])
-], [
-	AC_MSG_RESULT(no)
-])
 
 
 # ------------------------------------------------------------------------
@@ -433,17 +418,7 @@ CFLAGS="-Wno-address $CFLAGS"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
 
 # Require at least C99 and use C11 if available
-AC_RUN_IFELSE(
-[AC_LANG_PROGRAM([], [dnl
-        #ifdef __STDC_VERSION__
-        #if __STDC_VERSION__ >= 201112L
-        return 0;
-        #endif
-        #endif
-        return 1;
-        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"],
-        [AC_MSG_NOTICE([WARNING: result CFLAGS -std=c11 guessed because of cross compilation])
-        CFLAGS="$CFLAGS -std=c11"])
+AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"], [AX_CHECK_COMPILE_FLAG([-std=c99], [CFLAGS="$CFLAGS -std=c99"], [AC_MSG_ERROR([compiler does neither have C99 nor C11 support])])])
 AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
 
 
@@ -452,7 +427,7 @@ AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not hav
 # ------------------------------------------------------------------------
 
 AC_ARG_WITH(ipv6,
-    AS_HELP_STRING([--without-ipv6], [Disable the IPv6 support (default: enabled)]),
+    AS_HELP_STRING([--without-ipv6], [Disable the IPv6 support (default: check)]),
     [
         if test "x$withval" = "xno"
         then
@@ -460,19 +435,15 @@ AC_ARG_WITH(ipv6,
         elif test "x$withval" = "xyes"
         then
             with_ipv6=1
+            AC_DEFINE([HAVE_IPV6], 1, [Define to 1 if the system supports IPv6])
         fi
     ],
     [
-        # Note inverse test. On by default
-        with_ipv6=1
-    ]
-)
-
-if test $with_ipv6 -eq 1
-then
+        # Note inverse test. Check by default
         AC_MSG_CHECKING(for IPv6 support)
         AC_CACHE_VAL(ac_cv_ipv6,
-                AC_TRY_RUN([
+                AC_RUN_IFELSE([
+                AC_LANG_SOURCE([[
                 #include <sys/types.h>
                 #include <sys/socket.h>
                 #include <netinet/in.h>
@@ -484,19 +455,22 @@ then
                         struct sockaddr_in6 foo;
                         fd = socket(AF_INET6, SOCK_STREAM, 0);
                         exit(fd >= 0 ? 0 : 1);
-                }],
-                ac_cv_ipv6=yes,
-                ac_cv_ipv6=no,
-                ac_cv_ipv6=no))
+                }]])],
+                [ac_cv_ipv6=yes],
+                [ac_cv_ipv6=no],
+                [ac_cv_ipv6=no])
+        )
         AC_MSG_RESULT($ac_cv_ipv6)
 
         if test $ac_cv_ipv6 = yes
         then
+                with_ipv6=1
                 AC_DEFINE([HAVE_IPV6], 1, [Define to 1 if the system supports IPv6])
         else
                 with_ipv6=0
         fi
-fi
+    ]
+)
 
 
 # ------------------------------------------------------------------------
@@ -934,8 +908,8 @@ then
                                    $maindir/lib64/openssl \
                                    $maindir/lib64/ssl \
                                    $maindir/ssl/lib64 \
-                                   $maindir/lib/${build} \
-                                   $maindir/lib/${build_alias}; do
+                                   $maindir/lib/${host} \
+                                   $maindir/lib/${host_alias}; do
                             checkssllibdirdynamic $dir && break 2
                         done
                     done

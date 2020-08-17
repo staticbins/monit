@@ -25,7 +25,7 @@ fi
 # Libtool 
 # ---------------------------------------------------------------------------
 
-AC_PROG_LIBTOOL
+LT_INIT
 
 # ------------------------------------------------------------------------
 # AddressSanitizer
@@ -228,25 +228,10 @@ AC_CHECK_TYPES([uchar_t])
 # ------------------------------------------------------------------------
 
 # Require a working setjmp
-AC_CACHE_CHECK([setjmp is available],
-               [libmonit_cv_setjmp_available],
-               [AC_RUN_IFELSE([AC_LANG_PROGRAM(
-                       [[#include <setjmp.h>]],
-                       [[jmp_buf env; setjmp(env);]])],
-                       [AC_MSG_RESULT(yes)],
-                       [AC_MSG_FAILURE([setjmp is required])],
-                       [AC_MSG_ERROR(cross-compiling: please set 'libmonit_cv_setjmp_available=[yes|no]')])])
+AC_CHECK_DECLS([setjmp], [], [AC_MSG_FAILURE([setjmp is required])], [[#include <setjmp.h>]])
 
 # Require that we have vsnprintf that conforms to c99. I.e. does bounds check
-AC_CACHE_CHECK([vsnprintf is c99 conformant],
-               [libmonit_cv_vsnprintf_c99_conformant],
-               [AC_RUN_IFELSE([AC_LANG_PROGRAM(
-                        [[#include <stdarg.h>
-                          #include <stdio.h>]],
-                        [[char t[1]; va_list ap; int n = vsnprintf(t, 1, "hello", ap); if(n == 5) return 0;return 1;]])],
-                        [AC_MSG_RESULT(yes)],
-                        [AC_MSG_FAILURE([vsnprintf does not conform to c99])],
-                        [AC_MSG_ERROR(cross-compiling: please set 'libmonit_cv_vsnprintf_c99_conformant=[yes|no]')])])
+AC_CHECK_FUNC([vsnprintf], [], [AC_MSG_FAILURE([vsnprintf is required])])
 
 AC_CHECK_FUNCS([timegm getgrouplist getrandom arc4random_buf])
 
@@ -328,45 +313,58 @@ CFLAGS="-Wno-address $CFLAGS"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
 
 # Require at least C99 and use C11 if available
-AC_RUN_IFELSE(
-[AC_LANG_PROGRAM([], [dnl
-        #ifdef __STDC_VERSION__
-        #if __STDC_VERSION__ >= 201112L
-        return 0;
-        #endif
-        #endif
-        return 1;
-        ])], [CFLAGS="$CFLAGS -std=c11"], [CFLAGS="$CFLAGS -std=c99"],
-        [AC_MSG_NOTICE([WARNING: result CFLAGS -std=c11 guessed because of cross compilation])
-        CFLAGS="$CFLAGS -std=c11"])
+AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"], [AX_CHECK_COMPILE_FLAG([-std=c99], [CFLAGS="$CFLAGS -std=c99"], [AC_MSG_ERROR([compiler does neither have C99 nor C11 support])])])
 AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
 
 # ------------------------------------------------------------------------
 # IPv6 Support
 # ------------------------------------------------------------------------
 
-AC_MSG_CHECKING(for IPv6 support)
-AC_CACHE_VAL(ac_cv_ipv6,
-	AC_TRY_RUN([
-	#include <sys/types.h>
-	#include <sys/socket.h>
-	#include <netinet/in.h>
-	/* Make sure the definitions for AF_INET6 and struct sockaddr_in6
-	 * are defined, and that we can actually create an IPv6 TCP socket.*/
-	main()
-	{
-		int fd;
-		struct sockaddr_in6 foo;
-		fd = socket(AF_INET6, SOCK_STREAM, 0);
-		exit(fd >= 0 ? 0 : 1);
-	}],
-	ac_cv_ipv6=yes,
-	ac_cv_ipv6=no,
-	ac_cv_ipv6=no))
-AC_MSG_RESULT($ac_cv_ipv6)
-if test $ac_cv_ipv6 = yes ; then
-	AC_DEFINE([IPV6], 1, [Define to 1 if the system supports IPv6])
-fi
+AC_ARG_WITH(ipv6,
+    AS_HELP_STRING([--without-ipv6], [Disable the IPv6 support (default: check)]),
+    [
+        if test "x$withval" = "xno"
+        then
+            with_ipv6=0
+        elif test "x$withval" = "xyes"
+        then
+            with_ipv6=1
+            AC_DEFINE([HAVE_IPV6], 1, [Define to 1 if the system supports IPv6])
+        fi
+    ],
+    [
+        # Note inverse test. Check by default
+        AC_MSG_CHECKING(for IPv6 support)
+        AC_CACHE_VAL(ac_cv_ipv6,
+                AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                #include <sys/types.h>
+                #include <sys/socket.h>
+                #include <netinet/in.h>
+                /* Make sure the definitions for AF_INET6 and struct sockaddr_in6
+                 * are defined, and that we can actually create an IPv6 TCP socket.*/
+                main()
+                {
+                        int fd;
+                        struct sockaddr_in6 foo;
+                        fd = socket(AF_INET6, SOCK_STREAM, 0);
+                        exit(fd >= 0 ? 0 : 1);
+                }]])],
+                [ac_cv_ipv6=yes],
+                [ac_cv_ipv6=no],
+                [ac_cv_ipv6=no])
+        )
+        AC_MSG_RESULT($ac_cv_ipv6)
+
+        if test $ac_cv_ipv6 = yes
+        then
+                with_ipv6=1
+                AC_DEFINE([HAVE_IPV6], 1, [Define to 1 if the system supports IPv6])
+        else
+                with_ipv6=0
+        fi
+    ]
+)
+
 
 # ---------------------------------------------------------------------------
 # Outputs

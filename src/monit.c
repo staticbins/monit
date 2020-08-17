@@ -117,9 +117,9 @@ static void  handle_options(int, char **, List_T); /* Handle program options */
 static void  help(void);             /* Print program help message to stdout */
 static void  version(void);                     /* Print version information */
 static void *heartbeat(void *args);              /* M/Monit heartbeat thread */
-static RETSIGTYPE do_reload(int);       /* Signalhandler for a daemon reload */
-static RETSIGTYPE do_destroy(int);   /* Signalhandler for monit finalization */
-static RETSIGTYPE do_wakeup(int);  /* Signalhandler for a daemon wakeup call */
+static void do_reload(int);             /* Signalhandler for a daemon reload */
+static void do_destroy(int);         /* Signalhandler for monit finalization */
+static void do_wakeup(int);        /* Signalhandler for a daemon wakeup call */
 static void waitforchildren(void); /* Wait for any child process not running */
 
 
@@ -909,7 +909,7 @@ static void *heartbeat(__attribute__ ((unused)) void *args) {
 /**
  * Signalhandler for a daemon reload call
  */
-static RETSIGTYPE do_reload(__attribute__ ((unused)) int sig) {
+static void do_reload(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoReload;
 }
 
@@ -917,7 +917,7 @@ static RETSIGTYPE do_reload(__attribute__ ((unused)) int sig) {
 /**
  * Signalhandler for monit finalization
  */
-static RETSIGTYPE do_destroy(__attribute__ ((unused)) int sig) {
+static void do_destroy(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_Stopped;
 }
 
@@ -925,7 +925,7 @@ static RETSIGTYPE do_destroy(__attribute__ ((unused)) int sig) {
 /**
  * Signalhandler for a daemon wakeup call
  */
-static RETSIGTYPE do_wakeup(__attribute__ ((unused)) int sig) {
+static void do_wakeup(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoWakeup;
 }
 
