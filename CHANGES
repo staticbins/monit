@@ -1,8 +1,8 @@
-                     CHANGES version 5.28.0
+                     CHANGES version 5.27.1
 
            This file summarizes changes made since 5.0
 
-Version 5.28.0
+Version 5.27.1
 
 Fixed: Issue #916: Linux: If monit 5.27.0 runs as non-root user, the promatch fails to find processes that belong to
 other users and some statistics, such as memory usage, can show 0. Thanks to Lutz Mader for fix.
@@ -19,7 +19,7 @@ Fixed: Issue #928: Fixed race condition in HTTP interface reload on fast consecu
 
 Fixed: Improve the cross-compilation support. Thanks to Christian Goettsche and Helmut Grohne for patch.
 
-New: Changed log file timestamp format to ISO 8601
+Changed: log file timestamp now uses ISO 8601 format
 
 
 Version 5.27.0
