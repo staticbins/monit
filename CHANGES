@@ -19,6 +19,8 @@ Fixed: Issue #928: Fixed race condition in HTTP interface reload on fast consecu
 
 Fixed: Improve the cross-compilation support. Thanks to Christian Goettsche and Helmut Grohne for patch.
 
+Fixed: Monit may crash when sending heartbeat to M/Monit.
+
 Changed: log file timestamp now uses ISO 8601 format
 
 
