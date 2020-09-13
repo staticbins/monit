@@ -51,6 +51,7 @@
 
 // libmonit
 #include "util/List.h"
+#include "system/Time.h"
 
 #include "monit.h"
 #include "event.h"

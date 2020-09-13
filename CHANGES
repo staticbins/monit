@@ -21,6 +21,9 @@ Fixed: Improve the cross-compilation support. Thanks to Christian Goettsche and 
 
 Fixed: Monit may crash when sending heartbeat to M/Monit.
 
+Fixed: If the certificate verification failed and valid days test is enabled, monit may report following false positive error:
+        certificate expiry in 0 days matches check limit
+
 Changed: log file timestamp now uses ISO 8601 format
 
 
