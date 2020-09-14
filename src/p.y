@@ -1331,16 +1331,12 @@ checkfifo       : CHECKFIFO SERVICENAME PATHTOK PATH {
                 ;
 
 checkprogram    : CHECKPROGRAM SERVICENAME PATHTOK argumentlist programtimeout {
-                        command_t c = command; // Current command
-                        check_exec(c->arg[0]);
                         createservice(Service_Program, $<string>2, NULL, check_program);
                         current->program->timeout = $<number>5;
                         current->program->lastOutput = StringBuffer_create(64);
                         current->program->inprogressOutput = StringBuffer_create(64);
                  }
                 | CHECKPROGRAM SERVICENAME PATHTOK argumentlist useroptionlist programtimeout {
-                        command_t c = command; // Current command
-                        check_exec(c->arg[0]);
                         createservice(Service_Program, $<string>2, NULL, check_program);
                         current->program->timeout = $<number>6;
                         current->program->lastOutput = StringBuffer_create(64);
@@ -3450,21 +3446,23 @@ static void addservice(Service_T s) {
                                 Log_error("'check program %s' is incomplete: Please add an 'if status != n' test\n", s->name);
                                 cfg_errflag++;
                         }
-                        // Create the Command object
                         char program[PATH_MAX];
                         strncpy(program, s->program->args->arg[0], sizeof(program) - 1);
-                        s->program->C = Command_new(program, NULL);
-                        for (int i = 1; i < s->program->args->length; i++) {
-                                Command_appendArgument(s->program->C, s->program->args->arg[i]);
-                                snprintf(program + strlen(program), sizeof(program) - strlen(program) - 1, " %s", s->program->args->arg[i]);
+                        // Require that the program exist before creating the Command object
+                        if (File_isExecutable(program)) {
+                                s->program->C = Command_new(program, NULL);
+                                for (int i = 1; i < s->program->args->length; i++) {
+                                        Command_appendArgument(s->program->C, s->program->args->arg[i]);
+                                        snprintf(program + strlen(program), sizeof(program) - strlen(program) - 1, " %s", s->program->args->arg[i]);
+                                }
+                                s->path = Str_dup(program);
+                                if (s->program->args->has_uid)
+                                        Command_setUid(s->program->C, s->program->args->uid);
+                                if (s->program->args->has_gid)
+                                        Command_setGid(s->program->C, s->program->args->gid);
+                                // Set environment
+                                Command_setEnv(s->program->C, "MONIT_SERVICE", s->name);
                         }
-                        s->path = Str_dup(program);
-                        if (s->program->args->has_uid)
-                                Command_setUid(s->program->C, s->program->args->uid);
-                        if (s->program->args->has_gid)
-                                Command_setGid(s->program->C, s->program->args->gid);
-                        // Set environment
-                        Command_setEnv(s->program->C, "MONIT_SERVICE", s->name);
                         break;
                 case Service_Net:
                         if (! s->linkstatuslist) {
@@ -5077,13 +5075,13 @@ static void check_depend() {
 
 
 /*
- * Check if the executable exist
+ * Check and require that the executable exist
  */
 static void check_exec(char *exec) {
         if (! File_exist(exec))
-                yywarning2("Program does not exist:");
+                yyerror2("Program does not exist:");
         else if (! File_isExecutable(exec))
-                yywarning2("Program is not executable:");
+                yyerror2("Program is not executable:");
 }
 
 

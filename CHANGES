@@ -4,6 +4,10 @@
 
 Version 5.28.0
 
+Fixed: Issue #932. AssertException in "check program" if program does not exist. At the same
+time this fix also require that executables mentioned in start/stop/restart/exec and check
+program exist in the file system. Previously this only generated a warning.
+
 Fixed: Issue #916: Linux: If monit 5.27.0 runs as non-root user, the promatch fails to find processes that belong to
 other users and some statistics, such as memory usage, can show 0. Thanks to Lutz Mader for fix.
 
