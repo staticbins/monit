@@ -1,8 +1,8 @@
-                     CHANGES version 5.28.0
+                     CHANGES version 5.27.1
 
            This file summarizes changes made since 5.0
 
-Version 5.28.0
+Version 5.27.1
 
 Fixed: Issue #932. AssertException in "check program" if program does not exist. At the same
 time this fix also require that executables mentioned in start/stop/restart/exec and check
@@ -23,7 +23,12 @@ Fixed: Issue #928: Fixed race condition in HTTP interface reload on fast consecu
 
 Fixed: Improve the cross-compilation support. Thanks to Christian Goettsche and Helmut Grohne for patch.
 
-New: Changed log file timestamp format to ISO 8601
+Fixed: Monit may crash when sending heartbeat to M/Monit.
+
+Fixed: If the certificate verification failed and valid days test is enabled, monit may report following false positive error:
+        certificate expiry in 0 days matches check limit
+
+Changed: log file timestamp now uses ISO 8601 format
 
 
 Version 5.27.0

@@ -226,7 +226,7 @@ static bool _doConnect(int s, const struct sockaddr *addr, socklen_t addrlen, in
 }
 
 
-static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrlen, const struct sockaddr *localaddr, socklen_t localaddrlen, int family, int type, int protocol, SslOptions_T options, int timeout) {
+static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrlen, const struct sockaddr *localaddr, socklen_t localaddrlen, int family, int type, int protocol, int timeout) {
         ASSERT(host);
         char error[STRLEN];
         int s = socket(family, type, protocol);
@@ -249,18 +249,6 @@ static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_
                                         S->host = Str_dup(host);
                                         S->port = _getPort(addr);
                                         S->connection_type = Connection_Client;
-                                        if (options->flags == SSL_Enabled) {
-                                                TRY
-                                                {
-                                                        Socket_enableSsl(S, options, host);
-                                                }
-                                                ELSE
-                                                {
-                                                        Socket_free(&S);
-                                                        RETHROW;
-                                                }
-                                                END_TRY;
-                                        }
                                         return S;
                                 }
                         } else {
@@ -335,10 +323,14 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
                 for (struct addrinfo *r = result; r && S == NULL; r = r->ai_next) {
                         TRY
                         {
-                                S = _createIpSocket(host, r->ai_addr, r->ai_addrlen, NULL, 0, r->ai_family, r->ai_socktype, r->ai_protocol, options, timeout);
+                                S = _createIpSocket(host, r->ai_addr, r->ai_addrlen, NULL, 0, r->ai_family, r->ai_socktype, r->ai_protocol, timeout);
+                                if (options->flags == SSL_Enabled)
+                                        Socket_enableSsl(S, options, host);
                         }
                         ELSE
                         {
+                                if (S)
+                                        Socket_free((T *)&S);
                                 DEBUG("Info: Cannot connect to [%s]:%d -- %s\nTrying next address record\n", host, port, Exception_frame.message);
                                 snprintf(error, sizeof(error), "%s", Exception_frame.message);
                         }
@@ -587,18 +579,22 @@ static void _testIp(Port_T p) {
                                 volatile T S = NULL;
                                 TRY
                                 {
-                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, p->outgoing.addrlen ? (struct sockaddr *)&(p->outgoing.addr) : NULL, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, &(p->target.net.ssl.options), p->timeout);
+                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, p->outgoing.addrlen ? (struct sockaddr *)&(p->outgoing.addr) : NULL, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, p->timeout);
                                         S->Port = p;
                                         TRY
                                         {
+                                                if (p->target.net.ssl.options.flags == SSL_Enabled) {
+                                                        Socket_enableSsl(S, &(p->target.net.ssl.options), p->hostname);
+                                                }
                                                 p->protocol->check(S);
                                         }
                                         FINALLY
                                         {
-#ifdef HAVE_OPENSSL
                                                 // Set the minimum valid days past the protocol check as if the connection uses STARTTLS to switch plain->SSL, we have no SSL certificate information until the STARTTTLS is performed.
                                                 // Try to collect the certificate validDays even on protocol exception - the protocol test may fail on higher level (e.g. when HTTP returns 400), but we can still get certificate info
-                                                p->target.net.ssl.certificate.validDays = Ssl_getCertificateValidDays(S->ssl);
+#ifdef HAVE_OPENSSL
+                                                if (S->ssl)
+                                                        p->target.net.ssl.certificate.validDays = Ssl_getCertificateValidDays(S->ssl);
 #endif
                                         }
                                         END_TRY;
