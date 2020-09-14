@@ -3462,6 +3462,9 @@ static void addservice(Service_T s) {
                                         Command_setGid(s->program->C, s->program->args->gid);
                                 // Set environment
                                 Command_setEnv(s->program->C, "MONIT_SERVICE", s->name);
+                        } else {
+                                // If we have a check program with a non-existing program, assert that yyerror have been called during parsing
+                                ASSERT(cfg_errflag > 0);
                         }
                         break;
                 case Service_Net:
