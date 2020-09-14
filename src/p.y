@@ -3463,7 +3463,7 @@ static void addservice(Service_T s) {
                                 // Set environment
                                 Command_setEnv(s->program->C, "MONIT_SERVICE", s->name);
                         } else {
-                                // If we have a check program with a non-existing program, assert that yyerror have been called during parsing
+                                // If we have a check program with a non-existing or non-executable program, assert that yyerror was called during parsing
                                 ASSERT(cfg_errflag > 0);
                         }
                         break;
