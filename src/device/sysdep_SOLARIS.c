@@ -142,7 +142,7 @@ static bool _getKstatDiskActivity(void *_inf) {
                         if (kstat->ks_type == KSTAT_TYPE_IO && kstat->ks_instance == inf->filesystem->object.instance && IS(kstat->ks_module, inf->filesystem->object.module) && IS(kstat->ks_name, inf->filesystem->object.key)) {
                                 static kstat_io_t kio;
                                 if (kstat_read(kctl, kstat, &kio) == -1) {
-                                        LogError("filesystem statistics error: kstat_read failed -- %s\n", STRERROR);
+                                        Log_error("filesystem statistics error: kstat_read failed -- %s\n", STRERROR);
                                 } else {
                                         unsigned long long now = Time_milli();
                                         Statistics_update(&(inf->filesystem->read.bytes), now, kio.nread);
@@ -165,7 +165,7 @@ static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
         if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
+                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
                 return false;
         }
         int size = usage.f_frsize ? (usage.f_bsize / usage.f_frsize) : 1;
@@ -193,7 +193,7 @@ static bool _compareDevice(const char *device, struct extmnttab *mnt) {
 static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct extmnttab *mnt)) {
         FILE *f = fopen(MNTTAB, "r");
         if (! f) {
-                LogError("Cannot open %s\n", MNTTAB);
+                Log_error("Cannot open %s\n", MNTTAB);
                 return false;
         }
         resetmnttab(f);
@@ -229,9 +229,9 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                                 if (! realpath(mnt.mnt_special, special)) {
                                         // If the file doesn't exist it's a virtual filesystem -> ENOENT doesn't mean error
                                         if (errno != ENOENT && errno != ENOTDIR)
-                                                LogError("Lookup for '%s' filesystem failed -- %s\n", path, STRERROR);
+                                                Log_error("Lookup for '%s' filesystem failed -- %s\n", path, STRERROR);
                                 } else if (! Str_startsWith(special, "/devices/")) {
-                                        LogError("Lookup for '%s' filesystem -- invalid device %s\n", path, special);
+                                        Log_error("Lookup for '%s' filesystem -- invalid device %s\n", path, special);
                                 } else {
                                         // Strip "/devices" prefix and :X partition postfix: /devices/pci@0,0/pci15ad,1976@10/sd@0,0:a -> /pci@0,0/pci15ad,1976@10/sd@0,0
                                         int speclen = strlen(special);
@@ -243,7 +243,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                                         char line[PATH_MAX] = {};
                                         FILE *pti = fopen(PATHTOINST, "r");
                                         if (! pti) {
-                                                LogError("Cannot open %s\n", PATHTOINST);
+                                                Log_error("Cannot open %s\n", PATHTOINST);
                                         } else {
                                                 while (fgets(line, sizeof(line), pti)) {
                                                         char path[1024] = {};
@@ -274,7 +274,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                         return rv;
                 }
         }
-        LogError("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MNTTAB);
+        Log_error("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MNTTAB);
         fclose(f);
         inf->filesystem->object.mounted = false;
         return false;

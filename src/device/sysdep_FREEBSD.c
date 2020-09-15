@@ -122,12 +122,12 @@ static bool _parseDevice(const char *path, Device_T device) {
                 // Get the disk map
                 size_t len = 0;
                 if (sysctlbyname("kern.geom.conftxt", NULL, &len, NULL, 0)) {
-                        LogError("system statistics error -- cannot get kern.geom.conftxt size");
+                        Log_error("system statistics error -- cannot get kern.geom.conftxt size");
                         return false;
                 }
                 char buf[len + 1];
                 if (sysctlbyname("kern.geom.conftxt", buf, &len, NULL, 0)) {
-                        LogError("system statistics error -- cannot get kern.geom.conftxt");
+                        Log_error("system statistics error -- cannot get kern.geom.conftxt");
                         return false;
                 }
                 buf[len] = 0;
@@ -161,7 +161,7 @@ static bool _parseDevice(const char *path, Device_T device) {
                         }
                 }
         }
-        LogError("filesystem statistics error -- cannot parse device '%s'\n", path);
+        Log_error("filesystem statistics error -- cannot parse device '%s'\n", path);
         return false;
 }
 
@@ -170,7 +170,7 @@ static bool _getStatistics(unsigned long long now) {
         // Refresh only if the statistics are older then 1 second (handle also backward time jumps)
         if (now > _statistics.timestamp + 1000 || now < _statistics.timestamp - 1000) {
                 if (devstat_getdevs(NULL, &(_statistics.disk)) == -1) {
-                        LogError("filesystem statistics error -- devstat_getdevs: %s\n", devstat_errbuf);
+                        Log_error("filesystem statistics error -- devstat_getdevs: %s\n", devstat_errbuf);
                         return false;
                 }
                 _statistics.timestamp = now;
@@ -210,7 +210,7 @@ static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statfs usage;
         if (statfs(inf->filesystem->object.mountpoint, &usage) != 0) {
-                LogError("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
+                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
                 return false;
         }
         inf->filesystem->f_bsize = usage.f_bsize;
@@ -320,7 +320,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                 }
                 FREE(mnt);
         }
-        LogError("Lookup for '%s' filesystem failed\n", path);
+        Log_error("Lookup for '%s' filesystem failed\n", path);
 error:
         inf->filesystem->object.mounted = false;
         return false;

@@ -1342,29 +1342,29 @@ char *Util_monitId(char *idfile) {
                 // Generate the unique id
                 file = fopen(idfile, "w");
                 if (! file) {
-                        LogError("Error opening the idfile '%s' -- %s\n", idfile, STRERROR);
+                        Log_error("Error opening the idfile '%s' -- %s\n", idfile, STRERROR);
                         return NULL;
                 }
                 fprintf(file, "%s", Util_getToken(Run.id));
-                LogInfo(" New Monit id: %s\n Stored in '%s'\n", Run.id, idfile);
+                Log_info(" New Monit id: %s\n Stored in '%s'\n", Run.id, idfile);
         } else {
                 if (! File_isFile(idfile)) {
-                        LogError("idfile '%s' is not a regular file\n", idfile);
+                        Log_error("idfile '%s' is not a regular file\n", idfile);
                         return NULL;
                 }
                 if ((file = fopen(idfile,"r")) == (FILE *)NULL) {
-                        LogError("Error opening the idfile '%s' -- %s\n", idfile, STRERROR);
+                        Log_error("Error opening the idfile '%s' -- %s\n", idfile, STRERROR);
                         return NULL;
                 }
                 if (fscanf(file, "%64s", Run.id) != 1) {
-                        LogError("Error reading id from file '%s'\n", idfile);
+                        Log_error("Error reading id from file '%s'\n", idfile);
                         if (fclose(file))
-                                LogError("Error closing file '%s' -- %s\n", idfile, STRERROR);
+                                Log_error("Error closing file '%s' -- %s\n", idfile, STRERROR);
                         return NULL;
                 }
         }
         if (fclose(file))
-                LogError("Error closing file '%s' -- %s\n", idfile, STRERROR);
+                Log_error("Error closing file '%s' -- %s\n", idfile, STRERROR);
 
         return Run.id;
 }
@@ -1467,7 +1467,7 @@ char *Util_getBasicAuthHeader(char *username, char *password) {
 
         snprintf(buf, STRLEN, "%s:%s", username, password ? password : "");
         if (! (b64 = encode_base64(strlen(buf), (unsigned char *)buf)) ) {
-                LogError("Failed to base64 encode authentication header\n");
+                Log_error("Failed to base64 encode authentication header\n");
                 return NULL;
         }
         auth = CALLOC(sizeof(char), STRLEN + 1);
@@ -1480,7 +1480,7 @@ char *Util_getBasicAuthHeader(char *username, char *password) {
 void Util_redirectStdFds() {
         for (int i = 0; i < 3; i++) {
                 if (close(i) == -1 || open("/dev/null", O_RDWR) != i) {
-                        LogError("Cannot reopen standard file descriptor (%d) -- %s\n", i, STRERROR);
+                        Log_error("Cannot reopen standard file descriptor (%d) -- %s\n", i, STRERROR);
                 }
         }
 }
@@ -1531,7 +1531,7 @@ bool Util_checkCredentials(char *uname, char *outside) {
                         id[sizeof(id) - 1] = 0;
                         strncpy(id, c->passwd, sizeof(id) - 1);
                         if (! (temp = strchr(id + 1, '$'))) {
-                                LogError("Password not in MD5 format.\n");
+                                Log_error("Password not in MD5 format.\n");
                                 return false;
                         }
                         temp += 1;
@@ -1539,12 +1539,12 @@ bool Util_checkCredentials(char *uname, char *outside) {
                         salt[sizeof(salt) - 1] = 0;
                         strncpy(salt, c->passwd + strlen(id), sizeof(salt) - 1);
                         if (! (temp = strchr(salt, '$'))) {
-                                LogError("Password not in MD5 format.\n");
+                                Log_error("Password not in MD5 format.\n");
                                 return false;
                         }
                         *temp = '\0';
                         if (md5_crypt(outside, id, salt, outside_crypt, sizeof(outside_crypt)) == NULL) {
-                                LogError("Cannot generate MD5 digest error.\n");
+                                Log_error("Cannot generate MD5 digest error.\n");
                                 return false;
                         }
                         break;
@@ -1565,7 +1565,7 @@ bool Util_checkCredentials(char *uname, char *outside) {
                         break;
 #endif
                 default:
-                        LogError("Unknown password digestion method.\n");
+                        Log_error("Unknown password digestion method.\n");
                         return false;
         }
         if (Str_compareConstantTime(outside_crypt, c->passwd) == 0)
@@ -1713,7 +1713,7 @@ bool Util_evalQExpression(Operator_Type operator, long long left, long long righ
                                 return true;
                         break;
                 default:
-                        LogError("Unknown comparison operator\n");
+                        Log_error("Unknown comparison operator\n");
                         return false;
         }
         return false;
@@ -1748,7 +1748,7 @@ bool Util_evalDoubleQExpression(Operator_Type operator, double left, double righ
                                 return true;
                         break;
                 default:
-                        LogError("Unknown comparison operator\n");
+                        Log_error("Unknown comparison operator\n");
                         return false;
         }
         return false;

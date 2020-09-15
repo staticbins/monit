@@ -128,13 +128,13 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         size_t pinfo_size = 0;
         int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
         if (sysctl(mib, 4, NULL, &pinfo_size, NULL, 0) < 0) {
-                LogError("system statistic error -- sysctl failed: %s\n", STRERROR);
+                Log_error("system statistic error -- sysctl failed: %s\n", STRERROR);
                 return 0;
         }
         struct kinfo_proc *pinfo = CALLOC(1, pinfo_size);
         if (sysctl(mib, 4, pinfo, &pinfo_size, NULL, 0)) {
                 FREE(pinfo);
-                LogError("system statistic error -- sysctl failed: %s\n", STRERROR);
+                Log_error("system statistic error -- sysctl failed: %s\n", STRERROR);
                 return 0;
         }
         size_t treesize = pinfo_size / sizeof(struct kinfo_proc);
@@ -202,7 +202,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                 if (errno != EPERM)
                                         DEBUG("proc_pidinfo for pid %d failed -- %s\n", pt[i].pid, STRERROR);
                         } else if ((unsigned long)rv < sizeof(tinfo)) {
-                                LogError("proc_pidinfo for pid %d -- invalid result size\n", pt[i].pid);
+                                Log_error("proc_pidinfo for pid %d -- invalid result size\n", pt[i].pid);
                         } else {
                                 pt[i].memory.usage = (unsigned long long)tinfo.pti_resident_size;
                                 pt[i].cpu.time = (double)(tinfo.pti_total_user + tinfo.pti_total_system) / 100000000.; // The time is in nanoseconds, we store it as 1/10s

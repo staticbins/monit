@@ -73,7 +73,7 @@ bool filesystem_usage(Service_T s) {
                         // Symbolic link: dereference
                         char buf[PATH_MAX] = {};
                         if (! realpath(s->path, buf)) {
-                                LogError("Cannot dereference filesystem '%s' (symlink) -- %s\n", s->path, STRERROR);
+                                Log_error("Cannot dereference filesystem '%s' (symlink) -- %s\n", s->path, STRERROR);
                                 return false;
                         }
                         st = stat(buf, &sb);
@@ -120,7 +120,7 @@ bool filesystem_usage(Service_T s) {
                 Statistics_reset(&(s->inf.filesystem->time.write));
                 Statistics_reset(&(s->inf.filesystem->time.wait));
                 Statistics_reset(&(s->inf.filesystem->time.run));
-                LogError("Filesystem '%s' not mounted\n", s->path);
+                Log_error("Filesystem '%s' not mounted\n", s->path);
         }
         return rv;
 }

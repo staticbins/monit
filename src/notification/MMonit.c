@@ -97,7 +97,7 @@ static bool _send(Socket_T socket, Mmonit_T C, StringBuffer_T sb) {
                               auth ? auth : "");
         FREE(auth);
         if (rv < 0 || Socket_write(socket, (unsigned char *)body, bodyLength) < 0) {
-                LogError("M/Monit: error sending data to %s -- %s\n", C->url->url, STRERROR);
+                Log_error("M/Monit: error sending data to %s -- %s\n", C->url->url, STRERROR);
                 return false;
         }
         return true;
@@ -113,13 +113,13 @@ static bool _receive(Socket_T socket, Mmonit_T C) {
         int  status;
         char buf[STRLEN];
         if (! Socket_readLine(socket, buf, sizeof(buf))) {
-                LogError("M/Monit: error receiving data from %s -- %s\n", C->url->url, STRERROR);
+                Log_error("M/Monit: error receiving data from %s -- %s\n", C->url->url, STRERROR);
                 return false;
         }
         Str_chomp(buf);
         int n = sscanf(buf, "%*s %d", &status);
         if (n != 1 || (status >= 400)) {
-                LogError("M/Monit: failed to send message to %s -- %s\n", C->url->url, buf);
+                Log_error("M/Monit: failed to send message to %s -- %s\n", C->url->url, buf);
                 return false;
         }
         if (C->compress == MmonitCompress_Init) {
@@ -157,17 +157,17 @@ Handler_Type MMonit_send(Event_T E) {
         for (Mmonit_T C = Run.mmonits; C; C = C->next) {
                 Socket_T  socket = Socket_create(C->url->hostname, C->url->port, Socket_Tcp, Socket_Ip, &(C->ssl), C->timeout);
                 if (! socket) {
-                        LogError("M/Monit: cannot open a connection to %s\n", C->url->url);
+                        Log_error("M/Monit: cannot open a connection to %s\n", C->url->url);
                         goto error;
                 }
                 status_xml(sb, E, 2, Socket_getLocalHost(socket, (char[STRLEN]){}, STRLEN));
                 if (! _send(socket, C, sb)) {
-                        LogError("M/Monit: cannot send %s message to %s\n", E ? "event" : "status", C->url->url);
+                        Log_error("M/Monit: cannot send %s message to %s\n", E ? "event" : "status", C->url->url);
                         goto error;
                 }
                 StringBuffer_clear(sb);
                 if (! _receive(socket, C)) {
-                        LogError("M/Monit: %s message to %s failed\n", E ? "event" : "status", C->url->url);
+                        Log_error("M/Monit: %s message to %s failed\n", E ? "event" : "status", C->url->url);
                         goto error;
                 }
                 rv = Handler_Succeeded; // Return success if at least one M/Monit succeeded

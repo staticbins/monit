@@ -135,7 +135,7 @@ char *file_findControlFile() {
                 snprintf(rcfile, STRLEN, "%s/%s", Run.Env.cwd, MONITRC);
                 return rcfile;
         }
-        LogError("Cannot find the Monit control file at ~/.%s, /etc/%s, %s/%s, /usr/local/etc/%s or at ./%s \n", MONITRC, MONITRC, SYSCONFDIR, MONITRC, MONITRC, MONITRC);
+        Log_error("Cannot find the Monit control file at ~/.%s, /etc/%s, %s/%s, /usr/local/etc/%s or at ./%s \n", MONITRC, MONITRC, SYSCONFDIR, MONITRC, MONITRC, MONITRC);
         exit(1);
 }
 
@@ -145,7 +145,7 @@ bool file_createPidFile(const char *pidfile) {
         unlink(pidfile);
         FILE *F = fopen(pidfile, "w");
         if (! F) {
-                LogError("Error opening pidfile '%s' for writing -- %s\n", pidfile, STRERROR);
+                Log_error("Error opening pidfile '%s' for writing -- %s\n", pidfile, STRERROR);
                 return false;
         }
         fprintf(F, "%d\n", (int)getpid());
@@ -160,19 +160,19 @@ bool file_checkStat(const char *filename, const char *description, mode_t permma
         errno = 0;
         struct stat buf;
         if (stat(filename, &buf) < 0) {
-                LogError("Cannot stat the %s '%s' -- %s\n", description, filename, STRERROR);
+                Log_error("Cannot stat the %s '%s' -- %s\n", description, filename, STRERROR);
                 return false;
         }
         if (! S_ISREG(buf.st_mode)) {
-                LogError("The %s '%s' is not a regular file.\n", description,  filename);
+                Log_error("The %s '%s' is not a regular file.\n", description,  filename);
                 return false;
         }
         if (buf.st_uid != geteuid())  {
-                LogError("The %s '%s' must be owned by you.\n", description, filename);
+                Log_error("The %s '%s' must be owned by you.\n", description, filename);
                 return false;
         }
         if ((buf.st_mode & 0777) & ~permmask) {
-                LogError("The %s '%s' permission 0%o is wrong, maximum 0%o allowed\n", description, filename, buf.st_mode & 0777, permmask & 0777);
+                Log_error("The %s '%s' permission 0%o is wrong, maximum 0%o allowed\n", description, filename, buf.st_mode & 0777, permmask & 0777);
                 return false;
         }
         return true;
@@ -181,7 +181,7 @@ bool file_checkStat(const char *filename, const char *description, mode_t permma
 
 bool file_checkQueueDirectory(const char *path) {
         if (mkdir(path, 0700) < 0 && errno != EEXIST) {
-                LogError("Cannot create the event queue directory '%s' -- %s\n", path, STRERROR);
+                Log_error("Cannot create the event queue directory '%s' -- %s\n", path, STRERROR);
                 return false;
         }
         return true;
@@ -192,7 +192,7 @@ bool file_checkQueueLimit(const char *path, int limit) {
         if (limit >= 0) {
                 DIR *dir = opendir(path);
                 if (! dir) {
-                        LogError("Cannot open the event queue directory '%s' -- %s\n", path, STRERROR);
+                        Log_error("Cannot open the event queue directory '%s' -- %s\n", path, STRERROR);
                         return false;
                 }
                 int used = 0;
@@ -201,7 +201,7 @@ bool file_checkQueueLimit(const char *path, int limit) {
                         char buf[PATH_MAX];
                         snprintf(buf, sizeof(buf), "%s/%s", path, de->d_name);
                         if (File_isFile(buf) && ++used > limit) {
-                                LogError("Event queue is full\n");
+                                Log_error("Event queue is full\n");
                                 closedir(dir);
                                 return false;
                         }
@@ -218,18 +218,18 @@ bool file_writeQueue(FILE *file, const void *data, size_t size) {
         size_t rv = fwrite(&size, 1, sizeof(size_t), file);
         if (rv != sizeof(size_t)) {
                 if (feof(file) || ferror(file))
-                        LogError("Queued event file: unable to write event size -- %s\n", feof(file) ? "end of file" : "stream error");
+                        Log_error("Queued event file: unable to write event size -- %s\n", feof(file) ? "end of file" : "stream error");
                 else
-                        LogError("Queued event file: unable to write event size -- read returned %lu bytes\n", (unsigned long)rv);
+                        Log_error("Queued event file: unable to write event size -- read returned %lu bytes\n", (unsigned long)rv);
                 return false;
         }
         /* write data if any */
         if (size > 0) {
                 if ((rv = fwrite(data, 1, size, file)) != size) {
                         if (feof(file) || ferror(file))
-                                LogError("Queued event file: unable to write event size -- %s\n", feof(file) ? "end of file" : "stream error");
+                                Log_error("Queued event file: unable to write event size -- %s\n", feof(file) ? "end of file" : "stream error");
                         else
-                                LogError("Queued event file: unable to write event size -- read returned %lu bytes\n", (unsigned long)rv);
+                                Log_error("Queued event file: unable to write event size -- read returned %lu bytes\n", (unsigned long)rv);
                         return false;
                 }
         }
@@ -243,9 +243,9 @@ void *file_readQueue(FILE *file, size_t *size) {
         size_t rv = fread(size, 1, sizeof(size_t), file);
         if (rv != sizeof(size_t)) {
                 if (feof(file) || ferror(file))
-                        LogError("Queued event file: unable to read event size -- %s\n", feof(file) ? "end of file" : "stream error");
+                        Log_error("Queued event file: unable to read event size -- %s\n", feof(file) ? "end of file" : "stream error");
                 else
-                        LogError("Queued event file: unable to read event size -- read returned %lu bytes\n", (unsigned long)rv);
+                        Log_error("Queued event file: unable to read event size -- read returned %lu bytes\n", (unsigned long)rv);
                 return NULL;
         }
         /* read data if any (allow 1MB at maximum to prevent enormous memory allocation) */
@@ -255,9 +255,9 @@ void *file_readQueue(FILE *file, size_t *size) {
                 if ((rv = fread(data, 1, *size, file)) != *size) {
                         FREE(data);
                         if (feof(file) || ferror(file))
-                                LogError("Queued event file: unable to read event data -- %s\n", feof(file) ? "end of file" : "stream error");
+                                Log_error("Queued event file: unable to read event data -- %s\n", feof(file) ? "end of file" : "stream error");
                         else
-                                LogError("Queued event file: unable to read event data -- read returned %lu bytes\n", (unsigned long)rv);
+                                Log_error("Queued event file: unable to read event data -- read returned %lu bytes\n", (unsigned long)rv);
                         return NULL;
                 }
         }
@@ -294,7 +294,7 @@ bool file_readProc(char *buf, int buf_size, const char *name, int pid, int *byte
         }
 
         if (close(fd) < 0)
-                LogError("Failed to close proc file '%s' -- %s\n", filename, STRERROR);
+                Log_error("Failed to close proc file '%s' -- %s\n", filename, STRERROR);
 
         return rv;
 }

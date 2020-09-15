@@ -1,17 +1,34 @@
-                     CHANGES version 5.28.0
+                     CHANGES version 5.27.1
 
            This file summarizes changes made since 5.0
 
-Version 5.28.0
+Version 5.27.1
+
+Fixed: Issue #932. AssertException in "check program" if program does not exist. At the same
+time this fix also require that executables mentioned in start/stop/restart/exec and check
+program exist in the file system. Previously this only generated a warning.
 
 Fixed: Issue #916: Linux: If monit 5.27.0 runs as non-root user, the promatch fails to find processes that belong to
-other users. Thanks to Lutz Mader for fix.
+other users and some statistics, such as memory usage, can show 0. Thanks to Lutz Mader for fix.
 
 Fixed: Linux: If monit 5.27.0 runs as non-root user, it required the CAP_SYS_RESOURCE capability to be able to monitor
 filedescriptors usage of other processes. Thanks to Christian Goettsche for report.
 
 Fixed: Issue #920: AIX, NetBSD, Solaris: Monit 5.27.0 logs "Cannot test filesdescriptors usage as the statistics is not available on this system"
 every cycle even if no filedescriptors test was set in monit configuration.
+
+Fixed: Issue #926: Linux: The process-match based check had extra trailing space.
+
+Fixed: Issue #928: Fixed race condition in HTTP interface reload on fast consecutive SIGHUP. Thanks to Andy Spitzer for patch.
+
+Fixed: Improve the cross-compilation support. Thanks to Christian Goettsche and Helmut Grohne for patch.
+
+Fixed: Monit may crash when sending heartbeat to M/Monit.
+
+Fixed: If the certificate verification failed and valid days test is enabled, monit may report following false positive error:
+        certificate expiry in 0 days matches check limit
+
+Changed: log file timestamp now uses ISO 8601 format
 
 
 Version 5.27.0

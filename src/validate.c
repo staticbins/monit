@@ -165,7 +165,7 @@ retry:
         END_TRY;
         if (rv == State_Failed) {
                 if (retry_count-- > 1) {
-                        LogWarning("'%s' %s (attempt %d/%d)\n", s->name, report, p->retry - retry_count, p->retry);
+                        Log_warning("'%s' %s (attempt %d/%d)\n", s->name, report, p->retry - retry_count, p->retry);
                         goto retry;
                 }
                 Event_post(s, Event_Connection, State_Failed, p->action, "%s", report);
@@ -430,7 +430,7 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
                         break;
 
                 default:
-                        LogError("'%s' error -- unknown resource ID: [%d]\n", s->name, r->resource_id);
+                        Log_error("'%s' error -- unknown resource ID: [%d]\n", s->name, r->resource_id);
                         return State_Failed;
         }
         Event_post(s, Event_Resource, rv, r->action, "%s", report);
@@ -507,7 +507,7 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                                         snprintf(report, STRLEN, "cpu I/O wait check succeeded [current cpu I/O wait = %.1f%%]", systeminfo.cpu.usage.iowait);
                                 }
                         } else {
-                                LogWarning("Cannot test cpu I/O wait usage as the statistics is not available on this system\n");
+                                Log_warning("Cannot test cpu I/O wait usage as the statistics is not available on this system\n");
                         }
                         break;
 
@@ -523,7 +523,7 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                                         snprintf(report, STRLEN, "cpu nice usage check succeeded [current cpu nice usage = %.1f%%]", systeminfo.cpu.usage.nice);
                                 }
                         } else {
-                                LogWarning("Cannot test cpu nice usage as the statistics is not available on this system\n");
+                                Log_warning("Cannot test cpu nice usage as the statistics is not available on this system\n");
                         }
                         break;
 
@@ -539,7 +539,7 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                                         snprintf(report, STRLEN, "cpu hardware IRQ usage check succeeded [current cpu hardware IRQ usage = %.1f%%]", systeminfo.cpu.usage.hardirq);
                                 }
                         } else {
-                                LogWarning("Cannot test cpu hardware IRQ usage as the statistics is not available on this system\n");
+                                Log_warning("Cannot test cpu hardware IRQ usage as the statistics is not available on this system\n");
                         }
                         break;
 
@@ -555,7 +555,7 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                                         snprintf(report, STRLEN, "cpu software IRQ usage check succeeded [current cpu software IRQ usage = %.1f%%]", systeminfo.cpu.usage.softirq);
                                 }
                         } else {
-                                LogWarning("Cannot test cpu software IRQ usage as the statistics is not available on this system\n");
+                                Log_warning("Cannot test cpu software IRQ usage as the statistics is not available on this system\n");
                         }
                         break;
 
@@ -571,7 +571,7 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                                         snprintf(report, STRLEN, "cpu steal usage check succeeded [current cpu steal usage = %.1f%%]", systeminfo.cpu.usage.steal);
                                 }
                         } else {
-                                LogWarning("Cannot test cpu steal usage as the statistics is not available on this system\n");
+                                Log_warning("Cannot test cpu steal usage as the statistics is not available on this system\n");
                         }
                         break;
 
@@ -587,7 +587,7 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                                         snprintf(report, STRLEN, "cpu guest usage check succeeded [current cpu guest usage = %.1f%%]", systeminfo.cpu.usage.guest);
                                 }
                         } else {
-                                LogWarning("Cannot test cpu guest usage as the statistics is not available on this system\n");
+                                Log_warning("Cannot test cpu guest usage as the statistics is not available on this system\n");
                         }
                         break;
 
@@ -603,7 +603,7 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                                         snprintf(report, STRLEN, "cpu guest nice usage check succeeded [current cpu guest nice usage = %.1f%%]", systeminfo.cpu.usage.guest_nice);
                                 }
                         } else {
-                                LogWarning("Cannot test cpu guestnice usage as the statistics is not available on this system\n");
+                                Log_warning("Cannot test cpu guestnice usage as the statistics is not available on this system\n");
                         }
                         break;
 
@@ -670,7 +670,7 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
                         break;
 
                 default:
-                        LogError("'%s' error -- unknown resource ID: [%d]\n", s->name, r->resource_id);
+                        Log_error("'%s' error -- unknown resource ID: [%d]\n", s->name, r->resource_id);
                         return State_Failed;
         }
         Event_post(s, Event_Resource, rv, r->action, "%s", report);
@@ -702,7 +702,7 @@ static State_Type _checkChecksum(Service_T s) {
                                         changed = strncmp(cs->hash, s->inf.file->cs_sum, 40);
                                         break;
                                 default:
-                                        LogError("'%s' unknown hash type (%d)\n", s->name, cs->type);
+                                        Log_error("'%s' unknown hash type (%d)\n", s->name, cs->type);
                                         *s->inf.file->cs_sum = 0;
                                         return State_Failed;
                         }
@@ -847,7 +847,7 @@ static State_Type _checkSystemFiledescriptors(Service_T s) {
                         }
                 }
         } else if (s->filedescriptorslist) {
-                LogWarning("Cannot test filesdescriptors usage as the statistics is not available on this system\n");
+                Log_warning("Cannot test filesdescriptors usage as the statistics is not available on this system\n");
         }
         return rv;
 }
@@ -883,7 +883,7 @@ static State_Type _checkProcessFiledescriptors(Service_T s) {
                                                 Event_post(s, Event_Resource, State_Succeeded, o->action, "filedescriptors usage test succeeded [current filedescriptors usage = %.1f%%]", usage);
                                         }
                                 } else {
-                                        LogWarning("Cannot compute filesdescriptors usage %% as per-process maximum is not exposed on this system -- filesdecriptors usage test skipped, please switch to testing absolute value\n");
+                                        Log_warning("Cannot compute filesdescriptors usage %% as per-process maximum is not exposed on this system -- filesdecriptors usage test skipped, please switch to testing absolute value\n");
                                 }
                         }
                 }
@@ -1066,7 +1066,7 @@ static State_Type _checkMatch(Service_T s) {
         if (s->matchlist) {
                 FILE *file = fopen(s->path, "r");
                 if (! file) {
-                        LogError("'%s' cannot open file %s: %s\n", s->name, s->path, STRERROR);
+                        Log_error("'%s' cannot open file %s: %s\n", s->name, s->path, STRERROR);
                         return State_Failed;
                 }
                 /* FIXME: Refactor: Initialize the filesystems table ahead of file and filesystems test and index it by device id + replace the Str_startsWith() with lookup to the table by device id (obtained via file's stat()).
@@ -1091,13 +1091,13 @@ next:
                         /* Seek to the read position */
                         if (fseek(file, (long)s->inf.file->readpos, SEEK_SET)) {
                                 rv = State_Failed;
-                                LogError("'%s' cannot seek file %s: %s\n", s->name, s->path, STRERROR);
+                                Log_error("'%s' cannot seek file %s: %s\n", s->name, s->path, STRERROR);
                                 goto final2;
                         }
                         if (! fgets(line, (int)Run.limits.fileContentBuffer, file)) {
                                 if (! feof(file)) {
                                         rv = State_Failed;
-                                        LogError("'%s' cannot read file %s: %s\n", s->name, s->path, STRERROR);
+                                        Log_error("'%s' cannot read file %s: %s\n", s->name, s->path, STRERROR);
                                 }
                                 goto final2;
                         }
@@ -1155,7 +1155,7 @@ final2:
 final1:
                 if (fclose(file)) {
                         rv = State_Failed;
-                        LogError("'%s' cannot close file %s: %s\n", s->name, s->path, STRERROR);
+                        Log_error("'%s' cannot close file %s: %s\n", s->name, s->path, STRERROR);
                 }
                 /* Post process the matches: generate events for particular patterns */
                 for (Match_T ml = s->matchlist; ml; ml = ml->next) {
@@ -1203,7 +1203,7 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
         ASSERT(s);
         ASSERT(td);
         if ((td->limit_percent < 0) && (td->limit_absolute < 0)) {
-                LogError("'%s' error: filesystem limit not set\n", s->name);
+                Log_error("'%s' error: filesystem limit not set\n", s->name);
                 return State_Failed;
         }
         switch (td->resource) {
@@ -1373,7 +1373,7 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                         return State_Succeeded;
 
                 default:
-                        LogError("'%s' error -- unknown resource type: [%d]\n", s->name, td->resource);
+                        Log_error("'%s' error -- unknown resource type: [%d]\n", s->name, td->resource);
                         return State_Failed;
         }
 }
@@ -1538,7 +1538,7 @@ State_Type check_process(Service_T s) {
         if (Run.flags & Run_ProcessEngineEnabled) {
                 // Update statistics (event can execute a program and set environment like MONIT_PROCESS_PID)
                 if (! (checkResources = ProcessTree_updateProcess(s, pid))) {
-                        LogError("'%s' failed to get process data\n", s->name);
+                        Log_error("'%s' failed to get process data\n", s->name);
                         rv = State_Failed;
                 }
         }
@@ -1830,7 +1830,7 @@ State_Type check_program(Service_T s) {
                         long long execution_time = (now - s->program->started) * 1000;
                         if (execution_time > s->program->timeout) { // Program timed out
                                 rv = State_Failed;
-                                LogError("'%s' program timed out after %s. Killing program with pid %ld\n", s->name, Convert_time2str(execution_time, (char[11]){}), (long)Process_getPid(P));
+                                Log_error("'%s' program timed out after %s. Killing program with pid %ld\n", s->name, Convert_time2str(execution_time, (char[11]){}), (long)Process_getPid(P));
                                 Process_kill(P);
                                 Process_waitFor(P); // Wait for child to exit to get correct exit value
                                 // Fall-through with P and evaluate exit value below.
@@ -1922,7 +1922,7 @@ State_Type check_remote_host(Service_T s) {
                                 last_ping = icmp;
                                 break;
                         default:
-                                LogError("'%s' error -- unknown ICMP type: [%d]\n", s->name, icmp->type);
+                                Log_error("'%s' error -- unknown ICMP type: [%d]\n", s->name, icmp->type);
                                 return State_Failed;
                 }
         }
@@ -1951,8 +1951,10 @@ State_Type check_system(Service_T s) {
                         rv = State_Failed;
         if (_checkUptime(s, Time_now() - systeminfo.booted) == State_Failed)
                 rv = State_Failed;
-        if (_checkSystemFiledescriptors(s) == State_Failed)
-                rv = State_Failed;
+        if ( systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem ) {
+                if (_checkSystemFiledescriptors(s) == State_Failed)
+                        rv = State_Failed;
+        }
         return rv;
 }
 

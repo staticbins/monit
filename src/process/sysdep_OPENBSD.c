@@ -152,12 +152,12 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         kvm_t                    *kvm_handle;
 
         if (sysctl(mib_maxslp, 2, &maxslp, &size, NULL, 0) < 0) {
-                LogError("system statistic error -- vm.maxslp failed\n");
+                Log_error("system statistic error -- vm.maxslp failed\n");
                 return 0;
         }
 
         if (sysctl(mib_proc, 6, NULL, &size, NULL, 0) == -1) {
-                LogError("system statistic error -- kern.proc #1 failed\n");
+                Log_error("system statistic error -- kern.proc #1 failed\n");
                 return 0;
         }
 
@@ -166,7 +166,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         mib_proc[5] = (int)(size / sizeof(struct kinfo_proc));
         if (sysctl(mib_proc, 6, pinfo, &size, NULL, 0) == -1) {
                 FREE(pinfo);
-                LogError("system statistic error -- kern.proc #2 failed\n");
+                Log_error("system statistic error -- kern.proc #2 failed\n");
                 return 0;
         }
 
@@ -178,7 +178,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         if (! (kvm_handle = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, buf))) {
                 FREE(pinfo);
                 FREE(pt);
-                LogError("system statistic error -- kvm_openfiles failed: %s\n", buf);
+                Log_error("system statistic error -- kvm_openfiles failed: %s\n", buf);
                 return 0;
         }
 
@@ -257,7 +257,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         size_t len = sizeof(struct uvmexp);
         if (sysctl(mib, 2, &vm, &len, NULL, 0) == -1) {
                 si->swap.size = 0ULL;
-                LogError("system statistic error -- cannot get memory usage: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get memory usage: %s\n", STRERROR);
                 return false;
         }
         si->memory.usage.bytes = (unsigned long long)(vm.active + vm.wired) * (unsigned long long)pagesize;
@@ -280,7 +280,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
         len = sizeof(cp_time);
         if (sysctl(mib, 2, &cp_time, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get cpu time: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get cpu time: %s\n", STRERROR);
                 return false;
         }
 

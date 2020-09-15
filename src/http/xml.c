@@ -51,6 +51,7 @@
 
 // libmonit
 #include "util/List.h"
+#include "system/Time.h"
 
 #include "monit.h"
 #include "event.h"
@@ -109,7 +110,7 @@ static void document_head(StringBuffer_T B, int V, const char *myip) {
                             "<startdelay>%d</startdelay>"
                             "<localhostname>%s</localhostname>"
                             "<controlfile>%s</controlfile>",
-                            (long long)ProcessTree_getProcessUptime(getpid()),
+                            (long long)(Time_now() - Run.incarnation),
                             Run.polltime,
                             Run.startdelay,
                             Run.system->name ? Run.system->name : "",

@@ -117,9 +117,9 @@ static void  handle_options(int, char **, List_T); /* Handle program options */
 static void  help(void);             /* Print program help message to stdout */
 static void  version(void);                     /* Print version information */
 static void *heartbeat(void *args);              /* M/Monit heartbeat thread */
-static RETSIGTYPE do_reload(int);       /* Signalhandler for a daemon reload */
-static RETSIGTYPE do_destroy(int);   /* Signalhandler for monit finalization */
-static RETSIGTYPE do_wakeup(int);  /* Signalhandler for a daemon wakeup call */
+static void do_reload(int);             /* Signalhandler for a daemon reload */
+static void do_destroy(int);         /* Signalhandler for monit finalization */
+static void do_wakeup(int);        /* Signalhandler for a daemon wakeup call */
 static void waitforchildren(void); /* Wait for any child process not running */
 
 
@@ -161,8 +161,8 @@ const char *httpmethod[] = {"", "HEAD", "GET"};
  */
 int main(int argc, char **argv) {
         Bootstrap(); // Bootstrap libmonit
-        Bootstrap_setAbortHandler(vLogAbortHandler);  // Abort Monit on exceptions thrown by libmonit
-        Bootstrap_setErrorHandler(vLogError);
+        Bootstrap_setAbortHandler(Log_abort_handler);  // Abort Monit on exceptions thrown by libmonit
+        Bootstrap_setErrorHandler(Log_verror);
         setlocale(LC_ALL, "C");
         prog = File_basename(argv[0]);
 #ifdef HAVE_OPENSSL
@@ -188,7 +188,7 @@ bool do_wakeupcall() {
 
         if ((pid = exist_daemon()) > 0) {
                 kill(pid, SIGUSR1);
-                LogInfo("Monit daemon with PID %d awakened\n", pid);
+                Log_info("Monit daemon with PID %d awakened\n", pid);
 
                 return true;
         }
@@ -295,14 +295,14 @@ static void do_init() {
         /*
          * Initialize the log system
          */
-        if (! log_init())
+        if (! Log_init())
                 exit(1);
 
         /*
          * Did we find any service ?
          */
         if (! servicelist) {
-                LogError("No service has been specified\n");
+                Log_error("No service has been specified\n");
                 exit(0);
         }
 
@@ -331,7 +331,7 @@ static void do_init() {
  * monit daemon receives the SIGHUP signal.
  */
 static void do_reinit() {
-        LogInfo("Reinitializing Monit -- control file '%s'\n", Run.files.control);
+        Log_info("Reinitializing Monit -- control file '%s'\n", Run.files.control);
 
         /* Wait non-blocking for any children that has exited. Since we
          reinitialize any information about children we have setup to wait
@@ -361,20 +361,20 @@ static void do_reinit() {
         gc();
 
         if (! parse(Run.files.control)) {
-                LogError("%s stopped -- error parsing configuration file\n", prog);
+                Log_error("%s stopped -- error parsing configuration file\n", prog);
                 exit(1);
         }
 
         /* Close the current log */
-        log_close();
+        Log_close();
 
         /* Reinstall the log system */
-        if (! log_init())
+        if (! Log_init())
                 exit(1);
 
         /* Did we find any services ?  */
         if (! servicelist) {
-                LogError("No service has been specified\n");
+                Log_error("No service has been specified\n");
                 exit(0);
         }
 
@@ -382,7 +382,7 @@ static void do_reinit() {
         file_init();
 
         if (! file_createPidFile(Run.files.pid)) {
-                LogError("%s stopped -- cannot create a pid file\n", prog);
+                Log_error("%s stopped -- cannot create a pid file\n", prog);
                 exit(1);
         }
 
@@ -436,7 +436,7 @@ static void do_action(List_T arguments) {
                                 }
                                 if (List_length(services) == 0) {
                                         List_free(&services);
-                                        LogError("Group '%s' not found\n", Run.mygroup);
+                                        Log_error("Group '%s' not found\n", Run.mygroup);
                                         exit(1);
                                 }
                         } else if (IS(service, "all")) {
@@ -450,11 +450,11 @@ static void do_action(List_T arguments) {
                         if (errors)
                                 exit(1);
                 } else {
-                        LogError("Please specify a service name or 'all' after %s\n", action);
+                        Log_error("Please specify a service name or 'all' after %s\n", action);
                         exit(1);
                 }
         } else if (IS(action, "reload")) {
-                LogInfo("Reinitializing %s daemon\n", prog);
+                Log_info("Reinitializing %s daemon\n", prog);
                 kill_daemon(SIGHUP);
         } else if (IS(action, "status")) {
                 char *service = List_pop(arguments);
@@ -486,7 +486,7 @@ static void do_action(List_T arguments) {
                 }
                 exit(1);
         } else {
-                LogError("Invalid argument -- %s  (-h will show valid arguments)\n", action);
+                Log_error("Invalid argument -- %s  (-h will show valid arguments)\n", action);
                 exit(1);
         }
 }
@@ -508,7 +508,7 @@ static void do_exit(bool saveState) {
                         heartbeatRunning = false;
                 }
 
-                LogInfo("Monit daemon with pid [%d] stopped\n", (int)getpid());
+                Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
 
                 /* send the monit stop notification */
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_STOP, "Monit %s stopped", VERSION);
@@ -537,18 +537,18 @@ static void do_default() {
                 Run.flags &= ~Run_Once;
                 if (can_http()) {
                         if (Run.httpd.flags & Httpd_Net)
-                                LogInfo("Starting Monit %s daemon with http interface at [%s]:%d\n", VERSION, Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "*", Run.httpd.socket.net.port);
+                                Log_info("Starting Monit %s daemon with http interface at [%s]:%d\n", VERSION, Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "*", Run.httpd.socket.net.port);
                         else if (Run.httpd.flags & Httpd_Unix)
-                                LogInfo("Starting Monit %s daemon with http interface at %s\n", VERSION, Run.httpd.socket.unix.path);
+                                Log_info("Starting Monit %s daemon with http interface at %s\n", VERSION, Run.httpd.socket.unix.path);
                 } else {
-                        LogInfo("Starting Monit %s daemon\n", VERSION);
+                        Log_info("Starting Monit %s daemon\n", VERSION);
                 }
 
                 if (! (Run.flags & Run_Foreground))
                         daemonize();
 
                 if (! file_createPidFile(Run.files.pid)) {
-                        LogError("Monit daemon died\n");
+                        Log_error("Monit daemon died\n");
                         exit(1);
                 }
 
@@ -562,7 +562,7 @@ static void do_default() {
                         time_t now = Time_now();
                         time_t delay = now + Run.startdelay;
 
-                        LogInfo("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
+                        Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
 
                         /* sleep can be interrupted by signal => make sure we paused long enough */
                         while (now < delay) {
@@ -593,7 +593,7 @@ static void do_default() {
 
                         if (Run.flags & Run_DoWakeup) {
                                 Run.flags &= ~Run_DoWakeup;
-                                LogInfo("Awakened by User defined signal 1\n");
+                                Log_info("Awakened by User defined signal 1\n");
                         }
 
                         if (Run.flags & Run_Stopped) {
@@ -666,7 +666,7 @@ static void handle_options(int argc, char **argv, List_T arguments) {
                                 {
                                         Run.flags |= Run_Daemon;
                                         if (sscanf(optarg, "%d", &Run.polltime) != 1 || Run.polltime < 1) {
-                                                LogError("Option -%c requires a natural number\n", opt);
+                                                Log_error("Option -%c requires a natural number\n", opt);
                                                 exit(1);
                                         }
                                         break;
@@ -755,12 +755,12 @@ static void handle_options(int argc, char **argv, List_T arguments) {
                                                 case 'p':
                                                 case 's':
                                                 {
-                                                        LogError("Option -- %c requires an argument\n", optopt);
+                                                        Log_error("Option -- %c requires an argument\n", optopt);
                                                         break;
                                                 }
                                                 default:
                                                 {
-                                                        LogError("Invalid option -- %c  (-h will show valid options)\n", optopt);
+                                                        Log_error("Invalid option -- %c  (-h will show valid options)\n", optopt);
                                                 }
                                         }
                                         exit(1);
@@ -888,7 +888,7 @@ static void version() {
  */
 static void *heartbeat(__attribute__ ((unused)) void *args) {
         set_signal_block();
-        LogInfo("M/Monit heartbeat started\n");
+        Log_info("M/Monit heartbeat started\n");
         LOCK(heartbeatMutex)
         {
                 while (! interrupt()) {
@@ -901,7 +901,7 @@ static void *heartbeat(__attribute__ ((unused)) void *args) {
 #ifdef HAVE_OPENSSL
         Ssl_threadCleanup();
 #endif
-        LogInfo("M/Monit heartbeat stopped\n");
+        Log_info("M/Monit heartbeat stopped\n");
         return NULL;
 }
 
@@ -909,7 +909,7 @@ static void *heartbeat(__attribute__ ((unused)) void *args) {
 /**
  * Signalhandler for a daemon reload call
  */
-static RETSIGTYPE do_reload(__attribute__ ((unused)) int sig) {
+static void do_reload(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoReload;
 }
 
@@ -917,7 +917,7 @@ static RETSIGTYPE do_reload(__attribute__ ((unused)) int sig) {
 /**
  * Signalhandler for monit finalization
  */
-static RETSIGTYPE do_destroy(__attribute__ ((unused)) int sig) {
+static void do_destroy(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_Stopped;
 }
 
@@ -925,7 +925,7 @@ static RETSIGTYPE do_destroy(__attribute__ ((unused)) int sig) {
 /**
  * Signalhandler for a daemon wakeup call
  */
-static RETSIGTYPE do_wakeup(__attribute__ ((unused)) int sig) {
+static void do_wakeup(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoWakeup;
 }
 

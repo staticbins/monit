@@ -227,7 +227,7 @@ bool Checksum_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned lo
                         hashlength = 20;
                         break;
                 default:
-                        LogError("checksum: invalid hash type: 0x%x\n", hashtype);
+                        Log_error("checksum: invalid hash type: 0x%x\n", hashtype);
                         return false;
         }
 
@@ -249,10 +249,10 @@ bool Checksum_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned lo
                         }
 
                         if (fclose(f))
-                                LogError("checksum: error closing file '%s' -- %s\n", file, STRERROR);
+                                Log_error("checksum: error closing file '%s' -- %s\n", file, STRERROR);
 
                         if (! fresult) {
-                                LogError("checksum: file %s stream error (0x%x)\n", file, fresult);
+                                Log_error("checksum: file %s stream error (0x%x)\n", file, fresult);
                                 return false;
                         }
 
@@ -260,9 +260,9 @@ bool Checksum_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned lo
                         return true;
 
                 } else
-                        LogError("checksum: failed to open file %s -- %s\n", file, STRERROR);
+                        Log_error("checksum: failed to open file %s -- %s\n", file, STRERROR);
         } else
-                LogError("checksum: file %s is not regular file\n", file);
+                Log_error("checksum: file %s is not regular file\n", file);
         return false;
 }
 

@@ -175,7 +175,7 @@ static void _receive(Socket_T S) {
 static bool _client(const char *request, StringBuffer_T data) {
         volatile bool status = false;
         if (! exist_daemon()) {
-                LogError("Monit: the monit daemon is not running\n");
+                Log_error("Monit: the monit daemon is not running\n");
                 return status;
         }
         Socket_T S = NULL;
@@ -184,7 +184,7 @@ static bool _client(const char *request, StringBuffer_T data) {
         } else if (Run.httpd.flags & Httpd_Unix) {
                 S = Socket_createUnix(Run.httpd.socket.unix.path, Socket_Tcp, Run.limits.networkTimeout);
         } else {
-                LogError("Monit: the monit HTTP interface is not enabled, please add the 'set httpd' statement and use the 'allow' option to allow monit to connect\n");
+                Log_error("Monit: the monit HTTP interface is not enabled, please add the 'set httpd' statement and use the 'allow' option to allow monit to connect\n");
         }
         if (S) {
                 TRY
@@ -195,7 +195,7 @@ static bool _client(const char *request, StringBuffer_T data) {
                 }
                 ELSE
                 {
-                        LogError("%s\n", Exception_frame.message);
+                        Log_error("%s\n", Exception_frame.message);
                 }
                 END_TRY;
                 Socket_free(&S);
@@ -211,7 +211,7 @@ bool HttpClient_action(const char *action, List_T services) {
         ASSERT(services);
         ASSERT(action);
         if (Util_getAction(action) == Action_Ignored) {
-                LogError("Invalid action %s\n", action);
+                Log_error("Invalid action %s\n", action);
                 return false;
         }
         StringBuffer_T data = StringBuffer_create(64);

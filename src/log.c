@@ -86,8 +86,8 @@
 /* ------------------------------------------------------------- Definitions */
 
 
-static FILE *LOG = NULL;
-static Mutex_T log_mutex = PTHREAD_MUTEX_INITIALIZER;
+static FILE *_LOG = NULL;
+static Mutex_T _mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 static struct mylogpriority {
@@ -112,17 +112,17 @@ static struct mylogpriority {
 /**
  * Open a log file or syslog
  */
-static bool open_log(void) {
+static bool _open(void) {
         if (Run.flags & Run_UseSyslog) {
                 openlog(prog, LOG_PID, Run.facility);
         } else {
-                LOG = fopen(Run.files.log, "a");
-                if (! LOG) {
-                        LogError("Error opening the log file '%s' for writing -- %s\n", Run.files.log, STRERROR);
+                _LOG = fopen(Run.files.log, "a");
+                if (! _LOG) {
+                        Log_error("Error opening the log file '%s' for writing -- %s\n", Run.files.log, STRERROR);
                         return false;
                 }
                 /* Set logger in unbuffered mode */
-                setvbuf(LOG, NULL, _IONBF, 0);
+                setvbuf(_LOG, NULL, _IONBF, 0);
         }
         return true;
 }
@@ -134,7 +134,7 @@ static bool open_log(void) {
  * @return A string describing the log priority in clear text. If the
  * priority is not found NULL is returned.
  */
-static const char *logPriorityDescription(int p) {
+static const char *_priorityDescription(int p) {
         struct mylogpriority *lp = logPriority;
         while ((*lp).description) {
                 if (p == (*lp).priority) {
@@ -152,43 +152,27 @@ static const char *logPriorityDescription(int p) {
  * @param s A formatted (printf-style) string to log
  */
 __attribute__((format (printf, 2, 0)))
-static void log_log(int priority, const char *s, va_list ap) {
+static void _log(int priority, const char *s, va_list ap) {
         ASSERT(s);
-#ifdef HAVE_VA_COPY
         va_list ap_copy;
-#endif
-        LOCK(log_mutex)
+        LOCK(_mutex)
         {
 
                 FILE *output = priority < LOG_INFO ? stderr : stdout;
-#ifdef HAVE_VA_COPY
                 va_copy(ap_copy, ap);
                 vfprintf(output, s, ap_copy);
                 va_end(ap_copy);
-#else
-                vfprintf(output, s, ap);
-#endif
                 fflush(output);
                 if (Run.flags & Run_Log) {
                         if (Run.flags & Run_UseSyslog) {
-#ifdef HAVE_VA_COPY
                                 va_copy(ap_copy, ap);
                                 vsyslog(priority, s, ap_copy);
                                 va_end(ap_copy);
-#else
-                                vsyslog(priority, s, ap);
-#endif
-                        } else if (LOG) {
-                                char datetime[STRLEN];
-                                fprintf(LOG, "[%s] %-8s : ", Time_fmt(datetime, sizeof(datetime), TIMEFORMAT, time(NULL)), logPriorityDescription(priority));
-#ifdef HAVE_VA_COPY
+                        } else if (_LOG) {
+                                fprintf(_LOG, "[%s] %-8s : ", Time_fmt((char[STRLEN]){}, STRLEN, TIMEFORMAT, Time_now()), _priorityDescription(priority));
                                 va_copy(ap_copy, ap);
-                                vfprintf(LOG, s, ap_copy);
+                                vfprintf(_LOG, s, ap_copy);
                                 va_end(ap_copy);
-#else
-                                vfprintf(LOG, s, ap);
-#endif
-
                         }
                 }
         }
@@ -196,7 +180,7 @@ static void log_log(int priority, const char *s, va_list ap) {
 }
 
 
-static void log_backtrace(void) {
+static void _backtrace(void) {
 #ifdef HAVE_BACKTRACE
         int i, frames;
         void *callstack[128];
@@ -205,14 +189,28 @@ static void log_backtrace(void) {
         if (Run.debug >= 2) {
                 frames = backtrace(callstack, 128);
                 strs = backtrace_symbols(callstack, frames);
-                LogDebug("-------------------------------------------------------------------------------\n");
+                Log_debug("-------------------------------------------------------------------------------\n");
                 for (i = 0; i < frames; ++i)
-                LogDebug("    %s\n", strs[i]);
-                LogDebug("-------------------------------------------------------------------------------\n");
+                Log_debug("    %s\n", strs[i]);
+                Log_debug("-------------------------------------------------------------------------------\n");
                 FREE(strs);
         }
 #endif
 }
+
+
+/* ------------------------------------------------------------------------- */
+
+
+#ifndef HAVE_VSYSLOG
+#ifdef HAVE_SYSLOG
+void vsyslog(int facility_priority, const char *format, va_list arglist) {
+        char msg[STRLEN+1];
+        vsnprintf(msg, STRLEN, format, arglist);
+        syslog(facility_priority, "%s", msg);
+}
+#endif /* HAVE_SYSLOG */
+#endif /* HAVE_VSYSLOG */
 
 
 /* ------------------------------------------------------------------ Public */
@@ -222,13 +220,13 @@ static void log_backtrace(void) {
  * Initialize the log system and 'log' function
  * @return true if the log system was successfully initialized
  */
-bool log_init() {
+bool Log_init() {
         if (! (Run.flags & Run_Log))
                 return true;
-        if (! open_log())
+        if (! _open())
                 return false;
-        /* Register log_close to be called at program termination */
-        atexit(log_close);
+        /* Register Log_close to be called at program termination */
+        atexit(Log_close);
         return true;
 }
 
@@ -237,13 +235,13 @@ bool log_init() {
  * Logging interface with priority support
  * @param s A formatted (printf-style) string to log
  */
-void LogEmergency(const char *s, ...) {
+void Log_emergency(const char *s, ...) {
         ASSERT(s);
         va_list ap;
         va_start(ap, s);
-        log_log(LOG_EMERG, s, ap);
+        _log(LOG_EMERG, s, ap);
         va_end(ap);
-        log_backtrace();
+        _backtrace();
 }
 
 
@@ -252,13 +250,13 @@ void LogEmergency(const char *s, ...) {
  * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
-void vLogEmergency(const char *s, va_list ap) {
+void Log_vemergency(const char *s, va_list ap) {
         ASSERT(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
-        log_log(LOG_EMERG, s, ap);
+        _log(LOG_EMERG, s, ap);
         va_end(ap_copy);
-        log_backtrace();
+        _backtrace();
 }
 
 
@@ -266,13 +264,13 @@ void vLogEmergency(const char *s, va_list ap) {
  * Logging interface with priority support
  * @param s A formatted (printf-style) string to log
  */
-void LogAlert(const char *s, ...) {
+void Log_alert(const char *s, ...) {
         ASSERT(s);
         va_list ap;
         va_start(ap, s);
-        log_log(LOG_ALERT, s, ap);
+        _log(LOG_ALERT, s, ap);
         va_end(ap);
-        log_backtrace();
+        _backtrace();
 }
 
 
@@ -281,13 +279,13 @@ void LogAlert(const char *s, ...) {
  * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
-void vLogAlert(const char *s, va_list ap) {
+void Log_valert(const char *s, va_list ap) {
         ASSERT(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
-        log_log(LOG_ALERT, s, ap);
+        _log(LOG_ALERT, s, ap);
         va_end(ap_copy);
-        log_backtrace();
+        _backtrace();
 }
 
 
@@ -295,13 +293,13 @@ void vLogAlert(const char *s, va_list ap) {
  * Logging interface with priority support
  * @param s A formatted (printf-style) string to log
  */
-void LogCritical(const char *s, ...) {
+void Log_critical(const char *s, ...) {
         ASSERT(s);
         va_list ap;
         va_start(ap, s);
-        log_log(LOG_CRIT, s, ap);
+        _log(LOG_CRIT, s, ap);
         va_end(ap);
-        log_backtrace();
+        _backtrace();
 }
 
 
@@ -310,13 +308,13 @@ void LogCritical(const char *s, ...) {
  * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
-void vLogCritical(const char *s, va_list ap) {
+void Log_vcritical(const char *s, va_list ap) {
         ASSERT(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
-        log_log(LOG_CRIT, s, ap);
+        _log(LOG_CRIT, s, ap);
         va_end(ap_copy);
-        log_backtrace();
+        _backtrace();
 }
 
 
@@ -324,11 +322,11 @@ void vLogCritical(const char *s, va_list ap) {
  * Called by libmonit on Exception. Log
  * error and abort the application
  */
-void vLogAbortHandler(const char *s, va_list ap) {
+void Log_abort_handler(const char *s, va_list ap) {
         ASSERT(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
-        log_log(LOG_CRIT, s, ap);
+        _log(LOG_CRIT, s, ap);
         va_end(ap_copy);
         if (Run.debug)
                 abort();
@@ -340,13 +338,13 @@ void vLogAbortHandler(const char *s, va_list ap) {
  * Logging interface with priority support
  * @param s A formatted (printf-style) string to log
  */
-void LogError(const char *s, ...) {
+void Log_error(const char *s, ...) {
         ASSERT(s);
         va_list ap;
         va_start(ap, s);
-        log_log(LOG_ERR, s, ap);
+        _log(LOG_ERR, s, ap);
         va_end(ap);
-        log_backtrace();
+        _backtrace();
 }
 
 
@@ -355,13 +353,13 @@ void LogError(const char *s, ...) {
  * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
-void vLogError(const char *s, va_list ap) {
+void Log_verror(const char *s, va_list ap) {
         ASSERT(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
-        log_log(LOG_ERR, s, ap);
+        _log(LOG_ERR, s, ap);
         va_end(ap_copy);
-        log_backtrace();
+        _backtrace();
 }
 
 
@@ -369,38 +367,11 @@ void vLogError(const char *s, va_list ap) {
  * Logging interface with priority support
  * @param s A formatted (printf-style) string to log
  */
-void LogWarning(const char *s, ...) {
+void Log_warning(const char *s, ...) {
         ASSERT(s);
         va_list ap;
         va_start(ap, s);
-        log_log(LOG_WARNING, s, ap);
-        va_end(ap);
-}
-
-
-/**
- * Logging interface with priority support
- * @param s A formatted (printf-style) string to log
- * @param ap A variable argument list
- */
-void vLogWarning(const char *s, va_list ap) {
-        ASSERT(s);
-        va_list ap_copy;
-        va_copy(ap_copy, ap);
-        log_log(LOG_WARNING, s, ap);
-        va_end(ap_copy);
-}
-
-
-/**
- * Logging interface with priority support
- * @param s A formatted (printf-style) string to log
- */
-void LogNotice(const char *s, ...) {
-        ASSERT(s);
-        va_list ap;
-        va_start(ap, s);
-        log_log(LOG_NOTICE, s, ap);
+        _log(LOG_WARNING, s, ap);
         va_end(ap);
 }
 
@@ -410,11 +381,11 @@ void LogNotice(const char *s, ...) {
  * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
-void vLogNotice(const char *s, va_list ap) {
+void Log_vwarning(const char *s, va_list ap) {
         ASSERT(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
-        log_log(LOG_NOTICE, s, ap);
+        _log(LOG_WARNING, s, ap);
         va_end(ap_copy);
 }
 
@@ -423,11 +394,11 @@ void vLogNotice(const char *s, va_list ap) {
  * Logging interface with priority support
  * @param s A formatted (printf-style) string to log
  */
-void LogInfo(const char *s, ...) {
+void Log_notice(const char *s, ...) {
         ASSERT(s);
         va_list ap;
         va_start(ap, s);
-        log_log(LOG_INFO, s, ap);
+        _log(LOG_NOTICE, s, ap);
         va_end(ap);
 }
 
@@ -437,11 +408,11 @@ void LogInfo(const char *s, ...) {
  * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
-void vLogInfo(const char *s, va_list ap) {
+void Log_vnotice(const char *s, va_list ap) {
         ASSERT(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
-        log_log(LOG_INFO, s, ap);
+        _log(LOG_NOTICE, s, ap);
         va_end(ap_copy);
 }
 
@@ -450,12 +421,39 @@ void vLogInfo(const char *s, va_list ap) {
  * Logging interface with priority support
  * @param s A formatted (printf-style) string to log
  */
-void LogDebug(const char *s, ...) {
+void Log_info(const char *s, ...) {
+        ASSERT(s);
+        va_list ap;
+        va_start(ap, s);
+        _log(LOG_INFO, s, ap);
+        va_end(ap);
+}
+
+
+/**
+ * Logging interface with priority support
+ * @param s A formatted (printf-style) string to log
+ * @param ap A variable argument list
+ */
+void Log_vinfo(const char *s, va_list ap) {
+        ASSERT(s);
+        va_list ap_copy;
+        va_copy(ap_copy, ap);
+        _log(LOG_INFO, s, ap);
+        va_end(ap_copy);
+}
+
+
+/**
+ * Logging interface with priority support
+ * @param s A formatted (printf-style) string to log
+ */
+void Log_debug(const char *s, ...) {
         ASSERT(s);
         if (Run.debug) {
                 va_list ap;
                 va_start(ap, s);
-                log_log(LOG_DEBUG, s, ap);
+                _log(LOG_DEBUG, s, ap);
                 va_end(ap);
         }
 }
@@ -466,12 +464,12 @@ void LogDebug(const char *s, ...) {
  * @param s A formatted (printf-style) string to log
  * @param ap A variable argument list
  */
-void vLogDebug(const char *s, va_list ap) {
+void Log_vdebug(const char *s, va_list ap) {
         ASSERT(s);
         if (Run.debug) {
                 va_list ap_copy;
                 va_copy(ap_copy, ap);
-                log_log(LOG_NOTICE, s, ap);
+                _log(LOG_NOTICE, s, ap);
                 va_end(ap_copy);
         }
 }
@@ -480,24 +478,12 @@ void vLogDebug(const char *s, va_list ap) {
 /**
  * Close the log file or syslog
  */
-void log_close() {
+void Log_close() {
         if (Run.flags & Run_UseSyslog) {
                 closelog();
         }
-        if (LOG  && (0 != fclose(LOG))) {
-                LogError("Error closing the log file -- %s\n", STRERROR);
+        if (_LOG  && (0 != fclose(_LOG))) {
+                Log_error("Error closing the log file -- %s\n", STRERROR);
         }
-        LOG = NULL;
+        _LOG = NULL;
 }
-
-
-#ifndef HAVE_VSYSLOG
-#ifdef HAVE_SYSLOG
-void vsyslog (int facility_priority, const char *format, va_list arglist) {
-        char msg[STRLEN+1];
-        vsnprintf(msg, STRLEN, format, arglist);
-        syslog(facility_priority, "%s", msg);
-}
-#endif /* HAVE_SYSLOG */
-#endif /* HAVE_VSYSLOG */
-

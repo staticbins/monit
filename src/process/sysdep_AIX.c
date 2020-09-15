@@ -127,7 +127,7 @@ bool init_process_info_sysdep(void) {
         perfstat_memory_total_t mem;
 
         if (perfstat_memory_total(NULL, &mem, sizeof(perfstat_memory_total_t), 1) < 1) {
-                LogError("system statistic error -- perfstat_memory_total failed: %s\n", STRERROR);
+                Log_error("system statistic error -- perfstat_memory_total failed: %s\n", STRERROR);
                 return false;
         }
 
@@ -157,7 +157,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
         perfstat_cpu_total_t cpu;
 
         if (perfstat_cpu_total(NULL, &cpu, sizeof(perfstat_cpu_total_t), 1) < 1) {
-                LogError("system statistic error -- perfstat_cpu_total failed: %s\n", STRERROR);
+                Log_error("system statistic error -- perfstat_cpu_total failed: %s\n", STRERROR);
                 return -1;
         }
 
@@ -186,7 +186,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         int treesize;
         pid_t firstproc = 0;
         if ((treesize = getprocs64(NULL, 0, NULL, 0, &firstproc, PID_MAX)) < 0) {
-                LogError("system statistic error -- getprocs64 failed: %s\n", STRERROR);
+                Log_error("system statistic error -- getprocs64 failed: %s\n", STRERROR);
                 return 0;
         }
 
@@ -195,7 +195,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         firstproc = 0;
         if ((treesize = getprocs64(procs, sizeof(struct procentry64), NULL, 0, &firstproc, treesize)) < 0) {
                 FREE(procs);
-                LogError("system statistic error -- getprocs64 failed: %s\n", STRERROR);
+                Log_error("system statistic error -- getprocs64 failed: %s\n", STRERROR);
                 return 0;
         }
 
@@ -231,11 +231,11 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 if (read(fd, &ps, sizeof(ps)) < 0) {
                         DEBUG("Cannot read proc file %s -- %s\n", filename, STRERROR);
                         if (close(fd) < 0)
-                                LogError("Socket close failed -- %s\n", STRERROR);
+                                Log_error("Socket close failed -- %s\n", STRERROR);
                         continue;
                 }
                 if (close(fd) < 0)
-                        LogError("Socket close failed -- %s\n", STRERROR);
+                        Log_error("Socket close failed -- %s\n", STRERROR);
                 pt[i].cred.uid = ps.pr_uid;
                 pt[i].cred.gid = ps.pr_gid;
                 if (pflags & ProcessEngine_CollectCommandLine) {
@@ -276,7 +276,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
 
         /* Memory */
         if (perfstat_memory_total(NULL, &mem, sizeof(perfstat_memory_total_t), 1) < 1) {
-                LogError("system statistic error -- perfstat_memory_total failed: %s\n", STRERROR);
+                Log_error("system statistic error -- perfstat_memory_total failed: %s\n", STRERROR);
                 return false;
         }
         si->memory.usage.bytes = (unsigned long long)(mem.real_total - mem.real_free - mem.numperm) * (unsigned long long)page_size;
@@ -303,7 +303,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
 
         if (perfstat_cpu_total(NULL, &cpu, sizeof(perfstat_cpu_total_t), 1) < 0) {
-                LogError("system statistic error -- perfstat_cpu_total failed: %s\n", STRERROR);
+                Log_error("system statistic error -- perfstat_cpu_total failed: %s\n", STRERROR);
                 return -1;
         }
 

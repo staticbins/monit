@@ -143,14 +143,14 @@ bool init_process_info_sysdep(void) {
 int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
         kvm_t *kvm_handle = kvm_open(NULL, _PATH_DEVNULL, NULL, O_RDONLY, prog);
         if (! kvm_handle) {
-                LogError("system statistic error -- cannot initialize kvm interface\n");
+                Log_error("system statistic error -- cannot initialize kvm interface\n");
                 return 0;
         }
 
         int treesize;
         struct kinfo_proc *pinfo = kvm_getprocs(kvm_handle, KERN_PROC_ALL, 0, &treesize);
         if (! pinfo || (treesize < 1)) {
-                LogError("system statistic error -- cannot get process tree\n");
+                Log_error("system statistic error -- cannot get process tree\n");
                 kvm_close(kvm_handle);
                 return 0;
         }
@@ -226,20 +226,20 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         size_t len = sizeof(unsigned int);
         unsigned int active;
         if (sysctlbyname("vm.stats.vm.v_active_count", &active, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get for active memory usage: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get for active memory usage: %s\n", STRERROR);
                 return false;
         }
         if (len != sizeof(unsigned int)) {
-                LogError("system statistic error -- active memory usage statics error\n");
+                Log_error("system statistic error -- active memory usage statics error\n");
                 return false;
         }
         unsigned int wired;
         if (sysctlbyname("vm.stats.vm.v_wire_count", &wired, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get for wired memory usage: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get for wired memory usage: %s\n", STRERROR);
                 return false;
         }
         if (len != sizeof(unsigned int)) {
-                LogError("system statistic error -- wired memory usage statics error\n");
+                Log_error("system statistic error -- wired memory usage statics error\n");
                 return false;
         }
         si->memory.usage.bytes = (unsigned long long)(active + wired) * (unsigned long long)pagesize;
@@ -247,20 +247,20 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         /* Swap */
         unsigned int used;
         if (sysctlbyname("vm.swap_anon_use", &used, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get swap usage: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get swap usage: %s\n", STRERROR);
                 si->swap.size = 0;
                 return false;
         }
         si->swap.usage.bytes = (unsigned long long)used * (unsigned long long)pagesize;
         if (sysctlbyname("vm.swap_cache_use", &used, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get swap usage: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get swap usage: %s\n", STRERROR);
                 si->swap.size = 0;
                 return false;
         }
         si->swap.usage.bytes += (unsigned long long)used * (unsigned long long)pagesize;
         unsigned int free;
         if (sysctlbyname("vm.swap_size", &free, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get swap usage: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get swap usage: %s\n", STRERROR);
                 si->swap.size = 0;
                 return false;
         }
@@ -282,13 +282,13 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
         len = sizeof(mib);
         if (sysctlnametomib("kern.cp_time", mib, &len) == -1) {
-                LogError("system statistic error -- cannot get cpu time handler: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get cpu time handler: %s\n", STRERROR);
                 return false;
         }
 
         len = sizeof(cp_time);
         if (sysctl(mib, 2, &cp_time, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get cpu time: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get cpu time: %s\n", STRERROR);
                 return false;
         }
 

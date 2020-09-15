@@ -85,14 +85,14 @@ void daemonize() {
          * Become a session leader to lose our controlling terminal
          */
         if ((pid = fork ()) < 0) {
-                LogError("Cannot fork a new process\n");
+                Log_error("Cannot fork a new process\n");
                 exit (1);
         } else if (pid != 0) {
                 _exit(0);
         }
         setsid();
         if ((pid = fork ()) < 0) {
-                LogError("Cannot fork a new process\n");
+                Log_error("Cannot fork a new process\n");
                 exit (1);
         } else if (pid != 0) {
                 _exit(0);
@@ -101,7 +101,7 @@ void daemonize() {
          * Change current directory to the root so that other file systems can be unmounted while we're running
          */
         if (chdir("/") < 0) {
-                LogError("Cannot chdir to / -- %s\n", STRERROR);
+                Log_error("Cannot chdir to / -- %s\n", STRERROR);
                 exit(1);
         }
         /*
@@ -120,11 +120,11 @@ bool kill_daemon(int sig) {
         pid_t pid;
         if ((pid = exist_daemon()) > 0) {
                 if (kill(pid, sig) < 0) {
-                        LogError("Cannot signal the monit daemon process -- %s\n", STRERROR);
+                        Log_error("Cannot signal the monit daemon process -- %s\n", STRERROR);
                         return false;
                 }
         } else {
-                LogInfo("Monit daemon is not running\n");
+                Log_info("Monit daemon is not running\n");
                 return true;
         }
         if (sig == SIGTERM) {

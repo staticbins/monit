@@ -168,9 +168,9 @@ static void _pushAllow(HostsAllow_T h, const char *pattern) {
                 inet_ntop(AF_INET6, &(h->address), buf, sizeof(buf));
         if (_hasAllow(h))  {
                 if (*buf)
-                        LogWarning("Skipping 'allow %s' -- host resolved to [%s] which is present in ACL already\n", pattern, buf);
+                        Log_warning("Skipping 'allow %s' -- host resolved to [%s] which is present in ACL already\n", pattern, buf);
                 else
-                        LogWarning("Skipping 'allow %s' -- present in ACL already\n", pattern);
+                        Log_warning("Skipping 'allow %s' -- present in ACL already\n", pattern);
                 FREE(h);
         } else {
                 if (*buf)
@@ -376,7 +376,7 @@ static bool _authenticateHost(struct sockaddr *addr) {
                 uint32_t address[4];
                 _mapIPv4toIPv6((uint32_t *)&(a->sin_addr), (uint32_t *)&address);
                 if (! (allow = _isAllowed(address)))
-                        LogError("Denied connection from non-authorized client [%s]\n", inet_ntop(addr->sa_family, &a->sin_addr, (char[INET_ADDRSTRLEN]){}, INET_ADDRSTRLEN));
+                        Log_error("Denied connection from non-authorized client [%s]\n", inet_ntop(addr->sa_family, &a->sin_addr, (char[INET_ADDRSTRLEN]){}, INET_ADDRSTRLEN));
                 return allow;
         }
 #ifdef HAVE_IPV6
@@ -384,7 +384,7 @@ static bool _authenticateHost(struct sockaddr *addr) {
                 bool allow = false;
                 struct sockaddr_in6 *a = (struct sockaddr_in6 *)addr;
                 if (! (allow = _isAllowed((uint32_t *)&(a->sin6_addr))))
-                        LogError("Denied connection from non-authorized client [%s]\n", inet_ntop(addr->sa_family, &(a->sin6_addr), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
+                        Log_error("Denied connection from non-authorized client [%s]\n", inet_ntop(addr->sa_family, &(a->sin6_addr), (char[INET6_ADDRSTRLEN]){}, INET6_ADDRSTRLEN));
                 return allow;
         }
 #endif
@@ -405,7 +405,7 @@ static Socket_T _socketProducer(void) {
                         if (myServerSockets[i].revents & POLLIN) {
                                 int client = accept(myServerSockets[i].fd, data[i].addr, &(data[i].addrlen));
                                 if (client < 0) {
-                                        LogError("HTTP server: cannot accept connection -- %s\n", stopped ? "service stopped" : STRERROR);
+                                        Log_error("HTTP server: cannot accept connection -- %s\n", stopped ? "service stopped" : STRERROR);
                                         return NULL;
                                 }
                                 if (!Net_setNonBlocking(client) || !Net_canRead(client, 500) || !Net_canWrite(client, 500) || ! _authenticateHost(data[i].addr)) {
@@ -483,8 +483,10 @@ error:
 
 
 void Engine_start() {
+        if (Run.flags & Run_Stopped) {
+                return;
+        }
         Engine_cleanup();
-        stopped = (Run.flags & Run_Stopped) != 0;
         init_service();
         char error[MAX_SERVER_SOCKETS][STRLEN] = {};
         if (Run.httpd.flags & Httpd_Net) {
@@ -498,7 +500,7 @@ void Engine_start() {
                 // Log error only if no socket was created
                 for (int i = 0; i < MAX_SERVER_SOCKETS; i++)
                         if (STR_DEF(error[i]))
-                                LogError("HTTP server -- %s\n", error[i]);
+                                Log_error("HTTP server -- %s\n", error[i]);
         } else {
                 while (! stopped) {
                         Socket_T S = _socketProducer();
@@ -517,8 +519,13 @@ void Engine_start() {
 }
 
 
+void Engine_setStopped(bool stop) {
+        stopped = stop;
+}
+
+
 void Engine_stop() {
-        stopped = true;
+        Engine_setStopped(true);
 }
 
 

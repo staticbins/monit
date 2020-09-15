@@ -333,10 +333,12 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("swap usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(systeminfo.swap.usage.bytes, (char[10]){}), systeminfo.swap.usage.percent);
                                         _formatStatus("uptime", Event_Uptime, type, res, s, systeminfo.booted > 0, "%s", _getUptime(Time_now() - systeminfo.booted, (char[256]){}));
                                         _formatStatus("boot time", Event_Null, type, res, s, true, "%s", Time_string(systeminfo.booted, (char[32]){}));
-                                        if (systeminfo.filedescriptors.maximum > 0)
-                                                _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "%lld [%.1f%% of %lld limit]", systeminfo.filedescriptors.allocated, (float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum, systeminfo.filedescriptors.maximum);
-                                        else
-                                                _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "N/A");
+                                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem) {
+                                                if (systeminfo.filedescriptors.maximum > 0)
+                                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "%lld [%.1f%% of %lld limit]", systeminfo.filedescriptors.allocated, (float)100 * (float)systeminfo.filedescriptors.allocated / (float)systeminfo.filedescriptors.maximum, systeminfo.filedescriptors.maximum);
+                                                else
+                                                        _formatStatus("filedescriptors", Event_Resource, type, res, s, true, "N/A");
+                                        }
                                 }
                                 break;
 
@@ -631,7 +633,7 @@ static void printFavicon(HttpResponse res) {
                 Socket_print(S, "Content-Type: image/x-icon\r\n");
                 Socket_print(S, "Connection: close\r\n\r\n");
                 if (Socket_write(S, favicon, l) < 0) {
-                        LogError("Error sending favicon data -- %s\n", STRERROR);
+                        Log_error("Error sending favicon data -- %s\n", STRERROR);
                 }
         }
 }
@@ -1018,7 +1020,7 @@ static void handle_service_action(HttpRequest req, HttpResponse res) {
                         FREE(s->token);
                         s->token = Str_dup(token);
                 }
-                LogInfo("'%s' %s on user request\n", s->name, action);
+                Log_info("'%s' %s on user request\n", s->name, action);
                 Run.flags |= Run_ActionPending; /* set the global flag */
                 do_wakeupcall();
         }
@@ -1048,7 +1050,7 @@ static void handle_doaction(HttpRequest req, HttpResponse res) {
                                         return;
                                 }
                                 s->doaction = doaction;
-                                LogInfo("'%s' %s on user request\n", s->name, action);
+                                Log_info("'%s' %s on user request\n", s->name, action);
                         }
                 }
                 /* Set token for last service only so we'll get it back after all services were handled */
@@ -1083,10 +1085,10 @@ static void handle_runtime_action(HttpRequest req, HttpResponse res) {
                         return;
                 }
                 if (IS(action, "validate")) {
-                        LogInfo("The Monit http server woke up on user request\n");
+                        Log_info("The Monit http server woke up on user request\n");
                         do_wakeupcall();
                 } else if (IS(action, "stop")) {
-                        LogInfo("The Monit http server stopped on user request\n");
+                        Log_info("The Monit http server stopped on user request\n");
                         send_error(req, res, SC_SERVICE_UNAVAILABLE, "The Monit http server is stopped");
                         Engine_stop();
                         return;

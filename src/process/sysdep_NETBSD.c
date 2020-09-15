@@ -141,13 +141,13 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         size_t size = sizeof(maxslp);
         static int mib_maxslp[] = {CTL_VM, VM_MAXSLP};
         if (sysctl(mib_maxslp, 2, &maxslp, &size, NULL, 0) < 0) {
-                LogError("system statistic error -- vm.maxslp failed\n");
+                Log_error("system statistic error -- vm.maxslp failed\n");
                 return 0;
         }
 
         int mib_proc2[6] = {CTL_KERN, KERN_PROC2, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc2), 0};
         if (sysctl(mib_proc2, 6, NULL, &size, NULL, 0) == -1) {
-                LogError("system statistic error -- kern.proc2 #1 failed\n");
+                Log_error("system statistic error -- kern.proc2 #1 failed\n");
                 return 0;
         }
 
@@ -156,7 +156,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         mib_proc2[5] = (int)(size / sizeof(struct kinfo_proc2));
         if (sysctl(mib_proc2, 6, pinfo, &size, NULL, 0) == -1) {
                 FREE(pinfo);
-                LogError("system statistic error -- kern.proc2 #2 failed\n");
+                Log_error("system statistic error -- kern.proc2 #2 failed\n");
                 return 0;
         }
 
@@ -169,7 +169,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         if (! kvm_handle) {
                 FREE(pinfo);
                 FREE(pt);
-                LogError("system statistic error -- kvm_openfiles failed: %s\n", buf);
+                Log_error("system statistic error -- kvm_openfiles failed: %s\n", buf);
                 return 0;
         }
 
@@ -243,7 +243,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         int mib[2] = {CTL_VM, VM_UVMEXP2};
         size_t len = sizeof(struct uvmexp_sysctl);
         if (sysctl(mib, 2, &vm, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get memory usage: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get memory usage: %s\n", STRERROR);
                 si->swap.size = 0ULL;
                 return false;
         }
@@ -267,7 +267,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
         len = sizeof(cp_time);
         if (sysctl(mib, 2, &cp_time, &len, NULL, 0) == -1) {
-                LogError("system statistic error -- cannot get cpu time: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get cpu time: %s\n", STRERROR);
                 return false;
         }
 

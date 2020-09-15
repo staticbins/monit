@@ -181,7 +181,7 @@ void SMTP_free(T *S) {
         }
         ELSE
         {
-                LogError("SMTP: %s\n", Exception_frame.message);
+                Log_error("SMTP: %s\n", Exception_frame.message);
         }
         FINALLY
         {

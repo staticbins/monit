@@ -227,11 +227,11 @@ static bool _setVersion(SSL_CTX *ctx, SslOptions_T options) {
 
         if (versionAllowed & SSL_V2) {
 #if defined OPENSSL_NO_SSL2 || ! defined HAVE_SSLV2
-                LogError("SSL: SSLv2 not supported\n");
+                Log_error("SSL: SSLv2 not supported\n");
                 return false;
 #else
                 if (Run.flags & Run_FipsEnabled) {
-                        LogError("SSL: SSLv2 is not allowed in FIPS mode -- use TLS\n");
+                        Log_error("SSL: SSLv2 is not allowed in FIPS mode -- use TLS\n");
                         return false;
                 }
                 versionMask &= ~SSL_OP_NO_SSLv2;
@@ -240,11 +240,11 @@ static bool _setVersion(SSL_CTX *ctx, SslOptions_T options) {
 
         if (versionAllowed & SSL_V3) {
 #if defined OPENSSL_NO_SSL3
-                LogError("SSL: SSLv3 not supported\n");
+                Log_error("SSL: SSLv3 not supported\n");
                 return false;
 #else
                 if (Run.flags & Run_FipsEnabled) {
-                        LogError("SSL: SSLv3 is not allowed in FIPS mode -- use TLS\n");
+                        Log_error("SSL: SSLv3 is not allowed in FIPS mode -- use TLS\n");
                         return false;
                 }
                 versionMask &= ~SSL_OP_NO_SSLv3;
@@ -253,7 +253,7 @@ static bool _setVersion(SSL_CTX *ctx, SslOptions_T options) {
 
         if (versionAllowed & SSL_TLSV1) {
 #if defined OPENSSL_NO_TLS1_METHOD
-                LogError("SSL: TLSv1.0 not supported\n");
+                Log_error("SSL: TLSv1.0 not supported\n");
                 return false;
 #else
                 versionMask &= ~SSL_OP_NO_TLSv1;
@@ -262,7 +262,7 @@ static bool _setVersion(SSL_CTX *ctx, SslOptions_T options) {
 
         if (versionAllowed & SSL_TLSV11) {
 #if defined OPENSSL_NO_TLS1_1_METHOD || ! defined HAVE_TLSV1_1
-                LogError("SSL: TLSv1.1 not supported\n");
+                Log_error("SSL: TLSv1.1 not supported\n");
                 return false;
 #else
                 versionMask &= ~SSL_OP_NO_TLSv1_1;
@@ -271,7 +271,7 @@ static bool _setVersion(SSL_CTX *ctx, SslOptions_T options) {
 
         if (versionAllowed & SSL_TLSV12) {
 #if defined OPENSSL_NO_TLS1_2_METHOD || ! defined HAVE_TLSV1_2
-                LogError("SSL: TLSv1.2 not supported\n");
+                Log_error("SSL: TLSv1.2 not supported\n");
                 return false;
 #else
                 versionMask &= ~SSL_OP_NO_TLSv1_2;
@@ -280,7 +280,7 @@ static bool _setVersion(SSL_CTX *ctx, SslOptions_T options) {
 
         if (versionAllowed & SSL_TLSV13) {
 #if defined OPENSSL_NO_TLS1_3_METHOD || ! defined HAVE_TLSV1_3
-                LogError("SSL: TLSv1.3 not supported\n");
+                Log_error("SSL: TLSv1.3 not supported\n");
                 return false;
 #else
                 versionMask &= ~SSL_OP_NO_TLSv1_3;
@@ -382,7 +382,7 @@ static int _saveAndCheckServerCertificates(T C, X509_STORE_CTX *ctx) {
 static int _verifyServerCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
         T C = SSL_get_app_data(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
         if (! C) {
-                LogError("SSL: cannot get application data");
+                Log_error("SSL: cannot get application data");
                 return 0;
         }
         *C->error = 0;
@@ -409,7 +409,7 @@ static int _verifyServerCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
 static int _verifyClientCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
         T C = SSL_get_app_data(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
         if (! C) {
-                LogError("SSL: cannot get application data");
+                Log_error("SSL: cannot get application data");
                 return 0;
         }
         if (! preverify_ok) {
@@ -417,7 +417,7 @@ static int _verifyClientCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
                 switch (error) {
                         case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
                                 if (! (_optionsAllowSelfSigned(C->options->allowSelfSigned))) {
-                                        LogError("SSL: self-signed certificate is not allowed\n");
+                                        Log_error("SSL: self-signed certificate is not allowed\n");
                                         return 0;
                                 }
                                 X509_STORE_CTX_set_error(ctx, X509_V_OK); // Reset error if we accept self-signed certificates
@@ -425,7 +425,7 @@ static int _verifyClientCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
                         case X509_V_ERR_INVALID_PURPOSE:
                                 break;
                         default:
-                                LogError("SSL: invalid certificate -- %s\n", X509_verify_cert_error_string(error));
+                                Log_error("SSL: invalid certificate -- %s\n", X509_verify_cert_error_string(error));
                                 return 0;
                 }
         }
@@ -436,7 +436,7 @@ static int _verifyClientCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
         X509_OBJECT *found_cert = X509_OBJECT_new();
         if (X509_STORE_CTX_get_error_depth(ctx) == 0 && X509_STORE_CTX_get_by_subject(ctx, X509_LU_X509, X509_get_subject_name(X509_STORE_CTX_get_current_cert(ctx)), found_cert) != 1) {
 #endif
-                LogError("SSL: no matching certificate found -- %s\n", SSLERROR);
+                Log_error("SSL: no matching certificate found -- %s\n", SSLERROR);
                 X509_STORE_CTX_set_error(ctx, X509_V_ERR_CERT_REJECTED);
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && ! defined(LIBRESSL_VERSION_NUMBER)
                 X509_OBJECT_free(found_cert);
@@ -469,15 +469,15 @@ static bool _setServerNameIdentification(T C, const char *hostname) {
 
 static bool _setClientCertificate(T C, const char *file) {
         if (SSL_CTX_use_certificate_chain_file(C->ctx, file) != 1) {
-                LogError("SSL client certificate chain loading failed: %s\n", SSLERROR);
+                Log_error("SSL client certificate chain loading failed: %s\n", SSLERROR);
                 return false;
         }
         if (SSL_CTX_use_PrivateKey_file(C->ctx, file, SSL_FILETYPE_PEM) != 1) {
-                LogError("SSL client private key loading failed: %s\n", SSLERROR);
+                Log_error("SSL client private key loading failed: %s\n", SSLERROR);
                 return false;
         }
         if (SSL_CTX_check_private_key(C->ctx) != 1) {
-                LogError("SSL client private key doesn't match the certificate: %s\n", SSLERROR);
+                Log_error("SSL client private key doesn't match the certificate: %s\n", SSLERROR);
                 return false;
         }
         return true;
@@ -549,11 +549,11 @@ T Ssl_new(SslOptions_T options) {
         const SSL_METHOD *method = TLS_client_method();
 #endif
         if (! method) {
-                LogError("SSL: client method initialization failed -- %s\n", SSLERROR);
+                Log_error("SSL: client method initialization failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
         if (! (C->ctx = SSL_CTX_new(method))) {
-                LogError("SSL: client context initialization failed -- %s\n", SSLERROR);
+                Log_error("SSL: client context initialization failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
         if (! _setVersion(C->ctx, options)) {
@@ -564,7 +564,7 @@ T Ssl_new(SslOptions_T options) {
         const char *CACertificatePath = _optionsCACertificatePath(options->CACertificatePath);
         if (CACertificateFile || CACertificatePath) {
                 if (! SSL_CTX_load_verify_locations(C->ctx, CACertificateFile, CACertificatePath)) {
-                        LogError("SSL: CA certificates loading failed -- %s\n", SSLERROR);
+                        Log_error("SSL: CA certificates loading failed -- %s\n", SSLERROR);
                         goto sslerror;
                 }
         }
@@ -576,11 +576,11 @@ T Ssl_new(SslOptions_T options) {
 #endif
         const char *ciphers = _optionsCiphers(options->ciphers);
         if (SSL_CTX_set_cipher_list(C->ctx, ciphers) != 1) {
-                LogError("SSL: client cipher list [%s] error -- no valid ciphers\n", ciphers);
+                Log_error("SSL: client cipher list [%s] error -- no valid ciphers\n", ciphers);
                 goto sslerror;
         }
         if (! (C->handler = SSL_new(C->ctx))) {
-                LogError("SSL: cannot create client handler -- %s\n", SSLERROR);
+                Log_error("SSL: cannot create client handler -- %s\n", SSLERROR);
                 goto sslerror;
         }
         SSL_set_verify(C->handler, SSL_VERIFY_PEER, _verifyServerCertificates);
@@ -694,15 +694,15 @@ int Ssl_write(T C, const void *b, int size, int timeout) {
                                         {
                                                 unsigned long error = ERR_get_error();
                                                 if (error)
-                                                        LogError("SSL: write error -- %s\n", ERR_error_string(error, NULL));
+                                                        Log_error("SSL: write error -- %s\n", ERR_error_string(error, NULL));
                                                 else if (n == 0)
-                                                        LogError("SSL: write error -- EOF\n");
+                                                        Log_error("SSL: write error -- EOF\n");
                                                 else if (n == -1)
-                                                        LogError("SSL: write I/O error -- %s\n", STRERROR);
+                                                        Log_error("SSL: write I/O error -- %s\n", STRERROR);
                                         }
                                         return -1;
                                 default:
-                                        LogError("SSL: write error -- %s\n", SSLERROR);
+                                        Log_error("SSL: write error -- %s\n", SSLERROR);
                                         return -1;
                         }
                 } while (retry);
@@ -735,15 +735,15 @@ int Ssl_read(T C, void *b, int size, int timeout) {
                                         {
                                                 unsigned long error = ERR_get_error();
                                                 if (error)
-                                                        LogError("SSL: read error -- %s\n", ERR_error_string(error, NULL));
+                                                        Log_error("SSL: read error -- %s\n", ERR_error_string(error, NULL));
                                                 else if (n == 0)
-                                                        LogError("SSL: read error -- EOF\n");
+                                                        Log_error("SSL: read error -- EOF\n");
                                                 else if (n == -1)
-                                                        LogError("SSL: read I/O error -- %s\n", STRERROR);
+                                                        Log_error("SSL: read I/O error -- %s\n", STRERROR);
                                         }
                                         return -1;
                                 default:
-                                        LogError("SSL: read error -- %s\n", SSLERROR);
+                                        Log_error("SSL: read error -- %s\n", SSLERROR);
                                         return -1;
                         }
                 } while (retry);
@@ -852,23 +852,23 @@ SslServer_T SslServer_new(int socket, SslOptions_T options) {
         const SSL_METHOD *method = TLS_server_method();
 #endif
         if (! method) {
-                LogError("SSL: server method initialization failed -- %s\n", SSLERROR);
+                Log_error("SSL: server method initialization failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
         if (! (S->ctx = SSL_CTX_new(method))) {
-                LogError("SSL: server context initialization failed -- %s\n", SSLERROR);
+                Log_error("SSL: server context initialization failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
         if (! _setVersion(S->ctx, options)) {
                 goto sslerror;
         }
         if (SSL_CTX_set_session_id_context(S->ctx, (void *)&session_id_context, sizeof(session_id_context)) != 1) {
-                LogError("SSL: server session id context initialization failed -- %s\n", SSLERROR);
+                Log_error("SSL: server session id context initialization failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
         const char *ciphers = _optionsCiphers(options->ciphers);
         if (SSL_CTX_set_cipher_list(S->ctx, ciphers) != 1) {
-                LogError("SSL: server cipher list [%s] error -- no valid ciphers\n", ciphers);
+                Log_error("SSL: server cipher list [%s] error -- no valid ciphers\n", ciphers);
                 goto sslerror;
         }
         SSL_CTX_set_options(S->ctx, SSL_OP_CIPHER_SERVER_PREFERENCE);
@@ -898,35 +898,35 @@ SslServer_T SslServer_new(int socket, SslOptions_T options) {
         const char *pemkey = _optionsServerPEMKey(options->pemkey);
         const char *pemfile = _optionsServerPEMFile(options->pemfile);
         if (SSL_CTX_use_certificate_chain_file(S->ctx, pemchain ? pemchain : pemfile) != 1) {
-                LogError("SSL: server certificate chain loading failed -- %s\n", SSLERROR);
+                Log_error("SSL: server certificate chain loading failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
         if (SSL_CTX_use_PrivateKey_file(S->ctx, pemkey ? pemkey : pemfile, SSL_FILETYPE_PEM) != 1) {
-                LogError("SSL: server private key loading failed -- %s\n", SSLERROR);
+                Log_error("SSL: server private key loading failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
         if (SSL_CTX_check_private_key(S->ctx) != 1) {
-                LogError("SSL: server private key do not match the certificate -- %s\n", SSLERROR);
+                Log_error("SSL: server private key do not match the certificate -- %s\n", SSLERROR);
                 goto sslerror;
         }
         const char *clientpemfile = _optionsClientPEMFile(options->clientpemfile);
         if (clientpemfile) {
                 struct stat sb;
                 if (stat(clientpemfile, &sb) == -1) {
-                        LogError("SSL: client PEM file %s error -- %s\n", clientpemfile, STRERROR);
+                        Log_error("SSL: client PEM file %s error -- %s\n", clientpemfile, STRERROR);
                         goto sslerror;
                 }
                 if (! S_ISREG(sb.st_mode)) {
-                        LogError("SSL: client PEM file %s is not a file\n", clientpemfile);
+                        Log_error("SSL: client PEM file %s is not a file\n", clientpemfile);
                         goto sslerror;
                 }
                 if (! SSL_CTX_load_verify_locations(S->ctx, clientpemfile, NULL)) {
-                        LogError("SSL: client PEM file CA certificates %s loading failed -- %s\n", clientpemfile, SSLERROR);
+                        Log_error("SSL: client PEM file CA certificates %s loading failed -- %s\n", clientpemfile, SSLERROR);
                         goto sslerror;
                 }
                 SSL_CTX_set_client_CA_list(S->ctx, SSL_load_client_CA_file(clientpemfile));
                 if (! SSL_CTX_load_verify_locations(S->ctx, pemfile, NULL)) {
-                        LogError("SSL: server certificate CA certificates %s loading failed -- %s\n", pemfile, SSLERROR);
+                        Log_error("SSL: server certificate CA certificates %s loading failed -- %s\n", pemfile, SSLERROR);
                         goto sslerror;
                 }
                 SSL_CTX_set_verify(S->ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, _verifyClientCertificates);
@@ -955,7 +955,7 @@ T SslServer_newConnection(SslServer_T S) {
         C->accepted = true;
         C->ctx = S->ctx;
         if (! (C->handler = SSL_new(C->ctx))) {
-                LogError("SSL: server cannot create handler -- %s\n", SSLERROR);
+                Log_error("SSL: server cannot create handler -- %s\n", SSLERROR);
                 Ssl_free(&C);
                 return NULL;
         }
@@ -995,9 +995,9 @@ bool SslServer_accept(T C, int socket, int timeout) {
                                 default:
                                         rv = (int)SSL_get_verify_result(C->handler);
                                         if (rv != X509_V_OK)
-                                                LogError("SSL client certificate verification error: %s\n", *C->error ? C->error : X509_verify_cert_error_string(rv));
+                                                Log_error("SSL client certificate verification error: %s\n", *C->error ? C->error : X509_verify_cert_error_string(rv));
                                         else
-                                                LogError("SSL accept error: %s\n", SSLERROR);
+                                                Log_error("SSL accept error: %s\n", SSLERROR);
                                         return false;
                         }
                 } else {

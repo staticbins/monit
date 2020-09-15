@@ -219,7 +219,7 @@ void send_error(HttpRequest req, HttpResponse res, int code, const char *msg, ..
         va_end(ap);
         escapeHTML(res->outputbuffer, message);
         if (code != SC_UNAUTHORIZED) // We log details in basic_authenticate() already, no need to log generic error sent to client here
-                LogError("HttpRequest: error -- client [%s]: %s %d %s\n", NVLSTR(Socket_getRemoteHost(req->S)), SERVER_PROTOCOL, code, message);
+                Log_error("HttpRequest: error -- client [%s]: %s %d %s\n", NVLSTR(Socket_getRemoteHost(req->S)), SERVER_PROTOCOL, code, message);
         FREE(message);
         char server[STRLEN];
         StringBuffer_append(res->outputbuffer,
@@ -741,13 +741,13 @@ static bool is_authenticated(HttpRequest req, HttpResponse res) {
                 // Check CSRF double-submit cookie (https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Double_Submit_Cookie)
                 const char *token = get_parameter(req, "securitytoken");
                 if (! token) {
-                        LogError("HttpRequest: access denied -- client [%s]: missing CSRF token in HTTP parameter\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                        Log_error("HttpRequest: access denied -- client [%s]: missing CSRF token in HTTP parameter\n", NVLSTR(Socket_getRemoteHost(req->S)));
                         send_error(req, res, SC_FORBIDDEN, "Invalid CSRF Token");
                         return false;
                 }
                 const char *cookie = get_header(req, "Cookie");
                 if (! cookie) {
-                        LogError("HttpRequest: access denied -- client [%s]: missing CSRF token cookie\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                        Log_error("HttpRequest: access denied -- client [%s]: missing CSRF token cookie\n", NVLSTR(Socket_getRemoteHost(req->S)));
                         send_error(req, res, SC_FORBIDDEN, "Invalid CSRF Token");
                         return false;
                 }
@@ -777,14 +777,14 @@ static bool is_authenticated(HttpRequest req, HttpResponse res) {
                                         }
                                 }
                                 if (Str_compareConstantTime(cookieValue, token)) {
-                                        LogError("HttpRequest: access denied -- client [%s]: CSRF token mismatch\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                                        Log_error("HttpRequest: access denied -- client [%s]: CSRF token mismatch\n", NVLSTR(Socket_getRemoteHost(req->S)));
                                         send_error(req, res, SC_FORBIDDEN, "Invalid CSRF Token");
                                         return false;
                                 }
                                 return true;
                         }
                 }
-                LogError("HttpRequest: access denied -- client [%s]: no CSRF token in cookie\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                Log_error("HttpRequest: access denied -- client [%s]: no CSRF token in cookie\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 send_error(req, res, SC_FORBIDDEN, "Invalid CSRF Token");
                 return false;
         }
@@ -799,34 +799,34 @@ static bool is_authenticated(HttpRequest req, HttpResponse res) {
 static bool basic_authenticate(HttpRequest req) {
         const char *credentials = get_header(req, "Authorization");
         if (! (credentials && Str_startsWith(credentials, "Basic "))) {
-                LogDebug("HttpRequest: access denied -- client [%s]: missing or invalid Authorization header\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                Log_debug("HttpRequest: access denied -- client [%s]: missing or invalid Authorization header\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
         char buf[STRLEN] = {0};
         strncpy(buf, &credentials[6], sizeof(buf) - 1);
         char uname[STRLEN] = {0};
         if (decode_base64((unsigned char *)uname, buf) <= 0) {
-                LogDebug("HttpRequest: access denied -- client [%s]: invalid Authorization header\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                Log_debug("HttpRequest: access denied -- client [%s]: invalid Authorization header\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
         if (STR_UNDEF(uname)) {
-                LogDebug("HttpRequest: access denied -- client [%s]: empty username\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                Log_debug("HttpRequest: access denied -- client [%s]: empty username\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
         char *password = strchr(uname, ':');
         if (STR_UNDEF(password)) {
-                LogDebug("HttpRequest: access denied -- client [%s]: empty password\n", NVLSTR(Socket_getRemoteHost(req->S)));
+                Log_debug("HttpRequest: access denied -- client [%s]: empty password\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
         *password++ = 0;
         /* Check if user exist */
         if (! Util_getUserCredentials(uname)) {
-                LogError("HttpRequest: access denied -- client [%s]: unknown user '%s'\n", NVLSTR(Socket_getRemoteHost(req->S)), uname);
+                Log_error("HttpRequest: access denied -- client [%s]: unknown user '%s'\n", NVLSTR(Socket_getRemoteHost(req->S)), uname);
                 return false;
         }
         /* Check if user has supplied the right password */
         if (! Util_checkCredentials(uname,  password)) {
-                LogError("HttpRequest: access denied -- client [%s]: wrong password for user '%s'\n", NVLSTR(Socket_getRemoteHost(req->S)), uname);
+                Log_error("HttpRequest: access denied -- client [%s]: wrong password for user '%s'\n", NVLSTR(Socket_getRemoteHost(req->S)), uname);
                 return false;
         }
         req->remote_user = Str_dup(uname);

@@ -461,13 +461,13 @@ assigned to each message based on the context.
 To turn off logging, simply do not set the log in the control file
 (and of course, do not use the -l switch)
 
-The format for log file is:
+The format for an entry in the log file is:
 
     [date] priority : message
 
 for example:
 
-    [CET Jan  5 18:49:29] info : 'localhost' Monit started
+    [2020-08-12T16:35:00+0200] info : 'localhost' Monit started
 
 
 

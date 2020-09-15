@@ -114,7 +114,7 @@
 
 
 #define MONITRC            "monitrc"
-#define TIMEFORMAT         "%Z %Y %b %e %T"
+#define TIMEFORMAT         "%FT%T%z"
 #define STRERROR            strerror(errno)
 #define STRLEN             256
 #ifndef USEC_PER_SEC
@@ -426,7 +426,7 @@ Sigfunc *signal(int signo, Sigfunc * func);
 #undef MIN
 #define MIN(x,y) ((x) < (y) ? (x) : (y))
 #define IS(a,b)  ((a && b) ? Str_isEqual(a, b) : false)
-#define DEBUG LogDebug
+#define DEBUG Log_debug
 #define FLAG(x, y) (x & y) == y
 #define NVLSTR(x) (x ? x : "")
 
@@ -434,7 +434,7 @@ Sigfunc *signal(int signo, Sigfunc * func);
 /** ------------------------------------------ Simple Assert Exception macro */
 
 
-#define ASSERT(e) do { if (!(e)) { LogCritical("AssertException: " #e \
+#define ASSERT(e) do { if (!(e)) { Log_critical("AssertException: " #e \
 " at %s:%d\naborting..\n", __FILE__, __LINE__); abort(); } } while (0)
 
 
@@ -1387,31 +1387,26 @@ extern const char *httpmethod[];
 bool parse(char *);
 bool control_service(const char *, Action_Type);
 bool control_service_string(List_T, const char *);
-void  spawn(Service_T, command_t, Event_T);
-bool log_init(void);
-void  LogEmergency(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogAlert(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogCritical(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogError(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogWarning(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogNotice(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogInfo(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  LogDebug(const char *, ...) __attribute__((format (printf, 1, 2)));
-void  vLogEmergency(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogAlert(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogCritical(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogError(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogWarning(const char *,va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogNotice(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogInfo(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogDebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void  vLogAbortHandler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
-void  log_close(void);
-#ifndef HAVE_VSYSLOG
-#ifdef HAVE_SYSLOG
-void vsyslog (int, const char *, va_list);
-#endif /* HAVE_SYSLOG */
-#endif /* HAVE_VSYSLOG */
+void spawn(Service_T, command_t, Event_T);
+bool Log_init(void);
+void Log_emergency(const char *, ...) __attribute__((format (printf, 1, 2)));
+void Log_alert(const char *, ...) __attribute__((format (printf, 1, 2)));
+void Log_critical(const char *, ...) __attribute__((format (printf, 1, 2)));
+void Log_error(const char *, ...) __attribute__((format (printf, 1, 2)));
+void Log_warning(const char *, ...) __attribute__((format (printf, 1, 2)));
+void Log_notice(const char *, ...) __attribute__((format (printf, 1, 2)));
+void Log_info(const char *, ...) __attribute__((format (printf, 1, 2)));
+void Log_debug(const char *, ...) __attribute__((format (printf, 1, 2)));
+void Log_vemergency(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void Log_valert(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void Log_vcritical(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void Log_verror(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void Log_vwarning(const char *,va_list ap) __attribute__((format (printf, 1, 0)));
+void Log_vnotice(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void Log_vinfo(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void Log_vdebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
+void Log_abort_handler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
+void Log_close(void);
 int   validate(void);
 void  daemonize(void);
 void  gc(void);

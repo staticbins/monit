@@ -91,7 +91,7 @@ static volatile bool running = false;
 bool can_http() {
         if ((Run.httpd.flags & Httpd_Net || Run.httpd.flags & Httpd_Unix) && (Run.flags & Run_Daemon)) {
                 if (! Engine_hasAllow() && ! Run.httpd.credentials && ! ((Run.httpd.socket.net.ssl.flags & SSL_Enabled) && (Run.httpd.flags & Httpd_Net) && Run.httpd.socket.net.ssl.clientpemfile)) {
-                        LogError("%s: monit httpd not started since no connections are allowed\n", prog);
+                        Log_error("%s: monit httpd not started since no connections are allowed\n", prog);
                         return false;
 
                 }
@@ -110,23 +110,24 @@ void monit_http(Httpd_Action action) {
                 case Httpd_Stop:
                         if (! running)
                                 break;
-                        LogDebug("Shutting down Monit HTTP server\n");
+                        Log_debug("Shutting down Monit HTTP server\n");
                         Engine_stop();
                         Thread_join(thread);
-                        LogDebug("Monit HTTP server stopped\n");
+                        Log_debug("Monit HTTP server stopped\n");
                         running = false;
                         break;
                 case Httpd_Start:
                         if (Run.httpd.flags & Httpd_Net)
-                                LogDebug("Starting Monit HTTP server at [%s]:%d\n", Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "*", Run.httpd.socket.net.port);
+                                Log_debug("Starting Monit HTTP server at [%s]:%d\n", Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "*", Run.httpd.socket.net.port);
                         if (Run.httpd.flags & Httpd_Unix)
-                                LogDebug("Starting Monit HTTP server at %s\n", Run.httpd.socket.unix.path);
+                                Log_debug("Starting Monit HTTP server at %s\n", Run.httpd.socket.unix.path);
+                        Engine_setStopped(false);
                         Thread_create(thread, thread_wrapper, NULL);
-                        LogDebug("Monit HTTP server started\n");
+                        Log_debug("Monit HTTP server started\n");
                         running = true;
                         break;
                 default:
-                        LogError("Monit: Unknown http server action\n");
+                        Log_error("Monit: Unknown http server action\n");
                         break;
         }
 }

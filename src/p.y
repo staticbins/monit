@@ -1315,7 +1315,7 @@ checksystem     : CHECKSYSTEM SERVICENAME {
                         if (Str_sub(servicename, "$HOST")) {
                                 char hostname[STRLEN];
                                 if (gethostname(hostname, sizeof(hostname))) {
-                                        LogError("System hostname error -- %s\n", STRERROR);
+                                        Log_error("System hostname error -- %s\n", STRERROR);
                                         cfg_errflag++;
                                 } else {
                                         Util_replaceString(&servicename, "$HOST", hostname);
@@ -1331,16 +1331,12 @@ checkfifo       : CHECKFIFO SERVICENAME PATHTOK PATH {
                 ;
 
 checkprogram    : CHECKPROGRAM SERVICENAME PATHTOK argumentlist programtimeout {
-                        command_t c = command; // Current command
-                        check_exec(c->arg[0]);
                         createservice(Service_Program, $<string>2, NULL, check_program);
                         current->program->timeout = $<number>5;
                         current->program->lastOutput = StringBuffer_create(64);
                         current->program->inprogressOutput = StringBuffer_create(64);
                  }
                 | CHECKPROGRAM SERVICENAME PATHTOK argumentlist useroptionlist programtimeout {
-                        command_t c = command; // Current command
-                        check_exec(c->arg[0]);
                         createservice(Service_Program, $<string>2, NULL, check_program);
                         current->program->timeout = $<number>6;
                         current->program->lastOutput = StringBuffer_create(64);
@@ -3100,7 +3096,7 @@ void yyerror(const char *s, ...) {
         va_start(ap, s);
         msg = Str_vcat(s, ap);
         va_end(ap);
-        LogError("%s:%i: %s '%s'\n", currentfile, lineno, msg, yytext);
+        Log_error("%s:%i: %s '%s'\n", currentfile, lineno, msg, yytext);
         cfg_errflag++;
         FREE(msg);
 }
@@ -3116,7 +3112,7 @@ void yywarning(const char *s, ...) {
         va_start(ap, s);
         msg = Str_vcat(s, ap);
         va_end(ap);
-        LogWarning("%s:%i: %s '%s'\n", currentfile, lineno, msg, yytext);
+        Log_warning("%s:%i: %s '%s'\n", currentfile, lineno, msg, yytext);
         FREE(msg);
 }
 
@@ -3131,7 +3127,7 @@ void yyerror2(const char *s, ...) {
         va_start(ap, s);
         msg = Str_vcat(s, ap);
         va_end(ap);
-        LogError("%s:%i: %s '%s'\n", argcurrentfile, arglineno, msg, argyytext);
+        Log_error("%s:%i: %s '%s'\n", argcurrentfile, arglineno, msg, argyytext);
         cfg_errflag++;
         FREE(msg);
 }
@@ -3147,7 +3143,7 @@ void yywarning2(const char *s, ...) {
         va_start(ap, s);
         msg = Str_vcat(s, ap);
         va_end(ap);
-        LogWarning("%s:%i: %s '%s'\n", argcurrentfile, arglineno, msg, argyytext);
+        Log_warning("%s:%i: %s '%s'\n", argcurrentfile, arglineno, msg, argyytext);
         FREE(msg);
 }
 
@@ -3160,7 +3156,7 @@ bool parse(char *controlfile) {
         ASSERT(controlfile);
 
         if ((yyin = fopen(controlfile,"r")) == (FILE *)NULL) {
-                LogError("Cannot open the control file '%s' -- %s\n", controlfile, STRERROR);
+                Log_error("Cannot open the control file '%s' -- %s\n", controlfile, STRERROR);
                 return false;
         }
 
@@ -3288,7 +3284,7 @@ static void postparse() {
 
         /* Check that we do not start monit in daemon mode without having a poll time */
         if (! Run.polltime && ((Run.flags & Run_Daemon) || (Run.flags & Run_Foreground))) {
-                LogError("Poll time is invalid or not defined. Please define poll time in the control file\nas a number (> 0)  or use the -d option when starting monit\n");
+                Log_error("Poll time is invalid or not defined. Please define poll time in the control file\nas a number (> 0)  or use the -d option when starting monit\n");
                 cfg_errflag++;
         }
 
@@ -3299,11 +3295,11 @@ static void postparse() {
         if (! Run.system) {
                 char hostname[STRLEN];
                 if (gethostname(hostname, sizeof(hostname))) {
-                        LogError("Cannot get system hostname -- please add 'check system <name>'\n");
+                        Log_error("Cannot get system hostname -- please add 'check system <name>'\n");
                         cfg_errflag++;
                 }
                 if (Util_existService(hostname)) {
-                        LogError("'check system' not defined in control file, failed to add automatic configuration (service name %s is used already) -- please add 'check system <name>' manually\n", hostname);
+                        Log_error("'check system' not defined in control file, failed to add automatic configuration (service name %s is used already) -- please add 'check system <name>' manually\n", hostname);
                         cfg_errflag++;
                 }
                 Run.system = createservice(Service_System, Str_dup(hostname), NULL, check_system);
@@ -3323,12 +3319,12 @@ static void postparse() {
                                         }
                                 }
                                 if (! Run.mmonitcredentials)
-                                        LogWarning("M/Monit registration with credentials enabled, but no suitable credentials found in monit configuration file -- please add 'allow user:password' option to 'set httpd' statement\n");
+                                        Log_warning("M/Monit registration with credentials enabled, but no suitable credentials found in monit configuration file -- please add 'allow user:password' option to 'set httpd' statement\n");
                         }
                 } else if (Run.httpd.flags & Httpd_Unix) {
-                        LogWarning("M/Monit enabled but Monit httpd is using unix socket -- please change 'set httpd' statement to use TCP port in order to be able to manage services on Monit\n");
+                        Log_warning("M/Monit enabled but Monit httpd is using unix socket -- please change 'set httpd' statement to use TCP port in order to be able to manage services on Monit\n");
                 } else {
-                        LogWarning("M/Monit enabled but no httpd allowed -- please add 'set httpd' statement\n");
+                        Log_warning("M/Monit enabled but no httpd allowed -- please add 'set httpd' statement\n");
                 }
         }
 
@@ -3440,31 +3436,36 @@ static void addservice(Service_T s) {
                 case Service_Host:
                         // Verify that a remote service has a port or an icmp list
                         if (! s->portlist && ! s->icmplist) {
-                                LogError("'check host' statement is incomplete: Please specify a port number to test\n or an icmp test at the remote host: '%s'\n", s->name);
+                                Log_error("'check host' statement is incomplete: Please specify a port number to test\n or an icmp test at the remote host: '%s'\n", s->name);
                                 cfg_errflag++;
                         }
                         break;
                 case Service_Program:
                         // Verify that a program test has a status test
                         if (! s->statuslist) {
-                                LogError("'check program %s' is incomplete: Please add an 'if status != n' test\n", s->name);
+                                Log_error("'check program %s' is incomplete: Please add an 'if status != n' test\n", s->name);
                                 cfg_errflag++;
                         }
-                        // Create the Command object
                         char program[PATH_MAX];
                         strncpy(program, s->program->args->arg[0], sizeof(program) - 1);
-                        s->program->C = Command_new(program, NULL);
-                        for (int i = 1; i < s->program->args->length; i++) {
-                                Command_appendArgument(s->program->C, s->program->args->arg[i]);
-                                snprintf(program + strlen(program), sizeof(program) - strlen(program) - 1, " %s", s->program->args->arg[i]);
+                        // Require that the program exist before creating the Command object
+                        if (File_isExecutable(program)) {
+                                s->program->C = Command_new(program, NULL);
+                                for (int i = 1; i < s->program->args->length; i++) {
+                                        Command_appendArgument(s->program->C, s->program->args->arg[i]);
+                                        snprintf(program + strlen(program), sizeof(program) - strlen(program) - 1, " %s", s->program->args->arg[i]);
+                                }
+                                s->path = Str_dup(program);
+                                if (s->program->args->has_uid)
+                                        Command_setUid(s->program->C, s->program->args->uid);
+                                if (s->program->args->has_gid)
+                                        Command_setGid(s->program->C, s->program->args->gid);
+                                // Set environment
+                                Command_setEnv(s->program->C, "MONIT_SERVICE", s->name);
+                        } else {
+                                // If we have a check program with a non-existing or non-executable program, assert that yyerror was called during parsing
+                                ASSERT(cfg_errflag > 0);
                         }
-                        s->path = Str_dup(program);
-                        if (s->program->args->has_uid)
-                                Command_setUid(s->program->C, s->program->args->uid);
-                        if (s->program->args->has_gid)
-                                Command_setGid(s->program->C, s->program->args->gid);
-                        // Set environment
-                        Command_setEnv(s->program->C, "MONIT_SERVICE", s->name);
                         break;
                 case Service_Net:
                         if (! s->linkstatuslist) {
@@ -5045,7 +5046,7 @@ static void check_depend() {
                         for (d = s->dependantlist; d; d = d->next) {
                                 Service_T dp = Util_getService(d->dependant);
                                 if (! dp) {
-                                        LogError("Depending service '%s' is not defined in the control file\n", d->dependant);
+                                        Log_error("Depending service '%s' is not defined in the control file\n", d->dependant);
                                         exit(1);
                                 }
                                 if (! dp->visited) {
@@ -5064,7 +5065,7 @@ static void check_depend() {
 
         if (! done) {
                 ASSERT(depends_on);
-                LogError("Found a depend loop in the control file involving the service '%s'\n", depends_on->name);
+                Log_error("Found a depend loop in the control file involving the service '%s'\n", depends_on->name);
                 exit(1);
         }
 
@@ -5077,13 +5078,13 @@ static void check_depend() {
 
 
 /*
- * Check if the executable exist
+ * Check and require that the executable exist
  */
 static void check_exec(char *exec) {
         if (! File_exist(exec))
-                yywarning2("Program does not exist:");
+                yyerror2("Program does not exist:");
         else if (! File_isExecutable(exec))
-                yywarning2("Program is not executable:");
+                yyerror2("Program is not executable:");
 }
 
 

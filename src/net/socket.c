@@ -179,7 +179,7 @@ static char *_addressToString(const struct sockaddr *addr, socklen_t addrlen, ch
                 char port[NI_MAXSERV];
                 int status = getnameinfo(addr, addrlen, ip, sizeof(ip), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
                 if (status) {
-                        LogError("Cannot get address string -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                        Log_error("Cannot get address string -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
                         *buf = 0;
                 } else {
                         snprintf(buf, buflen, "[%s]:%s", ip, port);
@@ -226,7 +226,7 @@ static bool _doConnect(int s, const struct sockaddr *addr, socklen_t addrlen, in
 }
 
 
-static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrlen, const struct sockaddr *localaddr, socklen_t localaddrlen, int family, int type, int protocol, SslOptions_T options, int timeout) {
+static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrlen, const struct sockaddr *localaddr, socklen_t localaddrlen, int family, int type, int protocol, int timeout) {
         ASSERT(host);
         char error[STRLEN];
         int s = socket(family, type, protocol);
@@ -249,18 +249,6 @@ static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_
                                         S->host = Str_dup(host);
                                         S->port = _getPort(addr);
                                         S->connection_type = Connection_Client;
-                                        if (options->flags == SSL_Enabled) {
-                                                TRY
-                                                {
-                                                        Socket_enableSsl(S, options, host);
-                                                }
-                                                ELSE
-                                                {
-                                                        Socket_free(&S);
-                                                        RETHROW;
-                                                }
-                                                END_TRY;
-                                        }
                                         return S;
                                 }
                         } else {
@@ -301,14 +289,14 @@ static struct addrinfo *_resolve(const char *hostname, int port, Socket_Type typ
                         break;
 #endif
                 default:
-                        LogError("Invalid socket family %d\n", family);
+                        Log_error("Invalid socket family %d\n", family);
                         return NULL;
         }
         char _port[6];
         snprintf(_port, sizeof(_port), "%d", port);
         int status = getaddrinfo(hostname, _port, &hints, &result);
         if (status != 0) {
-                LogError("Cannot translate '%s' to IP address -- %s\n", hostname, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                Log_error("Cannot translate '%s' to IP address -- %s\n", hostname, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
                 return NULL;
         }
         return result;
@@ -335,10 +323,14 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
                 for (struct addrinfo *r = result; r && S == NULL; r = r->ai_next) {
                         TRY
                         {
-                                S = _createIpSocket(host, r->ai_addr, r->ai_addrlen, NULL, 0, r->ai_family, r->ai_socktype, r->ai_protocol, options, timeout);
+                                S = _createIpSocket(host, r->ai_addr, r->ai_addrlen, NULL, 0, r->ai_family, r->ai_socktype, r->ai_protocol, timeout);
+                                if (options->flags == SSL_Enabled)
+                                        Socket_enableSsl(S, options, host);
                         }
                         ELSE
                         {
+                                if (S)
+                                        Socket_free((T *)&S);
                                 DEBUG("Info: Cannot connect to [%s]:%d -- %s\nTrying next address record\n", host, port, Exception_frame.message);
                                 snprintf(error, sizeof(error), "%s", Exception_frame.message);
                         }
@@ -346,7 +338,7 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
                 }
                 freeaddrinfo(result);
                 if (! S)
-                        LogError("Cannot connect to [%s]:%d -- %s\n", host, port, error);
+                        Log_error("Cannot connect to [%s]:%d -- %s\n", host, port, error);
         }
         return S;
 }
@@ -362,7 +354,7 @@ T Socket_createUnix(const char *path, Socket_Type type, int timeout) {
                         unixsocket_client.sun_family = AF_UNIX;
                         snprintf(unixsocket_client.sun_path, sizeof(unixsocket_client.sun_path), "/tmp/monit_%p.sock", &unixsocket_client);
                         if (bind(s, (struct sockaddr *) &unixsocket_client, sizeof(unixsocket_client)) != 0) {
-                                LogError("Unix socket %s bind error -- %s\n", unixsocket_client.sun_path, STRERROR);
+                                Log_error("Unix socket %s bind error -- %s\n", unixsocket_client.sun_path, STRERROR);
                                 goto error;
                         }
                 }
@@ -382,16 +374,16 @@ T Socket_createUnix(const char *path, Socket_Type type, int timeout) {
                                 S->host = Str_dup(LOCALHOST);
                                 return S;
                         }
-                        LogError("Unix socket %s connection error -- %s\n", path, error);
+                        Log_error("Unix socket %s connection error -- %s\n", path, error);
                 } else {
-                        LogError("Cannot set nonblocking unix socket %s -- %s\n", path, STRERROR);
+                        Log_error("Cannot set nonblocking unix socket %s -- %s\n", path, STRERROR);
                 }
 error:
                 Net_close(s);
                 if (type == Socket_Udp)
                         unlink(unixsocket_client.sun_path);
         } else {
-                LogError("Cannot create unix socket %s -- %s\n", path, STRERROR);
+                Log_error("Cannot create unix socket %s -- %s\n", path, STRERROR);
         }
         return NULL;
 }
@@ -455,7 +447,7 @@ void Socket_free(T *S) {
                 socklen_t length = sizeof(type);
                 int rv = getsockopt((*S)->socket, SOL_SOCKET, SO_TYPE, &type, &length);
                 if (rv) {
-                        LogError("Freeing socket -- getsockopt failed: %s\n", STRERROR);
+                        Log_error("Freeing socket -- getsockopt failed: %s\n", STRERROR);
                 } else if (type == SOCK_DGRAM) {
                         struct sockaddr_storage addr;
                         socklen_t addrlen = sizeof(addr);
@@ -549,9 +541,9 @@ const char *Socket_getLocalHost(T S, char *host, int hostlen) {
                 int status = getnameinfo((struct sockaddr *)&addr, addrlen, host, hostlen, NULL, 0, NI_NUMERICHOST);
                 if (! status)
                         return host;
-                LogError("Cannot translate address to hostname -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                Log_error("Cannot translate address to hostname -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
         } else {
-                LogError("Cannot translate address to hostname -- getsockname failed: %s\n", STRERROR);
+                Log_error("Cannot translate address to hostname -- getsockname failed: %s\n", STRERROR);
         }
         return NULL;
 }
@@ -587,18 +579,22 @@ static void _testIp(Port_T p) {
                                 volatile T S = NULL;
                                 TRY
                                 {
-                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, p->outgoing.addrlen ? (struct sockaddr *)&(p->outgoing.addr) : NULL, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, &(p->target.net.ssl.options), p->timeout);
+                                        S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, p->outgoing.addrlen ? (struct sockaddr *)&(p->outgoing.addr) : NULL, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, p->timeout);
                                         S->Port = p;
                                         TRY
                                         {
+                                                if (p->target.net.ssl.options.flags == SSL_Enabled) {
+                                                        Socket_enableSsl(S, &(p->target.net.ssl.options), p->hostname);
+                                                }
                                                 p->protocol->check(S);
                                         }
                                         FINALLY
                                         {
-#ifdef HAVE_OPENSSL
                                                 // Set the minimum valid days past the protocol check as if the connection uses STARTTLS to switch plain->SSL, we have no SSL certificate information until the STARTTTLS is performed.
                                                 // Try to collect the certificate validDays even on protocol exception - the protocol test may fail on higher level (e.g. when HTTP returns 400), but we can still get certificate info
-                                                p->target.net.ssl.certificate.validDays = Ssl_getCertificateValidDays(S->ssl);
+#ifdef HAVE_OPENSSL
+                                                if (S->ssl)
+                                                        p->target.net.ssl.certificate.validDays = Ssl_getCertificateValidDays(S->ssl);
 #endif
                                         }
                                         END_TRY;
