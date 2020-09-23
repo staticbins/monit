@@ -2572,7 +2572,7 @@ action2         : action {
 
 rateXcycles     : NUMBER CYCLE {
                         if ($<number>1 < 1 || (unsigned long)$<number>1 > BITMAP_MAX) {
-                                yyerror2("The number of cycles must be between 1 and %lu", BITMAP_MAX);
+                                yyerror2("The number of cycles must be between 1 and %zu", BITMAP_MAX);
                         } else {
                                 rate.count  = $<number>1;
                                 rate.cycles = $<number>1;
@@ -2582,7 +2582,7 @@ rateXcycles     : NUMBER CYCLE {
 
 rateXYcycles    : NUMBER NUMBER CYCLE {
                         if ($<number>2 < 1 || (unsigned long)$<number>2 > BITMAP_MAX) {
-                                yyerror2("The number of cycles must be between 1 and %lu", BITMAP_MAX);
+                                yyerror2("The number of cycles must be between 1 and %zu", BITMAP_MAX);
                         } else if ($<number>1 < 1 || $<number>1 > $<number>2) {
                                 yyerror2("The number of events must be between 1 and less then poll cycles");
                         } else {
