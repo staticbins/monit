@@ -878,9 +878,9 @@ bool available_statistics(SystemInfo_T *si) {
 
         si->statisticsAvailable |= Statistics_FiledescriptorsPerSystem | Statistics_FiledescriptorsPerProcess;
 
-#ifdef HAVE_PRLIMIT
-        si->statisticsAvailable |= Statistics_FiledescriptorsPerProcessMax;
-#endif
+        struct stat sb;
+        if (stat("/proc/sys/fs/file-nr", &sb) == 0)
+                si->statisticsAvailable |= Statistics_FiledescriptorsPerProcessMax;
 
         return true;
 }
