@@ -3463,8 +3463,8 @@ static void addservice(Service_T s) {
                                 // Set environment
                                 Command_setEnv(s->program->C, "MONIT_SERVICE", s->name);
                         } else {
-                                // If we have a check program with a non-existing or non-executable program, assert that yyerror was called during parsing
-                                ASSERT(cfg_errflag > 0);
+                                Log_error("A 'check program' statement requires the program to exist '%s'\n", program);
+                                cfg_errflag++;
                         }
                         break;
                 case Service_Net:
@@ -4306,10 +4306,8 @@ static void addargument(char *argument) {
         ASSERT(argument);
 
         if (! command) {
-
-                NEW(command);
                 check_exec(argument);
-
+                NEW(command);
         }
 
         command->arg[command->length++] = argument;
@@ -5077,14 +5075,12 @@ static void check_depend() {
 }
 
 
-/*
- * Check and require that the executable exist
- */
+// Check and warn if the executable does not exist
 static void check_exec(char *exec) {
         if (! File_exist(exec))
-                yyerror2("Program does not exist:");
+                yywarning2("Program does not exist:");
         else if (! File_isExecutable(exec))
-                yyerror2("Program is not executable:");
+                yywarning2("Program is not executable:");
 }
 
 
