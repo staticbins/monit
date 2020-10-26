@@ -8,10 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		52165FF9245A3FC1003EEE11 /* Thread.c in Sources */ = {isa = PBXBuildFile; fileRef = 52165FF8245A3FC1003EEE11 /* Thread.c */; };
+		521B725224A41D9300246118 /* Convert.h in Headers */ = {isa = PBXBuildFile; fileRef = 521B725024A41D9300246118 /* Convert.h */; };
+		521B725324A41D9300246118 /* Convert.c in Sources */ = {isa = PBXBuildFile; fileRef = 521B725124A41D9300246118 /* Convert.c */; };
 		521C6648225B7DD7001E8544 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
 		521C664E225B7DF5001E8544 /* FmtTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3B21D85EC100F8045E /* FmtTest.c */; };
-		521ECE3921D85CFE00F8045E /* Fmt.h in Headers */ = {isa = PBXBuildFile; fileRef = 521ECE3721D85CFE00F8045E /* Fmt.h */; };
-		521ECE3A21D85CFE00F8045E /* Fmt.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3821D85CFE00F8045E /* Fmt.c */; };
 		521ECE3C21D85EC100F8045E /* FmtTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3B21D85EC100F8045E /* FmtTest.c */; };
 		522FF2FA192E702D00C62A13 /* TimeTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8613A5212700FC4089 /* TimeTest.c */; };
 		523FFE7C19AFE7B30018595D /* StrTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8313A5212700FC4089 /* StrTest.c */; };
@@ -157,8 +157,8 @@
 /* Begin PBXFileReference section */
 		5205CE261A59FEA500DB6380 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		52165FF8245A3FC1003EEE11 /* Thread.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Thread.c; sourceTree = "<group>"; };
-		521ECE3721D85CFE00F8045E /* Fmt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fmt.h; sourceTree = "<group>"; };
-		521ECE3821D85CFE00F8045E /* Fmt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Fmt.c; sourceTree = "<group>"; };
+		521B725024A41D9300246118 /* Convert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Convert.h; sourceTree = "<group>"; };
+		521B725124A41D9300246118 /* Convert.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Convert.c; sourceTree = "<group>"; };
 		521ECE3B21D85EC100F8045E /* FmtTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FmtTest.c; sourceTree = "<group>"; };
 		522539AC18B91092003EB002 /* THIRDPARTY */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = THIRDPARTY; sourceTree = "<group>"; };
 		52532AF5226DDE050021EAB6 /* libev.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libev.a; path = ../../../../../opt/local/lib/libev.a; sourceTree = "<group>"; };
@@ -449,14 +449,14 @@
 		52D7967413A6CE560014CED2 /* util */ = {
 			isa = PBXGroup;
 			children = (
+				521B725124A41D9300246118 /* Convert.c */,
+				521B725024A41D9300246118 /* Convert.h */,
 				52D7967713A6CE560014CED2 /* List.h */,
 				52D7967613A6CE560014CED2 /* List.c */,
 				52D7967913A6CE560014CED2 /* Str.h */,
 				52D7967813A6CE560014CED2 /* Str.c */,
 				52D7967B13A6CE560014CED2 /* StringBuffer.h */,
 				52D7967A13A6CE560014CED2 /* StringBuffer.c */,
-				521ECE3721D85CFE00F8045E /* Fmt.h */,
-				521ECE3821D85CFE00F8045E /* Fmt.c */,
 			);
 			path = util;
 			sourceTree = "<group>";
@@ -482,7 +482,7 @@
 				5280A6DC22667D5B00A4C0B3 /* Task.h in Headers */,
 				52DA27A822713A0700C6C67F /* Atomic.h in Headers */,
 				5280A6D8226674E000A4C0B3 /* Scheduler.h in Headers */,
-				521ECE3921D85CFE00F8045E /* Fmt.h in Headers */,
+				521B725224A41D9300246118 /* Convert.h in Headers */,
 				52E737DC1EE71099007BF939 /* ProtocolException.h in Headers */,
 				5280A6D4226674CD00A4C0B3 /* Dispatcher.h in Headers */,
 			);
@@ -692,7 +692,6 @@
 				52D7968413A6CE560014CED2 /* Exception.c in Sources */,
 				52D7968913A6CE560014CED2 /* Dir.c in Sources */,
 				5280A6D7226674E000A4C0B3 /* Scheduler.c in Sources */,
-				521ECE3A21D85CFE00F8045E /* Fmt.c in Sources */,
 				52D7968B13A6CE560014CED2 /* File.c in Sources */,
 				52D7968D13A6CE560014CED2 /* InputStream.c in Sources */,
 				52D7968F13A6CE560014CED2 /* OutputStream.c in Sources */,
@@ -705,6 +704,7 @@
 				52D7969A13A6CE560014CED2 /* Time.c in Sources */,
 				52D7969F13A6CE560014CED2 /* List.c in Sources */,
 				52D796A113A6CE560014CED2 /* Str.c in Sources */,
+				521B725324A41D9300246118 /* Convert.c in Sources */,
 				5280A6D3226674CD00A4C0B3 /* Dispatcher.c in Sources */,
 				52D796A313A6CE560014CED2 /* StringBuffer.c in Sources */,
 			);

@@ -165,6 +165,7 @@ static void _worker(void *t) {
         Task_T task = t;
         TRY
         {
+                task->executed = ev_now(task->scheduler->loop);
                 task->worker(task);
         }
         ELSE
@@ -173,7 +174,6 @@ static void _worker(void *t) {
         }
         FINALLY
         {
-                task->executed = ev_now(task->scheduler->loop);
                 Atomic_set(task->inprogress, 0);
         }
         END_TRY;
