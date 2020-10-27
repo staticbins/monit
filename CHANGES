@@ -4,7 +4,7 @@
 
 Version 5.27.2
 
-Fixed: Issue #931: The "if oes exist" file test with unmonitor or stop action didn't work properly.
+Fixed: Issue #931: The "if does exist" test with unmonitor or stop action didn't work properly.
 
 
 Version 5.27.1

@@ -1549,6 +1549,9 @@ State_Type check_process(Service_T s) {
                 rv = State_Failed;
                 Event_post(s, Event_Exist, State_Failed, l->action, "process is running with pid %d", (int)pid);
         }
+        // Double-check the monitoring state: the "if does exist" may call unmonitor/stop, which resets the service object
+        if (s->monitor == Monitor_Not)
+                return rv;
         /* Reset the exec and timeout errors if active ... the process is running (most probably after manual intervention) */
         if (IS_EVENT_SET(s->error, Event_Exec))
                 Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "process is running after previous exec error (slow starting or manually recovered?)");
@@ -1629,6 +1632,9 @@ State_Type check_filesystem(Service_T s) {
                 rv = State_Failed;
                 Event_post(s, Event_Exist, State_Failed, l->action, "filesystem '%s' exists", s->path);
         }
+        // Double-check the monitoring state: the "if does exist" may call unmonitor/stop, which resets the service object
+        if (s->monitor == Monitor_Not)
+                return rv;
         if (_checkPerm(s, s->inf.filesystem->mode) == State_Failed)
                 rv = State_Failed;
         if (_checkUid(s, s->inf.filesystem->uid) == State_Failed)
@@ -1746,6 +1752,9 @@ State_Type check_directory(Service_T s) {
                         Event_post(s, Event_Exist, State_Failed, l->action, "directory exists");
                 }
         }
+        // Double-check the monitoring state: the "if does exist" may call unmonitor/stop, which resets the service object
+        if (s->monitor == Monitor_Not)
+                return rv;
         if (! S_ISDIR(s->inf.directory->mode)) {
                 Event_post(s, Event_Invalid, State_Failed, s->action_INVALID, "is not directory");
                 return State_Failed;
@@ -1796,6 +1805,9 @@ State_Type check_fifo(Service_T s) {
                         Event_post(s, Event_Exist, State_Failed, l->action, "fifo exists");
                 }
         }
+        // Double-check the monitoring state: the "if does exist" may call unmonitor/stop, which resets the service object
+        if (s->monitor == Monitor_Not)
+                return rv;
         if (! S_ISFIFO(s->inf.fifo->mode)) {
                 Event_post(s, Event_Invalid, State_Failed, s->action_INVALID, "is not fifo");
                 return State_Failed;
