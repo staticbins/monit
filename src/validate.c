@@ -1686,6 +1686,9 @@ State_Type check_file(Service_T s) {
                         Event_post(s, Event_Exist, State_Failed, l->action, "file exists");
                 }
         }
+        // Double-check the monitoring state: the "if does exist" may call unmonitor/stop, which resets the service object
+        if (s->monitor == Monitor_Not)
+                return rv;
         if (! S_ISREG(s->inf.file->mode) && ! S_ISSOCK(s->inf.file->mode)) {
                 Event_post(s, Event_Invalid, State_Failed, s->action_INVALID, "is neither a regular file nor a socket");
                 return State_Failed;
