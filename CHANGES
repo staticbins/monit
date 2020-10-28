@@ -1,10 +1,15 @@
-                     CHANGES version 5.27.1
+                     CHANGES version 5.27.2
 
            This file summarizes changes made since 5.0
 
+Version 5.27.2
+
+Fixed: Issue #931: The "if does exist" test with unmonitor or stop action didn't work properly.
+
+
 Version 5.27.1
 
-Fixed: Issue #932. AssertException in "check program" if program does not exist. At the same
+Fixed: Issue #932: AssertException in "check program" if program does not exist. At the same
 time this fix also require that executables mentioned in start/stop/restart/exec and check
 program exist in the file system. Previously this only generated a warning.
 
