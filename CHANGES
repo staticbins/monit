@@ -10,6 +10,8 @@ Fixed: Issue #937: If the filesystem check uses mountpoint instead of device and
 are defined for the same filesystem with mismatch between /etc/mtab and device name in disk statistics
 path, Monit reported error and disk activity was not reported.
 
+Fixed: If the disk activity statistics if procfs fallback was used instead of sysfs.
+
 Changed: The debug mode no longer logs error about procfs /proc/<pid>/io and /proc/<pid>/fd open
 errors, because if monit is not running as root, these errors are common as linux doesn't allo to
 read these files if the process belongs to different user. These errors are logged only in extra
