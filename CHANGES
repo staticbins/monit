@@ -6,6 +6,11 @@ Version 5.27.2
 
 Fixed: Issue #931: The "if does exist" test with unmonitor or stop action didn't work properly.
 
+Changed: The debug mode no longer logs error about procfs /proc/<pid>/io and /proc/<pid>/fd open
+errors, because if monit is not running as root, these errors are common as linux doesn't allo to
+read these files if the process belongs to different user. These errors are logged only in extra
+verbose mode (-vv option).
+
 
 Version 5.27.1
 

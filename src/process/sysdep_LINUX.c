@@ -384,7 +384,8 @@ static bool _parseProcFdCount(Proc_T proc) {
         snprintf(path, sizeof(path), "/proc/%d/fd", proc->data.pid);
         DIR *dirp = opendir(path);
         if (! dirp) {
-                DEBUG("system statistic error -- opendir %s: %s\n", path, STRERROR);
+                if (Run.debug >= 2)
+                        DEBUG("system statistic error -- opendir %s: %s\n", path, STRERROR);
                 return false;
         }
         errno = 0;
