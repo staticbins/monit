@@ -297,15 +297,35 @@ static bool _getProcfsBlockDiskActivity(void *_inf) {
 }
 
 
+static bool _getDeviceNumbers(const char *device, int *major, int *minor) {
+        struct stat sb;
+        if (stat(device, &sb) != 0) {
+                *major = *minor = -1;
+                return false;
+        }
+        *major = major(sb.st_rdev);
+        *minor = minor(sb.st_rdev);
+        return true;
+}
+
+
 static bool _compareMountpoint(const char *mountpoint, struct mntent *mnt) {
         return IS(mountpoint, mnt->mnt_dir);
 }
 
 
 static bool _compareDevice(const char *device, struct mntent *mnt) {
+        int mnt_major, mnt_minor;
+        int device_major, device_minor;
         char target[PATH_MAX] = {};
-        // The device listed in /etc/mtab can be a device mapper symlink (e.g. /dev/mapper/centos-root -> /dev/dm-1) ... lookup the device as is first (support for NFS/CIFS/SSHFS/etc.) and fallback to realpath if it didn't match
-        return (Str_isEqual(device, mnt->mnt_fsname) || (realpath(mnt->mnt_fsname, target) && Str_isEqual(device, target)));
+        return (
+                // lookup the device as is first (support for NFS/CIFS/SSHFS/etc.)
+                Str_isEqual(device, mnt->mnt_fsname) ||
+                // The device listed in /etc/mtab can be a device mapper symlink (e.g. /dev/mapper/centos-root -> /dev/dm-1), i.e. try realpath
+                (realpath(mnt->mnt_fsname, target) && Str_isEqual(device, target)) ||
+                // The same filesystem may have multiple independent device nodes with the same major+minor number (e.g. block devices /dev/root and /dev/xvda1 for the same filesystem) => if path didn't match, compare major+minor
+                (_getDeviceNumbers(device, &device_major, &device_minor) && _getDeviceNumbers(mnt->mnt_fsname, &mnt_major, &mnt_minor) && (mnt_major == device_major) && (mnt_minor == device_minor))
+        );
 }
 
 
@@ -329,14 +349,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                         inf->filesystem->object.getDiskUsage = _getDiskUsage; // The disk usage method is common for all filesystem types
                         inf->filesystem->object.getDiskActivity = _getDummyDiskActivity; // Set to dummy IO statistics method by default (can be overridden bellow if statistics method is available for this filesystem)
                         // Get the major and minor device number
-                        struct stat sb;
-                        if (stat(inf->filesystem->object.device, &sb) == 0) {
-                                inf->filesystem->object.number.major = major(sb.st_rdev);
-                                inf->filesystem->object.number.minor = minor(sb.st_rdev);
-                        } else {
-                                Log_error("Cannot get major and minor device number for %s -- %s\n", inf->filesystem->object.device, STRERROR);
-                                inf->filesystem->object.number.major = inf->filesystem->object.number.minor = -1;
-                        }
+                        _getDeviceNumbers(inf->filesystem->object.device, &(inf->filesystem->object.number.major), &(inf->filesystem->object.number.minor));
                         // Set filesystem-dependent callbacks
                         if (Str_startsWith(mnt->mnt_type, "nfs")) {
                                 // NFS
