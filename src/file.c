@@ -277,7 +277,8 @@ bool file_readProc(char *buf, int buf_size, const char *name, int pid, int *byte
 
         int fd = open(filename, O_RDONLY);
         if (fd < 0) {
-                DEBUG("Cannot open proc file '%s' -- %s\n", filename, STRERROR);
+                if (Run.debug >= 2)
+                        DEBUG("Cannot open proc file '%s' -- %s\n", filename, STRERROR);
                 return false;
         }
 

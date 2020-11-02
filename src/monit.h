@@ -1035,6 +1035,10 @@ typedef struct Device_T {
         bool mounted;
         int generation;
         int instance;
+        struct {
+                int major;
+                int minor;
+        } number;
         char partition;
         char device[PATH_MAX];
         char mountpoint[PATH_MAX];

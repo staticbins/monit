@@ -95,7 +95,7 @@
 static struct {
         int fd;                                    // /proc/self/mounts filedescriptor (needed for mount/unmount notification)
         int generation;                            // Increment each time the mount table is changed
-        bool (*getBlockDiskActivity)(void *); // Disk activity callback: _getProcfsBlockDiskActivity (old kernels), _getSysfsBlockDiskActivity (new kernels)
+        bool (*getBlockDiskActivity)(void *); // Disk activity callback: _getProcfsBlockDiskActivity or _getSysfsBlockDiskActivity (if sysfs is mounted)
         bool (*getCifsDiskActivity)(void *);  // Disk activity callback: _getCifsDiskActivity if /proc/fs/cifs/Stats is present, otherwise _getDummyDiskActivity
 } _statistics = {};
 
@@ -234,88 +234,17 @@ static bool _getZfsDiskActivity(void *_inf) {
 }
 
 
-static bool _getVxfsDiskActivity(void *_inf) {
-        Info_T inf = _inf;
-
-        // Get the major and minor node number to find the statistic data.
-        struct stat statbuf;
-        unsigned int st_major, st_minor;
-        unsigned int major = 0, minor = 0;
-
-        if (stat(inf->filesystem->object.device, &statbuf) < 0) {
-                return false;
-        }
-        st_major = major(statbuf.st_rdev);
-        st_minor = minor(statbuf.st_rdev);
-
-        // Try to find the statistic data in the sysfs first.
-        char path[PATH_MAX];
-        snprintf(path, sizeof(path), "/sys/dev/block/%u:%u/stat", st_major, st_minor);
-        FILE *f = fopen(path, "r");
-        if (f) {
-                unsigned long long now = Time_milli();
-                unsigned long long readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
-                unsigned long long writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
-                if (fscanf(f, "%llu %*u %llu %llu %llu %*u %llu %llu %*u %*u %*u", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
-                        Log_error("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
-                        fclose(f);
-                        return false;
-                }
-                Statistics_update(&(inf->filesystem->time.read), now, readTime);
-                Statistics_update(&(inf->filesystem->read.bytes), now, readSectors * 512);
-                Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
-                Statistics_update(&(inf->filesystem->time.write), now, writeTime);
-                Statistics_update(&(inf->filesystem->write.bytes), now, writeSectors * 512);
-                Statistics_update(&(inf->filesystem->write.operations), now, writeOperations);
-                fclose(f);
-                return true;
-        }
-        DEBUG("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
-
-        // Use the procfs file for backup purpose only.
-        // It should not used as main data collector, it support kernels >= 2.6.25 format only, too.
-        f = fopen(DISKSTAT, "r");
-        if (f) {
-                unsigned long long now = Time_milli();
-                unsigned long long readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
-                unsigned long long writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
-                char line[PATH_MAX];
-                while (fgets(line, sizeof(line), f)) {
-                        char name[256] = {};
-
-                        // Traverse the /proc/diskstats to have the statistics.
-                        // The kernels >= 2.6.25 format with 11 fields is supported only.
-                        if (fscanf(f, "%u %u %255s %llu %*u %llu %llu %llu %*u %llu %llu %*u %*u %*u", &major, &minor, name, &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) == 9 && major == st_major && minor == st_minor) {
-                                Statistics_update(&(inf->filesystem->time.read), now, readTime);
-                                Statistics_update(&(inf->filesystem->read.bytes), now, readSectors * 512);
-                                Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
-                                Statistics_update(&(inf->filesystem->time.write), now, writeTime);
-                                Statistics_update(&(inf->filesystem->write.bytes), now, writeSectors * 512);
-                                Statistics_update(&(inf->filesystem->write.operations), now, writeOperations);
-                                fclose(f);
-                                return true;
-                        }
-                }
-                fclose(f);
-                DEBUG("filesystem statistic error: cannot find device number %u %u for %s\n", st_major, st_minor, inf->filesystem->object.device);
-        } else {
-                DEBUG("filesystem statistic error: cannot read %s -- %s\n", DISKSTAT, STRERROR);
-        }
-        // Always true to get the disk usage, at least.
-        return true;
-}
-
-
+// See https://www.kernel.org/doc/Documentation/block/stat.txt
 static bool _getSysfsBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
         char path[2 * PATH_MAX];
-        snprintf(path, sizeof(path), "/sys/class/block/%s/stat", inf->filesystem->object.key);
+        snprintf(path, sizeof(path), "/sys/dev/block/%u:%u/stat", inf->filesystem->object.number.major, inf->filesystem->object.number.minor);
         FILE *f = fopen(path, "r");
         if (f) {
                 unsigned long long now = Time_milli();
                 unsigned long long readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
                 unsigned long long writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
-                if (fscanf(f, "%llu %*u %llu %llu %llu %*u %llu %llu %*u %*u %*u", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
+                if (fscanf(f, "%llu %*u %llu %llu %llu %*u %llu %llu", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
                         fclose(f);
                         Log_error("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
                         return false;
@@ -334,22 +263,27 @@ static bool _getSysfsBlockDiskActivity(void *_inf) {
 }
 
 
+// See https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats
 static bool _getProcfsBlockDiskActivity(void *_inf) {
         Info_T inf = _inf;
         FILE *f = fopen(DISKSTAT, "r");
         if (f) {
                 unsigned long long now = Time_milli();
-                unsigned long long readOperations = 0ULL, readSectors = 0ULL;
-                unsigned long long writeOperations = 0ULL, writeSectors = 0ULL;
+                unsigned long long readOperations = 0ULL, readSectors = 0ULL, readTime = 0ULL;
+                unsigned long long writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
                 char line[PATH_MAX];
                 while (fgets(line, sizeof(line), f)) {
+                        int rv;
+                        int major;
+                        int minor;
                         char name[256] = {};
-                        // Fallback for kernels < 2.6.25: the /proc/diskstats used to have just 4 statistics, the file is present on >= 2.6.25 too and has 11 fields (same format as /sys/class/block/<NAME>/stat), but we use sysfs for it
-                        // as we read the given partition directly instead of traversing the whole filesystems list. In this function we expect the old 4-statistics format - if it should be ever used as main data collector, it needs to
-                        // be modified to support >= 2.6.25 format too.
-                        if (fscanf(f, " %*d %*d %255s %llu %llu %llu %llu", name, &readOperations, &readSectors, &writeOperations, &writeSectors) == 5 && Str_isEqual(name, inf->filesystem->object.key)) {
+                        // Note: There are 17 fields in kernel 5.5+, we may use them in the future
+                        rv = fscanf(f, " %d %d %255s %llu %*u %llu %llu %llu %*u %llu %llu", &major, &minor, name, &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime);
+                        if (rv == 9 && major == inf->filesystem->object.number.major && minor == inf->filesystem->object.number.minor) {
+                                Statistics_update(&(inf->filesystem->time.read), now, readTime);
                                 Statistics_update(&(inf->filesystem->read.bytes), now, readSectors * 512);
                                 Statistics_update(&(inf->filesystem->read.operations), now, readOperations);
+                                Statistics_update(&(inf->filesystem->time.write), now, writeTime);
                                 Statistics_update(&(inf->filesystem->write.bytes), now, writeSectors * 512);
                                 Statistics_update(&(inf->filesystem->write.operations), now, writeOperations);
                                 break;
@@ -363,15 +297,35 @@ static bool _getProcfsBlockDiskActivity(void *_inf) {
 }
 
 
+static bool _getDeviceNumbers(const char *device, int *major, int *minor) {
+        struct stat sb;
+        if (stat(device, &sb) != 0) {
+                *major = *minor = -1;
+                return false;
+        }
+        *major = major(sb.st_rdev);
+        *minor = minor(sb.st_rdev);
+        return true;
+}
+
+
 static bool _compareMountpoint(const char *mountpoint, struct mntent *mnt) {
         return IS(mountpoint, mnt->mnt_dir);
 }
 
 
 static bool _compareDevice(const char *device, struct mntent *mnt) {
+        int mnt_major, mnt_minor;
+        int device_major, device_minor;
         char target[PATH_MAX] = {};
-        // The device listed in /etc/mtab can be a device mapper symlink (e.g. /dev/mapper/centos-root -> /dev/dm-1) ... lookup the device as is first (support for NFS/CIFS/SSHFS/etc.) and fallback to realpath if it didn't match
-        return (Str_isEqual(device, mnt->mnt_fsname) || (realpath(mnt->mnt_fsname, target) && Str_isEqual(device, target)));
+        return (
+                // lookup the device as is first (support for NFS/CIFS/SSHFS/etc.)
+                Str_isEqual(device, mnt->mnt_fsname) ||
+                // The device listed in /etc/mtab can be a device mapper symlink (e.g. /dev/mapper/centos-root -> /dev/dm-1), i.e. try realpath
+                (realpath(mnt->mnt_fsname, target) && Str_isEqual(device, target)) ||
+                // The same filesystem may have multiple independent device nodes with the same major+minor number (e.g. block devices /dev/root and /dev/xvda1 for the same filesystem) => if path didn't match, compare major+minor
+                (_getDeviceNumbers(device, &device_major, &device_minor) && _getDeviceNumbers(mnt->mnt_fsname, &mnt_major, &mnt_minor) && (mnt_major == device_major) && (mnt_minor == device_minor))
+        );
 }
 
 
@@ -394,6 +348,9 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                         snprintf(flags, sizeof(flags), "%s", mnt->mnt_opts);
                         inf->filesystem->object.getDiskUsage = _getDiskUsage; // The disk usage method is common for all filesystem types
                         inf->filesystem->object.getDiskActivity = _getDummyDiskActivity; // Set to dummy IO statistics method by default (can be overridden bellow if statistics method is available for this filesystem)
+                        // Get the major and minor device number
+                        _getDeviceNumbers(inf->filesystem->object.device, &(inf->filesystem->object.number.major), &(inf->filesystem->object.number.minor));
+                        // Set filesystem-dependent callbacks
                         if (Str_startsWith(mnt->mnt_type, "nfs")) {
                                 // NFS
                                 inf->filesystem->object.getDiskActivity = _getNfsDiskActivity;
@@ -409,11 +366,6 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                                 // Need base zpool name for /proc/spl/kstat/zfs/<NAME>/io lookup:
                                 snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s", inf->filesystem->object.device);
                                 Str_replaceChar(inf->filesystem->object.key, '/', 0);
-                        } else if (IS(mnt->mnt_type, "vxfs")) {
-                                // VXFS, Veritas FS
-                                inf->filesystem->object.getDiskActivity = _getVxfsDiskActivity;
-                                // Use device major and minor number lookup in sysfs or procfs.
-                                snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s", inf->filesystem->object.device);
                         } else {
                                 if (realpath(mnt->mnt_fsname, inf->filesystem->object.key)) {
                                         // Need base name for /sys/class/block/<NAME>/stat or /proc/diskstats lookup:
