@@ -12,7 +12,7 @@ path, Monit reported error and disk activity was not reported.
 
 Fixed: Disk activity statistics if procfs fallback was used instead of sysfs.
 
-Fixed: LXC container: Monit may ignore the "start delay" in the "set daemon" statement, when the container
+Fixed: LXC container: Monit may ignore the "start delay" option of the "set daemon" statement when the container
 was rebooted, while the host was not rebooted (the LXC cotainer's boot time is not virtualized - it is inherited
 from the host).
 
