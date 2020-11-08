@@ -558,18 +558,22 @@ static void do_default() {
 
                 atexit(file_finalize);
 
-                if (Run.startdelay && State_reboot()) {
-                        time_t now = Time_now();
-                        time_t delay = now + Run.startdelay;
+                if (Run.startdelay) {
+                        if (State_reboot()) {
+                                time_t now = Time_now();
+                                time_t delay = now + Run.startdelay;
 
-                        Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
+                                Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
 
-                        /* sleep can be interrupted by signal => make sure we paused long enough */
-                        while (now < delay) {
-                                sleep((unsigned int)(delay - now));
-                                if (Run.flags & Run_Stopped)
-                                        do_exit(false);
-                                now = Time_now();
+                                /* sleep can be interrupted by signal => make sure we paused long enough */
+                                while (now < delay) {
+                                        sleep((unsigned int)(delay - now));
+                                        if (Run.flags & Run_Stopped)
+                                                do_exit(false);
+                                        now = Time_now();
+                                }
+                        } else {
+                                DEBUG("Monit delay %ds skipped -- the system boot time has not changed since last Monit start\n", Run.startdelay);
                         }
                 }
 

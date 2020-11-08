@@ -479,21 +479,7 @@ bool init_process_info_sysdep(void) {
                 DEBUG("system statistic error -- cannot open /proc/meminfo\n");
         }
 
-        f = fopen("/proc/stat", "r");
-        if (f) {
-                char line[STRLEN];
-                systeminfo.booted = 0;
-                while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "btime %llu", &systeminfo.booted) == 1) {
-                                break;
-                        }
-                }
-                fclose(f);
-                if (! systeminfo.booted)
-                        DEBUG("system statistic error -- cannot get system boot time\n");
-        } else {
-                DEBUG("system statistic error -- cannot open /proc/stat\n");
-        }
+        systeminfo.booted = (long long)_getStartTime();
 
         return true;
 }

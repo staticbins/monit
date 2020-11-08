@@ -10,7 +10,11 @@ Fixed: Issue #937: If the filesystem check uses mountpoint instead of device and
 are defined for the same filesystem with mismatch between /etc/mtab and device name in disk statistics
 path, Monit reported error and disk activity was not reported.
 
-Fixed: If the disk activity statistics if procfs fallback was used instead of sysfs.
+Fixed: Disk activity statistics if procfs fallback was used instead of sysfs.
+
+Fixed: LXC container: Monit may ignore the "start delay" option of the "set daemon" statement when the container
+was rebooted, while the host was not rebooted (the LXC cotainer's boot time is not virtualized - it is inherited
+from the host).
 
 Changed: The debug mode no longer logs error about procfs /proc/<pid>/io and /proc/<pid>/fd open
 errors, because if monit is not running as root, these errors are common as linux doesn't allo to
