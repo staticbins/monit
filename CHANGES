@@ -10,6 +10,9 @@ Fixed: Issue #937: If the filesystem check uses mountpoint instead of device and
 are defined for the same filesystem with mismatch between /etc/mtab and device name in disk statistics
 path, Monit reported error and disk activity was not reported.
 
+Fixed: Issue #948: Cookie validation problem, Invalid CSRF Token, if the request is more then 1024 bytes.
+Increased the request to 8kB.
+
 Fixed: Disk activity statistics if procfs fallback was used instead of sysfs.
 
 Fixed: LXC container: Monit may ignore the "start delay" option of the "set daemon" statement when the container

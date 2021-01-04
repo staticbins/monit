@@ -46,7 +46,7 @@
 
 /* Initial buffer sizes */
 #define STRLEN             256
-#define REQ_STRLEN         1024
+#define REQ_STRLEN         8192
 #define RES_STRLEN         2048
 #define MAX_URL_LENGTH     512
 
