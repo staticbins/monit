@@ -1,6 +1,14 @@
-                     CHANGES version 5.27.2
+                     CHANGES version 5.28.0
 
            This file summarizes changes made since 5.0
+
+Version 5.28.0
+
+New: For TCP/UDP ports monit can alert on successful connection, e.g. when a
+service like mysql should not be publicly available. Thanks to Christian
+Goettsche for patch. Example:
+   if succeeded host example.org port 3306 type tcp protocol mysql then alert
+
 
 Version 5.27.2
 
