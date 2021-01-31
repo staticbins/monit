@@ -3281,9 +3281,12 @@ a connection and that it is possible to write and read from the socket.
 If a connection is not accepted or if there is a problem with socket
 I/O, Monit will execute a specified action.
 
+For TCP/UDP ports monit can alert on successful connection, e.g. when a
+service like mysql should not be publicly available.
+
 TCP/UDP port test syntax:
 
- IF FAILED
+ IF FAILED|SUCCEEDED
     [HOST string]
     <PORT number>
     [ADDRESS string]
@@ -3312,6 +3315,8 @@ Examples:
  if failed port 80 then alert
 
  if failed port 53 type udp protocol dns then alert
+
+ if succeeded host example.org port 3306 type tcp protocol mysql then alert
 
  if failed unixsocket /var/run/sophie then alert
 

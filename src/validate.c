@@ -143,7 +143,7 @@ static void _programOutput(InputStream_T I, StringBuffer_T S) {
 /**
  * Test the connection and protocol
  */
-static State_Type _checkConnection(Service_T s, Port_T p) {
+static State_Type _checkConnection(Service_T s, Port_T p, bool check_invers) {
         ASSERT(s);
         ASSERT(p);
         volatile int retry_count = p->retry;
@@ -154,23 +154,23 @@ retry:
         TRY
         {
                 Socket_test(p);
-                rv = State_Succeeded;
+                rv = check_invers ? State_Failed : State_Succeeded;
                 DEBUG("'%s' succeeded testing protocol [%s] at %s [response time %s]\n", s->name, p->protocol->name, Util_portDescription(p, buf, sizeof(buf)), Convert_time2str(p->response, (char[11]){}));
         }
         ELSE
         {
-                rv = State_Failed;
+                rv = check_invers ? State_Succeeded : State_Failed;
                 snprintf(report, sizeof(report), "failed protocol test [%s] at %s -- %s", p->protocol->name, Util_portDescription(p, buf, sizeof(buf)), Exception_frame.message);
         }
         END_TRY;
-        if (rv == State_Failed) {
+        if ((rv == State_Failed && !check_invers) || (rv == State_Succeeded && check_invers)) {
                 if (retry_count-- > 1) {
                         Log_warning("'%s' %s (attempt %d/%d)\n", s->name, report, p->retry - retry_count, p->retry);
                         goto retry;
                 }
-                Event_post(s, Event_Connection, State_Failed, p->action, "%s", report);
+                Event_post(s, Event_Connection, check_invers ? State_Succeeded : State_Failed, p->action, "%s", report);
         } else {
-                Event_post(s, Event_Connection, State_Succeeded, p->action, "connection succeeded to %s", Util_portDescription(p, buf, sizeof(buf)));
+                Event_post(s, Event_Connection, check_invers ? State_Failed : State_Succeeded, p->action, "connection succeeded to %s", Util_portDescription(p, buf, sizeof(buf)));
         }
         if (p->target.net.ssl.options.flags && p->target.net.ssl.certificate.validDays >= 0 && p->target.net.ssl.certificate.minimumDays > 0) {
                 if (p->target.net.ssl.certificate.validDays < p->target.net.ssl.certificate.minimumDays) {
@@ -1586,7 +1586,7 @@ State_Type check_process(Service_T s) {
                 //FIXME: instead of pause, try to test, but ignore any errors in the start timeout timeframe ... will allow to display the port response time as soon as available, instead of waiting for 30+ seconds
                 /* pause port tests in the start timeout timeframe while the process is starting (it may take some time to the process before it starts accepting connections) */
                 if (! s->start || uptimeMilli > s->start->timeout) {
-                        if (_checkConnection(s, pp) == State_Failed)
+                        if (_checkConnection(s, pp, pp->check_invers) == State_Failed)
                                 rv = State_Failed;
                 } else {
                         pp->is_available = Connection_Init;
@@ -1597,7 +1597,7 @@ State_Type check_process(Service_T s) {
                 //FIXME: instead of pause, try to test, but ignore any errors in the start timeout timeframe ... will allow to display the port response time as soon as available, instead of waiting for 30+ seconds
                 /* pause socket tests in the start timeout timeframe while the process is starting (it may take some time to the process before it starts accepting connections) */
                 if (! s->start || uptimeMilli > s->start->timeout) {
-                        if (_checkConnection(s, pp) == State_Failed)
+                        if (_checkConnection(s, pp, false) == State_Failed)
                                 rv = State_Failed;
                 } else {
                         pp->is_available = Connection_Init;
@@ -1948,7 +1948,7 @@ State_Type check_remote_host(Service_T s) {
         }
         /* Test each host:port and protocol in the service's portlist */
         for (Port_T p = s->portlist; p; p = p->next)
-                if (_checkConnection(s, p) == State_Failed)
+                if (_checkConnection(s, p, false) == State_Failed)
                         rv = State_Failed;
         return rv;
 }

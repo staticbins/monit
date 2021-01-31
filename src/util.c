@@ -928,8 +928,8 @@ void Util_printService(Service_T s) {
 
         for (Port_T o = s->portlist; o; o = o->next) {
                 StringBuffer_T buf2 = StringBuffer_create(64);
-                StringBuffer_append(buf2, "if failed [%s]:%d%s",
-                        o->hostname, o->target.net.port, Util_portRequestDescription(o));
+                StringBuffer_append(buf2, "if %s [%s]:%d%s",
+                        o->check_invers ? "succeeded" : "failed", o->hostname, o->target.net.port, Util_portRequestDescription(o));
                 if (o->outgoing.ip)
                         StringBuffer_append(buf2, " via address %s", o->outgoing.ip);
                 StringBuffer_append(buf2, " type %s/%s protocol %s with timeout %s",
