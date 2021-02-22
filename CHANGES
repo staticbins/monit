@@ -9,6 +9,11 @@ service like mysql should not be publicly available. Thanks to Christian
 Goettsche for patch. Example:
    if succeeded host example.org port 3306 type tcp protocol mysql then alert
 
+New: Issue #915: Add support for sevice name regular expressions in  monit CLI status, summary, start,
+stop, restart, unmonitor, monitor commands. Examples:
+   monit status myservice  # exact match
+   monit status "data.*"    # pattern which will match all services whos name contain "data" substring
+
 
 Version 5.27.2
 

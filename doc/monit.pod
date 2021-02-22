@@ -187,7 +187,7 @@ monitoring for them. If the group option is set (I<-g>), only
 start and enable monitoring of services in the named group ("all"
 is not required in this case).
 
-=item start <name>
+=item start <name|pattern>
 
 Start the named service and enable monitoring for it. The name is
 a service entry name from the monitrc file.
@@ -199,7 +199,7 @@ monitoring. If the group option is set, only stop and disable
 monitoring of the services in the named group ("all" is not
 required in this case).
 
-=item stop <name>
+=item stop <name|pattern>
 
 Stop the named service and disable its monitoring. The name is a
 service entry name from the monitrc file.
@@ -210,7 +210,7 @@ Stop and start I<all> services. If the group option is set, only
 restart the services in the named group ("all" is not required in
 this case).
 
-=item restart <name>
+=item restart <name|pattern>
 
 Restart the named service. The name is a service entry name from
 the monitrc file.
@@ -221,7 +221,7 @@ Enable monitoring of all services listed in the control file. If
 the group option is set, only start monitoring of services in the
 named group ("all" is not required in this case).
 
-=item monitor <name>
+=item monitor <name|pattern>
 
 Enable monitoring of the named service. The name is a service
 entry name from the monitrc file. Monit will also enable
@@ -233,17 +233,17 @@ Disable monitoring of all services listed in the control file. If
 the group option is set, only disable monitoring of services in
 the named group ("all" is not required in this case).
 
-=item unmonitor <name>
+=item unmonitor <name|pattern>
 
 Disable monitoring of the named service. The name is a service
 entry name from the monitrc file. Monit will also disable
 monitoring of all services that depends on this service.
 
-=item status [name]
+=item status [name|pattern]
 
 Print service status information.
 
-=item summary [name]
+=item summary [name|pattern]
 
 Print a short status summary.
 

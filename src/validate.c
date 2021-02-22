@@ -1467,7 +1467,6 @@ static bool _doScheduledAction(Service_T s) {
         if (action != Action_Ignored) {
                 rv = control_service(s->name, action);
                 Event_post(s, Event_Action, State_Changed, s->action_ACTION, "%s action %s", actionnames[action], rv ? "done" : "failed");
-                FREE(s->token);
         }
         return rv;
 }

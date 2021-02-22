@@ -112,6 +112,24 @@ typedef enum {
 } __attribute__((__packed__)) Output_Type;
 
 
+typedef struct ServiceMap_T {
+        int found;
+        union {
+                struct {
+                        const char *name;
+                        const char *token;
+                        Action_Type id;
+                } action;
+                struct {
+                        HttpResponse res;
+                } status;
+                struct {
+                        Box_T box;
+                } summary;
+        } data;
+} *ServiceMap_T;
+
+
 /* Private prototypes */
 static bool is_readonly(HttpRequest);
 static void printFavicon(HttpResponse);
@@ -204,6 +222,96 @@ void init_service() {
 
 
 /* ----------------------------------------------------------------- Private */
+
+
+static void _printServiceSummary(Box_T t, Service_T s) {
+        Box_setColumn(t, 1, "%s", s->name);
+        Box_setColumn(t, 2, "%s", get_service_status(TXT, s, (char[STRLEN]){}, STRLEN));
+        Box_setColumn(t, 3, "%s", servicetypes[s->type]);
+        Box_printRow(t);
+}
+
+
+static void _serviceMapByName(const char *pattern, void (*callback)(Service_T s, ServiceMap_T ap), ServiceMap_T ap) {
+        // Check the service name using the following sequence:
+        // 1) if the pattern is NULL, any service will match
+        // 2) backard compatibility: before monit 5.28.0 there was no support for regular expresion => check verbatim match before trying regex (the service may contain special characters)
+        // 3) regex match
+        if (pattern) {
+                int rv;
+                regex_t r;
+                char patternEscaped[STRLEN];
+                const char *patternCursor;
+
+                // If the pattern doesn't contain "^" or "$" already, wrap it as "^<pattern>$" to prevent match with services that contain the given substring only
+                if (! Str_has("^$", pattern)) {
+                        snprintf(patternEscaped, sizeof(patternEscaped), "^%s$", pattern);
+                        patternCursor = patternEscaped;
+                } else {
+                        patternCursor = pattern;
+                }
+
+                // The pattern is set, try to compile it as regex
+                if ((rv = regcomp(&r, patternCursor, REG_NOSUB | REG_EXTENDED))) {
+                        // Pattern compilation failed, fallback to verbatim match (before monit 5.28.0 there was no support for regular expresion)
+                        char error[STRLEN];
+
+                        regerror(rv, &r, error, STRLEN);
+                        regfree(&r);
+                        DEBUG("Regex %s parsing error: %s\n", patternCursor, error);
+
+                        for (Service_T s = servicelist_conf; s; s = s->next_conf) {
+                                if (IS(pattern, s->name)) { // Use the unescaped/original pattern
+                                        callback(s, ap);
+                                        ap->found++;
+                                }
+                        }
+                } else {
+                        // Regular expression match
+                        for (Service_T s = servicelist_conf; s; s = s->next_conf) {
+                                if (! regexec(&r, s->name, 0, NULL, 0)) {
+                                        callback(s, ap);
+                                        ap->found++;
+                                }
+                        }
+                        regfree(&r);
+                }
+
+
+        } else {
+                // Pattern is not set, any service will match
+                for (Service_T s = servicelist_conf; s; s = s->next_conf) {
+                        callback(s, ap);
+                        ap->found++;
+                }
+        }
+}
+
+
+static void _serviceMapByType(Service_Type type, void (*callback)(Service_T s, ServiceMap_T ap), ServiceMap_T ap) {
+        for (Service_T s = servicelist_conf; s; s = s->next_conf) {
+                if (s->type == type) {
+                        callback(s, ap);
+                        ap->found++;
+                }
+        }
+}
+
+
+static void _serviceMapSummary(Service_T s, ServiceMap_T ap) {
+        _printServiceSummary(ap->data.summary.box, s);
+}
+
+
+static void _serviceMapStatus(Service_T s, ServiceMap_T ap) {
+        status_service_txt(s, ap->data.status.res);
+}
+
+
+static void _serviceMapAction(Service_T s, ServiceMap_T ap) {
+        s->doaction = ap->data.action.id;
+        Log_info("'%s' %s on user request\n", s->name, ap->data.action.name);
+}
 
 
 static char *_getUptime(time_t delta, char s[256]) {
@@ -992,80 +1100,63 @@ static void handle_service(HttpRequest req, HttpResponse res) {
 }
 
 
+// Do action for the service (the service name is the last component of the URL path)
 static void handle_service_action(HttpRequest req, HttpResponse res) {
         char *name = req->url;
         if (! name) {
                 send_error(req, res, SC_NOT_FOUND, "Service name required");
                 return;
         }
-        Service_T s = Util_getService(++name);
-        if (! s) {
-                send_error(req, res, SC_NOT_FOUND, "There is no service named \"%s\"", name);
-                return;
-        }
-        const char *action = get_parameter(req, "action");
-        if (action) {
+        struct ServiceMap_T ap = {.found = 0, .data.action.name = get_parameter(req, "action")};
+        if (ap.data.action.name) {
                 if (is_readonly(req)) {
                         send_error(req, res, SC_FORBIDDEN, "You do not have sufficient privileges to access this page");
-                        return;
+                } else {
+                        ap.data.action.id = Util_getAction(ap.data.action.name);
+                        if (ap.data.action.id == Action_Ignored) {
+                                send_error(req, res, SC_BAD_REQUEST, "Invalid action \"%s\"", ap.data.action.name);
+                        } else {
+                                Service_T s = Util_getService(++name);
+                                if (! s) {
+                                        send_error(req, res, SC_NOT_FOUND, "There is no service named \"%s\"", name);
+                                        return;
+                                }
+                                _serviceMapAction(s, &ap);
+                                Run.flags |= Run_ActionPending; /* set the global flag */
+                                do_wakeupcall();
+                                do_service(req, res, s);
+                        }
                 }
-                Action_Type doaction = Util_getAction(action);
-                if (doaction == Action_Ignored) {
-                        send_error(req, res, SC_BAD_REQUEST, "Invalid action \"%s\"", action);
-                        return;
-                }
-                s->doaction = doaction;
-                const char *token = get_parameter(req, "token");
-                if (token) {
-                        FREE(s->token);
-                        s->token = Str_dup(token);
-                }
-                Log_info("'%s' %s on user request\n", s->name, action);
-                Run.flags |= Run_ActionPending; /* set the global flag */
-                do_wakeupcall();
         }
-        do_service(req, res, s);
 }
 
 
+// Do action for all services listed in "service" HTTP parameter (may have multiple value)
 static void handle_doaction(HttpRequest req, HttpResponse res) {
-        Service_T s;
-        Action_Type doaction = Action_Ignored;
-        const char *action = get_parameter(req, "action");
-        const char *token = get_parameter(req, "token");
-        if (action) {
+        struct ServiceMap_T ap = {.found = 0, .data.action.name = get_parameter(req, "action")};
+        if (ap.data.action.name) {
                 if (is_readonly(req)) {
                         send_error(req, res, SC_FORBIDDEN, "You do not have sufficient privileges to access this page");
                         return;
-                }
-                if ((doaction = Util_getAction(action)) == Action_Ignored) {
-                        send_error(req, res, SC_BAD_REQUEST, "Invalid action \"%s\"", action);
-                        return;
-                }
-                for (HttpParameter p = req->params; p; p = p->next) {
-                        if (IS(p->name, "service")) {
-                                s  = Util_getService(p->value);
-                                if (! s) {
-                                        send_error(req, res, SC_BAD_REQUEST, "There is no service named \"%s\"", p->value ? p->value : "");
-                                        return;
+                } else {
+                        if ((ap.data.action.id = Util_getAction(ap.data.action.name)) == Action_Ignored) {
+                                send_error(req, res, SC_BAD_REQUEST, "Invalid action \"%s\"", ap.data.action.name);
+                                return;
+                        }
+                        for (HttpParameter p = req->params; p; p = p->next) {
+                                if (IS(p->name, "service")) {
+                                        _serviceMapByName(p->value, _serviceMapAction, &ap);
+                                        if (ap.found == 0) {
+                                                send_error(req, res, SC_BAD_REQUEST, "There is no service named \"%s\"", p->value ? p->value : "");
+                                                return;
+                                        }
                                 }
-                                s->doaction = doaction;
-                                Log_info("'%s' %s on user request\n", s->name, action);
+                        }
+                        if (ap.found > 0) {
+                                Run.flags |= Run_ActionPending;
+                                do_wakeupcall();
                         }
                 }
-                /* Set token for last service only so we'll get it back after all services were handled */
-                if (token) {
-                        Service_T q = NULL;
-                        for (s = servicelist; s; s = s->next)
-                                if (s->doaction == doaction)
-                                        q = s;
-                        if (q) {
-                                FREE(q->token);
-                                q->token = Str_dup(token);
-                        }
-                }
-                Run.flags |= Run_ActionPending;
-                do_wakeupcall();
         }
 }
 
@@ -2440,7 +2531,7 @@ static void print_status(HttpRequest req, HttpResponse res, int version) {
 
                 StringBuffer_append(res->outputbuffer, "Monit %s uptime: %s\n\n", VERSION, _getUptime(ProcessTree_getProcessUptime(getpid()), (char[256]){}));
 
-                int found = 0;
+                struct ServiceMap_T ap = {.found = 0, .data.status.res = res};
                 const char *stringGroup = Util_urlDecode((char *)get_parameter(req, "group"));
                 const char *stringService = Util_urlDecode((char *)get_parameter(req, "service"));
                 if (stringGroup) {
@@ -2448,20 +2539,15 @@ static void print_status(HttpRequest req, HttpResponse res, int version) {
                                 if (IS(stringGroup, sg->name)) {
                                         for (list_t m = sg->members->head; m; m = m->next) {
                                                 status_service_txt(m->e, res);
-                                                found++;
+                                                ap.found++;
                                         }
                                         break;
                                 }
                         }
                 } else {
-                        for (Service_T s = servicelist_conf; s; s = s->next_conf) {
-                                if (! stringService || IS(stringService, s->name)) {
-                                        status_service_txt(s, res);
-                                        found++;
-                                }
-                        }
+                        _serviceMapByName(stringService, _serviceMapStatus, &ap);
                 }
-                if (found == 0) {
+                if (ap.found == 0) {
                         if (stringGroup)
                                 send_error(req, res, SC_BAD_REQUEST, "Service group '%s' not found", stringGroup);
                         else if (stringService)
@@ -2473,69 +2559,48 @@ static void print_status(HttpRequest req, HttpResponse res, int version) {
 }
 
 
-static void _printServiceSummary(Box_T t, Service_T s) {
-        Box_setColumn(t, 1, "%s", s->name);
-        Box_setColumn(t, 2, "%s", get_service_status(TXT, s, (char[STRLEN]){}, STRLEN));
-        Box_setColumn(t, 3, "%s", servicetypes[s->type]);
-        Box_printRow(t);
-}
-
-
-static int _printServiceSummaryByType(Box_T t, Service_Type type) {
-        int found = 0;
-        for (Service_T s = servicelist_conf; s; s = s->next_conf) {
-                if (s->type == type) {
-                        _printServiceSummary(t, s);
-                        found++;
-                }
-        }
-        return found;
-}
-
-
 static void print_summary(HttpRequest req, HttpResponse res) {
         set_content_type(res, "text/plain");
 
         StringBuffer_append(res->outputbuffer, "Monit %s uptime: %s\n", VERSION, _getUptime(ProcessTree_getProcessUptime(getpid()), (char[256]){}));
 
-        int found = 0;
+        struct ServiceMap_T ap = {.found = 0};
         const char *stringGroup = Util_urlDecode((char *)get_parameter(req, "group"));
         const char *stringService = Util_urlDecode((char *)get_parameter(req, "service"));
-        Box_T t = Box_new(res->outputbuffer, 3, (BoxColumn_T []){
+
+        ap.data.summary.box = Box_new(res->outputbuffer, 3, (BoxColumn_T []){
                         {.name = "Service Name", .width = 31, .wrap = false, .align = BoxAlign_Left},
                         {.name = "Status",       .width = 26, .wrap = false, .align = BoxAlign_Left},
                         {.name = "Type",         .width = 13, .wrap = false, .align = BoxAlign_Left}
                   }, true);
+
         if (stringGroup) {
                 for (ServiceGroup_T sg = servicegrouplist; sg; sg = sg->next) {
                         if (IS(stringGroup, sg->name)) {
                                 for (list_t m = sg->members->head; m; m = m->next) {
-                                        _printServiceSummary(t, m->e);
-                                        found++;
+                                        _printServiceSummary(ap.data.summary.box, m->e);
+                                        ap.found++;
                                 }
                                 break;
                         }
                 }
         } else if (stringService) {
-                for (Service_T s = servicelist_conf; s; s = s->next_conf) {
-                        if (IS(stringService, s->name)) {
-                                _printServiceSummary(t, s);
-                                found++;
-                        }
-                }
+                _serviceMapByName(stringService, _serviceMapSummary, &ap);
         } else {
-                found += _printServiceSummaryByType(t, Service_System);
-                found += _printServiceSummaryByType(t, Service_Process);
-                found += _printServiceSummaryByType(t, Service_File);
-                found += _printServiceSummaryByType(t, Service_Fifo);
-                found += _printServiceSummaryByType(t, Service_Directory);
-                found += _printServiceSummaryByType(t, Service_Filesystem);
-                found += _printServiceSummaryByType(t, Service_Host);
-                found += _printServiceSummaryByType(t, Service_Net);
-                found += _printServiceSummaryByType(t, Service_Program);
+                _serviceMapByType(Service_System, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Process, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_File, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Fifo, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Directory, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Filesystem, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Host, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Net, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Program, _serviceMapSummary, &ap);
         }
-        Box_free(&t);
-        if (found == 0) {
+
+        Box_free(&ap.data.summary.box);
+
+        if (ap.found == 0) {
                 if (stringGroup)
                         send_error(req, res, SC_BAD_REQUEST, "Service group '%s' not found", stringGroup);
                 else if (stringService)

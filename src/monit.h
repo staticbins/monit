@@ -1240,7 +1240,6 @@ typedef struct Service_T {
         int                error_hint;   /**< Failed/Changed hint for error bitmap */
         union Info_T       inf;                          /**< Service check result */
         struct timeval     collected;                /**< When were data collected */ //FIXME: replace with unsigned long long? (all places where timeval is used) ... Time_milli()?
-        char              *token;                                /**< Action token */
 
         /** Events */
         struct myevent {
