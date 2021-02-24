@@ -1475,9 +1475,9 @@ connectionurlopt : urloption
                  | sslexpire
                  ;
 
-connectionunix  : IF FAILED unixsocket connectionuxoptlist rate1 THEN action1 recovery {
+connectionunix  : IF connection_clause unixsocket connectionuxoptlist rate1 THEN action1 recovery {
                         addeventaction(&(portset).action, $<number>7, $<number>8);
-                        addport(&(current->socketlist), &portset, 0);
+                        addport(&(current->socketlist), &portset, $<number>2);
                   }
                 ;
 
@@ -1492,23 +1492,23 @@ connectionuxopt : type
                 | retry
                 ;
 
-icmp            : IF FAILED ICMP icmptype icmpoptlist rate1 THEN action1 recovery {
+icmp            : IF FAILED ICMP icmptype icmpoptlist rate1 THEN action1 recovery { //FIXME: connection_clause
                         icmpset.family = Socket_Ip;
                         icmpset.type = $<number>4;
                         addeventaction(&(icmpset).action, $<number>8, $<number>9);
                         addicmp(&icmpset);
                   }
-                | IF FAILED PING icmpoptlist rate1 THEN action1 recovery {
+                | IF FAILED PING icmpoptlist rate1 THEN action1 recovery { //FIXME: connection_clause
                         icmpset.family = Socket_Ip;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
-                | IF FAILED PING4 icmpoptlist rate1 THEN action1 recovery {
+                | IF FAILED PING4 icmpoptlist rate1 THEN action1 recovery { //FIXME: connection_clause
                         icmpset.family = Socket_Ip4;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
-                | IF FAILED PING6 icmpoptlist rate1 THEN action1 recovery {
+                | IF FAILED PING6 icmpoptlist rate1 THEN action1 recovery { //FIXME: connection_clause
                         icmpset.family = Socket_Ip6;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
@@ -2959,7 +2959,7 @@ gid             : IF FAILED GID STRING rate1 THEN action1 recovery {
                   }
                 ;
 
-linkstatus   : IF FAILED LINK rate1 THEN action1 recovery {
+linkstatus   : IF FAILED LINK rate1 THEN action1 recovery { //FIXME: connection_clause
                         addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
                         addlinkstatus(current, &linkstatusset);
                   }
@@ -3602,7 +3602,7 @@ static void addport(Port_T *list, Port_T port, int check_invers) {
 
         Port_T p;
         NEW(p);
-        p->check_invers       = !!check_invers;
+        p->check_invers       = check_invers;
         p->is_available       = Connection_Init;
         p->type               = port->type;
         p->socket             = port->socket;

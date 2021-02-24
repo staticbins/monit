@@ -1986,9 +1986,9 @@ static void print_service_rules_socket(HttpResponse res, Service_T s) {
         for (Port_T p = s->socketlist; p; p = p->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (p->retry > 1)
-                        Util_printRule(sb, p->action, "If failed %s type %s protocol %s with timeout %s and retry %d time(s)", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}), p->retry);
+                        Util_printRule(sb, p->action, "If %s %s type %s protocol %s with timeout %s and retry %d time(s)", p->check_invers ? "succeeded" : "failed", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}), p->retry);
                 else
-                        Util_printRule(sb, p->action, "If failed %s type %s protocol %s with timeout %s", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}));
+                        Util_printRule(sb, p->action, "If %s %s type %s protocol %s with timeout %s", p->check_invers ? "succeeded" : "failed", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}));
                 _displayTableRow(res, true, "rule", "Unix Socket", "%s", StringBuffer_toString(sb));
                 StringBuffer_free(&sb);
         }

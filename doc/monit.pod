@@ -3286,7 +3286,7 @@ service like mysql should not be publicly available.
 
 TCP/UDP port test syntax:
 
- IF FAILED|SUCCEEDED
+ IF <FAILED|SUCCEEDED>
     [HOST string]
     <PORT number>
     [ADDRESS string]
@@ -3302,7 +3302,7 @@ TCP/UDP port test syntax:
 
 Unix socket test syntax:
 
- IF FAILED
+ IF <FAILED|SUCCEEDED>
     <UNIXSOCKET path>
     [TYPE <TCP|UDP>]
     [PROTOCOL protocol | <SEND|EXPECT> "string",...]

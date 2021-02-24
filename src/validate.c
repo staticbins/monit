@@ -163,7 +163,7 @@ retry:
                 snprintf(report, sizeof(report), "failed protocol test [%s] at %s -- %s", p->protocol->name, Util_portDescription(p, buf, sizeof(buf)), Exception_frame.message);
         }
         END_TRY;
-        if ((rv == State_Failed && !check_invers) || (rv == State_Succeeded && check_invers)) {
+        if ((rv == State_Failed && ! check_invers) || (rv == State_Succeeded && check_invers)) {
                 if (retry_count-- > 1) {
                         Log_warning("'%s' %s (attempt %d/%d)\n", s->name, report, p->retry - retry_count, p->retry);
                         goto retry;
@@ -1596,7 +1596,7 @@ State_Type check_process(Service_T s) {
                 //FIXME: instead of pause, try to test, but ignore any errors in the start timeout timeframe ... will allow to display the port response time as soon as available, instead of waiting for 30+ seconds
                 /* pause socket tests in the start timeout timeframe while the process is starting (it may take some time to the process before it starts accepting connections) */
                 if (! s->start || uptimeMilli > s->start->timeout) {
-                        if (_checkConnection(s, pp, false) == State_Failed)
+                        if (_checkConnection(s, pp, pp->check_invers) == State_Failed)
                                 rv = State_Failed;
                 } else {
                         pp->is_available = Connection_Init;
@@ -1947,7 +1947,7 @@ State_Type check_remote_host(Service_T s) {
         }
         /* Test each host:port and protocol in the service's portlist */
         for (Port_T p = s->portlist; p; p = p->next)
-                if (_checkConnection(s, p, false) == State_Failed)
+                if (_checkConnection(s, p, p->check_invers) == State_Failed)
                         rv = State_Failed;
         return rv;
 }

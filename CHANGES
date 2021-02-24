@@ -4,10 +4,15 @@
 
 Version 5.28.0
 
-New: For TCP/UDP ports monit can alert on successful connection, e.g. when a
-service like mysql should not be publicly available. Thanks to Christian
-Goettsche for patch. Example:
-   if succeeded host example.org port 3306 type tcp protocol mysql then alert
+New: Monit can now watch offline TCP/UDP ports and perform action on successful connection.
+It can be used as a security check, e.g. if a service like mysql should not be publicly available, or
+to perform custom actions to initialize the service that depends on the one that was just started.
+Thanks to Christian Goettsche for patch. Example:
+   if succeeded port 443 protocol https then exec "/bin/monit start myclient"
+   if succeeded host example.org port 3306 protocol mysql then alert
+
+New: For unix sockets monit can perform action on successful connection, example:
+   if succeeded unixsocket /var/run/mysql.sock protocol mysql then exec "/bin/myscript.sh initdb"
 
 New: Issue #915: Add support for sevice name regular expressions in  monit CLI status, summary, start,
 stop, restart, unmonitor, monitor commands. Examples:
