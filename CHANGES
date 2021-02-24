@@ -11,8 +11,13 @@ Thanks to Christian Goettsche for patch. Example:
    if succeeded port 443 protocol https then exec "/bin/monit start myclient"
    if succeeded host example.org port 3306 protocol mysql then alert
 
-New: For unix sockets monit can perform action on successful connection, example:
+New: Monit can watch unix sockets that doesn't exist or are offline and perform action on successful
+connection. Example:
    if succeeded unixsocket /var/run/mysql.sock protocol mysql then exec "/bin/myscript.sh initdb"
+
+New: Monit can ping hosts that are supposed to be offline and perform action when they become
+available. Example:
+   if succeeded ping then alert
 
 New: Issue #915: Add support for sevice name regular expressions in  monit CLI status, summary, start,
 stop, restart, unmonitor, monitor commands. Examples:

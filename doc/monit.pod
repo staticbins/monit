@@ -3207,7 +3207,7 @@ is allowed to).
 
 Syntax:
 
-  IF FAILED PING[4|6]
+  IF <FAILED|SUCCEEDED> PING[4|6]
      [COUNT number]
      [SIZE number]
      [TIMEOUT number SECONDS]
@@ -3267,6 +3267,11 @@ for up to 10 seconds for a reply
 
   check host mmonit.com with address mmonit.com
         if failed ping count 5 size 128 with timeout 10 seconds then alert
+
+You can also watch host, that is supposed to be offline:
+
+ check host offlinehost with address 192.168.100.50
+       if succeeded ping then alert
 
 
 =head2 CONNECTION TESTS

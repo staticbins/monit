@@ -586,9 +586,9 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                 }
                 for (Icmp_T i = s->icmplist; i; i = i->next) {
                         if (i->is_available == Connection_Failed)
-                                _formatStatus("ping response time", Event_Icmp, type, res, s, true, "connection failed");
+                                _formatStatus("ping response time", i->check_invers ? Event_Null : Event_Icmp, type, res, s, true, "connection failed");
                         else
-                                _formatStatus("ping response time", Event_Null, type, res, s, i->is_available != Connection_Init && i->response >= 0., "%s", Convert_time2str(i->response, (char[11]){}));
+                                _formatStatus("ping response time", i->check_invers ? Event_Icmp : Event_Null, type, res, s, i->is_available != Connection_Init && i->response >= 0., "%s", Convert_time2str(i->response, (char[11]){}));
                 }
                 for (Port_T p = s->portlist; p; p = p->next) {
                         if (p->is_available == Connection_Failed) {
@@ -2014,7 +2014,7 @@ static void print_service_rules_icmp(HttpResponse res, Service_T s) {
                                 key = "Ping";
                                 break;
                 }
-                _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(Util_printRule(sb, i->action, "If failed [count %d size %d with timeout %s%s%s]", i->count, i->size, Convert_time2str(i->timeout, (char[11]){}), i->outgoing.ip ? " via address " : "", i->outgoing.ip ? i->outgoing.ip : "")));
+                _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(Util_printRule(sb, i->action, "If %s [count %d size %d with timeout %s%s%s]", i->check_invers ? "succeeded" : "failed", i->count, i->size, Convert_time2str(i->timeout, (char[11]){}), i->outgoing.ip ? " via address " : "", i->outgoing.ip ? i->outgoing.ip : "")));
                 StringBuffer_free(&sb);
         }
 }

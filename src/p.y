@@ -229,7 +229,7 @@ static Service_T createservice(Service_Type, char *, char *, State_Type (*)(Serv
 static void  addservice(Service_T);
 static void  adddependant(char *);
 static void  addservicegroup(char *);
-static void  addport(Port_T *, Port_T, int);
+static void  addport(Port_T *, Port_T);
 static void  addhttpheader(Port_T, const char *);
 static void  addresource(Resource_T);
 static void  addtimestamp(Timestamp_T);
@@ -1426,8 +1426,9 @@ connection      : IF connection_clause host port connectionoptlist rate1 THEN ac
                         /* This is a workaround to support content match without having to create an URL object. 'urloption' creates the Request_T object we need minus the URL object, but with enough information to perform content test.
                            TODO: Parser is in need of refactoring */
                         portset.url_request = urlrequest;
+                        portset.check_invers = $<number>2;
                         addeventaction(&(portset).action, $<number>8, $<number>9);
-                        addport(&(current->portlist), &portset, $<number>2);
+                        addport(&(current->portlist), &portset);
                   }
                 ;
 
@@ -1456,10 +1457,11 @@ connectionopt   : ip
                 | sslexpire
                 ;
 
-connectionurl   : IF FAILED URL URLOBJECT connectionurloptlist rate1 THEN action1 recovery {
+connectionurl   : IF connection_clause URL URLOBJECT connectionurloptlist rate1 THEN action1 recovery {
+                        portset.check_invers = $<number>2;
                         prepare_urlrequest($<url>4);
                         addeventaction(&(portset).action, $<number>8, $<number>9);
-                        addport(&(current->portlist), &portset, 0);
+                        addport(&(current->portlist), &portset);
                   }
                 ;
 
@@ -1476,8 +1478,9 @@ connectionurlopt : urloption
                  ;
 
 connectionunix  : IF connection_clause unixsocket connectionuxoptlist rate1 THEN action1 recovery {
+                        portset.check_invers = $<number>2;
                         addeventaction(&(portset).action, $<number>7, $<number>8);
-                        addport(&(current->socketlist), &portset, $<number>2);
+                        addport(&(current->socketlist), &portset);
                   }
                 ;
 
@@ -1492,24 +1495,28 @@ connectionuxopt : type
                 | retry
                 ;
 
-icmp            : IF FAILED ICMP icmptype icmpoptlist rate1 THEN action1 recovery { //FIXME: connection_clause
+icmp            : IF connection_clause ICMP icmptype icmpoptlist rate1 THEN action1 recovery {
                         icmpset.family = Socket_Ip;
+                        icmpset.check_invers = $<number>2;
                         icmpset.type = $<number>4;
                         addeventaction(&(icmpset).action, $<number>8, $<number>9);
                         addicmp(&icmpset);
                   }
-                | IF FAILED PING icmpoptlist rate1 THEN action1 recovery { //FIXME: connection_clause
+                | IF connection_clause PING icmpoptlist rate1 THEN action1 recovery {
                         icmpset.family = Socket_Ip;
+                        icmpset.check_invers = $<number>2;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
-                | IF FAILED PING4 icmpoptlist rate1 THEN action1 recovery { //FIXME: connection_clause
+                | IF connection_clause PING4 icmpoptlist rate1 THEN action1 recovery {
                         icmpset.family = Socket_Ip4;
+                        icmpset.check_invers = $<number>2;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
-                | IF FAILED PING6 icmpoptlist rate1 THEN action1 recovery { //FIXME: connection_clause
+                | IF connection_clause PING6 icmpoptlist rate1 THEN action1 recovery {
                         icmpset.family = Socket_Ip6;
+                        icmpset.check_invers = $<number>2;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
@@ -3594,7 +3601,7 @@ static void addmail(char *mailto, Mail_T f, Mail_T *l) {
 /*
  * Add the given portset to the current service's portlist
  */
-static void addport(Port_T *list, Port_T port, int check_invers) {
+static void addport(Port_T *list, Port_T port) {
         ASSERT(port);
 
         if (port->protocol->check == check_radius && port->type != Socket_Udp)
@@ -3602,8 +3609,8 @@ static void addport(Port_T *list, Port_T port, int check_invers) {
 
         Port_T p;
         NEW(p);
-        p->check_invers       = check_invers;
         p->is_available       = Connection_Init;
+        p->check_invers       = port->check_invers;
         p->type               = port->type;
         p->socket             = port->socket;
         p->family             = port->family;
@@ -4207,6 +4214,7 @@ static void addicmp(Icmp_T is) {
         icmp->timeout      = is->timeout;
         icmp->action       = is->action;
         icmp->outgoing     = is->outgoing;
+        icmp->check_invers = is->check_invers;
         icmp->is_available = Connection_Init;
         icmp->response     = -1;
 
@@ -4782,6 +4790,7 @@ static void reset_mmonitset() {
  */
 static void reset_portset() {
         memset(&portset, 0, sizeof(struct Port_T));
+        portset.check_invers = false;
         portset.socket = -1;
         portset.type = Socket_Tcp;
         portset.family = Socket_Ip;
@@ -4981,6 +4990,7 @@ static void reset_icmpset() {
         icmpset.size = ICMP_SIZE;
         icmpset.count = ICMP_ATTEMPT_COUNT;
         icmpset.timeout = Run.limits.networkTimeout;
+        icmpset.check_invers = false;
         icmpset.action = NULL;
 }
 

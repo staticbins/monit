@@ -751,6 +751,7 @@ typedef struct Icmp_T {
         int size;                                     /**< ICMP echo requests size */
         int count;                                   /**< ICMP echo requests count */
         int timeout;         /**< The timeout in milliseconds to wait for response */
+        bool check_invers;           /**< Whether to alert on a connection success */
         Connection_State is_available;    /**< Flag for the server is availability */
         Socket_Family family;                 /**< ICMP family used for connection */
         double response;                         /**< ICMP ECHO response time [ms] */

@@ -912,7 +912,7 @@ void Util_printService(Service_T s) {
         for (Icmp_T o = s->icmplist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 const char *output = StringBuffer_toString(Util_printRule(buf, o->action,
-                                        "if failed [count %d size %d with timeout %s%s%s]", o->count, o->size, Convert_time2str(o->timeout, (char[11]){}), o->outgoing.ip ? " via address " : "", o->outgoing.ip ? o->outgoing.ip : ""));
+                                        "if %s [count %d size %d with timeout %s%s%s]", o->check_invers ? "succeeded" : "failed", o->count, o->size, Convert_time2str(o->timeout, (char[11]){}), o->outgoing.ip ? " via address " : "", o->outgoing.ip ? o->outgoing.ip : ""));
                 switch (o->family) {
                         case Socket_Ip4:
                                 printf(" %-20s = %s\n", "Ping4", output);
