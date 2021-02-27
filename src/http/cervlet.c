@@ -83,8 +83,8 @@
 #include "ProcessTree.h"
 #include "device.h"
 #include "protocol.h"
-#include "Color.h"
-#include "Box.h"
+#include "TextColor.h"
+#include "TextBox.h"
 
 
 #define ACTION(c) ! strncasecmp(req->url, c, sizeof(c))
@@ -124,7 +124,7 @@ typedef struct ServiceMap_T {
                         HttpResponse res;
                 } status;
                 struct {
-                        Box_T box;
+                        TextBox_T box;
                 } summary;
         } data;
 } *ServiceMap_T;
@@ -224,11 +224,11 @@ void init_service() {
 /* ----------------------------------------------------------------- Private */
 
 
-static void _printServiceSummary(Box_T t, Service_T s) {
-        Box_setColumn(t, 1, "%s", s->name);
-        Box_setColumn(t, 2, "%s", get_service_status(TXT, s, (char[STRLEN]){}, STRLEN));
-        Box_setColumn(t, 3, "%s", servicetypes[s->type]);
-        Box_printRow(t);
+static void _printServiceSummary(TextBox_T t, Service_T s) {
+        TextBox_setColumn(t, 1, "%s", s->name);
+        TextBox_setColumn(t, 2, "%s", get_service_status(TXT, s, (char[STRLEN]){}, STRLEN));
+        TextBox_setColumn(t, 3, "%s", servicetypes[s->type]);
+        TextBox_printRow(t);
 }
 
 
@@ -2572,10 +2572,10 @@ static void print_summary(HttpRequest req, HttpResponse res) {
         const char *stringGroup = Util_urlDecode((char *)get_parameter(req, "group"));
         const char *stringService = Util_urlDecode((char *)get_parameter(req, "service"));
 
-        ap.data.summary.box = Box_new(res->outputbuffer, 3, (BoxColumn_T []){
-                        {.name = "Service Name", .width = 31, .wrap = false, .align = BoxAlign_Left},
-                        {.name = "Status",       .width = 26, .wrap = false, .align = BoxAlign_Left},
-                        {.name = "Type",         .width = 13, .wrap = false, .align = BoxAlign_Left}
+        ap.data.summary.box = TextBox_new(res->outputbuffer, 3, (TextBoxColumn_T []){
+                        {.name = "Service Name", .width = 31, .wrap = false, .align = TextBoxAlign_Left},
+                        {.name = "Status",       .width = 26, .wrap = false, .align = TextBoxAlign_Left},
+                        {.name = "Type",         .width = 13, .wrap = false, .align = TextBoxAlign_Left}
                   }, true);
 
         if (stringGroup) {
@@ -2602,7 +2602,7 @@ static void print_summary(HttpRequest req, HttpResponse res) {
                 _serviceMapByType(Service_Program, _serviceMapSummary, &ap);
         }
 
-        Box_free(&ap.data.summary.box);
+        TextBox_free(&ap.data.summary.box);
 
         if (ap.found == 0) {
                 if (stringGroup)
@@ -2701,17 +2701,17 @@ static char *get_monitoring_status(Output_Type type, Service_T s, char *buf, int
                 if (type == HTML)
                         snprintf(buf, buflen, "<span class='gray-text'>Not monitored</span>");
                 else
-                        snprintf(buf, buflen, Color_lightYellow("Not monitored"));
+                        snprintf(buf, buflen, TextColor_lightYellow("Not monitored"));
         } else if (s->monitor & Monitor_Waiting) {
                 if (type == HTML)
                         snprintf(buf, buflen, "<span>Waiting</span>");
                 else
-                        snprintf(buf, buflen, Color_white("Waiting"));
+                        snprintf(buf, buflen, TextColor_white("Waiting"));
         } else if (s->monitor & Monitor_Init) {
                 if (type == HTML)
                         snprintf(buf, buflen, "<span class='blue-text'>Initializing</span>");
                 else
-                        snprintf(buf, buflen, Color_lightBlue("Initializing"));
+                        snprintf(buf, buflen, TextColor_lightBlue("Initializing"));
         } else if (s->monitor & Monitor_Yes) {
                 if (type == HTML)
                         snprintf(buf, buflen, "<span>Monitored</span>");
@@ -2728,7 +2728,7 @@ static char *get_service_status(Output_Type type, Service_T s, char *buf, int bu
         if (s->monitor == Monitor_Not || s->monitor & Monitor_Init) {
                 get_monitoring_status(type, s, buf, buflen);
         } else if (s->error == 0) {
-                snprintf(buf, buflen, type == HTML ? "<span class='green-text'>OK</span>" : Color_lightGreen("OK"));
+                snprintf(buf, buflen, type == HTML ? "<span class='green-text'>OK</span>" : TextColor_lightGreen("OK"));
         } else {
                 // In the case that the service has actually some failure, the error bitmap will be non zero
                 char *p = buf;
@@ -2741,12 +2741,12 @@ static char *get_service_status(Output_Type type, Service_T s, char *buf, int bu
                                         if (type == HTML)
                                                 p += snprintf(p, buflen - (p - buf), "<span class='orange-text'>%s</span>", (*et).description_changed);
                                         else
-                                                p += snprintf(p, buflen - (p - buf), Color_lightYellow("%s", (*et).description_changed));
+                                                p += snprintf(p, buflen - (p - buf), TextColor_lightYellow("%s", (*et).description_changed));
                                 } else {
                                         if (type == HTML)
                                                 p += snprintf(p, buflen - (p - buf), "<span class='red-text'>%s</span>", (*et).description_failed);
                                         else
-                                                p += snprintf(p, buflen - (p - buf), Color_lightRed("%s", (*et).description_failed));
+                                                p += snprintf(p, buflen - (p - buf), TextColor_lightRed("%s", (*et).description_failed));
                                 }
                         }
                         et++;

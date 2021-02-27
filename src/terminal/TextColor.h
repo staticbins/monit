@@ -23,8 +23,8 @@
  */
 
 
-#ifndef COLOR_INCLUDED
-#define COLOR_INCLUDED
+#ifndef TEXTCOLOR_INCLUDED
+#define TEXTCOLOR_INCLUDED
 
 
 /**
@@ -68,43 +68,43 @@
 #define COLOR_LIGHTWHITE   "\033[0;97m"
 
 
-#define Color_black(format, ...)        COLOR_BLACK format COLOR_RESET, ##__VA_ARGS__
-#define Color_red(format, ...)          COLOR_RED format COLOR_RESET, ##__VA_ARGS__
-#define Color_green(format, ...)        COLOR_GREEN format COLOR_RESET, ##__VA_ARGS__
-#define Color_yellow(format, ...)       COLOR_YELLOW format COLOR_RESET, ##__VA_ARGS__
-#define Color_blue(format, ...)         COLOR_BLUE format COLOR_RESET, ##__VA_ARGS__
-#define Color_magenta(format, ...)      COLOR_MAGENTA format COLOR_RESET, ##__VA_ARGS__
-#define Color_cyan(format, ...)         COLOR_CYAN format COLOR_RESET, ##__VA_ARGS__
-#define Color_white(format, ...)        COLOR_WHITE format COLOR_RESET, ##__VA_ARGS__
-#define Color_boldBlack(format, ...)    COLOR_BOLDBLACK format COLOR_RESET, ##__VA_ARGS__
-#define Color_boldRed(format, ...)      COLOR_BOLDRED format COLOR_RESET, ##__VA_ARGS__
-#define Color_boldGreen(format, ...)    COLOR_BOLDGREEN format COLOR_RESET, ##__VA_ARGS__
-#define Color_boldYellow(format, ...)   COLOR_BOLDYELLOW format COLOR_RESET, ##__VA_ARGS__
-#define Color_boldBlue(format, ...)     COLOR_BOLDBLUE format COLOR_RESET, ##__VA_ARGS__
-#define Color_boldMagenta(format, ...)  COLOR_BOLDMAGENTA format COLOR_RESET, ##__VA_ARGS__
-#define Color_boldCyan(format, ...)     COLOR_BOLDCYAN format COLOR_RESET, ##__VA_ARGS__
-#define Color_boldWhite(format, ...)    COLOR_BOLDWHITE format COLOR_RESET, ##__VA_ARGS__
-#define Color_darkGray(format, ...)     COLOR_DARKGRAY format COLOR_RESET, ##__VA_ARGS__
-#define Color_lightRed(format, ...)     COLOR_LIGHTRED format COLOR_RESET, ##__VA_ARGS__
-#define Color_lightGreen(format, ...)   COLOR_LIGHTGREEN format COLOR_RESET, ##__VA_ARGS__
-#define Color_lightYellow(format, ...)  COLOR_LIGHTYELLOW format COLOR_RESET, ##__VA_ARGS__
-#define Color_lightBlue(format, ...)    COLOR_LIGHTBLUE format COLOR_RESET, ##__VA_ARGS__
-#define Color_lightMagenta(format, ...) COLOR_LIGHTMAGENTA format COLOR_RESET, ##__VA_ARGS__
-#define Color_lightCyan(format, ...)    COLOR_LIGHTCYAN format COLOR_RESET, ##__VA_ARGS__
-#define Color_lightWhite(format, ...)   COLOR_LIGHTWHITE format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_black(format, ...)        COLOR_BLACK format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_red(format, ...)          COLOR_RED format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_green(format, ...)        COLOR_GREEN format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_yellow(format, ...)       COLOR_YELLOW format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_blue(format, ...)         COLOR_BLUE format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_magenta(format, ...)      COLOR_MAGENTA format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_cyan(format, ...)         COLOR_CYAN format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_white(format, ...)        COLOR_WHITE format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_boldBlack(format, ...)    COLOR_BOLDBLACK format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_boldRed(format, ...)      COLOR_BOLDRED format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_boldGreen(format, ...)    COLOR_BOLDGREEN format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_boldYellow(format, ...)   COLOR_BOLDYELLOW format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_boldBlue(format, ...)     COLOR_BOLDBLUE format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_boldMagenta(format, ...)  COLOR_BOLDMAGENTA format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_boldCyan(format, ...)     COLOR_BOLDCYAN format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_boldWhite(format, ...)    COLOR_BOLDWHITE format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_darkGray(format, ...)     COLOR_DARKGRAY format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_lightRed(format, ...)     COLOR_LIGHTRED format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_lightGreen(format, ...)   COLOR_LIGHTGREEN format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_lightYellow(format, ...)  COLOR_LIGHTYELLOW format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_lightBlue(format, ...)    COLOR_LIGHTBLUE format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_lightMagenta(format, ...) COLOR_LIGHTMAGENTA format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_lightCyan(format, ...)    COLOR_LIGHTCYAN format COLOR_RESET, ##__VA_ARGS__
+#define TextColor_lightWhite(format, ...)   COLOR_LIGHTWHITE format COLOR_RESET, ##__VA_ARGS__
 
 /**
  * Test terminal color support
  * @return true if colors are supported, otherwise false
  */
-bool Color_support(void);
+bool TextColor_support(void);
 
 
 /**
  * Return length of ANSI color sequences in the string.
  * @return bytes used by control sequences or 0 if the string has no colors
  */
-int Color_length(char *s);
+int TextColor_length(char *s);
 
 
 /**
@@ -117,7 +117,7 @@ int Color_length(char *s);
  * @param s The string to strip
  * @return A pointer to s
  */
-char *Color_strip(char *s);
+char *TextColor_strip(char *s);
 
 
 #endif

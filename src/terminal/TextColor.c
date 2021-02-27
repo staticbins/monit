@@ -34,7 +34,7 @@
 #endif
 
 #include "monit.h"
-#include "Color.h"
+#include "TextColor.h"
 
 // libmonit
 #include "util/Str.h"
@@ -52,7 +52,7 @@
 /* -------------------------------------------------------- Public Methods */
 
 
-bool Color_support() {
+bool TextColor_support() {
         if (! (Run.flags & Run_Batch) && isatty(STDOUT_FILENO)) {
                 if (getenv("COLORTERM")) {
                         return true;
@@ -66,7 +66,7 @@ bool Color_support() {
 }
 
 
-int Color_length(char *s) {
+int TextColor_length(char *s) {
         if (STR_DEF(s)) {
                 int length = 0;
                 bool ansi = false;
@@ -89,7 +89,7 @@ int Color_length(char *s) {
 }
 
 
-char *Color_strip(char *s) {
+char *TextColor_strip(char *s) {
         if (STR_DEF(s)) {
                 int x, y;
                 bool ansi = false;

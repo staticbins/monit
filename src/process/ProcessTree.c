@@ -68,8 +68,8 @@
 #include "event.h"
 #include "ProcessTree.h"
 #include "process_sysdep.h"
-#include "Box.h"
-#include "Color.h"
+#include "TextBox.h"
+#include "TextColor.h"
 
 // libmonit
 #include "system/Time.h"
@@ -409,11 +409,11 @@ void ProcessTree_testMatch(char *pattern) {
                 int count = 0;
                 printf("List of processes matching pattern \"%s\":\n", pattern);
                 StringBuffer_T output = StringBuffer_create(256);
-                Box_T t = Box_new(output, 4, (BoxColumn_T []){
-                                {.name = "",        .width = 1,  .wrap = false, .align = BoxAlign_Left},
-                                {.name = "PID",     .width = 8,  .wrap = false, .align = BoxAlign_Right},
-                                {.name = "PPID",    .width = 8,  .wrap = false, .align = BoxAlign_Right},
-                                {.name = "Command", .width = 50, .wrap = true,  .align = BoxAlign_Left}
+                TextBox_T t = TextBox_new(output, 4, (TextBoxColumn_T []){
+                                {.name = "",        .width = 1,  .wrap = false, .align = TextBoxAlign_Left},
+                                {.name = "PID",     .width = 8,  .wrap = false, .align = TextBoxAlign_Right},
+                                {.name = "PPID",    .width = 8,  .wrap = false, .align = TextBoxAlign_Right},
+                                {.name = "Command", .width = 50, .wrap = true,  .align = TextBoxAlign_Left}
                           }, true);
                 // Select the process matching the pattern
                 int pid = _match(regex_comp);
@@ -422,23 +422,23 @@ void ProcessTree_testMatch(char *pattern) {
                         if (ptree[i].cmdline && ! strstr(ptree[i].cmdline, "procmatch")) {
                                 if (! regexec(regex_comp, ptree[i].cmdline, 0, NULL, 0)) {
                                         if (pid == ptree[i].pid) {
-                                                Box_setColumn(t, 1, COLOR_BOLD "*" COLOR_RESET);
-                                                Box_setColumn(t, 2, COLOR_BOLD "%d" COLOR_RESET, ptree[i].pid);
-                                                Box_setColumn(t, 3, COLOR_BOLD "%d" COLOR_RESET, ptree[i].ppid);
-                                                Box_setColumn(t, 4, COLOR_BOLD "%s" COLOR_RESET, ptree[i].cmdline);
+                                                TextBox_setColumn(t, 1, COLOR_BOLD "*" COLOR_RESET);
+                                                TextBox_setColumn(t, 2, COLOR_BOLD "%d" COLOR_RESET, ptree[i].pid);
+                                                TextBox_setColumn(t, 3, COLOR_BOLD "%d" COLOR_RESET, ptree[i].ppid);
+                                                TextBox_setColumn(t, 4, COLOR_BOLD "%s" COLOR_RESET, ptree[i].cmdline);
                                         } else {
-                                                Box_setColumn(t, 2, "%d", ptree[i].pid);
-                                                Box_setColumn(t, 3, "%d", ptree[i].ppid);
-                                                Box_setColumn(t, 4, "%s", ptree[i].cmdline);
+                                                TextBox_setColumn(t, 2, "%d", ptree[i].pid);
+                                                TextBox_setColumn(t, 3, "%d", ptree[i].ppid);
+                                                TextBox_setColumn(t, 4, "%s", ptree[i].cmdline);
                                         }
-                                        Box_printRow(t);
+                                        TextBox_printRow(t);
                                         count++;
                                 }
                         }
                 }
-                Box_free(&t);
-                if (Run.flags & Run_Batch || ! Color_support())
-                        Color_strip(Box_strip((char *)StringBuffer_toString(output)));
+                TextBox_free(&t);
+                if (Run.flags & Run_Batch || ! TextColor_support())
+                        TextColor_strip(TextBox_strip((char *)StringBuffer_toString(output)));
                 printf("%s", StringBuffer_toString(output));
                 StringBuffer_free(&output);
                 printf("Total matches: %d\n", count);
