@@ -243,6 +243,8 @@ packetin          { return PACKETIN; }
 packetout         { return PACKETOUT; }
 upload(ed)?       { return UPLOAD; }
 download(ed)?     { return DOWNLOAD; }
+up                { return UP; }
+down              { return DOWN; }
 saturation        { return SATURATION; }
 speed             { return SPEED; }
 total             { return TOTAL; }

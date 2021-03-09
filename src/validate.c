@@ -1975,8 +1975,9 @@ State_Type check_system(Service_T s) {
 
 
 State_Type check_net(Service_T s) {
+        volatile State_Type rv;
         volatile bool havedata = true;
-        volatile State_Type rv = State_Succeeded;
+        // Get link statistics
         TRY
         {
                 Link_update(s->inf.net->stats);
@@ -1984,38 +1985,46 @@ State_Type check_net(Service_T s) {
         ELSE
         {
                 havedata = false;
-                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next)
-                        Event_post(s, Event_Link, State_Failed, link->action, "link data collection failed -- %s", Exception_frame.message);
-        }
-        END_TRY;
-        if (! havedata)
-                return State_Failed; // Terminate test if no data are available
-        // State
-        if (! Link_getState(s->inf.net->stats)) {
-                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next)
-                        Event_post(s, Event_Link, State_Failed, link->action, "link down");
-                return State_Failed; // Terminate test if the link is down
-        } else {
-                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next)
-                        Event_post(s, Event_Link, State_Succeeded, link->action, "link up");
-        }
-        // Link errors
-        long long oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
-        for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                if (oerrors > 0) {
-                        rv = State_Failed;
-                        Event_post(s, Event_Link, State_Failed, link->action, "%lld upload errors detected", oerrors);
-                } else {
-                        Event_post(s, Event_Link, State_Succeeded, link->action, "upload errors check succeeded");
+                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                        rv = link->check_invers ? State_Succeeded : State_Failed;
+                        Event_post(s, Event_Link, link->check_invers ? State_Succeeded : State_Failed, link->action, "link data collection failed -- %s", Exception_frame.message);
                 }
         }
-        long long ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
-        for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                if (ierrors > 0) {
-                        rv = State_Failed;
-                        Event_post(s, Event_Link, State_Failed, link->action, "%lld download errors detected", ierrors);
-                } else {
-                        Event_post(s, Event_Link, State_Succeeded, link->action, "download errors check succeeded");
+        END_TRY;
+        // State
+        if (! havedata) {
+                return s->inverseStatus ? State_Succeeded : State_Failed; // No data, event handled in the TRY-ELSE loop already, terminate remaining tests
+        } else if (! Link_getState(s->inf.net->stats)) {
+                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                        Event_post(s, Event_Link, link->check_invers ? State_Succeeded : State_Failed, link->action, "link down");
+                }
+                return s->inverseStatus ? State_Succeeded : State_Failed; // Link is down, terminate remaining tests
+        } else {
+                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next)
+                        Event_post(s, Event_Link, link->check_invers ? State_Failed : State_Succeeded, link->action, "link up");
+        }
+        if (! s->inverseStatus) {
+                //FIXME: these tests share the same class (Event_Link), so if "link up" test is set, it would set the state to failure, but these tests will reset it back to success. When we'll add more event types,
+                //       we shoud assign a new type for link in/out errors and then we can perform these tests even if "link up" is set
+
+                // Link errors
+                long long oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
+                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                        if (oerrors > 0) {
+                                rv = State_Failed;
+                                Event_post(s, Event_Link, State_Failed, link->action, "%lld upload errors detected", oerrors);
+                        } else {
+                                Event_post(s, Event_Link, State_Succeeded, link->action, "upload errors check succeeded");
+                        }
+                }
+                long long ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
+                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                        if (ierrors > 0) {
+                                rv = State_Failed;
+                                Event_post(s, Event_Link, State_Failed, link->action, "%lld download errors detected", ierrors);
+                        } else {
+                                Event_post(s, Event_Link, State_Succeeded, link->action, "download errors check succeeded");
+                        }
                 }
         }
         // Link speed

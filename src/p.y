@@ -331,7 +331,7 @@ static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Typ
 %token SET LOGFILE FACILITY DAEMON SYSLOG MAILSERVER HTTPD ALLOW REJECTOPT ADDRESS INIT TERMINAL BATCH
 %token READONLY CLEARTEXT MD5HASH SHA1HASH CRYPT DELAY
 %token PEMFILE PEMKEY PEMCHAIN ENABLE DISABLE SSLTOKEN CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
-%token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL
+%token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL UP DOWN
 %token IDFILE STATEFILE SEND EXPECT CYCLE COUNT REMINDER REPEAT
 %token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT PROGRAMTIMEOUT STARTTIMEOUT STOPTIMEOUT RESTARTTIMEOUT
 %token PIDFILE START STOP PATHTOK RSAKEY
@@ -2966,7 +2966,17 @@ gid             : IF FAILED GID STRING rate1 THEN action1 recovery {
                   }
                 ;
 
-linkstatus   : IF FAILED LINK rate1 THEN action1 recovery { //FIXME: connection_clause
+linkstatus   : IF FAILED LINK rate1 THEN action1 recovery { /* Deprecated */
+                        addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
+                        addlinkstatus(current, &linkstatusset);
+                  }
+             | IF LINK DOWN rate1 THEN action1 recovery {
+                        linkstatusset.check_invers = false;
+                        addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
+                        addlinkstatus(current, &linkstatusset);
+                  }
+             | IF LINK UP rate1 THEN action1 recovery {
+                        linkstatusset.check_invers = true;
                         addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
                         addlinkstatus(current, &linkstatusset);
                   }
@@ -3962,7 +3972,18 @@ static void addlinkstatus(Service_T s, LinkStatus_T L) {
         ASSERT(L);
 
         LinkStatus_T l;
+
+        // Sanity check: we don't support link up/down tests mix
+        for (l = s->linkstatuslist; l; l = l->next) {
+                if (l->check_invers != L->check_invers)
+                        yyerror2("Mixing link up and down tests is not supported");
+        }
+                        
+        if (L->check_invers)
+                s->inverseStatus = true;
+
         NEW(l);
+        l->check_invers = L->check_invers;
         l->action = L->action;
 
         l->next = s->linkstatuslist;
@@ -4857,6 +4878,7 @@ static void reset_uptimeset() {
 
 
 static void reset_linkstatusset() {
+        linkstatusset.check_invers = false;
         linkstatusset.action = NULL;
 }
 

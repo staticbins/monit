@@ -2180,7 +2180,7 @@ static void print_service_rules_size(HttpResponse res, Service_T s) {
 static void print_service_rules_linkstatus(HttpResponse res, Service_T s) {
         for (LinkStatus_T l = s->linkstatuslist; l; l = l->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "Link status", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If failed")));
+                _displayTableRow(res, true, "rule", "Link status", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If %s", l->check_invers ? "up" : "down")));
                 StringBuffer_free(&sb);
         }
 }
@@ -2735,6 +2735,9 @@ static char *get_service_status(Output_Type type, Service_T s, char *buf, int bu
                 EventTable_T *et = Event_Table;
                 while ((*et).id) {
                         if (s->error & (*et).id) {
+                                bool inverse = false;
+                                if ((*et).id == Event_Link && s->inverseStatus)
+                                        inverse = true;
                                 if (p > buf)
                                         p += snprintf(p, buflen - (p - buf), " | ");
                                 if (s->error_hint & (*et).id) {
@@ -2744,9 +2747,9 @@ static char *get_service_status(Output_Type type, Service_T s, char *buf, int bu
                                                 p += snprintf(p, buflen - (p - buf), TextColor_lightYellow("%s", (*et).description_changed));
                                 } else {
                                         if (type == HTML)
-                                                p += snprintf(p, buflen - (p - buf), "<span class='red-text'>%s</span>", (*et).description_failed);
+                                                p += snprintf(p, buflen - (p - buf), "<span class='red-text'>%s</span>", inverse ? (*et).description_succeeded : (*et).description_failed);
                                         else
-                                                p += snprintf(p, buflen - (p - buf), TextColor_lightRed("%s", (*et).description_failed));
+                                                p += snprintf(p, buflen - (p - buf), TextColor_lightRed("%s", inverse ? (*et).description_succeeded : (*et).description_failed));
                                 }
                         }
                         et++;

@@ -985,7 +985,7 @@ void Util_printService(Service_T s) {
 
         for (LinkStatus_T o = s->linkstatuslist; o; o = o->next) {
                 StringBuffer_clear(buf);
-                printf(" %-20s = %s\n", "Link status", StringBuffer_toString(Util_printRule(buf, o->action, "if failed")));
+                printf(" %-20s = %s\n", "Link status", StringBuffer_toString(Util_printRule(buf, o->action, "if %s", o->check_invers ? "up" : "down")));
         }
 
         for (LinkSpeed_T o = s->linkspeedlist; o; o = o->next) {

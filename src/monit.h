@@ -874,6 +874,7 @@ typedef struct Uptime_T {
 
 
 typedef struct LinkStatus_T {
+        bool check_invers;                      /**< Whether to alert on a link up */
         EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
@@ -1177,6 +1178,7 @@ typedef struct Service_T {
         State_Type (*check)(struct Service_T *);/**< Service verification function */
         bool onrebootRestored;
         bool visited; /**< Service visited flag, set if dependencies are used */
+        bool inverseStatus;
         Service_Type type;                             /**< Monitored service type */
         Monitor_State monitor;                             /**< Monitor state flag */
         Monitor_Mode mode;                    /**< Monitoring mode for the service */
