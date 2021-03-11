@@ -1921,7 +1921,9 @@ State_Type check_remote_host(Service_T s) {
                                 if (icmp->response == -2) {
                                         icmp->is_available = Connection_Init;
 #ifdef SOLARIS
-                                        DEBUG("'%s' ping test skipped -- the monit user has no permission to create raw socket, please add net_icmpaccess privilege\n", s->name);
+                                        DEBUG("'%s' ping test skipped -- the monit user has no permission to create raw socket, please add net_icmpaccess privilege or run monit as root\n", s->name);
+#elif defined LINUX
+                                        DEBUG("'%s' ping test skipped -- the monit user has no permission to create raw socket, please add CAP_NET_RAW capability or run monit as root\n", s->name);
 #else
                                         DEBUG("'%s' ping test skipped -- the monit user has no permission to create raw socket, please run monit as root\n", s->name);
 #endif
