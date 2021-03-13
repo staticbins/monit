@@ -208,6 +208,8 @@ static void _gc_service(Service_T *s) {
                 _gcpql(&(*s)->resourcelist);
         if ((*s)->timestamplist)
                 _gcptl(&(*s)->timestamplist);
+        if ((*s)->uptimelist)
+                _gcuptimelist(&(*s)->uptimelist);
         if ((*s)->actionratelist)
                 _gcparl(&(*s)->actionratelist);
         if ((*s)->sizelist)
@@ -470,6 +472,16 @@ static void _gcptl(Timestamp_T *p) {
         if ((*p)->action)
                 _gc_eventaction(&(*p)->action);
         FREE(*p);
+}
+
+
+static void _gcuptimelist(Uptime_T *u) {
+        ASSERT(u);
+        if ((*u)->next)
+                _gcuptimelist(&(*p)->next);
+        if ((*u)->action)
+                _gc_eventaction(&(*p)->action);
+        FREE(*u);
 }
 
 
