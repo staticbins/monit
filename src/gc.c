@@ -51,6 +51,7 @@ static void _gcfilesystem(FileSystem_T *);
 static void _gcicmp(Icmp_T *);
 static void _gcpql(Resource_T *);
 static void _gcptl(Timestamp_T *);
+static void _gcuptimelist(Uptime_T *);
 static void _gcparl(ActionRate_T *);
 static void _gc_action(Action_T *);
 static void _gc_eventaction(EventAction_T *);
