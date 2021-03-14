@@ -478,9 +478,9 @@ static void _gcptl(Timestamp_T *p) {
 static void _gcuptimelist(Uptime_T *u) {
         ASSERT(u);
         if ((*u)->next)
-                _gcuptimelist(&(*p)->next);
+                _gcuptimelist(&(*u)->next);
         if ((*u)->action)
-                _gc_eventaction(&(*p)->action);
+                _gc_eventaction(&(*u)->action);
         FREE(*u);
 }
 
