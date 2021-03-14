@@ -83,8 +83,8 @@
 #include "ProcessTree.h"
 #include "device.h"
 #include "protocol.h"
-#include "Color.h"
-#include "Box.h"
+#include "TextColor.h"
+#include "TextBox.h"
 
 
 #define ACTION(c) ! strncasecmp(req->url, c, sizeof(c))
@@ -110,6 +110,24 @@ typedef enum {
         TXT = 0,
         HTML
 } __attribute__((__packed__)) Output_Type;
+
+
+typedef struct ServiceMap_T {
+        int found;
+        union {
+                struct {
+                        const char *name;
+                        const char *token;
+                        Action_Type id;
+                } action;
+                struct {
+                        HttpResponse res;
+                } status;
+                struct {
+                        TextBox_T box;
+                } summary;
+        } data;
+} *ServiceMap_T;
 
 
 /* Private prototypes */
@@ -204,6 +222,96 @@ void init_service() {
 
 
 /* ----------------------------------------------------------------- Private */
+
+
+static void _printServiceSummary(TextBox_T t, Service_T s) {
+        TextBox_setColumn(t, 1, "%s", s->name);
+        TextBox_setColumn(t, 2, "%s", get_service_status(TXT, s, (char[STRLEN]){}, STRLEN));
+        TextBox_setColumn(t, 3, "%s", servicetypes[s->type]);
+        TextBox_printRow(t);
+}
+
+
+static void _serviceMapByName(const char *pattern, void (*callback)(Service_T s, ServiceMap_T ap), ServiceMap_T ap) {
+        // Check the service name using the following sequence:
+        // 1) if the pattern is NULL, any service will match
+        // 2) backard compatibility: before monit 5.28.0 there was no support for regular expresion => check verbatim match before trying regex (the service may contain special characters)
+        // 3) regex match
+        if (pattern) {
+                int rv;
+                regex_t r;
+                char patternEscaped[STRLEN];
+                const char *patternCursor;
+
+                // If the pattern doesn't contain "^" or "$" already, wrap it as "^<pattern>$" to prevent match with services that contain the given substring only
+                if (! Str_has("^$", pattern)) {
+                        snprintf(patternEscaped, sizeof(patternEscaped), "^%s$", pattern);
+                        patternCursor = patternEscaped;
+                } else {
+                        patternCursor = pattern;
+                }
+
+                // The pattern is set, try to compile it as regex
+                if ((rv = regcomp(&r, patternCursor, REG_NOSUB | REG_EXTENDED))) {
+                        // Pattern compilation failed, fallback to verbatim match (before monit 5.28.0 there was no support for regular expresion)
+                        char error[STRLEN];
+
+                        regerror(rv, &r, error, STRLEN);
+                        regfree(&r);
+                        DEBUG("Regex %s parsing error: %s\n", patternCursor, error);
+
+                        for (Service_T s = servicelist_conf; s; s = s->next_conf) {
+                                if (IS(pattern, s->name)) { // Use the unescaped/original pattern
+                                        callback(s, ap);
+                                        ap->found++;
+                                }
+                        }
+                } else {
+                        // Regular expression match
+                        for (Service_T s = servicelist_conf; s; s = s->next_conf) {
+                                if (! regexec(&r, s->name, 0, NULL, 0)) {
+                                        callback(s, ap);
+                                        ap->found++;
+                                }
+                        }
+                        regfree(&r);
+                }
+
+
+        } else {
+                // Pattern is not set, any service will match
+                for (Service_T s = servicelist_conf; s; s = s->next_conf) {
+                        callback(s, ap);
+                        ap->found++;
+                }
+        }
+}
+
+
+static void _serviceMapByType(Service_Type type, void (*callback)(Service_T s, ServiceMap_T ap), ServiceMap_T ap) {
+        for (Service_T s = servicelist_conf; s; s = s->next_conf) {
+                if (s->type == type) {
+                        callback(s, ap);
+                        ap->found++;
+                }
+        }
+}
+
+
+static void _serviceMapSummary(Service_T s, ServiceMap_T ap) {
+        _printServiceSummary(ap->data.summary.box, s);
+}
+
+
+static void _serviceMapStatus(Service_T s, ServiceMap_T ap) {
+        status_service_txt(s, ap->data.status.res);
+}
+
+
+static void _serviceMapAction(Service_T s, ServiceMap_T ap) {
+        s->doaction = ap->data.action.id;
+        Log_info("'%s' %s on user request\n", s->name, ap->data.action.name);
+}
 
 
 static char *_getUptime(time_t delta, char s[256]) {
@@ -478,25 +586,29 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                 }
                 for (Icmp_T i = s->icmplist; i; i = i->next) {
                         if (i->is_available == Connection_Failed)
-                                _formatStatus("ping response time", Event_Icmp, type, res, s, true, "connection failed");
+                                _formatStatus("ping response time", i->check_invers ? Event_Null : Event_Icmp, type, res, s, true, "connection failed");
                         else
-                                _formatStatus("ping response time", Event_Null, type, res, s, i->is_available != Connection_Init && i->response >= 0., "%s", Convert_time2str(i->response, (char[11]){}));
+                                _formatStatus("ping response time", i->check_invers ? Event_Icmp : Event_Null, type, res, s, i->is_available != Connection_Init && i->response >= 0., "%s", Convert_time2str(i->response, (char[11]){}));
                 }
                 for (Port_T p = s->portlist; p; p = p->next) {
                         if (p->is_available == Connection_Failed) {
-                                _formatStatus("port response time", Event_Connection, type, res, s, true, "FAILED to [%s]:%d%s type %s/%s %sprotocol %s", p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), p->target.net.ssl.options.flags ? "using TLS " : "", p->protocol->name);
+                                Event_Type highlight = p->check_invers ? Event_Null : Event_Connection;
+                                _formatStatus("port response time", highlight, type, res, s, true, "FAILED to [%s]:%d%s type %s/%s %sprotocol %s", p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), p->target.net.ssl.options.flags ? "using TLS " : "", p->protocol->name);
                         } else {
                                 char buf[STRLEN] = {};
                                 if (p->target.net.ssl.options.flags)
                                         snprintf(buf, sizeof(buf), "using TLS (certificate valid for %d days) ", p->target.net.ssl.certificate.validDays);
-                                _formatStatus("port response time", p->target.net.ssl.certificate.validDays < p->target.net.ssl.certificate.minimumDays ? Event_Timestamp : Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %sprotocol %s", Convert_time2str(p->response, (char[11]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), buf, p->protocol->name);
+                                Event_Type highlight = p->check_invers ? Event_Connection : Event_Null;
+                                if (p->target.net.ssl.certificate.validDays < p->target.net.ssl.certificate.minimumDays)
+                                        highlight |= Event_Timestamp;
+                                _formatStatus("port response time", highlight, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %sprotocol %s", Convert_time2str(p->response, (char[11]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), buf, p->protocol->name);
                         }
                 }
                 for (Port_T p = s->socketlist; p; p = p->next) {
                         if (p->is_available == Connection_Failed) {
-                                _formatStatus("unix socket response time", Event_Connection, type, res, s, true, "FAILED to %s type %s protocol %s", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
+                                _formatStatus("unix socket response time", p->check_invers ? Event_Null : Event_Connection, type, res, s, true, "FAILED to %s type %s protocol %s", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
                         } else {
-                                _formatStatus("unix socket response time", Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s type %s protocol %s", Convert_time2str(p->response, (char[11]){}), p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
+                                _formatStatus("unix socket response time", p->check_invers ? Event_Connection : Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s type %s protocol %s", Convert_time2str(p->response, (char[11]){}), p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
                         }
                 }
         }
@@ -992,80 +1104,63 @@ static void handle_service(HttpRequest req, HttpResponse res) {
 }
 
 
+// Do action for the service (the service name is the last component of the URL path)
 static void handle_service_action(HttpRequest req, HttpResponse res) {
         char *name = req->url;
         if (! name) {
                 send_error(req, res, SC_NOT_FOUND, "Service name required");
                 return;
         }
-        Service_T s = Util_getService(++name);
-        if (! s) {
-                send_error(req, res, SC_NOT_FOUND, "There is no service named \"%s\"", name);
-                return;
-        }
-        const char *action = get_parameter(req, "action");
-        if (action) {
+        struct ServiceMap_T ap = {.found = 0, .data.action.name = get_parameter(req, "action")};
+        if (ap.data.action.name) {
                 if (is_readonly(req)) {
                         send_error(req, res, SC_FORBIDDEN, "You do not have sufficient privileges to access this page");
-                        return;
+                } else {
+                        ap.data.action.id = Util_getAction(ap.data.action.name);
+                        if (ap.data.action.id == Action_Ignored) {
+                                send_error(req, res, SC_BAD_REQUEST, "Invalid action \"%s\"", ap.data.action.name);
+                        } else {
+                                Service_T s = Util_getService(++name);
+                                if (! s) {
+                                        send_error(req, res, SC_NOT_FOUND, "There is no service named \"%s\"", name);
+                                        return;
+                                }
+                                _serviceMapAction(s, &ap);
+                                Run.flags |= Run_ActionPending; /* set the global flag */
+                                do_wakeupcall();
+                                do_service(req, res, s);
+                        }
                 }
-                Action_Type doaction = Util_getAction(action);
-                if (doaction == Action_Ignored) {
-                        send_error(req, res, SC_BAD_REQUEST, "Invalid action \"%s\"", action);
-                        return;
-                }
-                s->doaction = doaction;
-                const char *token = get_parameter(req, "token");
-                if (token) {
-                        FREE(s->token);
-                        s->token = Str_dup(token);
-                }
-                Log_info("'%s' %s on user request\n", s->name, action);
-                Run.flags |= Run_ActionPending; /* set the global flag */
-                do_wakeupcall();
         }
-        do_service(req, res, s);
 }
 
 
+// Do action for all services listed in "service" HTTP parameter (may have multiple value)
 static void handle_doaction(HttpRequest req, HttpResponse res) {
-        Service_T s;
-        Action_Type doaction = Action_Ignored;
-        const char *action = get_parameter(req, "action");
-        const char *token = get_parameter(req, "token");
-        if (action) {
+        struct ServiceMap_T ap = {.found = 0, .data.action.name = get_parameter(req, "action")};
+        if (ap.data.action.name) {
                 if (is_readonly(req)) {
                         send_error(req, res, SC_FORBIDDEN, "You do not have sufficient privileges to access this page");
                         return;
-                }
-                if ((doaction = Util_getAction(action)) == Action_Ignored) {
-                        send_error(req, res, SC_BAD_REQUEST, "Invalid action \"%s\"", action);
-                        return;
-                }
-                for (HttpParameter p = req->params; p; p = p->next) {
-                        if (IS(p->name, "service")) {
-                                s  = Util_getService(p->value);
-                                if (! s) {
-                                        send_error(req, res, SC_BAD_REQUEST, "There is no service named \"%s\"", p->value ? p->value : "");
-                                        return;
+                } else {
+                        if ((ap.data.action.id = Util_getAction(ap.data.action.name)) == Action_Ignored) {
+                                send_error(req, res, SC_BAD_REQUEST, "Invalid action \"%s\"", ap.data.action.name);
+                                return;
+                        }
+                        for (HttpParameter p = req->params; p; p = p->next) {
+                                if (IS(p->name, "service")) {
+                                        _serviceMapByName(p->value, _serviceMapAction, &ap);
+                                        if (ap.found == 0) {
+                                                send_error(req, res, SC_BAD_REQUEST, "There is no service named \"%s\"", p->value ? p->value : "");
+                                                return;
+                                        }
                                 }
-                                s->doaction = doaction;
-                                Log_info("'%s' %s on user request\n", s->name, action);
+                        }
+                        if (ap.found > 0) {
+                                Run.flags |= Run_ActionPending;
+                                do_wakeupcall();
                         }
                 }
-                /* Set token for last service only so we'll get it back after all services were handled */
-                if (token) {
-                        Service_T q = NULL;
-                        for (s = servicelist; s; s = s->next)
-                                if (s->doaction == doaction)
-                                        q = s;
-                        if (q) {
-                                FREE(q->token);
-                                q->token = Str_dup(token);
-                        }
-                }
-                Run.flags |= Run_ActionPending;
-                do_wakeupcall();
         }
 }
 
@@ -1864,8 +1959,8 @@ static void print_service_rules_port(HttpResponse res, Service_T s) {
         for (Port_T p = s->portlist; p; p = p->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 StringBuffer_T buf = StringBuffer_create(64);
-                StringBuffer_append(buf, "If failed [%s]:%d%s",
-                        p->hostname, p->target.net.port, Util_portRequestDescription(p));
+                StringBuffer_append(buf, "If %s [%s]:%d%s",
+                        p->check_invers ? "succeeded" : "failed", p->hostname, p->target.net.port, Util_portRequestDescription(p));
                 if (p->outgoing.ip)
                         StringBuffer_append(buf, " via address %s", p->outgoing.ip);
                 StringBuffer_append(buf, " type %s/%s protocol %s with timeout %s",
@@ -1895,9 +1990,9 @@ static void print_service_rules_socket(HttpResponse res, Service_T s) {
         for (Port_T p = s->socketlist; p; p = p->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (p->retry > 1)
-                        Util_printRule(sb, p->action, "If failed %s type %s protocol %s with timeout %s and retry %d time(s)", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}), p->retry);
+                        Util_printRule(sb, p->action, "If %s %s type %s protocol %s with timeout %s and retry %d time(s)", p->check_invers ? "succeeded" : "failed", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}), p->retry);
                 else
-                        Util_printRule(sb, p->action, "If failed %s type %s protocol %s with timeout %s", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}));
+                        Util_printRule(sb, p->action, "If %s %s type %s protocol %s with timeout %s", p->check_invers ? "succeeded" : "failed", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}));
                 _displayTableRow(res, true, "rule", "Unix Socket", "%s", StringBuffer_toString(sb));
                 StringBuffer_free(&sb);
         }
@@ -1919,7 +2014,7 @@ static void print_service_rules_icmp(HttpResponse res, Service_T s) {
                                 key = "Ping";
                                 break;
                 }
-                _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(Util_printRule(sb, i->action, "If failed [count %d size %d with timeout %s%s%s]", i->count, i->size, Convert_time2str(i->timeout, (char[11]){}), i->outgoing.ip ? " via address " : "", i->outgoing.ip ? i->outgoing.ip : "")));
+                _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(Util_printRule(sb, i->action, "If %s [count %d size %d with timeout %s%s%s]", i->check_invers ? "succeeded" : "failed", i->count, i->size, Convert_time2str(i->timeout, (char[11]){}), i->outgoing.ip ? " via address " : "", i->outgoing.ip ? i->outgoing.ip : "")));
                 StringBuffer_free(&sb);
         }
 }
@@ -2085,7 +2180,7 @@ static void print_service_rules_size(HttpResponse res, Service_T s) {
 static void print_service_rules_linkstatus(HttpResponse res, Service_T s) {
         for (LinkStatus_T l = s->linkstatuslist; l; l = l->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "Link status", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If failed")));
+                _displayTableRow(res, true, "rule", "Link status", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If %s", l->check_invers ? "up" : "down")));
                 StringBuffer_free(&sb);
         }
 }
@@ -2440,7 +2535,7 @@ static void print_status(HttpRequest req, HttpResponse res, int version) {
 
                 StringBuffer_append(res->outputbuffer, "Monit %s uptime: %s\n\n", VERSION, _getUptime(ProcessTree_getProcessUptime(getpid()), (char[256]){}));
 
-                int found = 0;
+                struct ServiceMap_T ap = {.found = 0, .data.status.res = res};
                 const char *stringGroup = Util_urlDecode((char *)get_parameter(req, "group"));
                 const char *stringService = Util_urlDecode((char *)get_parameter(req, "service"));
                 if (stringGroup) {
@@ -2448,20 +2543,15 @@ static void print_status(HttpRequest req, HttpResponse res, int version) {
                                 if (IS(stringGroup, sg->name)) {
                                         for (list_t m = sg->members->head; m; m = m->next) {
                                                 status_service_txt(m->e, res);
-                                                found++;
+                                                ap.found++;
                                         }
                                         break;
                                 }
                         }
                 } else {
-                        for (Service_T s = servicelist_conf; s; s = s->next_conf) {
-                                if (! stringService || IS(stringService, s->name)) {
-                                        status_service_txt(s, res);
-                                        found++;
-                                }
-                        }
+                        _serviceMapByName(stringService, _serviceMapStatus, &ap);
                 }
-                if (found == 0) {
+                if (ap.found == 0) {
                         if (stringGroup)
                                 send_error(req, res, SC_BAD_REQUEST, "Service group '%s' not found", stringGroup);
                         else if (stringService)
@@ -2473,69 +2563,48 @@ static void print_status(HttpRequest req, HttpResponse res, int version) {
 }
 
 
-static void _printServiceSummary(Box_T t, Service_T s) {
-        Box_setColumn(t, 1, "%s", s->name);
-        Box_setColumn(t, 2, "%s", get_service_status(TXT, s, (char[STRLEN]){}, STRLEN));
-        Box_setColumn(t, 3, "%s", servicetypes[s->type]);
-        Box_printRow(t);
-}
-
-
-static int _printServiceSummaryByType(Box_T t, Service_Type type) {
-        int found = 0;
-        for (Service_T s = servicelist_conf; s; s = s->next_conf) {
-                if (s->type == type) {
-                        _printServiceSummary(t, s);
-                        found++;
-                }
-        }
-        return found;
-}
-
-
 static void print_summary(HttpRequest req, HttpResponse res) {
         set_content_type(res, "text/plain");
 
         StringBuffer_append(res->outputbuffer, "Monit %s uptime: %s\n", VERSION, _getUptime(ProcessTree_getProcessUptime(getpid()), (char[256]){}));
 
-        int found = 0;
+        struct ServiceMap_T ap = {.found = 0};
         const char *stringGroup = Util_urlDecode((char *)get_parameter(req, "group"));
         const char *stringService = Util_urlDecode((char *)get_parameter(req, "service"));
-        Box_T t = Box_new(res->outputbuffer, 3, (BoxColumn_T []){
-                        {.name = "Service Name", .width = 31, .wrap = false, .align = BoxAlign_Left},
-                        {.name = "Status",       .width = 26, .wrap = false, .align = BoxAlign_Left},
-                        {.name = "Type",         .width = 13, .wrap = false, .align = BoxAlign_Left}
+
+        ap.data.summary.box = TextBox_new(res->outputbuffer, 3, (TextBoxColumn_T []){
+                        {.name = "Service Name", .width = 31, .wrap = false, .align = TextBoxAlign_Left},
+                        {.name = "Status",       .width = 26, .wrap = false, .align = TextBoxAlign_Left},
+                        {.name = "Type",         .width = 13, .wrap = false, .align = TextBoxAlign_Left}
                   }, true);
+
         if (stringGroup) {
                 for (ServiceGroup_T sg = servicegrouplist; sg; sg = sg->next) {
                         if (IS(stringGroup, sg->name)) {
                                 for (list_t m = sg->members->head; m; m = m->next) {
-                                        _printServiceSummary(t, m->e);
-                                        found++;
+                                        _printServiceSummary(ap.data.summary.box, m->e);
+                                        ap.found++;
                                 }
                                 break;
                         }
                 }
         } else if (stringService) {
-                for (Service_T s = servicelist_conf; s; s = s->next_conf) {
-                        if (IS(stringService, s->name)) {
-                                _printServiceSummary(t, s);
-                                found++;
-                        }
-                }
+                _serviceMapByName(stringService, _serviceMapSummary, &ap);
         } else {
-                found += _printServiceSummaryByType(t, Service_System);
-                found += _printServiceSummaryByType(t, Service_Process);
-                found += _printServiceSummaryByType(t, Service_File);
-                found += _printServiceSummaryByType(t, Service_Fifo);
-                found += _printServiceSummaryByType(t, Service_Directory);
-                found += _printServiceSummaryByType(t, Service_Filesystem);
-                found += _printServiceSummaryByType(t, Service_Host);
-                found += _printServiceSummaryByType(t, Service_Net);
-                found += _printServiceSummaryByType(t, Service_Program);
+                _serviceMapByType(Service_System, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Process, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_File, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Fifo, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Directory, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Filesystem, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Host, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Net, _serviceMapSummary, &ap);
+                _serviceMapByType(Service_Program, _serviceMapSummary, &ap);
         }
-        Box_free(&t);
-        if (found == 0) {
+
+        TextBox_free(&ap.data.summary.box);
+
+        if (ap.found == 0) {
                 if (stringGroup)
                         send_error(req, res, SC_BAD_REQUEST, "Service group '%s' not found", stringGroup);
                 else if (stringService)
@@ -2632,17 +2701,17 @@ static char *get_monitoring_status(Output_Type type, Service_T s, char *buf, int
                 if (type == HTML)
                         snprintf(buf, buflen, "<span class='gray-text'>Not monitored</span>");
                 else
-                        snprintf(buf, buflen, Color_lightYellow("Not monitored"));
+                        snprintf(buf, buflen, TextColor_lightYellow("Not monitored"));
         } else if (s->monitor & Monitor_Waiting) {
                 if (type == HTML)
                         snprintf(buf, buflen, "<span>Waiting</span>");
                 else
-                        snprintf(buf, buflen, Color_white("Waiting"));
+                        snprintf(buf, buflen, TextColor_white("Waiting"));
         } else if (s->monitor & Monitor_Init) {
                 if (type == HTML)
                         snprintf(buf, buflen, "<span class='blue-text'>Initializing</span>");
                 else
-                        snprintf(buf, buflen, Color_lightBlue("Initializing"));
+                        snprintf(buf, buflen, TextColor_lightBlue("Initializing"));
         } else if (s->monitor & Monitor_Yes) {
                 if (type == HTML)
                         snprintf(buf, buflen, "<span>Monitored</span>");
@@ -2659,25 +2728,28 @@ static char *get_service_status(Output_Type type, Service_T s, char *buf, int bu
         if (s->monitor == Monitor_Not || s->monitor & Monitor_Init) {
                 get_monitoring_status(type, s, buf, buflen);
         } else if (s->error == 0) {
-                snprintf(buf, buflen, type == HTML ? "<span class='green-text'>OK</span>" : Color_lightGreen("OK"));
+                snprintf(buf, buflen, type == HTML ? "<span class='green-text'>OK</span>" : TextColor_lightGreen("OK"));
         } else {
                 // In the case that the service has actually some failure, the error bitmap will be non zero
                 char *p = buf;
                 EventTable_T *et = Event_Table;
                 while ((*et).id) {
                         if (s->error & (*et).id) {
+                                bool inverse = false;
+                                if ((*et).id == Event_Link && s->inverseStatus)
+                                        inverse = true;
                                 if (p > buf)
                                         p += snprintf(p, buflen - (p - buf), " | ");
                                 if (s->error_hint & (*et).id) {
                                         if (type == HTML)
                                                 p += snprintf(p, buflen - (p - buf), "<span class='orange-text'>%s</span>", (*et).description_changed);
                                         else
-                                                p += snprintf(p, buflen - (p - buf), Color_lightYellow("%s", (*et).description_changed));
+                                                p += snprintf(p, buflen - (p - buf), TextColor_lightYellow("%s", (*et).description_changed));
                                 } else {
                                         if (type == HTML)
-                                                p += snprintf(p, buflen - (p - buf), "<span class='red-text'>%s</span>", (*et).description_failed);
+                                                p += snprintf(p, buflen - (p - buf), "<span class='red-text'>%s</span>", inverse ? (*et).description_succeeded : (*et).description_failed);
                                         else
-                                                p += snprintf(p, buflen - (p - buf), Color_lightRed("%s", (*et).description_failed));
+                                                p += snprintf(p, buflen - (p - buf), TextColor_lightRed("%s", inverse ? (*et).description_succeeded : (*et).description_failed));
                                 }
                         }
                         et++;

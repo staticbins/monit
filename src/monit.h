@@ -658,6 +658,7 @@ typedef struct Port_T {
                 } net;
         } target;
         Outgoing_T outgoing;                                 /**< Outgoing address */
+        bool check_invers;           /**< Whether to alert on a connection success */
         int timeout;      /**< The timeout in [ms] to wait for connect or read i/o */
         int retry;       /**< Number of connection retry before reporting an error */
         volatile int socket;                       /**< Socket used for connection */
@@ -750,6 +751,7 @@ typedef struct Icmp_T {
         int size;                                     /**< ICMP echo requests size */
         int count;                                   /**< ICMP echo requests count */
         int timeout;         /**< The timeout in milliseconds to wait for response */
+        bool check_invers;           /**< Whether to alert on a connection success */
         Connection_State is_available;    /**< Flag for the server is availability */
         Socket_Family family;                 /**< ICMP family used for connection */
         double response;                         /**< ICMP ECHO response time [ms] */
@@ -872,6 +874,7 @@ typedef struct Uptime_T {
 
 
 typedef struct LinkStatus_T {
+        bool check_invers;                      /**< Whether to alert on a link up */
         EventAction_T action; /**< Description of the action upon event occurrence */
 
         /** For internal use */
@@ -1175,6 +1178,7 @@ typedef struct Service_T {
         State_Type (*check)(struct Service_T *);/**< Service verification function */
         bool onrebootRestored;
         bool visited; /**< Service visited flag, set if dependencies are used */
+        bool inverseStatus;
         Service_Type type;                             /**< Monitored service type */
         Monitor_State monitor;                             /**< Monitor state flag */
         Monitor_Mode mode;                    /**< Monitoring mode for the service */
@@ -1239,7 +1243,6 @@ typedef struct Service_T {
         int                error_hint;   /**< Failed/Changed hint for error bitmap */
         union Info_T       inf;                          /**< Service check result */
         struct timeval     collected;                /**< When were data collected */ //FIXME: replace with unsigned long long? (all places where timeval is used) ... Time_milli()?
-        char              *token;                                /**< Action token */
 
         /** Events */
         struct myevent {

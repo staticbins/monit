@@ -92,8 +92,8 @@ monit_SOURCES	= src/y.tab.c \
 		  src/protocols/tns.c \
 		  src/protocols/websocket.c \
 		  src/ssl/Ssl.c \
-		  src/terminal/Box.c \
-		  src/terminal/Color.c \
+		  src/terminal/TextBox.c \
+		  src/terminal/TextColor.c \
                   src/statistics/Statistics.c
 
 monit_LDADD 	= libmonit/libmonit.la

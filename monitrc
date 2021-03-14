@@ -287,7 +287,7 @@ set httpd port 2812 and
 ## and bandwidth usage.
 #
 #  check network public with interface eth0
-#    if failed link then alert
+#    if link down then alert
 #    if changed link then alert
 #    if saturation > 90% then alert
 #    if download > 10 MB/s then alert

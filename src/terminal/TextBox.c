@@ -30,8 +30,8 @@
 #endif
 
 #include "monit.h"
-#include "Color.h"
-#include "Box.h"
+#include "TextColor.h"
+#include "TextBox.h"
 
 // libmonit
 #include "util/Str.h"
@@ -63,7 +63,7 @@
 #define BOX_UP_LEFT             "\u2518" // ┘
 
 
-#define T Box_T
+#define T TextBox_T
 struct T {
         struct {
                 unsigned int row;
@@ -76,7 +76,7 @@ struct T {
                 } header;
         } options;
         unsigned int columnsCount;
-        BoxColumn_T *columns;
+        TextBoxColumn_T *columns;
         StringBuffer_T b;
 };
 
@@ -131,7 +131,7 @@ static void _printHeader(T t) {
 }
 
 
-static void _cacheColor(BoxColumn_T *column) {
+static void _cacheColor(TextBoxColumn_T *column) {
         bool ansi = false;
         if (column->value) {
                 for (int i = 0, k = 0; column->value[i]; i++) {
@@ -173,12 +173,12 @@ static bool _printRow(T t) {
                         } else {
                                 // The value exceeds the column width and should be truncated
                                 Str_trunc(t->columns[i].value, t->columns[i].width);
-                                StringBuffer_append(t->b, t->columns[i].align == BoxAlign_Right ? "%*s" : "%-*s", t->columns[i].width, t->columns[i].value);
+                                StringBuffer_append(t->b, t->columns[i].align == TextBoxAlign_Right ? "%*s" : "%-*s", t->columns[i].width, t->columns[i].value);
                                 t->columns[i]._cursor = t->columns[i]._valueLength;
                         }
                 } else {
                         // The whole value fits in the column width
-                        StringBuffer_append(t->b, t->columns[i].align == BoxAlign_Right ? "%*s" : "%-*s", t->columns[i].width, t->columns[i].value + t->columns[i]._cursor);
+                        StringBuffer_append(t->b, t->columns[i].align == TextBoxAlign_Right ? "%*s" : "%-*s", t->columns[i].width, t->columns[i].value + t->columns[i]._cursor);
                         t->columns[i]._cursor = t->columns[i]._valueLength;
                 }
                 StringBuffer_append(t->b, " ");
@@ -191,7 +191,7 @@ static bool _printRow(T t) {
 }
 
 
-static void _resetColumn(BoxColumn_T *column) {
+static void _resetColumn(TextBoxColumn_T *column) {
         FREE(column->value);
         column->_cursor = column->_colorLength = column->_valueLength = 0;
         memset(column->_color, 0, sizeof(column->_color));
@@ -207,7 +207,7 @@ static void _resetRow(T t) {
 /* -------------------------------------------------------- Public Methods */
 
 
-T Box_new(StringBuffer_T b, int columnsCount, BoxColumn_T *columns, bool printHeader) {
+T TextBox_new(StringBuffer_T b, int columnsCount, TextBoxColumn_T *columns, bool printHeader) {
         ASSERT(b);
         ASSERT(columns);
         ASSERT(columnsCount > 0);
@@ -224,7 +224,7 @@ T Box_new(StringBuffer_T b, int columnsCount, BoxColumn_T *columns, bool printHe
 }
 
 
-void Box_free(T *t) {
+void TextBox_free(T *t) {
         ASSERT(t && *t);
         if ((*t)->index.row > 0)
                 _printBorderBottom(*t);
@@ -234,7 +234,7 @@ void Box_free(T *t) {
 }
 
 
-void Box_setColumn(T t, unsigned int index, const char *format, ...) {
+void TextBox_setColumn(T t, unsigned int index, const char *format, ...) {
         ASSERT(t);
         ASSERT(index > 0);
         ASSERT(index <= t->columnsCount);
@@ -245,16 +245,16 @@ void Box_setColumn(T t, unsigned int index, const char *format, ...) {
                 va_start(ap, format);
                 t->columns[_index].value = Str_vcat(format, ap);
                 va_end(ap);
-                if ((t->columns[_index]._colorLength = Color_length(t->columns[_index].value))) {
+                if ((t->columns[_index]._colorLength = TextColor_length(t->columns[_index].value))) {
                         _cacheColor(&(t->columns[_index]));
-                        Color_strip(t->columns[_index].value); // Strip the escape sequences, so we can safely break the line
+                        TextColor_strip(t->columns[_index].value); // Strip the escape sequences, so we can safely break the line
                 }
                 t->columns[_index]._valueLength = strlen(t->columns[_index].value);
         }
 }
 
 
-void Box_printRow(T t) {
+void TextBox_printRow(T t) {
         ASSERT(t);
         if (t->index.row == 0) {
                 _printBorderTop(t);
@@ -273,7 +273,7 @@ void Box_printRow(T t) {
 }
 
 
-char *Box_strip(char *s) {
+char *TextBox_strip(char *s) {
         if (STR_DEF(s)) {
                 int x, y;
                 unsigned char *_s = (unsigned char *)s;

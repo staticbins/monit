@@ -154,23 +154,23 @@ retry:
         TRY
         {
                 Socket_test(p);
-                rv = State_Succeeded;
+                rv = p->check_invers ? State_Failed : State_Succeeded;
                 DEBUG("'%s' succeeded testing protocol [%s] at %s [response time %s]\n", s->name, p->protocol->name, Util_portDescription(p, buf, sizeof(buf)), Convert_time2str(p->response, (char[11]){}));
         }
         ELSE
         {
-                rv = State_Failed;
+                rv = p->check_invers ? State_Succeeded : State_Failed;
                 snprintf(report, sizeof(report), "failed protocol test [%s] at %s -- %s", p->protocol->name, Util_portDescription(p, buf, sizeof(buf)), Exception_frame.message);
         }
         END_TRY;
-        if (rv == State_Failed) {
+        if ((rv == State_Failed && ! p->check_invers) || (rv == State_Succeeded && p->check_invers)) {
                 if (retry_count-- > 1) {
                         Log_warning("'%s' %s (attempt %d/%d)\n", s->name, report, p->retry - retry_count, p->retry);
                         goto retry;
                 }
-                Event_post(s, Event_Connection, State_Failed, p->action, "%s", report);
+                Event_post(s, Event_Connection, p->check_invers ? State_Succeeded : State_Failed, p->action, "%s", report);
         } else {
-                Event_post(s, Event_Connection, State_Succeeded, p->action, "connection succeeded to %s", Util_portDescription(p, buf, sizeof(buf)));
+                Event_post(s, Event_Connection, p->check_invers ? State_Failed : State_Succeeded, p->action, "connection succeeded to %s", Util_portDescription(p, buf, sizeof(buf)));
         }
         if (p->target.net.ssl.options.flags && p->target.net.ssl.certificate.validDays >= 0 && p->target.net.ssl.certificate.minimumDays > 0) {
                 if (p->target.net.ssl.certificate.validDays < p->target.net.ssl.certificate.minimumDays) {
@@ -1467,7 +1467,6 @@ static bool _doScheduledAction(Service_T s) {
         if (action != Action_Ignored) {
                 rv = control_service(s->name, action);
                 Event_post(s, Event_Action, State_Changed, s->action_ACTION, "%s action %s", actionnames[action], rv ? "done" : "failed");
-                FREE(s->token);
         }
         return rv;
 }
@@ -1922,17 +1921,20 @@ State_Type check_remote_host(Service_T s) {
                                 if (icmp->response == -2) {
                                         icmp->is_available = Connection_Init;
 #ifdef SOLARIS
-                                        DEBUG("'%s' ping test skipped -- the monit user has no permission to create raw socket, please add net_icmpaccess privilege\n", s->name);
+                                        DEBUG("'%s' ping test skipped -- the monit user has no permission to create raw socket, please add net_icmpaccess privilege or run monit as root\n", s->name);
+#elif defined LINUX
+                                        DEBUG("'%s' ping test skipped -- the monit user has no permission to create raw socket, please add CAP_NET_RAW capability or run monit as root\n", s->name);
 #else
                                         DEBUG("'%s' ping test skipped -- the monit user has no permission to create raw socket, please run monit as root\n", s->name);
 #endif
                                 } else if (icmp->response == -1) {
-                                        rv = State_Failed;
+                                        rv = icmp->check_invers ? State_Succeeded : State_Failed;
                                         icmp->is_available = Connection_Failed;
-                                        Event_post(s, Event_Icmp, State_Failed, icmp->action, "ping test failed");
+                                        Event_post(s, Event_Icmp, rv, icmp->action, "ping test failed");
                                 } else {
+                                        rv = icmp->check_invers ? State_Failed : State_Succeeded;
                                         icmp->is_available = Connection_Ok;
-                                        Event_post(s, Event_Icmp, State_Succeeded, icmp->action, "ping test succeeded [response time %s]", Convert_time2str(icmp->response, (char[11]){}));
+                                        Event_post(s, Event_Icmp, rv, icmp->action, "ping test succeeded [response time %s]", Convert_time2str(icmp->response, (char[11]){}));
                                 }
                                 last_ping = icmp;
                                 break;
@@ -1975,8 +1977,9 @@ State_Type check_system(Service_T s) {
 
 
 State_Type check_net(Service_T s) {
+        volatile State_Type rv;
         volatile bool havedata = true;
-        volatile State_Type rv = State_Succeeded;
+        // Get link statistics
         TRY
         {
                 Link_update(s->inf.net->stats);
@@ -1984,38 +1987,46 @@ State_Type check_net(Service_T s) {
         ELSE
         {
                 havedata = false;
-                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next)
-                        Event_post(s, Event_Link, State_Failed, link->action, "link data collection failed -- %s", Exception_frame.message);
-        }
-        END_TRY;
-        if (! havedata)
-                return State_Failed; // Terminate test if no data are available
-        // State
-        if (! Link_getState(s->inf.net->stats)) {
-                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next)
-                        Event_post(s, Event_Link, State_Failed, link->action, "link down");
-                return State_Failed; // Terminate test if the link is down
-        } else {
-                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next)
-                        Event_post(s, Event_Link, State_Succeeded, link->action, "link up");
-        }
-        // Link errors
-        long long oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
-        for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                if (oerrors > 0) {
-                        rv = State_Failed;
-                        Event_post(s, Event_Link, State_Failed, link->action, "%lld upload errors detected", oerrors);
-                } else {
-                        Event_post(s, Event_Link, State_Succeeded, link->action, "upload errors check succeeded");
+                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                        rv = link->check_invers ? State_Succeeded : State_Failed;
+                        Event_post(s, Event_Link, link->check_invers ? State_Succeeded : State_Failed, link->action, "link data collection failed -- %s", Exception_frame.message);
                 }
         }
-        long long ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
-        for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                if (ierrors > 0) {
-                        rv = State_Failed;
-                        Event_post(s, Event_Link, State_Failed, link->action, "%lld download errors detected", ierrors);
-                } else {
-                        Event_post(s, Event_Link, State_Succeeded, link->action, "download errors check succeeded");
+        END_TRY;
+        // State
+        if (! havedata) {
+                return s->inverseStatus ? State_Succeeded : State_Failed; // No data, event handled in the TRY-ELSE loop already, terminate remaining tests
+        } else if (! Link_getState(s->inf.net->stats)) {
+                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                        Event_post(s, Event_Link, link->check_invers ? State_Succeeded : State_Failed, link->action, "link down");
+                }
+                return s->inverseStatus ? State_Succeeded : State_Failed; // Link is down, terminate remaining tests
+        } else {
+                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next)
+                        Event_post(s, Event_Link, link->check_invers ? State_Failed : State_Succeeded, link->action, "link up");
+        }
+        if (! s->inverseStatus) {
+                //FIXME: these tests share the same class (Event_Link), so if "link up" test is set, it would set the state to failure, but these tests will reset it back to success. When we'll add more event types,
+                //       we shoud assign a new type for link in/out errors and then we can perform these tests even if "link up" is set
+
+                // Link errors
+                long long oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
+                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                        if (oerrors > 0) {
+                                rv = State_Failed;
+                                Event_post(s, Event_Link, State_Failed, link->action, "%lld upload errors detected", oerrors);
+                        } else {
+                                Event_post(s, Event_Link, State_Succeeded, link->action, "upload errors check succeeded");
+                        }
+                }
+                long long ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
+                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                        if (ierrors > 0) {
+                                rv = State_Failed;
+                                Event_post(s, Event_Link, State_Failed, link->action, "%lld download errors detected", ierrors);
+                        } else {
+                                Event_post(s, Event_Link, State_Succeeded, link->action, "download errors check succeeded");
+                        }
                 }
         }
         // Link speed

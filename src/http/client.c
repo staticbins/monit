@@ -55,8 +55,8 @@
 #include "monit.h"
 #include "ProcessTree.h"
 #include "device.h"
-#include "Color.h"
-#include "Box.h"
+#include "TextColor.h"
+#include "TextBox.h"
 #include "client.h"
 
 // libmonit
@@ -163,10 +163,10 @@ static void _send(Socket_T S, const char *request, StringBuffer_T data) {
 static void _receive(Socket_T S) {
         char buf[1024];
         _parseHttpResponse(S);
-        bool strip = (Run.flags & Run_Batch || ! Color_support()) ? true : false;
+        bool strip = (Run.flags & Run_Batch || ! TextColor_support()) ? true : false;
         while (Socket_readLine(S, buf, sizeof(buf))) {
                 if (strip)
-                        Color_strip(Box_strip(buf));
+                        TextColor_strip(TextBox_strip(buf));
                 printf("%s", buf);
         }
 }

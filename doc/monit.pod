@@ -187,7 +187,7 @@ monitoring for them. If the group option is set (I<-g>), only
 start and enable monitoring of services in the named group ("all"
 is not required in this case).
 
-=item start <name>
+=item start <name|pattern>
 
 Start the named service and enable monitoring for it. The name is
 a service entry name from the monitrc file.
@@ -199,7 +199,7 @@ monitoring. If the group option is set, only stop and disable
 monitoring of the services in the named group ("all" is not
 required in this case).
 
-=item stop <name>
+=item stop <name|pattern>
 
 Stop the named service and disable its monitoring. The name is a
 service entry name from the monitrc file.
@@ -210,7 +210,7 @@ Stop and start I<all> services. If the group option is set, only
 restart the services in the named group ("all" is not required in
 this case).
 
-=item restart <name>
+=item restart <name|pattern>
 
 Restart the named service. The name is a service entry name from
 the monitrc file.
@@ -221,7 +221,7 @@ Enable monitoring of all services listed in the control file. If
 the group option is set, only start monitoring of services in the
 named group ("all" is not required in this case).
 
-=item monitor <name>
+=item monitor <name|pattern>
 
 Enable monitoring of the named service. The name is a service
 entry name from the monitrc file. Monit will also enable
@@ -233,17 +233,17 @@ Disable monitoring of all services listed in the control file. If
 the group option is set, only disable monitoring of services in
 the named group ("all" is not required in this case).
 
-=item unmonitor <name>
+=item unmonitor <name|pattern>
 
 Disable monitoring of the named service. The name is a service
 entry name from the monitrc file. Monit will also disable
 monitoring of all services that depends on this service.
 
-=item status [name]
+=item status [name|pattern]
 
 Print service status information.
 
-=item summary [name]
+=item summary [name|pattern]
 
 Print a short status summary.
 
@@ -1066,7 +1066,7 @@ Monit will raise an alert in the following situations:
  o A file content test found a match
  o Filesystem flags changed
  o A service action was performed by administrator
- o A network link failed
+ o A network link down or up
  o A network link capacity changed
  o A network link saturation failed
  o A network link upload/download rate failed
@@ -3032,17 +3032,23 @@ within a check network service entry in the Monit control file.
 
 Syntax:
 
- IF FAILED LINK THEN action
+ IF LINK <DOWN|UP> THEN action
 
 I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 "EXEC" or "UNMONITOR".
 
-The test will fail if the link/interface is down or link errors were detected.
+The I<DOWN> test will fail if the link/interface is down or link errors were
+detected.
 
-Example:
+Mixing "link up" and "link down" in the same "check network" is not supported.
+
+Examples:
 
  check network eth0 with interface eth0
-       if failed link then alert
+       if link down then alert
+
+ check network eth5 with interface eth5
+       if link up then exec "/usr/bin/monit start backup"
 
 In case a link failed you can add a start and stop program to automatically
 restart the interface which might help. (Substitute with the relevant network
@@ -3051,7 +3057,7 @@ commands for your system)
  check network eth0 with interface eth0
        start program = '/sbin/ipup eth0'
        stop program = '/sbin/ipdown eth0'
-       if failed link then restart
+       if link down then restart
 
 
 =head3 Link capacity
@@ -3207,7 +3213,7 @@ is allowed to).
 
 Syntax:
 
-  IF FAILED PING[4|6]
+  IF <FAILED|SUCCEEDED> PING[4|6]
      [COUNT number]
      [SIZE number]
      [TIMEOUT number SECONDS]
@@ -3268,6 +3274,11 @@ for up to 10 seconds for a reply
   check host mmonit.com with address mmonit.com
         if failed ping count 5 size 128 with timeout 10 seconds then alert
 
+You can also watch host, that is supposed to be offline:
+
+ check host offlinehost with address 192.168.100.50
+       if succeeded ping then alert
+
 
 =head2 CONNECTION TESTS
 
@@ -3281,9 +3292,12 @@ a connection and that it is possible to write and read from the socket.
 If a connection is not accepted or if there is a problem with socket
 I/O, Monit will execute a specified action.
 
+For TCP/UDP ports monit can alert on successful connection, e.g. when a
+service like mysql should not be publicly available.
+
 TCP/UDP port test syntax:
 
- IF FAILED
+ IF <FAILED|SUCCEEDED>
     [HOST string]
     <PORT number>
     [ADDRESS string]
@@ -3299,7 +3313,7 @@ TCP/UDP port test syntax:
 
 Unix socket test syntax:
 
- IF FAILED
+ IF <FAILED|SUCCEEDED>
     <UNIXSOCKET path>
     [TYPE <TCP|UDP>]
     [PROTOCOL protocol | <SEND|EXPECT> "string",...]
@@ -3312,6 +3326,8 @@ Examples:
  if failed port 80 then alert
 
  if failed port 53 type udp protocol dns then alert
+
+ if succeeded host example.org port 3306 type tcp protocol mysql then alert
 
  if failed unixsocket /var/run/sophie then alert
 

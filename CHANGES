@@ -1,6 +1,40 @@
-                     CHANGES version 5.27.2
+                     CHANGES version 5.28.0
 
            This file summarizes changes made since 5.0
+
+Version 5.28.0
+
+Deprecated: Monit "IF FAILED LINK" test was renamed to "IF LINK DOWN". The old syntax is deprecated, but still
+works for backward compatibility.
+
+New: Added "IF LINK UP" network interface test, which allows to monitor network interface that is by default down,
+and trigger action, when the interface is enabled. Example:
+    if link up then "/usr/bin/monit start backup"
+Notes: When "link up" test is used, the link errors tests are ignored, as these tests share the same event type
+and would reset the status. Also, mixing "link up" and "link down" in the same "check network" is not supported.
+
+New: Monit can now watch offline TCP/UDP ports and perform action on successful connection.
+It can be used as a security check, e.g. if a service like mysql should not be publicly available, or
+to perform custom actions to initialize the service that depends on the one that was just started.
+Thanks to Christian Goettsche for patch. Example:
+   if succeeded port 443 protocol https then exec "/bin/monit start myclient"
+   if succeeded host example.org port 3306 protocol mysql then alert
+
+New: Monit can watch unix sockets that doesn't exist or are offline and perform action on successful
+connection. Example:
+   if succeeded unixsocket /var/run/mysql.sock protocol mysql then exec "/bin/myscript.sh initdb"
+
+New: Monit can ping hosts that are supposed to be offline and perform action when they become
+available. Example:
+   if succeeded ping then alert
+
+New: Issue #915: Add support for sevice name regular expressions in  monit CLI status, summary, start,
+stop, restart, unmonitor, monitor commands. Examples:
+   monit status myservice  # exact match
+   monit status "data.*"    # pattern which will match all services whos name contain "data" substring
+
+Fixed: Minor memory leak when uptime test is used an monit is reloaded.
+
 
 Version 5.27.2
 

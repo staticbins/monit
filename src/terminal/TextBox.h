@@ -37,27 +37,27 @@
 
 
 typedef enum {
-        BoxAlign_Left = 0,
-        BoxAlign_Right
-} __attribute__((__packed__)) BoxAlign_T;
+        TextBoxAlign_Left = 0,
+        TextBoxAlign_Right
+} __attribute__((__packed__)) TextBoxAlign_T;
 
 
-typedef struct BoxColumn_T {
+typedef struct TexBoxColumn_T {
         const char *name;
         char *value;
         // Options
         int width;
         bool wrap;
-        BoxAlign_T align;
+        TextBoxAlign_T align;
         // Internal
         int _colorLength;
         unsigned long _valueLength;
         unsigned long _cursor;
         char _color[8];
-} BoxColumn_T;
+} TextBoxColumn_T;
 
 
-#define T Box_T
+#define T TextBox_T
 typedef struct T *T;
 
 
@@ -69,14 +69,14 @@ typedef struct T *T;
  * @param printHeader true if the header should be printed otherwise false
  * @return A new terminal table object
  */
-T Box_new(StringBuffer_T b, int columnsCount, BoxColumn_T *columns, bool printHeader); //FIXME: when OutputStream is added, use it instead of StringBuffer
+T TextBox_new(StringBuffer_T b, int columnsCount, TextBoxColumn_T *columns, bool printHeader); //FIXME: when OutputStream is added, use it instead of StringBuffer
 
 
 /**
  * Close and destroy a Box object and free allocated resources
  * @param t a Box object reference
  */
-void Box_free(T *t);
+void TextBox_free(T *t);
 
 
 /**
@@ -85,14 +85,14 @@ void Box_free(T *t);
  * @param index Column index
  * @param format A format string with optional var args
  */
-void Box_setColumn(T t, unsigned int index, const char *format, ...) __attribute__((format (printf, 3, 4)));
+void TextBox_setColumn(T t, unsigned int index, const char *format, ...) __attribute__((format (printf, 3, 4)));
 
 
 /**
  * Print a table row
  * @param t The terminal table object
  */
-void Box_printRow(T t);
+void TextBox_printRow(T t);
 
 
 /**
@@ -100,7 +100,7 @@ void Box_printRow(T t);
  * @param s The string to strip
  * @return A pointer to s
  */
-char *Box_strip(char *s);
+char *TextBox_strip(char *s);
 
 
 #undef T

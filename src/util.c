@@ -912,7 +912,7 @@ void Util_printService(Service_T s) {
         for (Icmp_T o = s->icmplist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 const char *output = StringBuffer_toString(Util_printRule(buf, o->action,
-                                        "if failed [count %d size %d with timeout %s%s%s]", o->count, o->size, Convert_time2str(o->timeout, (char[11]){}), o->outgoing.ip ? " via address " : "", o->outgoing.ip ? o->outgoing.ip : ""));
+                                        "if %s [count %d size %d with timeout %s%s%s]", o->check_invers ? "succeeded" : "failed", o->count, o->size, Convert_time2str(o->timeout, (char[11]){}), o->outgoing.ip ? " via address " : "", o->outgoing.ip ? o->outgoing.ip : ""));
                 switch (o->family) {
                         case Socket_Ip4:
                                 printf(" %-20s = %s\n", "Ping4", output);
@@ -928,8 +928,8 @@ void Util_printService(Service_T s) {
 
         for (Port_T o = s->portlist; o; o = o->next) {
                 StringBuffer_T buf2 = StringBuffer_create(64);
-                StringBuffer_append(buf2, "if failed [%s]:%d%s",
-                        o->hostname, o->target.net.port, Util_portRequestDescription(o));
+                StringBuffer_append(buf2, "if %s [%s]:%d%s",
+                        o->check_invers ? "succeeded" : "failed", o->hostname, o->target.net.port, Util_portRequestDescription(o));
                 if (o->outgoing.ip)
                         StringBuffer_append(buf2, " via address %s", o->outgoing.ip);
                 StringBuffer_append(buf2, " type %s/%s protocol %s with timeout %s",
@@ -956,9 +956,9 @@ void Util_printService(Service_T s) {
         for (Port_T o = s->socketlist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->retry > 1)
-                        printf(" %-20s = %s\n", "Unix Socket", StringBuffer_toString(Util_printRule(buf, o->action, "if failed %s type %s protocol %s with timeout %s and retry %d times", o->target.unix.pathname, Util_portTypeDescription(o), o->protocol->name, Convert_time2str(o->timeout, (char[11]){}), o->retry)));
+                        printf(" %-20s = %s\n", "Unix Socket", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s type %s protocol %s with timeout %s and retry %d times", o->check_invers ? "succeeded" : "failed", o->target.unix.pathname, Util_portTypeDescription(o), o->protocol->name, Convert_time2str(o->timeout, (char[11]){}), o->retry)));
                 else
-                        printf(" %-20s = %s\n", "Unix Socket", StringBuffer_toString(Util_printRule(buf, o->action, "if failed %s type %s protocol %s with timeout %s", o->target.unix.pathname, Util_portTypeDescription(o), o->protocol->name, Convert_time2str(o->timeout, (char[11]){}))));
+                        printf(" %-20s = %s\n", "Unix Socket", StringBuffer_toString(Util_printRule(buf, o->action, "if %s %s type %s protocol %s with timeout %s", o->check_invers ? "succeeded" : "failed", o->target.unix.pathname, Util_portTypeDescription(o), o->protocol->name, Convert_time2str(o->timeout, (char[11]){}))));
         }
 
         for (Timestamp_T o = s->timestamplist; o; o = o->next) {
@@ -985,7 +985,7 @@ void Util_printService(Service_T s) {
 
         for (LinkStatus_T o = s->linkstatuslist; o; o = o->next) {
                 StringBuffer_clear(buf);
-                printf(" %-20s = %s\n", "Link status", StringBuffer_toString(Util_printRule(buf, o->action, "if failed")));
+                printf(" %-20s = %s\n", "Link status", StringBuffer_toString(Util_printRule(buf, o->action, "if %s", o->check_invers ? "up" : "down")));
         }
 
         for (LinkSpeed_T o = s->linkspeedlist; o; o = o->next) {
