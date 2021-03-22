@@ -295,12 +295,13 @@ StringBuffer_T Util_printEventratio(Action_T action, StringBuffer_T buf);
  * Append a rule description to the given StringBuffer. The description
  * consists of the formatted string given by the rule argument and constant
  * part which describes rule actions based on the action argument.
+ * @param inverse Inverse test flag
  * @param buf StringBuffer
  * @param action An EventAction object
  * @param rule Rule description
  * @return StringBuffer reference
  */
-StringBuffer_T Util_printRule(StringBuffer_T buf, EventAction_T action, const char *rule, ...) __attribute__((format (printf, 3, 4)));
+StringBuffer_T Util_printRule(bool inverse, StringBuffer_T buf, EventAction_T action, const char *rule, ...) __attribute__((format (printf, 4, 5)));
 
 
 /**

@@ -1942,7 +1942,7 @@ static void print_service_rules_timeout(HttpResponse res, Service_T s) {
 static void print_service_rules_nonexistence(HttpResponse res, Service_T s) {
         for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "Existence", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If doesn't exist")));
+                _displayTableRow(res, true, "rule", "Existence", "%s", StringBuffer_toString(Util_printRule(false, sb, l->action, "If doesn't exist")));
                 StringBuffer_free(&sb);
         }
 }
@@ -1951,7 +1951,7 @@ static void print_service_rules_nonexistence(HttpResponse res, Service_T s) {
 static void print_service_rules_existence(HttpResponse res, Service_T s) {
         for (Exist_T l = s->existlist; l; l = l->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "Non-Existence", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If exist")));
+                _displayTableRow(res, true, "rule", "Non-Existence", "%s", StringBuffer_toString(Util_printRule(false, sb, l->action, "If exist")));
                 StringBuffer_free(&sb);
         }
 }
@@ -1983,7 +1983,7 @@ static void print_service_rules_port(HttpResponse res, Service_T s) {
                                 StringBuffer_append(buf, " and certificate checksum %s equal to '%s'", checksumnames[p->target.net.ssl.options.checksumType], p->target.net.ssl.options.checksum);
                 }
 #endif
-                _displayTableRow(res, true, "rule", "Port", "%s", StringBuffer_toString(Util_printRule(sb, p->action, "%s", StringBuffer_toString(buf))));
+                _displayTableRow(res, true, "rule", "Port", "%s", StringBuffer_toString(Util_printRule(p->check_invers, sb, p->action, "%s", StringBuffer_toString(buf))));
                 StringBuffer_free(&buf);
                 StringBuffer_free(&sb);
         }
@@ -1999,7 +1999,7 @@ static void print_service_rules_socket(HttpResponse res, Service_T s) {
                         StringBuffer_append(buf, " and retry %d times", p->retry);
                 if (p->responsetime.limit > -1.)
                         StringBuffer_append(buf, " and responsetime %s %s", operatornames[p->responsetime.operator], Convert_time2str(p->responsetime.limit, (char[11]){}));
-                _displayTableRow(res, true, "rule", "Unix Socket", "%s", StringBuffer_toString(Util_printRule(sb, p->action, "%s", StringBuffer_toString(buf))));
+                _displayTableRow(res, true, "rule", "Unix Socket", "%s", StringBuffer_toString(Util_printRule(p->check_invers, sb, p->action, "%s", StringBuffer_toString(buf))));
                 StringBuffer_free(&buf);
                 StringBuffer_free(&sb);
         }
@@ -2027,7 +2027,7 @@ static void print_service_rules_icmp(HttpResponse res, Service_T s) {
                         StringBuffer_append(buf, " via address %s", i->outgoing.ip);
                 if (i->responsetime.limit > -1.)
                         StringBuffer_append(buf, " and responsetime %s %s", operatornames[i->responsetime.operator], Convert_time2str(i->responsetime.limit, (char[11]){}));
-                _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(Util_printRule(sb, i->action, "%s", StringBuffer_toString(buf))));
+                _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(Util_printRule(i->check_invers, sb, i->action, "%s", StringBuffer_toString(buf))));
                 StringBuffer_free(&buf);
                 StringBuffer_free(&sb);
         }
@@ -2038,9 +2038,9 @@ static void print_service_rules_perm(HttpResponse res, Service_T s) {
         if (s->perm) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (s->perm->test_changes)
-                        Util_printRule(sb, s->perm->action, "If changed");
+                        Util_printRule(false, sb, s->perm->action, "If changed");
                 else
-                        Util_printRule(sb, s->perm->action, "If failed %o", s->perm->perm);
+                        Util_printRule(false, sb, s->perm->action, "If failed %o", s->perm->perm);
                 _displayTableRow(res, true, "rule", "Permissions", "%s", StringBuffer_toString(sb));
                 StringBuffer_free(&sb);
         }
@@ -2050,7 +2050,7 @@ static void print_service_rules_perm(HttpResponse res, Service_T s) {
 static void print_service_rules_uid(HttpResponse res, Service_T s) {
         if (s->uid) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "UID", "%s", StringBuffer_toString(Util_printRule(sb, s->uid->action, "If failed %d", s->uid->uid)));
+                _displayTableRow(res, true, "rule", "UID", "%s", StringBuffer_toString(Util_printRule(false, sb, s->uid->action, "If failed %d", s->uid->uid)));
                 StringBuffer_free(&sb);
         }
 }
@@ -2059,7 +2059,7 @@ static void print_service_rules_uid(HttpResponse res, Service_T s) {
 static void print_service_rules_euid(HttpResponse res, Service_T s) {
         if (s->euid) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "EUID", "%s", StringBuffer_toString(Util_printRule(sb, s->euid->action, "If failed %d", s->euid->uid)));
+                _displayTableRow(res, true, "rule", "EUID", "%s", StringBuffer_toString(Util_printRule(false, sb, s->euid->action, "If failed %d", s->euid->uid)));
                 StringBuffer_free(&sb);
         }
 }
@@ -2069,12 +2069,12 @@ static void print_service_rules_filedescriptors(HttpResponse res, Service_T s) {
         for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (o->total) {
-                        _displayTableRow(res, true, "rule", "Total filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %lld", operatornames[o->operator], o->limit_absolute)));
+                        _displayTableRow(res, true, "rule", "Total filedescriptors", "%s", StringBuffer_toString(Util_printRule(false, sb, o->action, "If %s %lld", operatornames[o->operator], o->limit_absolute)));
                 } else {
                         if (o->limit_absolute > -1LL)
-                                _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %lld", operatornames[o->operator], o->limit_absolute)));
+                                _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(false, sb, o->action, "If %s %lld", operatornames[o->operator], o->limit_absolute)));
                         else
-                                _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(sb, o->action, "If %s %.1f%%", operatornames[o->operator], o->limit_percent)));
+                                _displayTableRow(res, true, "rule", "Filedescriptors", "%s", StringBuffer_toString(Util_printRule(false, sb, o->action, "If %s %.1f%%", operatornames[o->operator], o->limit_percent)));
                 }
                 StringBuffer_free(&sb);
         }
@@ -2084,7 +2084,7 @@ static void print_service_rules_filedescriptors(HttpResponse res, Service_T s) {
 static void print_service_rules_gid(HttpResponse res, Service_T s) {
         if (s->gid) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "GID", "%s", StringBuffer_toString(Util_printRule(sb, s->gid->action, "If failed %d", s->gid->gid)));
+                _displayTableRow(res, true, "rule", "GID", "%s", StringBuffer_toString(Util_printRule(false, sb, s->gid->action, "If failed %d", s->gid->gid)));
                 StringBuffer_free(&sb);
         }
 }
@@ -2093,7 +2093,7 @@ static void print_service_rules_gid(HttpResponse res, Service_T s) {
 static void print_service_rules_secattr(HttpResponse res, Service_T s) {
         for (SecurityAttribute_T a = s->secattrlist; a; a = a->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "Security attribute", "%s", StringBuffer_toString(Util_printRule(sb, a->action, "If failed %s", a->attribute)));
+                _displayTableRow(res, true, "rule", "Security attribute", "%s", StringBuffer_toString(Util_printRule(false, sb, a->action, "If failed %s", a->attribute)));
                 StringBuffer_free(&sb);
          }
 }
@@ -2105,9 +2105,9 @@ static void print_service_rules_timestamp(HttpResponse res, Service_T s) {
                 snprintf(key, sizeof(key), "%c%s", toupper(timestampnames[t->type][0]), timestampnames[t->type] + 1);
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (t->test_changes)
-                        Util_printRule(sb, t->action, "If changed");
+                        Util_printRule(false, sb, t->action, "If changed");
                 else
-                        Util_printRule(sb, t->action, "If %s %s", operatornames[t->operator], Convert_time2str(t->time * 1000., (char[11]){}));
+                        Util_printRule(false, sb, t->action, "If %s %s", operatornames[t->operator], Convert_time2str(t->time * 1000., (char[11]){}));
                 _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(sb));
                 StringBuffer_free(&sb);
         }
@@ -2117,7 +2117,7 @@ static void print_service_rules_timestamp(HttpResponse res, Service_T s) {
 static void print_service_rules_fsflags(HttpResponse res, Service_T s) {
         for (FsFlag_T l = s->fsflaglist; l; l = l->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "Filesystem flags", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If changed")));
+                _displayTableRow(res, true, "rule", "Filesystem flags", "%s", StringBuffer_toString(Util_printRule(false, sb, l->action, "If changed")));
                 StringBuffer_free(&sb);
         }
 }
@@ -2129,46 +2129,46 @@ static void print_service_rules_filesystem(HttpResponse res, Service_T s) {
                 switch (dl->resource) {
                 case Resource_Inode:
                         if (dl->limit_absolute > -1)
-                                Util_printRule(sb, dl->action, "If %s %lld", operatornames[dl->operator], dl->limit_absolute);
+                                Util_printRule(false, sb, dl->action, "If %s %lld", operatornames[dl->operator], dl->limit_absolute);
                         else
-                                Util_printRule(sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
+                                Util_printRule(false, sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
                         _displayTableRow(res, true, "rule", "Inodes usage limit", "%s", StringBuffer_toString(sb));
                         break;
                 case Resource_InodeFree:
                         if (dl->limit_absolute > -1)
-                                Util_printRule(sb, dl->action, "If %s %lld", operatornames[dl->operator], dl->limit_absolute);
+                                Util_printRule(false, sb, dl->action, "If %s %lld", operatornames[dl->operator], dl->limit_absolute);
                         else
-                                Util_printRule(sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
+                                Util_printRule(false, sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
                         _displayTableRow(res, true, "rule", "Inodes free limit", "%s", StringBuffer_toString(sb));
                         break;
                 case Resource_Space:
                         if (dl->limit_absolute > -1)
-                                Util_printRule(sb, dl->action, "If %s %s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
+                                Util_printRule(false, sb, dl->action, "If %s %s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
                         else
-                                Util_printRule(sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
+                                Util_printRule(false, sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
                         _displayTableRow(res, true, "rule", "Space usage limit", "%s", StringBuffer_toString(sb));
                         break;
                 case Resource_SpaceFree:
                         if (dl->limit_absolute > -1)
-                                Util_printRule(sb, dl->action, "If %s %s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
+                                Util_printRule(false, sb, dl->action, "If %s %s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
                         else
-                                Util_printRule(sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
+                                Util_printRule(false, sb, dl->action, "If %s %.1f%%", operatornames[dl->operator], dl->limit_percent);
                         _displayTableRow(res, true, "rule", "Space free limit", "%s", StringBuffer_toString(sb));
                         break;
                 case Resource_ReadBytes:
-                        _displayTableRow(res, true, "rule", "Read limit", "%s", StringBuffer_toString(Util_printRule(sb, dl->action, "If read %s %s/s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}))));
+                        _displayTableRow(res, true, "rule", "Read limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If read %s %s/s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}))));
                         break;
                 case Resource_ReadOperations:
-                        _displayTableRow(res, true, "rule", "Read limit", "%s", StringBuffer_toString(Util_printRule(sb, dl->action, "If read %s %llu operations/s", operatornames[dl->operator], dl->limit_absolute)));
+                        _displayTableRow(res, true, "rule", "Read limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If read %s %llu operations/s", operatornames[dl->operator], dl->limit_absolute)));
                         break;
                 case Resource_WriteBytes:
-                        _displayTableRow(res, true, "rule", "Write limit", "%s", StringBuffer_toString(Util_printRule(sb, dl->action, "If write %s %s/s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}))));
+                        _displayTableRow(res, true, "rule", "Write limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If write %s %s/s", operatornames[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}))));
                         break;
                 case Resource_WriteOperations:
-                        _displayTableRow(res, true, "rule", "Write limit", "%s", StringBuffer_toString(Util_printRule(sb, dl->action, "If write %s %llu operations/s", operatornames[dl->operator], dl->limit_absolute)));
+                        _displayTableRow(res, true, "rule", "Write limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If write %s %llu operations/s", operatornames[dl->operator], dl->limit_absolute)));
                         break;
                 case Resource_ServiceTime:
-                        _displayTableRow(res, true, "rule", "Service time limit", "%s", StringBuffer_toString(Util_printRule(sb, dl->action, "If service time %s %s/operation", operatornames[dl->operator], Convert_time2str(dl->limit_absolute, (char[11]){}))));
+                        _displayTableRow(res, true, "rule", "Service time limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If service time %s %s/operation", operatornames[dl->operator], Convert_time2str(dl->limit_absolute, (char[11]){}))));
                         break;
                 default:
                         break;
@@ -2182,9 +2182,9 @@ static void print_service_rules_size(HttpResponse res, Service_T s) {
         for (Size_T sl = s->sizelist; sl; sl = sl->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (sl->test_changes)
-                        Util_printRule(sb, sl->action, "If changed");
+                        Util_printRule(false, sb, sl->action, "If changed");
                 else
-                        Util_printRule(sb, sl->action, "If %s %llu byte(s)", operatornames[sl->operator], sl->size);
+                        Util_printRule(false, sb, sl->action, "If %s %llu byte(s)", operatornames[sl->operator], sl->size);
                 _displayTableRow(res, true, "rule", "Size", "%s", StringBuffer_toString(sb));
                 StringBuffer_free(&sb);
         }
@@ -2194,7 +2194,7 @@ static void print_service_rules_size(HttpResponse res, Service_T s) {
 static void print_service_rules_linkstatus(HttpResponse res, Service_T s) {
         for (LinkStatus_T l = s->linkstatuslist; l; l = l->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "Link status", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If %s", l->check_invers ? "up" : "down")));
+                _displayTableRow(res, true, "rule", "Link status", "%s", StringBuffer_toString(Util_printRule(l->check_invers, sb, l->action, "If %s", l->check_invers ? "up" : "down")));
                 StringBuffer_free(&sb);
         }
 }
@@ -2203,7 +2203,7 @@ static void print_service_rules_linkstatus(HttpResponse res, Service_T s) {
 static void print_service_rules_linkspeed(HttpResponse res, Service_T s) {
         for (LinkSpeed_T l = s->linkspeedlist; l; l = l->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "Link capacity", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If changed")));
+                _displayTableRow(res, true, "rule", "Link capacity", "%s", StringBuffer_toString(Util_printRule(false, sb, l->action, "If changed")));
                 StringBuffer_free(&sb);
         }
 }
@@ -2212,7 +2212,7 @@ static void print_service_rules_linkspeed(HttpResponse res, Service_T s) {
 static void print_service_rules_linksaturation(HttpResponse res, Service_T s) {
         for (LinkSaturation_T l = s->linksaturationlist; l; l = l->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "Link saturation", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If %s %.1f%%", operatornames[l->operator], l->limit)));
+                _displayTableRow(res, true, "rule", "Link saturation", "%s", StringBuffer_toString(Util_printRule(false, sb, l->action, "If %s %.1f%%", operatornames[l->operator], l->limit)));
                 StringBuffer_free(&sb);
         }
 }
@@ -2222,9 +2222,9 @@ static void print_service_rules_uploadbytes(HttpResponse res, Service_T s) {
         for (Bandwidth_T bl = s->uploadbyteslist; bl; bl = bl->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (bl->range == Time_Second)
-                        _displayTableRow(res, true, "rule", "Upload bytes", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %s/s", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}))));
+                        _displayTableRow(res, true, "rule", "Upload bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s/s", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}))));
                 else
-                        _displayTableRow(res, true, "rule", "Total upload bytes", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %s in last %d %s(s)", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range))));
+                        _displayTableRow(res, true, "rule", "Total upload bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s in last %d %s(s)", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range))));
                 StringBuffer_free(&sb);
         }
 }
@@ -2234,9 +2234,9 @@ static void print_service_rules_uploadpackets(HttpResponse res, Service_T s) {
         for (Bandwidth_T bl = s->uploadpacketslist; bl; bl = bl->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (bl->range == Time_Second)
-                        _displayTableRow(res, true, "rule", "Upload packets", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %lld packets/s", operatornames[bl->operator], bl->limit)));
+                        _displayTableRow(res, true, "rule", "Upload packets", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %lld packets/s", operatornames[bl->operator], bl->limit)));
                 else
-                        _displayTableRow(res, true, "rule", "Total upload packets", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %lld packets in last %d %s(s)", operatornames[bl->operator], bl->limit, bl->rangecount, Util_timestr(bl->range))));
+                        _displayTableRow(res, true, "rule", "Total upload packets", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %lld packets in last %d %s(s)", operatornames[bl->operator], bl->limit, bl->rangecount, Util_timestr(bl->range))));
                 StringBuffer_free(&sb);
         }
 }
@@ -2246,9 +2246,9 @@ static void print_service_rules_downloadbytes(HttpResponse res, Service_T s) {
         for (Bandwidth_T bl = s->downloadbyteslist; bl; bl = bl->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (bl->range == Time_Second)
-                        _displayTableRow(res, true, "rule", "Download bytes", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %s/s", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}))));
+                        _displayTableRow(res, true, "rule", "Download bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s/s", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}))));
                 else
-                        _displayTableRow(res, true, "rule", "Total download bytes", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %s in last %d %s(s)", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range))));
+                        _displayTableRow(res, true, "rule", "Total download bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s in last %d %s(s)", operatornames[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range))));
                 StringBuffer_free(&sb);
         }
 }
@@ -2258,9 +2258,9 @@ static void print_service_rules_downloadpackets(HttpResponse res, Service_T s) {
         for (Bandwidth_T bl = s->downloadpacketslist; bl; bl = bl->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (bl->range == Time_Second)
-                        _displayTableRow(res, true, "rule", "Download packets", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %lld packets/s", operatornames[bl->operator], bl->limit)));
+                        _displayTableRow(res, true, "rule", "Download packets", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %lld packets/s", operatornames[bl->operator], bl->limit)));
                 else
-                        _displayTableRow(res, true, "rule", "Total download packets", "%s", StringBuffer_toString(Util_printRule(sb, bl->action, "If %s %lld packets in last %d %s(s)", operatornames[bl->operator], bl->limit, bl->rangecount, Util_timestr(bl->range))));
+                        _displayTableRow(res, true, "rule", "Total download packets", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %lld packets in last %d %s(s)", operatornames[bl->operator], bl->limit, bl->rangecount, Util_timestr(bl->range))));
                 StringBuffer_free(&sb);
         }
 }
@@ -2269,7 +2269,7 @@ static void print_service_rules_downloadpackets(HttpResponse res, Service_T s) {
 static void print_service_rules_uptime(HttpResponse res, Service_T s) {
         for (Uptime_T ul = s->uptimelist; ul; ul = ul->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "Uptime", "%s", StringBuffer_toString(Util_printRule(sb, ul->action, "If %s %s", operatornames[ul->operator], _getUptime(ul->uptime, (char[256]){}))));
+                _displayTableRow(res, true, "rule", "Uptime", "%s", StringBuffer_toString(Util_printRule(false, sb, ul->action, "If %s %s", operatornames[ul->operator], _getUptime(ul->uptime, (char[256]){}))));
                 StringBuffer_free(&sb);
         }
 }
@@ -2278,12 +2278,12 @@ static void print_service_rules_content(HttpResponse res, Service_T s) {
         if (s->type != Service_Process) {
                 for (Match_T ml = s->matchignorelist; ml; ml = ml->next) {
                         StringBuffer_T sb = StringBuffer_create(256);
-                        _displayTableRow(res, true, "rule", "Ignore content", "%s", StringBuffer_toString(Util_printRule(sb, ml->action, "If content %s \"%s\"", ml->not ? "!=" : "=", ml->match_string)));
+                        _displayTableRow(res, true, "rule", "Ignore content", "%s", StringBuffer_toString(Util_printRule(false, sb, ml->action, "If content %s \"%s\"", ml->not ? "!=" : "=", ml->match_string)));
                         StringBuffer_free(&sb);
                 }
                 for (Match_T ml = s->matchlist; ml; ml = ml->next) {
                         StringBuffer_T sb = StringBuffer_create(256);
-                        _displayTableRow(res, true, "rule", "Content match", "%s", StringBuffer_toString(Util_printRule(sb, ml->action, "If content %s \"%s\"", ml->not ? "!=" : "=", ml->match_string)));
+                        _displayTableRow(res, true, "rule", "Content match", "%s", StringBuffer_toString(Util_printRule(false, sb, ml->action, "If content %s \"%s\"", ml->not ? "!=" : "=", ml->match_string)));
                         StringBuffer_free(&sb);
                 }
         }
@@ -2294,9 +2294,9 @@ static void print_service_rules_checksum(HttpResponse res, Service_T s) {
         if (s->checksum) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (s->checksum->test_changes)
-                        Util_printRule(sb, s->checksum->action, "If changed %s", checksumnames[s->checksum->type]);
+                        Util_printRule(false, sb, s->checksum->action, "If changed %s", checksumnames[s->checksum->type]);
                 else
-                        Util_printRule(sb, s->checksum->action, "If failed %s(%s)", s->checksum->hash, checksumnames[s->checksum->type]);
+                        Util_printRule(false, sb, s->checksum->action, "If failed %s(%s)", s->checksum->hash, checksumnames[s->checksum->type]);
                 _displayTableRow(res, true, "rule", "Checksum", "%s", StringBuffer_toString(sb));
                 StringBuffer_free(&sb);
         }
@@ -2306,7 +2306,7 @@ static void print_service_rules_checksum(HttpResponse res, Service_T s) {
 static void print_service_rules_pid(HttpResponse res, Service_T s) {
         for (Pid_T l = s->pidlist; l; l = l->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "PID", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If changed")));
+                _displayTableRow(res, true, "rule", "PID", "%s", StringBuffer_toString(Util_printRule(false, sb, l->action, "If changed")));
                 StringBuffer_free(&sb);
         }
 }
@@ -2315,7 +2315,7 @@ static void print_service_rules_pid(HttpResponse res, Service_T s) {
 static void print_service_rules_ppid(HttpResponse res, Service_T s) {
         for (Pid_T l = s->ppidlist; l; l = l->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
-                _displayTableRow(res, true, "rule", "PPID", "%s", StringBuffer_toString(Util_printRule(sb, l->action, "If changed")));
+                _displayTableRow(res, true, "rule", "PPID", "%s", StringBuffer_toString(Util_printRule(false, sb, l->action, "If changed")));
                 StringBuffer_free(&sb);
         }
 }
@@ -2327,9 +2327,9 @@ static void print_service_rules_program(HttpResponse res, Service_T s) {
                 for (Status_T status = s->statuslist; status; status = status->next) {
                         StringBuffer_T sb = StringBuffer_create(256);
                         if (status->operator == Operator_Changed)
-                                Util_printRule(sb, status->action, "If exit value changed");
+                                Util_printRule(false, sb, status->action, "If exit value changed");
                         else
-                                Util_printRule(sb, status->action, "If exit value %s %d", operatorshortnames[status->operator], status->return_value);
+                                Util_printRule(false, sb, status->action, "If exit value %s %d", operatorshortnames[status->operator], status->return_value);
                         _displayTableRow(res, true, "rule", "Test Exit value", "%s", StringBuffer_toString(sb));
                         StringBuffer_free(&sb);
                 }
@@ -2477,13 +2477,13 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         case Resource_CpuGuestNice:
                         case Resource_MemoryPercent:
                         case Resource_SwapPercent:
-                                Util_printRule(sb, q->action, "If %s %.1f%%", operatornames[q->operator], q->limit);
+                                Util_printRule(false, sb, q->action, "If %s %.1f%%", operatornames[q->operator], q->limit);
                                 break;
 
                         case Resource_MemoryKbyte:
                         case Resource_SwapKbyte:
                         case Resource_MemoryKbyteTotal:
-                                Util_printRule(sb, q->action, "If %s %s", operatornames[q->operator], Convert_bytes2str(q->limit, buf));
+                                Util_printRule(false, sb, q->action, "If %s %s", operatornames[q->operator], Convert_bytes2str(q->limit, buf));
                                 break;
 
                         case Resource_LoadAverage1m:
@@ -2492,24 +2492,24 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         case Resource_LoadAveragePerCore1m:
                         case Resource_LoadAveragePerCore5m:
                         case Resource_LoadAveragePerCore15m:
-                                Util_printRule(sb, q->action, "If %s %.1f", operatornames[q->operator], q->limit);
+                                Util_printRule(false, sb, q->action, "If %s %.1f", operatornames[q->operator], q->limit);
                                 break;
 
                         case Resource_Threads:
                         case Resource_Children:
-                                Util_printRule(sb, q->action, "If %s %.0f", operatornames[q->operator], q->limit);
+                                Util_printRule(false, sb, q->action, "If %s %.0f", operatornames[q->operator], q->limit);
                                 break;
 
                         case Resource_ReadBytes:
                         case Resource_ReadBytesPhysical:
                         case Resource_WriteBytes:
                         case Resource_WriteBytesPhysical:
-                                Util_printRule(sb, q->action, "if %s %s", operatornames[q->operator], Convert_bytes2str(q->limit, (char[10]){}));
+                                Util_printRule(false, sb, q->action, "if %s %s", operatornames[q->operator], Convert_bytes2str(q->limit, (char[10]){}));
                                 break;
 
                         case Resource_ReadOperations:
                         case Resource_WriteOperations:
-                                Util_printRule(sb, q->action, "if %s %.0f operations/s", operatornames[q->operator], q->limit);
+                                Util_printRule(false, sb, q->action, "if %s %.0f operations/s", operatornames[q->operator], q->limit);
                                 break;
 
                         default:

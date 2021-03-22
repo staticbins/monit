@@ -1788,7 +1788,7 @@ value changes.
 
 General syntax for testing a specific value or range:
 
- IF <test> THEN <action> [ELSE IF SUCCEEDED THEN <action>]
+ IF <test> THEN <action> [ELSE <action>]
 
 The action is evaluated each time the <TEST> condition is true. Success
 action is optional and executed only when the state changes from
