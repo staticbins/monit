@@ -405,6 +405,26 @@ static void do_reinit() {
 }
 
 
+static bool _isMemberOfGroup(Service_T s, ServiceGroup_T g) {
+        for (list_t m = g->members->head; m; m = m->next) {
+                Service_T member = m->e;
+                if (s == member)
+                        return true;
+        }
+        return false;
+}
+
+
+static bool _hasParentInTheSameGroup(Service_T s, ServiceGroup_T g) {
+        for (Dependant_T d = s->dependantlist; d; d = d->next ) {
+                Service_T parent = Util_getService(d->dependant);
+                if (parent && _isMemberOfGroup(parent, g))
+                        return true;
+        }
+        return false;
+}
+
+
 /**
  * Dispatch to the submitted action - actions are program arguments
  */
@@ -429,6 +449,10 @@ static void do_action(List_T arguments) {
                                         if (IS(Run.mygroup, sg->name)) {
                                                 for (list_t m = sg->members->head; m; m = m->next) {
                                                         Service_T s = m->e;
+                                                        if (IS(action, "restart") && _hasParentInTheSameGroup(s, sg)) {
+                                                                DEBUG("Restart of %s skipped -- it'll be handled as part of the dependency chain, as the parent service is member of the same group\n", s->name);
+                                                                continue;
+                                                        }
                                                         List_append(services, s->name);
                                                 }
                                                 break;
