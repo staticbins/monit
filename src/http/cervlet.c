@@ -354,10 +354,12 @@ __attribute__((format (printf, 7, 8))) static void _formatStatus(const char *nam
                 va_start(ap, value);
                 char *_value = Str_vcat(value, ap);
                 va_end(ap);
+
                 if (errorType != Event_Null && s->error & errorType)
                         StringBuffer_append(res->outputbuffer, type == HTML ? "<td class='red-text'>" : COLOR_LIGHTRED);
                 else
                         StringBuffer_append(res->outputbuffer, type == HTML ? "<td>" : COLOR_DEFAULT);
+
                 if (type == HTML) {
                         // If the output contains multiple line, wrap use <pre>, otherwise keep as is
                         bool multiline = strrchr(_value, '\n') ? true : false;
@@ -588,7 +590,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                         if (i->is_available == Connection_Failed)
                                 _formatStatus("ping response time", i->check_invers ? Event_Null : Event_Icmp, type, res, s, true, "connection failed");
                         else
-                                _formatStatus("ping response time", i->check_invers ? Event_Icmp : Event_Null, type, res, s, i->is_available != Connection_Init && i->response >= 0., "%s", Convert_time2str(i->response, (char[11]){}));
+                                _formatStatus("ping response time", i->check_invers ? Event_Icmp : Event_Null, type, res, s, i->is_available != Connection_Init && i->responsetime.current >= 0., "%s", Convert_time2str(i->responsetime.current, (char[11]){}));
                 }
                 for (Port_T p = s->portlist; p; p = p->next) {
                         if (p->is_available == Connection_Failed) {
@@ -601,14 +603,14 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 Event_Type highlight = p->check_invers ? Event_Connection : Event_Null;
                                 if (p->target.net.ssl.certificate.validDays < p->target.net.ssl.certificate.minimumDays)
                                         highlight |= Event_Timestamp;
-                                _formatStatus("port response time", highlight, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %sprotocol %s", Convert_time2str(p->response, (char[11]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), buf, p->protocol->name);
+                                _formatStatus("port response time", highlight, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %sprotocol %s", Convert_time2str(p->responsetime.current, (char[11]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), buf, p->protocol->name);
                         }
                 }
                 for (Port_T p = s->socketlist; p; p = p->next) {
                         if (p->is_available == Connection_Failed) {
                                 _formatStatus("unix socket response time", p->check_invers ? Event_Null : Event_Connection, type, res, s, true, "FAILED to %s type %s protocol %s", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
                         } else {
-                                _formatStatus("unix socket response time", p->check_invers ? Event_Connection : Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s type %s protocol %s", Convert_time2str(p->response, (char[11]){}), p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
+                                _formatStatus("unix socket response time", p->check_invers ? Event_Connection : Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s type %s protocol %s", Convert_time2str(p->responsetime.current, (char[11]){}), p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
                         }
                 }
         }
@@ -1967,6 +1969,8 @@ static void print_service_rules_port(HttpResponse res, Service_T s) {
                         Util_portTypeDescription(p), Util_portIpDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}));
                 if (p->retry > 1)
                         StringBuffer_append(buf, " and retry %d times", p->retry);
+                if (p->responsetime.limit > -1.)
+                        StringBuffer_append(buf, " and responsetime %s %s", operatornames[p->responsetime.operator], Convert_time2str(p->responsetime.limit, (char[11]){}));
 #ifdef HAVE_OPENSSL
                 if (p->target.net.ssl.options.flags) {
                         StringBuffer_append(buf, " using TLS");
@@ -1989,11 +1993,14 @@ static void print_service_rules_port(HttpResponse res, Service_T s) {
 static void print_service_rules_socket(HttpResponse res, Service_T s) {
         for (Port_T p = s->socketlist; p; p = p->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
+                StringBuffer_T buf = StringBuffer_create(64);
+                StringBuffer_append(buf, "If %s %s type %s protocol %s with timeout %s", p->check_invers ? "succeeded" : "failed", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}));
                 if (p->retry > 1)
-                        Util_printRule(sb, p->action, "If %s %s type %s protocol %s with timeout %s and retry %d time(s)", p->check_invers ? "succeeded" : "failed", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}), p->retry);
-                else
-                        Util_printRule(sb, p->action, "If %s %s type %s protocol %s with timeout %s", p->check_invers ? "succeeded" : "failed", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}));
-                _displayTableRow(res, true, "rule", "Unix Socket", "%s", StringBuffer_toString(sb));
+                        StringBuffer_append(buf, " and retry %d times", p->retry);
+                if (p->responsetime.limit > -1.)
+                        StringBuffer_append(buf, " and responsetime %s %s", operatornames[p->responsetime.operator], Convert_time2str(p->responsetime.limit, (char[11]){}));
+                _displayTableRow(res, true, "rule", "Unix Socket", "%s", StringBuffer_toString(Util_printRule(sb, p->action, "%s", StringBuffer_toString(buf))));
+                StringBuffer_free(&buf);
                 StringBuffer_free(&sb);
         }
 }
@@ -2003,6 +2010,7 @@ static void print_service_rules_icmp(HttpResponse res, Service_T s) {
         for (Icmp_T i = s->icmplist; i; i = i->next) {
                 const char *key;
                 StringBuffer_T sb = StringBuffer_create(256);
+                StringBuffer_T buf = StringBuffer_create(64);
                 switch (i->family) {
                         case Socket_Ip4:
                                 key = "Ping4";
@@ -2014,7 +2022,13 @@ static void print_service_rules_icmp(HttpResponse res, Service_T s) {
                                 key = "Ping";
                                 break;
                 }
-                _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(Util_printRule(sb, i->action, "If %s [count %d size %d with timeout %s%s%s]", i->check_invers ? "succeeded" : "failed", i->count, i->size, Convert_time2str(i->timeout, (char[11]){}), i->outgoing.ip ? " via address " : "", i->outgoing.ip ? i->outgoing.ip : "")));
+                StringBuffer_append(buf, "If %s count %d size %d with timeout %s", i->check_invers ? "succeeded" : "failed", i->count, i->size, Convert_time2str(i->timeout, (char[11]){}));
+                if (i->outgoing.ip)
+                        StringBuffer_append(buf, " via address %s", i->outgoing.ip);
+                if (i->responsetime.limit > -1.)
+                        StringBuffer_append(buf, " and responsetime %s %s", operatornames[i->responsetime.operator], Convert_time2str(i->responsetime.limit, (char[11]){}));
+                _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(Util_printRule(sb, i->action, "%s", StringBuffer_toString(buf))));
+                StringBuffer_free(&buf);
                 StringBuffer_free(&sb);
         }
 }

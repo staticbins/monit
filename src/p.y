@@ -190,6 +190,7 @@ static struct Status_T statusset = {};
 static struct Perm_T permset = {};
 static struct Size_T sizeset = {};
 static struct Uptime_T uptimeset = {};
+static struct ResponseTime_T responsetimeset = {};
 static struct LinkStatus_T linkstatusset = {};
 static struct LinkSpeed_T linkspeedset = {};
 static struct LinkSaturation_T linksaturationset = {};
@@ -283,6 +284,7 @@ static void  reset_timestampset(void);
 static void  reset_actionrateset(void);
 static void  reset_sizeset(void);
 static void  reset_uptimeset(void);
+static void  reset_responsetimeset(void);
 static void  reset_pidset(void);
 static void  reset_ppidset(void);
 static void  reset_fsflagset(void);
@@ -357,7 +359,7 @@ static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Typ
 %token SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 TLSV13 CERTMD5 AUTO
 %token NOSSLV2 NOSSLV3 NOTLSV1 NOTLSV11 NOTLSV12 NOTLSV13
 %token BYTE KILOBYTE MEGABYTE GIGABYTE
-%token INODE SPACE TFREE PERMISSION SIZE MATCH NOT IGNORE ACTION UPTIME
+%token INODE SPACE TFREE PERMISSION SIZE MATCH NOT IGNORE ACTION UPTIME RESPONSETIME
 %token EXEC UNMONITOR PING PING4 PING6 ICMP ICMPECHO NONEXIST EXIST INVALID DATA RECOVERED PASSED SUCCEEDED
 %token URL CONTENT PID PPID FSFLAG
 %token REGISTER CREDENTIALS
@@ -1427,6 +1429,8 @@ connection      : IF connection_clause host port connectionoptlist rate1 THEN ac
                            TODO: Parser is in need of refactoring */
                         portset.url_request = urlrequest;
                         portset.check_invers = $<number>2;
+                        portset.responsetime.operator = responsetimeset.operator;
+                        portset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(portset).action, $<number>8, $<number>9);
                         addport(&(current->portlist), &portset);
                   }
@@ -1450,6 +1454,7 @@ connectionopt   : ip
                 | sendexpect
                 | urloption
                 | connectiontimeout
+                | responsetime
                 | outgoing
                 | retry
                 | ssl
@@ -1459,6 +1464,8 @@ connectionopt   : ip
 
 connectionurl   : IF connection_clause URL URLOBJECT connectionurloptlist rate1 THEN action1 recovery {
                         portset.check_invers = $<number>2;
+                        portset.responsetime.operator = responsetimeset.operator;
+                        portset.responsetime.limit = responsetimeset.limit;
                         prepare_urlrequest($<url>4);
                         addeventaction(&(portset).action, $<number>8, $<number>9);
                         addport(&(current->portlist), &portset);
@@ -1479,6 +1486,8 @@ connectionurlopt : urloption
 
 connectionunix  : IF connection_clause unixsocket connectionuxoptlist rate1 THEN action1 recovery {
                         portset.check_invers = $<number>2;
+                        portset.responsetime.operator = responsetimeset.operator;
+                        portset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(portset).action, $<number>7, $<number>8);
                         addport(&(current->socketlist), &portset);
                   }
@@ -1492,6 +1501,7 @@ connectionuxopt : type
                 | protocol
                 | sendexpect
                 | connectiontimeout
+                | responsetime
                 | retry
                 ;
 
@@ -1499,6 +1509,8 @@ icmp            : IF connection_clause ICMP icmptype icmpoptlist rate1 THEN acti
                         icmpset.family = Socket_Ip;
                         icmpset.check_invers = $<number>2;
                         icmpset.type = $<number>4;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>8, $<number>9);
                         addicmp(&icmpset);
                   }
@@ -1993,6 +2005,16 @@ uptime          : IF UPTIME operator NUMBER time rate1 THEN action1 recovery {
                         uptimeset.uptime = ((unsigned long long)$4 * $<number>5);
                         addeventaction(&(uptimeset).action, $<number>8, $<number>9);
                         adduptime(&uptimeset);
+                  }
+                ;
+
+responsetime    : RESPONSETIME operator NUMBER MILLISECOND {
+                        responsetimeset.operator = $<number>2;
+                        responsetimeset.limit = $3;
+                  }
+                | RESPONSETIME operator NUMBER SECOND {
+                        responsetimeset.operator = $<number>2;
+                        responsetimeset.limit = $3 * 1000;
                   }
                 ;
 
@@ -3276,6 +3298,7 @@ static void preparse() {
         reset_sslset();
         reset_mailserverset();
         reset_mmonitset();
+        reset_responsetimeset();
         reset_portset();
         reset_permset();
         reset_icmpset();
@@ -3631,6 +3654,7 @@ static void addport(Port_T *list, Port_T port) {
         p->hostname           = port->hostname;
         p->url_request        = port->url_request;
         p->outgoing           = port->outgoing;
+
         if (p->family == Socket_Unix) {
                 p->target.unix.pathname = port->target.unix.pathname;
         } else {
@@ -3677,10 +3701,15 @@ static void addport(Port_T *list, Port_T port) {
                 }
         }
 
+        p->responsetime.limit    = responsetimeset.limit;
+        p->responsetime.current  = responsetimeset.current;
+        p->responsetime.operator = responsetimeset.operator;
+
         p->next = *list;
         *list = p;
 
         reset_sslset();
+        reset_responsetimeset();
         reset_portset();
 
 }
@@ -4228,20 +4257,24 @@ static void addicmp(Icmp_T is) {
         ASSERT(is);
 
         NEW(icmp);
-        icmp->family       = is->family;
-        icmp->type         = is->type;
-        icmp->size         = is->size;
-        icmp->count        = is->count;
-        icmp->timeout      = is->timeout;
-        icmp->action       = is->action;
-        icmp->outgoing     = is->outgoing;
-        icmp->check_invers = is->check_invers;
-        icmp->is_available = Connection_Init;
-        icmp->response     = -1;
+        icmp->family        = is->family;
+        icmp->type          = is->type;
+        icmp->size          = is->size;
+        icmp->count         = is->count;
+        icmp->timeout       = is->timeout;
+        icmp->action        = is->action;
+        icmp->outgoing      = is->outgoing;
+        icmp->check_invers  = is->check_invers;
+        icmp->is_available  = Connection_Init;
 
-        icmp->next         = current->icmplist;
-        current->icmplist  = icmp;
+        icmp->responsetime.limit    = responsetimeset.limit;
+        icmp->responsetime.current  = responsetimeset.current;
+        icmp->responsetime.operator = responsetimeset.operator;
 
+        icmp->next          = current->icmplist;
+        current->icmplist   = icmp;
+
+        reset_responsetimeset();
         reset_icmpset();
 }
 
@@ -4874,6 +4907,13 @@ static void reset_uptimeset() {
         uptimeset.operator = Operator_Equal;
         uptimeset.uptime = 0;
         uptimeset.action = NULL;
+}
+
+
+static void reset_responsetimeset() {
+        responsetimeset.operator = Operator_Less;
+        responsetimeset.current = 0.;
+        responsetimeset.limit = -1.;
 }
 
 

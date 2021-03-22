@@ -3216,6 +3216,7 @@ Syntax:
   IF <FAILED|SUCCEEDED> PING[4|6]
      [COUNT number]
      [SIZE number]
+     [RESPONSETIME number <MILLISECONDS|SECONDS>]
      [TIMEOUT number SECONDS]
      [ADDRESS string]
   THEN action
@@ -3232,6 +3233,8 @@ will be sent to the host in one cycle at maximum. The default value is 3.
 
 The B<SIZE> parameter specifies the ping request payload size. Default
 is 64 bytes, minimum is 8 bytes, maximum 1492 bytes.
+
+The B<RESPONSETIME> parameter sets the response time limit.
 
 If no reply arrive within B<TIMEOUT> seconds, Monit reports an error.
 If at least one reply was received, the ping test is considered a
@@ -3307,6 +3310,7 @@ TCP/UDP port test syntax:
     [CERTIFICATE CHECKSUM [MD5|SHA1] string]
     [CERTIFICATE VALID for number DAYS]
     [PROTOCOL protocol | <SEND|EXPECT> "string",...]
+    [RESPONSETIME number <MILLISECONDS|SECONDS>]
     [TIMEOUT number SECONDS]
     [RETRY number]
  THEN action
@@ -3317,6 +3321,7 @@ Unix socket test syntax:
     <UNIXSOCKET path>
     [TYPE <TCP|UDP>]
     [PROTOCOL protocol | <SEND|EXPECT> "string",...]
+    [RESPONSETIME number <MILLISECONDS|SECONDS>]
     [TIMEOUT number SECONDS]
     [RETRY number]
  THEN action
@@ -3438,6 +3443,8 @@ knows how to speak:
 If the target server's protocol is not found in this list, simply
 do not specify the protocol and Monit will use a default connection
 test.
+
+I<RESPONSETIME> parameter sets the response time limit.
 
 I<TIMEOUT number SECONDS>. Optionally specifies the
 connect and read timeout for the connection. If Monit cannot

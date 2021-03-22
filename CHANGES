@@ -33,6 +33,11 @@ stop, restart, unmonitor, monitor commands. Examples:
    monit status myservice  # exact match
    monit status "data.*"    # pattern which will match all services whos name contain "data" substring
 
+New: Issue #718: Add support for response time monitoring to TCP/UDP ports, unix sockets and ping.
+Example for ping and port test:
+   if failed ping responsetime < 50 ms then alert
+   if failed port 443 protocol https and responsetime < 50 ms then alert
+
 Fixed: Minor memory leak when uptime test is used an monit is reloaded.
 
 
