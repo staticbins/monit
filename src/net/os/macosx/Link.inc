@@ -50,7 +50,7 @@ static bool _update(T L, const char *interface) {
                         name[sdl->sdl_nlen] = 0;
                         if (Str_isEqual(interface, name)) {
                                 int s = socket(AF_INET, SOCK_DGRAM, 0);
-                                if (s > 0) {
+                                if (s >= 0) {
                                         struct ifmediareq ifmr;
                                         memset(&ifmr, 0, sizeof(ifmr));
                                         strncpy(ifmr.ifm_name, interface, sizeof(ifmr.ifm_name));

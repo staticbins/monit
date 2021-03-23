@@ -38,7 +38,7 @@ static bool _update(T L, const char *interface) {
                         continue;
                 if (Str_isEqual(interface, a->ifa_name) && a->ifa_addr->sa_family == AF_LINK) {
                         int s = socket(AF_INET, SOCK_DGRAM, 0);
-                        if (s > 0) {
+                        if (s >= 0) {
                                 struct ifmediareq ifmr;
                                 memset(&ifmr, 0, sizeof(ifmr));
                                 strncpy(ifmr.ifm_name, interface, sizeof(ifmr.ifm_name) - 1);
