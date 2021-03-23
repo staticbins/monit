@@ -41,7 +41,7 @@ static bool _update(T L, const char *interface) {
                         if (s >= 0) {
                                 struct ifmediareq ifmr;
                                 memset(&ifmr, 0, sizeof(ifmr));
-                                strncpy(ifmr.ifm_name, interface, sizeof(ifmr.ifm_name));
+                                strncpy(ifmr.ifm_name, interface, sizeof(ifmr.ifm_name) - 1);
                                 // try SIOCGIFMEDIA - if not supported, assume the interface is UP (loopback or other virtual interface)
                                 if (ioctl(s, SIOCGIFMEDIA, (caddr_t)&ifmr) >= 0) {
                                         if (ifmr.ifm_status & IFM_AVALID && ifmr.ifm_status & IFM_ACTIVE) {
