@@ -521,7 +521,8 @@ static void send_response(HttpRequest req, HttpResponse res) {
                         Socket_print(S, "%s", headers);
                 Socket_print(S, "\r\n");
                 if (bodyLength)
-                        Socket_write(S, (unsigned char *)body, bodyLength);
+                        if(Socket_write(S, (unsigned char *)body, bodyLength) < 0)
+                                Log_error("Http: Cannot send the response -- %s\n", STRERROR);
                 FREE(headers);
         }
 }
