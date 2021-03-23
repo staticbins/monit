@@ -648,13 +648,13 @@ void Socket_test(void *P) {
                                 THROW(IOException, "Invalid socket family %d\n", p->family);
                                 break;
                 }
-                p->response = (double)(Time_micro() - start) / 1000.; // Convert microseconds to milliseconds
+                p->responsetime.current = (double)(Time_micro() - start) / 1000.; // Convert microseconds to milliseconds
                 p->is_available = Connection_Ok;
         }
         ELSE
         {
                 p->is_available = Connection_Failed;
-                p->response = -1.;
+                p->responsetime.current = -1.;
                 RETHROW;
         }
         END_TRY;

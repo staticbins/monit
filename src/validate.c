@@ -155,7 +155,7 @@ retry:
         {
                 Socket_test(p);
                 rv = p->check_invers ? State_Failed : State_Succeeded;
-                DEBUG("'%s' succeeded testing protocol [%s] at %s [response time %s]\n", s->name, p->protocol->name, Util_portDescription(p, buf, sizeof(buf)), Convert_time2str(p->response, (char[11]){}));
+                DEBUG("'%s' succeeded testing protocol [%s] at %s [response time %s]\n", s->name, p->protocol->name, Util_portDescription(p, buf, sizeof(buf)), Convert_time2str(p->responsetime.current, (char[11]){}));
         }
         ELSE
         {
@@ -171,6 +171,14 @@ retry:
                 Event_post(s, Event_Connection, p->check_invers ? State_Succeeded : State_Failed, p->action, "%s", report);
         } else {
                 Event_post(s, Event_Connection, p->check_invers ? State_Failed : State_Succeeded, p->action, "connection succeeded to %s", Util_portDescription(p, buf, sizeof(buf)));
+        }
+        if (p->responsetime.limit > -1.) {
+                if (Util_evalDoubleQExpression(p->responsetime.operator, p->responsetime.current, p->responsetime.limit)) {
+                        rv = State_Failed;
+                        Event_post(s, Event_Speed, State_Failed, p->action, "response time %s doesn't match limit [time %s %s]", Convert_time2str(p->responsetime.current, (char[11]){}), operatorshortnames[p->responsetime.operator], Convert_time2str(p->responsetime.limit, (char[11]){}));
+                } else {
+                        Event_post(s, Event_Speed, State_Failed, p->action, "response time %s matches limit [time %s %s]", Convert_time2str(p->responsetime.current, (char[11]){}), operatorshortnames[p->responsetime.operator], Convert_time2str(p->responsetime.limit, (char[11]){}));
+                }
         }
         if (p->target.net.ssl.options.flags && p->target.net.ssl.certificate.validDays >= 0 && p->target.net.ssl.certificate.minimumDays > 0) {
                 if (p->target.net.ssl.certificate.validDays < p->target.net.ssl.certificate.minimumDays) {
@@ -1917,8 +1925,8 @@ State_Type check_remote_host(Service_T s) {
         for (Icmp_T icmp = s->icmplist; icmp; icmp = icmp->next) {
                 switch (icmp->type) {
                         case ICMP_ECHO:
-                                icmp->response = icmp_echo(s->path, icmp->family, &(icmp->outgoing), icmp->size, icmp->timeout, icmp->count);
-                                if (icmp->response == -2) {
+                                icmp->responsetime.current = icmp_echo(s->path, icmp->family, &(icmp->outgoing), icmp->size, icmp->timeout, icmp->count);
+                                if (icmp->responsetime.current == -2) {
                                         icmp->is_available = Connection_Init;
 #ifdef SOLARIS
                                         DEBUG("'%s' ping test skipped -- the monit user has no permission to create raw socket, please add net_icmpaccess privilege or run monit as root\n", s->name);
@@ -1927,14 +1935,24 @@ State_Type check_remote_host(Service_T s) {
 #else
                                         DEBUG("'%s' ping test skipped -- the monit user has no permission to create raw socket, please run monit as root\n", s->name);
 #endif
-                                } else if (icmp->response == -1) {
+                                } else if (icmp->responsetime.current == -1) {
                                         rv = icmp->check_invers ? State_Succeeded : State_Failed;
                                         icmp->is_available = Connection_Failed;
                                         Event_post(s, Event_Icmp, rv, icmp->action, "ping test failed");
                                 } else {
                                         rv = icmp->check_invers ? State_Failed : State_Succeeded;
                                         icmp->is_available = Connection_Ok;
-                                        Event_post(s, Event_Icmp, rv, icmp->action, "ping test succeeded [response time %s]", Convert_time2str(icmp->response, (char[11]){}));
+                                        Event_post(s, Event_Icmp, rv, icmp->action, "ping test succeeded [response time %s]", Convert_time2str(icmp->responsetime.current, (char[11]){}));
+
+                                        // Check response time
+                                        if (icmp->responsetime.limit > -1.) {
+                                                if (Util_evalDoubleQExpression(icmp->responsetime.operator, icmp->responsetime.current, icmp->responsetime.limit)) {
+                                                        rv = State_Failed;
+                                                        Event_post(s, Event_Speed, State_Failed, icmp->action, "response time %s doesn't match limit [time %s %s]", Convert_time2str(icmp->responsetime.current, (char[11]){}), operatorshortnames[icmp->responsetime.operator], Convert_time2str(icmp->responsetime.limit, (char[11]){}));
+                                                } else {
+                                                        Event_post(s, Event_Speed, State_Failed, icmp->action, "response time %s matches limit [time %s %s]", Convert_time2str(icmp->responsetime.current, (char[11]){}), operatorshortnames[icmp->responsetime.operator], Convert_time2str(icmp->responsetime.limit, (char[11]){}));
+                                                }
+                                        }
                                 }
                                 last_ping = icmp;
                                 break;
@@ -1977,7 +1995,7 @@ State_Type check_system(Service_T s) {
 
 
 State_Type check_net(Service_T s) {
-        volatile State_Type rv;
+        volatile State_Type rv = State_Succeeded;
         volatile bool havedata = true;
         // Get link statistics
         TRY

@@ -463,7 +463,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             "<responsetime>%.6f</responsetime>"
                                             "</icmp>",
                                             icmpnames[i->type],
-                                            i->is_available == Connection_Ok ? i->response / 1000. : -1.); // We send the response time in [s] for backward compatibility (with microseconds precision)
+                                            i->is_available == Connection_Ok ? i->responsetime.current / 1000. : -1.); // We send the response time in [s] for backward compatibility (with microseconds precision)
                 }
                 for (Port_T p = S->portlist; p; p = p->next) {
                         StringBuffer_append(B,
@@ -479,7 +479,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             Util_portRequestDescription(p),
                                             p->protocol->name ? p->protocol->name : "",
                                             Util_portTypeDescription(p),
-                                            p->is_available == Connection_Ok ? p->response / 1000. : -1.); // We send the response time in [s] for backward compatibility (with microseconds precision)
+                                            p->is_available == Connection_Ok ? p->responsetime.current / 1000. : -1.); // We send the response time in [s] for backward compatibility (with microseconds precision)
                         if (p->target.net.ssl.options.flags)
                                 StringBuffer_append(B,
                                             "<certificate>"
@@ -498,7 +498,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             "</unix>",
                                             p->target.unix.pathname ? p->target.unix.pathname : "",
                                             p->protocol->name ? p->protocol->name : "",
-                                            p->is_available == Connection_Ok ? p->response / 1000. : -1.); // We send the response time in [s] for backward compatibility (with microseconds precision)
+                                            p->is_available == Connection_Ok ? p->responsetime.current / 1000. : -1.); // We send the response time in [s] for backward compatibility (with microseconds precision)
                 }
                 if (S->type == Service_System) {
                         StringBuffer_append(B,

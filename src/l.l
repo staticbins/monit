@@ -394,6 +394,7 @@ perm(ission)?     { return PERMISSION; }
 exec(ute)?        { return EXEC; }
 size              { return SIZE; }
 uptime            { return UPTIME; }
+responsetime      { return RESPONSETIME; }
 basedir           { return BASEDIR; }
 slot(s)?          { return SLOT; }
 eventqueue        { return EVENTQUEUE; }

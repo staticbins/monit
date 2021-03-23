@@ -190,6 +190,7 @@ static struct Status_T statusset = {};
 static struct Perm_T permset = {};
 static struct Size_T sizeset = {};
 static struct Uptime_T uptimeset = {};
+static struct ResponseTime_T responsetimeset = {};
 static struct LinkStatus_T linkstatusset = {};
 static struct LinkSpeed_T linkspeedset = {};
 static struct LinkSaturation_T linksaturationset = {};
@@ -283,6 +284,7 @@ static void  reset_timestampset(void);
 static void  reset_actionrateset(void);
 static void  reset_sizeset(void);
 static void  reset_uptimeset(void);
+static void  reset_responsetimeset(void);
 static void  reset_pidset(void);
 static void  reset_ppidset(void);
 static void  reset_fsflagset(void);
@@ -357,7 +359,7 @@ static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Typ
 %token SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 TLSV13 CERTMD5 AUTO
 %token NOSSLV2 NOSSLV3 NOTLSV1 NOTLSV11 NOTLSV12 NOTLSV13
 %token BYTE KILOBYTE MEGABYTE GIGABYTE
-%token INODE SPACE TFREE PERMISSION SIZE MATCH NOT IGNORE ACTION UPTIME
+%token INODE SPACE TFREE PERMISSION SIZE MATCH NOT IGNORE ACTION UPTIME RESPONSETIME
 %token EXEC UNMONITOR PING PING4 PING6 ICMP ICMPECHO NONEXIST EXIST INVALID DATA RECOVERED PASSED SUCCEEDED
 %token URL CONTENT PID PPID FSFLAG
 %token REGISTER CREDENTIALS
@@ -1422,21 +1424,23 @@ hostname        : /* EMPTY */     {
                   }
                 ;
 
-connection      : IF connection_clause host port connectionoptlist rate1 THEN action1 recovery {
+connection      : IF FAILED host port connectionoptlist rate1 THEN action1 recovery_success {
                         /* This is a workaround to support content match without having to create an URL object. 'urloption' creates the Request_T object we need minus the URL object, but with enough information to perform content test.
                            TODO: Parser is in need of refactoring */
                         portset.url_request = urlrequest;
-                        portset.check_invers = $<number>2;
+                        portset.check_invers = false;
+                        portset.responsetime.operator = responsetimeset.operator;
+                        portset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(portset).action, $<number>8, $<number>9);
                         addport(&(current->portlist), &portset);
                   }
-                ;
-
-connection_clause : FAILED {
-                        $<number>$ = 0;
-                  }
-                | SUCCEEDED {
-                        $<number>$ = 1;
+                | IF SUCCEEDED host port connectionoptlist rate1 THEN action1 recovery_failure {
+                        portset.url_request = urlrequest;
+                        portset.check_invers = true;
+                        portset.responsetime.operator = responsetimeset.operator;
+                        portset.responsetime.limit = responsetimeset.limit;
+                        addeventaction(&(portset).action, $<number>8, $<number>9);
+                        addport(&(current->portlist), &portset);
                   }
                 ;
 
@@ -1450,6 +1454,7 @@ connectionopt   : ip
                 | sendexpect
                 | urloption
                 | connectiontimeout
+                | responsetime
                 | outgoing
                 | retry
                 | ssl
@@ -1457,8 +1462,18 @@ connectionopt   : ip
                 | sslexpire
                 ;
 
-connectionurl   : IF connection_clause URL URLOBJECT connectionurloptlist rate1 THEN action1 recovery {
-                        portset.check_invers = $<number>2;
+connectionurl   : IF FAILED URL URLOBJECT connectionurloptlist rate1 THEN action1 recovery_success {
+                        portset.check_invers = false;
+                        portset.responsetime.operator = responsetimeset.operator;
+                        portset.responsetime.limit = responsetimeset.limit;
+                        prepare_urlrequest($<url>4);
+                        addeventaction(&(portset).action, $<number>8, $<number>9);
+                        addport(&(current->portlist), &portset);
+                  }
+                | IF SUCCEEDED URL URLOBJECT connectionurloptlist rate1 THEN action1 recovery_failure {
+                        portset.check_invers = true;
+                        portset.responsetime.operator = responsetimeset.operator;
+                        portset.responsetime.limit = responsetimeset.limit;
                         prepare_urlrequest($<url>4);
                         addeventaction(&(portset).action, $<number>8, $<number>9);
                         addport(&(current->portlist), &portset);
@@ -1477,8 +1492,17 @@ connectionurlopt : urloption
                  | sslexpire
                  ;
 
-connectionunix  : IF connection_clause unixsocket connectionuxoptlist rate1 THEN action1 recovery {
-                        portset.check_invers = $<number>2;
+connectionunix  : IF FAILED unixsocket connectionuxoptlist rate1 THEN action1 recovery_success {
+                        portset.check_invers = false;
+                        portset.responsetime.operator = responsetimeset.operator;
+                        portset.responsetime.limit = responsetimeset.limit;
+                        addeventaction(&(portset).action, $<number>7, $<number>8);
+                        addport(&(current->socketlist), &portset);
+                  }
+                | IF SUCCEEDED unixsocket connectionuxoptlist rate1 THEN action1 recovery_failure {
+                        portset.check_invers = true;
+                        portset.responsetime.operator = responsetimeset.operator;
+                        portset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(portset).action, $<number>7, $<number>8);
                         addport(&(current->socketlist), &portset);
                   }
@@ -1492,31 +1516,61 @@ connectionuxopt : type
                 | protocol
                 | sendexpect
                 | connectiontimeout
+                | responsetime
                 | retry
                 ;
 
-icmp            : IF connection_clause ICMP icmptype icmpoptlist rate1 THEN action1 recovery {
+icmp            : IF FAILED ICMP icmptype icmpoptlist rate1 THEN action1 recovery_success {
                         icmpset.family = Socket_Ip;
-                        icmpset.check_invers = $<number>2;
+                        icmpset.check_invers = false;
                         icmpset.type = $<number>4;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>8, $<number>9);
                         addicmp(&icmpset);
                   }
-                | IF connection_clause PING icmpoptlist rate1 THEN action1 recovery {
+                | IF FAILED PING icmpoptlist rate1 THEN action1 recovery_success {
                         icmpset.family = Socket_Ip;
-                        icmpset.check_invers = $<number>2;
+                        icmpset.check_invers = false;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
-                | IF connection_clause PING4 icmpoptlist rate1 THEN action1 recovery {
+                | IF FAILED PING4 icmpoptlist rate1 THEN action1 recovery_success {
                         icmpset.family = Socket_Ip4;
-                        icmpset.check_invers = $<number>2;
+                        icmpset.check_invers = false;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
-                | IF connection_clause PING6 icmpoptlist rate1 THEN action1 recovery {
+                | IF FAILED PING6 icmpoptlist rate1 THEN action1 recovery_success {
                         icmpset.family = Socket_Ip6;
-                        icmpset.check_invers = $<number>2;
+                        icmpset.check_invers = false;
+                        addeventaction(&(icmpset).action, $<number>7, $<number>8);
+                        addicmp(&icmpset);
+                 }
+                | IF SUCCEEDED ICMP icmptype icmpoptlist rate1 THEN action1 recovery_failure {
+                        icmpset.family = Socket_Ip;
+                        icmpset.check_invers = true;
+                        icmpset.type = $<number>4;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
+                        addeventaction(&(icmpset).action, $<number>8, $<number>9);
+                        addicmp(&icmpset);
+                  }
+                | IF SUCCEEDED PING icmpoptlist rate1 THEN action1 recovery_failure {
+                        icmpset.family = Socket_Ip;
+                        icmpset.check_invers = true;
+                        addeventaction(&(icmpset).action, $<number>7, $<number>8);
+                        addicmp(&icmpset);
+                 }
+                | IF SUCCEEDED PING4 icmpoptlist rate1 THEN action1 recovery_failure {
+                        icmpset.family = Socket_Ip4;
+                        icmpset.check_invers = true;
+                        addeventaction(&(icmpset).action, $<number>7, $<number>8);
+                        addicmp(&icmpset);
+                 }
+                | IF SUCCEEDED PING6 icmpoptlist rate1 THEN action1 recovery_failure {
+                        icmpset.family = Socket_Ip6;
+                        icmpset.check_invers = true;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
@@ -1965,11 +2019,11 @@ apache_stat     : username {
                   }
                 ;
 
-exist           : IF NOT EXIST rate1 THEN action1 recovery {
+exist           : IF NOT EXIST rate1 THEN action1 recovery_success {
                         addeventaction(&(nonexistset).action, $<number>6, $<number>7);
                         addnonexist(&nonexistset);
                   }
-                | IF EXIST rate1 THEN action1 recovery {
+                | IF EXIST rate1 THEN action1 recovery_success {
                         addeventaction(&(existset).action, $<number>5, $<number>6);
                         addexist(&existset);
                   }
@@ -1988,11 +2042,21 @@ ppid            : IF CHANGED PPID rate1 THEN action1 {
                   }
                 ;
 
-uptime          : IF UPTIME operator NUMBER time rate1 THEN action1 recovery {
+uptime          : IF UPTIME operator NUMBER time rate1 THEN action1 recovery_success {
                         uptimeset.operator = $<number>3;
                         uptimeset.uptime = ((unsigned long long)$4 * $<number>5);
                         addeventaction(&(uptimeset).action, $<number>8, $<number>9);
                         adduptime(&uptimeset);
+                  }
+                ;
+
+responsetime    : RESPONSETIME operator NUMBER MILLISECOND {
+                        responsetimeset.operator = $<number>2;
+                        responsetimeset.limit = $3;
+                  }
+                | RESPONSETIME operator NUMBER SECOND {
+                        responsetimeset.operator = $<number>2;
+                        responsetimeset.limit = $3 * 1000;
                   }
                 ;
 
@@ -2222,7 +2286,7 @@ dependlist      : dependant
 dependant       : SERVICENAME { adddependant($<string>1); }
                 ;
 
-statusvalue     : IF STATUS operator NUMBER rate1 THEN action1 recovery {
+statusvalue     : IF STATUS operator NUMBER rate1 THEN action1 recovery_success {
                         statusset.initialized = true;
                         statusset.operator = $<number>3;
                         statusset.return_value = $<number>4;
@@ -2238,7 +2302,7 @@ statusvalue     : IF STATUS operator NUMBER rate1 THEN action1 recovery {
                    }
                 ;
 
-resourceprocess : IF resourceprocesslist rate1 THEN action1 recovery {
+resourceprocess : IF resourceprocesslist rate1 THEN action1 recovery_success {
                         addeventaction(&(resourceset).action, $<number>5, $<number>6);
                         addresource(&resourceset);
                    }
@@ -2257,7 +2321,7 @@ resourceprocessopt  : resourcecpuproc
                     | resourcewrite
                     ;
 
-resourcesystem  : IF resourcesystemlist rate1 THEN action1 recovery {
+resourcesystem  : IF resourcesystemlist rate1 THEN action1 recovery_success {
                         addeventaction(&(resourceset).action, $<number>5, $<number>6);
                         addresource(&resourceset);
                    }
@@ -2485,7 +2549,7 @@ timestamptype   : TIME  { $<number>$ = Timestamp_Default; }
                 | MTIME { $<number>$ = Timestamp_Modification; }
                 ;
 
-timestamp       : IF timestamptype operator NUMBER time rate1 THEN action1 recovery {
+timestamp       : IF timestamptype operator NUMBER time rate1 THEN action1 recovery_success {
                         timestampset.type = $<number>2;
                         timestampset.operator = $<number>3;
                         timestampset.time = ($4 * $<number>5);
@@ -2633,8 +2697,11 @@ rate2           : /* EMPTY */
                 }
                 ;
 
-recovery        : /* EMPTY */ {
+recovery_success : /* EMPTY */ {
                         $<number>$ = Action_Alert;
+                  }
+                | ELSE action2 {
+                        $<number>$ = $<number>2;
                   }
                 | ELSE IF RECOVERED rate2 THEN action2 {
                         $<number>$ = $<number>6;
@@ -2647,12 +2714,23 @@ recovery        : /* EMPTY */ {
                   }
                 ;
 
-checksum        : IF FAILED hashtype CHECKSUM rate1 THEN action1 recovery {
+recovery_failure : /* EMPTY */ {
+                        $<number>$ = Action_Alert;
+                  }
+                | ELSE action2 {
+                        $<number>$ = $<number>2;
+                  }
+                | ELSE IF FAILED rate2 THEN action2 {
+                        $<number>$ = $<number>6;
+                  }
+                ;
+
+checksum        : IF FAILED hashtype CHECKSUM rate1 THEN action1 recovery_success {
                         addeventaction(&(checksumset).action, $<number>7, $<number>8);
                         addchecksum(&checksumset);
                   }
                 | IF FAILED hashtype CHECKSUM EXPECT STRING rate1 THEN action1
-                  recovery {
+                  recovery_success {
                         snprintf(checksumset.hash, sizeof(checksumset.hash), "%s", $6);
                         FREE($6);
                         addeventaction(&(checksumset).action, $<number>9, $<number>10);
@@ -2669,28 +2747,28 @@ hashtype        : /* EMPTY */ { checksumset.type = Hash_Unknown; }
                 | SHA1HASH    { checksumset.type = Hash_Sha1; }
                 ;
 
-inode           : IF INODE operator NUMBER rate1 THEN action1 recovery {
+inode           : IF INODE operator NUMBER rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_Inode;
                         filesystemset.operator = $<number>3;
                         filesystemset.limit_absolute = $4;
                         addeventaction(&(filesystemset).action, $<number>7, $<number>8);
                         addfilesystem(&filesystemset);
                   }
-                | IF INODE operator value PERCENT rate1 THEN action1 recovery {
+                | IF INODE operator value PERCENT rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_Inode;
                         filesystemset.operator = $<number>3;
                         filesystemset.limit_percent = $<real>4;
                         addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                         addfilesystem(&filesystemset);
                   }
-                | IF INODE TFREE operator NUMBER rate1 THEN action1 recovery {
+                | IF INODE TFREE operator NUMBER rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_InodeFree;
                         filesystemset.operator = $<number>4;
                         filesystemset.limit_absolute = $5;
                         addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                         addfilesystem(&filesystemset);
                   }
-                | IF INODE TFREE operator value PERCENT rate1 THEN action1 recovery {
+                | IF INODE TFREE operator value PERCENT rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_InodeFree;
                         filesystemset.operator = $<number>4;
                         filesystemset.limit_percent = $<real>5;
@@ -2699,28 +2777,28 @@ inode           : IF INODE operator NUMBER rate1 THEN action1 recovery {
                   }
                 ;
 
-space           : IF SPACE operator value unit rate1 THEN action1 recovery {
+space           : IF SPACE operator value unit rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_Space;
                         filesystemset.operator = $<number>3;
                         filesystemset.limit_absolute = $<real>4 * $<number>5;
                         addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                         addfilesystem(&filesystemset);
                   }
-                | IF SPACE operator value PERCENT rate1 THEN action1 recovery {
+                | IF SPACE operator value PERCENT rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_Space;
                         filesystemset.operator = $<number>3;
                         filesystemset.limit_percent = $<real>4;
                         addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                         addfilesystem(&filesystemset);
                   }
-                | IF SPACE TFREE operator value unit rate1 THEN action1 recovery {
+                | IF SPACE TFREE operator value unit rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_SpaceFree;
                         filesystemset.operator = $<number>4;
                         filesystemset.limit_absolute = $<real>5 * $<number>6;
                         addeventaction(&(filesystemset).action, $<number>9, $<number>10);
                         addfilesystem(&filesystemset);
                   }
-                | IF SPACE TFREE operator value PERCENT rate1 THEN action1 recovery {
+                | IF SPACE TFREE operator value PERCENT rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_SpaceFree;
                         filesystemset.operator = $<number>4;
                         filesystemset.limit_percent = $<real>5;
@@ -2729,14 +2807,14 @@ space           : IF SPACE operator value unit rate1 THEN action1 recovery {
                   }
                 ;
 
-read            : IF READ operator value unit currenttime rate1 THEN action1 recovery {
+read            : IF READ operator value unit currenttime rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_ReadBytes;
                         filesystemset.operator = $<number>3;
                         filesystemset.limit_absolute = $<real>4 * $<number>5;
                         addeventaction(&(filesystemset).action, $<number>9, $<number>10);
                         addfilesystem(&filesystemset);
                   }
-                | IF READ operator NUMBER OPERATION rate1 THEN action1 recovery {
+                | IF READ operator NUMBER OPERATION rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_ReadOperations;
                         filesystemset.operator = $<number>3;
                         filesystemset.limit_absolute = $<number>4;
@@ -2745,14 +2823,14 @@ read            : IF READ operator value unit currenttime rate1 THEN action1 rec
                   }
                 ;
 
-write           : IF WRITE operator value unit currenttime rate1 THEN action1 recovery {
+write           : IF WRITE operator value unit currenttime rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_WriteBytes;
                         filesystemset.operator = $<number>3;
                         filesystemset.limit_absolute = $<real>4 * $<number>5;
                         addeventaction(&(filesystemset).action, $<number>9, $<number>10);
                         addfilesystem(&filesystemset);
                   }
-                | IF WRITE operator NUMBER OPERATION rate1 THEN action1 recovery {
+                | IF WRITE operator NUMBER OPERATION rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_WriteOperations;
                         filesystemset.operator = $<number>3;
                         filesystemset.limit_absolute = $<number>4;
@@ -2761,14 +2839,14 @@ write           : IF WRITE operator value unit currenttime rate1 THEN action1 re
                   }
                 ;
 
-servicetime     : IF SERVICETIME operator NUMBER MILLISECOND rate1 THEN action1 recovery {
+servicetime     : IF SERVICETIME operator NUMBER MILLISECOND rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_ServiceTime;
                         filesystemset.operator = $<number>3;
                         filesystemset.limit_absolute = $<number>4;
                         addeventaction(&(filesystemset).action, $<number>8, $<number>9);
                         addfilesystem(&filesystemset);
                   }
-                | IF SERVICETIME operator value SECOND rate1 THEN action1 recovery {
+                | IF SERVICETIME operator value SECOND rate1 THEN action1 recovery_success {
                         filesystemset.resource = Resource_ServiceTime;
                         filesystemset.operator = $<number>3;
                         filesystemset.limit_absolute = $<real>4 * 1000;
@@ -2790,12 +2868,12 @@ unit            : /* empty */  { $<number>$ = Unit_Byte; }
                 | GIGABYTE     { $<number>$ = Unit_Gigabyte; }
                 ;
 
-permission      : IF FAILED PERMISSION NUMBER rate1 THEN action1 recovery {
+permission      : IF FAILED PERMISSION NUMBER rate1 THEN action1 recovery_success {
                         permset.perm = check_perm($4);
                         addeventaction(&(permset).action, $<number>7, $<number>8);
                         addperm(&permset);
                   }
-                | IF CHANGED PERMISSION rate1 THEN action1 recovery {
+                | IF CHANGED PERMISSION rate1 THEN action1 recovery_success {
                         permset.test_changes = true;
                         addeventaction(&(permset).action, $<number>6, Action_Ignored);
                         addperm(&permset);
@@ -2870,7 +2948,7 @@ matchflagnot    : /* EMPTY */ {
                 ;
 
 
-size            : IF SIZE operator NUMBER unit rate1 THEN action1 recovery {
+size            : IF SIZE operator NUMBER unit rate1 THEN action1 recovery_success {
                         sizeset.operator = $<number>3;
                         sizeset.size = ((unsigned long long)$4 * $<number>5);
                         addeventaction(&(sizeset).action, $<number>8, $<number>9);
@@ -2883,47 +2961,47 @@ size            : IF SIZE operator NUMBER unit rate1 THEN action1 recovery {
                   }
                 ;
 
-uid             : IF FAILED UID STRING rate1 THEN action1 recovery {
+uid             : IF FAILED UID STRING rate1 THEN action1 recovery_success {
                         uidset.uid = get_uid($4, 0);
                         addeventaction(&(uidset).action, $<number>7, $<number>8);
                         current->uid = adduid(&uidset);
                         FREE($4);
                   }
-                | IF FAILED UID NUMBER rate1 THEN action1 recovery {
+                | IF FAILED UID NUMBER rate1 THEN action1 recovery_success {
                     uidset.uid = get_uid(NULL, $4);
                     addeventaction(&(uidset).action, $<number>7, $<number>8);
                     current->uid = adduid(&uidset);
                   }
                 ;
 
-euid            : IF FAILED EUID STRING rate1 THEN action1 recovery {
+euid            : IF FAILED EUID STRING rate1 THEN action1 recovery_success {
                         uidset.uid = get_uid($4, 0);
                         addeventaction(&(uidset).action, $<number>7, $<number>8);
                         current->euid = adduid(&uidset);
                         FREE($4);
                   }
-                | IF FAILED EUID NUMBER rate1 THEN action1 recovery {
+                | IF FAILED EUID NUMBER rate1 THEN action1 recovery_success {
                         uidset.uid = get_uid(NULL, $4);
                         addeventaction(&(uidset).action, $<number>7, $<number>8);
                         current->euid = adduid(&uidset);
                   }
                 ;
 
-secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recovery {
+secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recovery_success {
                         addsecurityattribute($5, $<number>8, $<number>9);
                   }
-                | IF FAILED SECURITY ATTRIBUTE PATH rate1 THEN action1 recovery {
+                | IF FAILED SECURITY ATTRIBUTE PATH rate1 THEN action1 recovery_success {
                         addsecurityattribute($5, $<number>8, $<number>9);
                   }
                 ;
 
-filedescriptorssystem : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+filedescriptorssystem : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery_success {
                         if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
                                 addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
                         else
                                 yywarning("The per-system filedescriptors statistics is not available on this system\n");
                   }
-                | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
+                | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery_success {
                         if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
                                 addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
                         else
@@ -2931,13 +3009,13 @@ filedescriptorssystem : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 re
                   }
                 ;
 
-filedescriptorsprocess : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+filedescriptorsprocess : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery_success {
                         if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
                                 addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
                         else
                                 yywarning("The per-process filedescriptors statistics is not available on this system\n");
                   }
-                | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery {
+                | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery_success {
                         if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcessMax)
                                 addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
                         else
@@ -2945,7 +3023,7 @@ filedescriptorsprocess : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 r
                   }
                 ;
 
-filedescriptorsprocesstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery {
+filedescriptorsprocesstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery_success {
                         if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
                                 addfiledescriptors($<number>4, true, (long long)$5, -1., $<number>8, $<number>9);
                         else
@@ -2953,41 +3031,41 @@ filedescriptorsprocesstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THE
                   }
                 ;
 
-gid             : IF FAILED GID STRING rate1 THEN action1 recovery {
+gid             : IF FAILED GID STRING rate1 THEN action1 recovery_success {
                         gidset.gid = get_gid($4, 0);
                         addeventaction(&(gidset).action, $<number>7, $<number>8);
                         current->gid = addgid(&gidset);
                         FREE($4);
                   }
-                | IF FAILED GID NUMBER rate1 THEN action1 recovery {
+                | IF FAILED GID NUMBER rate1 THEN action1 recovery_success {
                         gidset.gid = get_gid(NULL, $4);
                         addeventaction(&(gidset).action, $<number>7, $<number>8);
                         current->gid = addgid(&gidset);
                   }
                 ;
 
-linkstatus   : IF FAILED LINK rate1 THEN action1 recovery { /* Deprecated */
+linkstatus   : IF FAILED LINK rate1 THEN action1 recovery_success { /* Deprecated */
                         addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
                         addlinkstatus(current, &linkstatusset);
                   }
-             | IF LINK DOWN rate1 THEN action1 recovery {
+             | IF LINK DOWN rate1 THEN action1 recovery_failure {
                         linkstatusset.check_invers = false;
                         addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
                         addlinkstatus(current, &linkstatusset);
                   }
-             | IF LINK UP rate1 THEN action1 recovery {
+             | IF LINK UP rate1 THEN action1 recovery_success {
                         linkstatusset.check_invers = true;
                         addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
                         addlinkstatus(current, &linkstatusset);
                   }
                 ;
 
-linkspeed    : IF CHANGED LINK rate1 THEN action1 recovery {
+linkspeed    : IF CHANGED LINK rate1 THEN action1 recovery_success {
                         addeventaction(&(linkspeedset).action, $<number>6, $<number>7);
                         addlinkspeed(current, &linkspeedset);
                   }
 
-linksaturation : IF SATURATION operator NUMBER PERCENT rate1 THEN action1 recovery {
+linksaturation : IF SATURATION operator NUMBER PERCENT rate1 THEN action1 recovery_success {
                         linksaturationset.operator = $<number>3;
                         linksaturationset.limit = (unsigned long long)$4;
                         addeventaction(&(linksaturationset).action, $<number>8, $<number>9);
@@ -2995,7 +3073,7 @@ linksaturation : IF SATURATION operator NUMBER PERCENT rate1 THEN action1 recove
                   }
                 ;
 
-upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 recovery {
+upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>3;
                         bandwidthset.limit = ((unsigned long long)$4 * $<number>5);
                         bandwidthset.rangecount = 1;
@@ -3003,7 +3081,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
                         addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
                         addbandwidth(&(current->uploadbyteslist), &bandwidthset);
                   }
-                | IF TOTAL UPLOAD operator NUMBER unit totaltime rate1 THEN action1 recovery {
+                | IF TOTAL UPLOAD operator NUMBER unit totaltime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>4;
                         bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
                         bandwidthset.rangecount = 1;
@@ -3011,7 +3089,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
                         addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
                         addbandwidth(&(current->uploadbyteslist), &bandwidthset);
                   }
-                | IF TOTAL UPLOAD operator NUMBER unit NUMBER totaltime rate1 THEN action1 recovery {
+                | IF TOTAL UPLOAD operator NUMBER unit NUMBER totaltime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>4;
                         bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
                         bandwidthset.rangecount = $7;
@@ -3019,7 +3097,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
                         addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
                         addbandwidth(&(current->uploadbyteslist), &bandwidthset);
                   }
-                | IF UPLOAD operator NUMBER PACKET currenttime rate1 THEN action1 recovery {
+                | IF UPLOAD operator NUMBER PACKET currenttime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>3;
                         bandwidthset.limit = (unsigned long long)$4;
                         bandwidthset.rangecount = 1;
@@ -3027,7 +3105,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
                         addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
                         addbandwidth(&(current->uploadpacketslist), &bandwidthset);
                   }
-                | IF TOTAL UPLOAD operator NUMBER PACKET totaltime rate1 THEN action1 recovery {
+                | IF TOTAL UPLOAD operator NUMBER PACKET totaltime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>4;
                         bandwidthset.limit = (unsigned long long)$5;
                         bandwidthset.rangecount = 1;
@@ -3035,7 +3113,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
                         addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
                         addbandwidth(&(current->uploadpacketslist), &bandwidthset);
                   }
-                | IF TOTAL UPLOAD operator NUMBER PACKET NUMBER totaltime rate1 THEN action1 recovery {
+                | IF TOTAL UPLOAD operator NUMBER PACKET NUMBER totaltime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>4;
                         bandwidthset.limit = (unsigned long long)$5;
                         bandwidthset.rangecount = $7;
@@ -3045,7 +3123,7 @@ upload          : IF UPLOAD operator NUMBER unit currenttime rate1 THEN action1 
                   }
                 ;
 
-download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action1 recovery {
+download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>3;
                         bandwidthset.limit = ((unsigned long long)$4 * $<number>5);
                         bandwidthset.rangecount = 1;
@@ -3053,7 +3131,7 @@ download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action
                         addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
                         addbandwidth(&(current->downloadbyteslist), &bandwidthset);
                   }
-                | IF TOTAL DOWNLOAD operator NUMBER unit totaltime rate1 THEN action1 recovery {
+                | IF TOTAL DOWNLOAD operator NUMBER unit totaltime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>4;
                         bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
                         bandwidthset.rangecount = 1;
@@ -3061,7 +3139,7 @@ download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action
                         addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
                         addbandwidth(&(current->downloadbyteslist), &bandwidthset);
                   }
-                | IF TOTAL DOWNLOAD operator NUMBER unit NUMBER totaltime rate1 THEN action1 recovery {
+                | IF TOTAL DOWNLOAD operator NUMBER unit NUMBER totaltime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>4;
                         bandwidthset.limit = ((unsigned long long)$5 * $<number>6);
                         bandwidthset.rangecount = $7;
@@ -3069,7 +3147,7 @@ download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action
                         addeventaction(&(bandwidthset).action, $<number>11, $<number>12);
                         addbandwidth(&(current->downloadbyteslist), &bandwidthset);
                   }
-                | IF DOWNLOAD operator NUMBER PACKET currenttime rate1 THEN action1 recovery {
+                | IF DOWNLOAD operator NUMBER PACKET currenttime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>3;
                         bandwidthset.limit = (unsigned long long)$4;
                         bandwidthset.rangecount = 1;
@@ -3077,7 +3155,7 @@ download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action
                         addeventaction(&(bandwidthset).action, $<number>9, $<number>10);
                         addbandwidth(&(current->downloadpacketslist), &bandwidthset);
                   }
-                | IF TOTAL DOWNLOAD operator NUMBER PACKET totaltime rate1 THEN action1 recovery {
+                | IF TOTAL DOWNLOAD operator NUMBER PACKET totaltime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>4;
                         bandwidthset.limit = (unsigned long long)$5;
                         bandwidthset.rangecount = 1;
@@ -3085,7 +3163,7 @@ download        : IF DOWNLOAD operator NUMBER unit currenttime rate1 THEN action
                         addeventaction(&(bandwidthset).action, $<number>10, $<number>11);
                         addbandwidth(&(current->downloadpacketslist), &bandwidthset);
                   }
-                | IF TOTAL DOWNLOAD operator NUMBER PACKET NUMBER totaltime rate1 THEN action1 recovery {
+                | IF TOTAL DOWNLOAD operator NUMBER PACKET NUMBER totaltime rate1 THEN action1 recovery_success {
                         bandwidthset.operator = $<number>4;
                         bandwidthset.limit = (unsigned long long)$5;
                         bandwidthset.rangecount = $7;
@@ -3276,6 +3354,7 @@ static void preparse() {
         reset_sslset();
         reset_mailserverset();
         reset_mmonitset();
+        reset_responsetimeset();
         reset_portset();
         reset_permset();
         reset_icmpset();
@@ -3631,6 +3710,7 @@ static void addport(Port_T *list, Port_T port) {
         p->hostname           = port->hostname;
         p->url_request        = port->url_request;
         p->outgoing           = port->outgoing;
+
         if (p->family == Socket_Unix) {
                 p->target.unix.pathname = port->target.unix.pathname;
         } else {
@@ -3677,10 +3757,15 @@ static void addport(Port_T *list, Port_T port) {
                 }
         }
 
+        p->responsetime.limit    = responsetimeset.limit;
+        p->responsetime.current  = responsetimeset.current;
+        p->responsetime.operator = responsetimeset.operator;
+
         p->next = *list;
         *list = p;
 
         reset_sslset();
+        reset_responsetimeset();
         reset_portset();
 
 }
@@ -4228,20 +4313,24 @@ static void addicmp(Icmp_T is) {
         ASSERT(is);
 
         NEW(icmp);
-        icmp->family       = is->family;
-        icmp->type         = is->type;
-        icmp->size         = is->size;
-        icmp->count        = is->count;
-        icmp->timeout      = is->timeout;
-        icmp->action       = is->action;
-        icmp->outgoing     = is->outgoing;
-        icmp->check_invers = is->check_invers;
-        icmp->is_available = Connection_Init;
-        icmp->response     = -1;
+        icmp->family        = is->family;
+        icmp->type          = is->type;
+        icmp->size          = is->size;
+        icmp->count         = is->count;
+        icmp->timeout       = is->timeout;
+        icmp->action        = is->action;
+        icmp->outgoing      = is->outgoing;
+        icmp->check_invers  = is->check_invers;
+        icmp->is_available  = Connection_Init;
 
-        icmp->next         = current->icmplist;
-        current->icmplist  = icmp;
+        icmp->responsetime.limit    = responsetimeset.limit;
+        icmp->responsetime.current  = responsetimeset.current;
+        icmp->responsetime.operator = responsetimeset.operator;
 
+        icmp->next          = current->icmplist;
+        current->icmplist   = icmp;
+
+        reset_responsetimeset();
         reset_icmpset();
 }
 
@@ -4874,6 +4963,13 @@ static void reset_uptimeset() {
         uptimeset.operator = Operator_Equal;
         uptimeset.uptime = 0;
         uptimeset.action = NULL;
+}
+
+
+static void reset_responsetimeset() {
+        responsetimeset.operator = Operator_Less;
+        responsetimeset.current = 0.;
+        responsetimeset.limit = -1.;
 }
 
 

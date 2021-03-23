@@ -206,7 +206,7 @@ bool File_chmod(const char *file, mode_t mode) {
 }
 
 
-mode_t File_mod(const char *file) {
+int File_mod(const char *file) {
         if (file) {
                 struct stat buf;
                 if (stat(file, &buf) == 0)
@@ -216,7 +216,7 @@ mode_t File_mod(const char *file) {
 }
 
 
-mode_t File_umask(void) {
+int File_umask(void) {
         mode_t omask = umask(0);
         umask(omask);
         return omask;        

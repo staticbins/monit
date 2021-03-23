@@ -639,6 +639,13 @@ typedef struct Outgoing_T {
 } Outgoing_T;
 
 
+typedef struct ResponseTime_T {
+        Operator_Type operator;
+        double current;                            /**< Current response time [ms] */
+        double limit;                                /**< Response time limit [ms] */
+} ResponseTime_T;
+
+
 /** Defines a port object */
 typedef struct Port_T {
         char *hostname;                                     /**< Hostname to check */
@@ -662,7 +669,7 @@ typedef struct Port_T {
         int timeout;      /**< The timeout in [ms] to wait for connect or read i/o */
         int retry;       /**< Number of connection retry before reporting an error */
         volatile int socket;                       /**< Socket used for connection */
-        double response;                 /**< Socket connection response time [ms] */
+        struct ResponseTime_T responsetime;               /**< Response time limit */
         Socket_Type type;           /**< Socket type used for connection (UDP/TCP) */
         Socket_Family family;    /**< Socket family used for connection (NET/UNIX) */
         Connection_State is_available;               /**< Server/port availability */
@@ -754,7 +761,7 @@ typedef struct Icmp_T {
         bool check_invers;           /**< Whether to alert on a connection success */
         Connection_State is_available;    /**< Flag for the server is availability */
         Socket_Family family;                 /**< ICMP family used for connection */
-        double response;                         /**< ICMP ECHO response time [ms] */
+        struct ResponseTime_T responsetime;               /**< Response time limit */
         Outgoing_T outgoing;                                 /**< Outgoing address */
         EventAction_T action; /**< Description of the action upon event occurrence */
 

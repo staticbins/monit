@@ -138,7 +138,7 @@ static bool _parseDevice(const char *path, Device_T device) {
                         while (*cursor == '\n') {
                                 cursor++;
                         }
-                        if (cursor) {
+                        if (*cursor) {
                                 int index;
                                 char type[64] = {};
                                 char name[PATH_MAX] = {};

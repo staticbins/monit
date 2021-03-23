@@ -218,7 +218,7 @@ bool File_chmod(const char *file, mode_t perm);
  * @return An octal number specifying the permission set for this file
  * or -1 if the file does not exist 
  */
-mode_t File_mod(const char *file);
+int File_mod(const char *file);
 
 
 /**
@@ -248,7 +248,7 @@ mode_t File_mod(const char *file);
  * See also http://en.wikipedia.org/wiki/Umask and umask(2) on Unix
  * @return An octal number representing the umask value for this process
  */
-mode_t File_umask(void);
+int File_umask(void);
 
 
 /**
