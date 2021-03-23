@@ -1995,7 +1995,7 @@ State_Type check_system(Service_T s) {
 
 
 State_Type check_net(Service_T s) {
-        volatile State_Type rv;
+        volatile State_Type rv = State_Succeeded;
         volatile bool havedata = true;
         // Get link statistics
         TRY
