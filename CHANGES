@@ -31,7 +31,7 @@ available. Example:
 New: Issue #915: Add support for sevice name regular expressions in  monit CLI status, summary, start,
 stop, restart, unmonitor, monitor commands. Examples:
    monit status myservice  # exact match
-   monit status "data.*"    # pattern which will match all services whos name contain "data" substring
+   monit status "data.*"   # pattern which will match all services whos name contain "data" substring
 
 New: Issue #718: Add support for response time monitoring to TCP/UDP ports, unix sockets and ping.
 Example for ping and port test:
