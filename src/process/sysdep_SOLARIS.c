@@ -91,6 +91,7 @@
 #endif
 
 #include "monit.h"
+#include "system/Time.h"
 #include "ProcessTree.h"
 #include "process_sysdep.h"
 
@@ -404,7 +405,7 @@ error:
 }
 
 
-bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
+bool used_system_filedescriptors_sysdep(__attribute__ ((unused)) SystemInfo_T *si) {
         // Not implemented
         return true;
 }
