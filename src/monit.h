@@ -923,11 +923,11 @@ typedef struct Bandwidth_T {
 
 /** Defines checksum object */
 typedef struct Checksum_T {
-        bool initialized;               /**< true if checksum was initialized */
-        bool test_changes;       /**< true if we only should test for changes */
+        bool initialized;                    /**< true if checksum was initialized */
+        bool test_changes;            /**< true if we only should test for changes */
         Hash_Type type;                   /**< The type of hash (e.g. md5 or sha1) */
         int   length;                                      /**< Length of the hash */
-        MD_T  hash;                     /**< A checksum hash computed for the path */
+        char  hash[MD_SIZE + 1];        /**< A checksum hash computed for the path */
         EventAction_T action; /**< Description of the action upon event occurrence */
 } *Checksum_T;
 
