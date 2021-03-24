@@ -97,7 +97,7 @@ static struct {
 /* ----------------------------------------------------------------- Private */
 
 
-static bool _getDummyDiskActivity(void *_inf) {
+static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
         return true;
 }
 
