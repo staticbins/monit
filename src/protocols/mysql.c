@@ -625,7 +625,7 @@ static void _sendPassword(mysql_t *mysql, const unsigned char *password, int pas
         if (mysql->state != MySQL_FullAuthenticationNeeded && mysql->state != MySQL_FetchRSAKey && mysql->state != MySQL_AuthSwitch)
                 THROW(ProtocolException, "Unexpected communication state %d before password exchange", mysql->state);
         _initRequest(mysql);
-        _setData(&mysql->request, (char *)password, passwordLength); // password
+        _setData(&mysql->request, (const char *)password, passwordLength); // password
         _sendRequest(mysql, MySQL_PasswordSent);
         DEBUG("MySQL password sent\n");
 }
@@ -743,7 +743,7 @@ void check_mysql(Socket_T S) {
                                 _sendPassword(&mysql, (unsigned char *)mysql.authentication.getPassword(password, mysql.port->parameters.mysql.password, mysql.salt), mysql.authentication.hashLength);
                         } else {
                                 // Send plain password
-                                _sendPassword(&mysql, (unsigned char *)"", 0);
+                                _sendPassword(&mysql, (const unsigned char *)"", 0);
                         }
                         _readResponse(&mysql);
                 } else if (mysql.state == MySQL_FastAuthSuccess) {
