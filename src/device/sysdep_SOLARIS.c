@@ -97,7 +97,7 @@ static struct {
 /* ----------------------------------------------------------------- Private */
 
 
-static bool _getDummyDiskActivity(void *_inf) {
+static bool _getDummyDiskActivity(__attribute__ ((unused)) void *_inf) {
         return true;
 }
 
@@ -114,7 +114,7 @@ static bool _getZfsDiskActivity(void *_inf) {
                 if (nvlist_lookup_nvlist(zpoolConfig, ZPOOL_CONFIG_VDEV_TREE, &zpoolVdevTree) == 0) {
                         vdev_stat_t *zpoolStatistics = NULL;
                         uint_t zpoolStatisticsCount = 0;
-                        if (nvlist_lookup_uint64_array(zpoolVdevTree, ZPOOL_CONFIG_VDEV_STATS, (unsigned long long **)&zpoolStatistics, &zpoolStatisticsCount) == 0) {
+                        if (nvlist_lookup_uint64_array(zpoolVdevTree, ZPOOL_CONFIG_VDEV_STATS, (uint64_t **)&zpoolStatistics, &zpoolStatisticsCount) == 0) {
                                 //FIXME: if the zpool state has error, trigger the fs event, can also report number of read/write/checksum errors (see vdev_stat_t in /usr/include/sys/fs/zfs.h)
                                 DEBUG("ZFS pool '%s' state: %s\n", inf->filesystem->object.key, zpool_state_to_name(zpoolStatistics->vs_state, zpoolStatistics->vs_aux));
                                 unsigned long long now = Time_milli();

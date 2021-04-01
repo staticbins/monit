@@ -54,7 +54,7 @@ typedef struct Interface_T {
 static bool _parseInterface(const char *name, Interface_T interface) {
         for (int len = strlen(name), i = len - 1; i >= 0; i--) {
                 if (! isdigit(*(name + i))) {
-                        strncpy(interface->module, name, i + 1 < sizeof(interface->module) ? i + 1 : sizeof(interface->module) - 1);
+                        strncpy(interface->module, name, i + 1 < (int)sizeof(interface->module) ? i + 1 : (int)sizeof(interface->module) - 1);
                         interface->instance = Str_parseInt(name + i + 1);
                         return true;
                 }
