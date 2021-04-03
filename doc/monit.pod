@@ -190,7 +190,8 @@ is not required in this case).
 =item start <name|pattern>
 
 Start the named service and enable monitoring for it. The name is
-a service entry name from the monitrc file.
+a service entry name from the monitrc file. You can use a regex
+pattern too (note that it is case insensitive).
 
 =item stop all
 
@@ -202,7 +203,8 @@ required in this case).
 =item stop <name|pattern>
 
 Stop the named service and disable its monitoring. The name is a
-service entry name from the monitrc file.
+service entry name from the monitrc file. You can use a regex
+pattern too (note that it is case insensitive).
 
 =item restart all
 
@@ -213,7 +215,8 @@ this case).
 =item restart <name|pattern>
 
 Restart the named service. The name is a service entry name from
-the monitrc file.
+the monitrc file. You can use a regex pattern too (note that it is
+case insensitive).
 
 =item monitor all
 
@@ -225,7 +228,8 @@ named group ("all" is not required in this case).
 
 Enable monitoring of the named service. The name is a service
 entry name from the monitrc file. Monit will also enable
-monitoring of all services this service depends on.
+monitoring of all services this service depends on. You can use a
+regex pattern too (note that it is case insensitive).
 
 =item unmonitor all
 
@@ -237,7 +241,8 @@ the named group ("all" is not required in this case).
 
 Disable monitoring of the named service. The name is a service
 entry name from the monitrc file. Monit will also disable
-monitoring of all services that depends on this service.
+monitoring of all services that depends on this service. You can use
+a regex pattern too (note that it is case insensitive).
 
 =item status [name|pattern]
 
@@ -342,7 +347,8 @@ separate files.
 Each service entry consists of the keywords C<check>, followed by the
 service type. Each entry requires a B<unique> descriptive name, which
 may be freely chosen. This name is used by Monit to refer to the
-service internally and in all interactions with the user.
+service internally and in all interactions with the user. The name
+is case insensitive.
 
 Currently, nine types of check statements are supported:
 
@@ -479,7 +485,7 @@ and UTF-8 box characters for tabular output.
 
 If you want to process the monit CLI output in a script, you
 can use either the -B option or use the following statement in the
-monit configuration file to disable tabular output and colors 
+monit configuration file to disable tabular output and colors
 completely:
 
  SET TERMINAL BATCH
@@ -639,7 +645,7 @@ in production for security reasons, as in such case the client cannot
 verify it talks to the correct server and attack types like man-in-the-middle
 or DNS hijacking are possible).
 
-I<CIPHERS> override default SSL/TLS ciphers. 
+I<CIPHERS> override default SSL/TLS ciphers.
 
 I<PEMFILE> set the path to the SSL server certificate
 "database-file" in PEM format. This options has effect only for the
@@ -2707,8 +2713,8 @@ I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 
 Example:
 
-        if service time > 10 milliseconds 
-                for 3 times within 5 cycles 
+        if service time > 10 milliseconds
+                for 3 times within 5 cycles
         then alert
 
 
