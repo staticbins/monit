@@ -252,7 +252,7 @@ static void _serviceMapByName(const char *pattern, void (*callback)(Service_T s,
                 }
 
                 // The pattern is set, try to compile it as regex
-                if ((rv = regcomp(&r, patternCursor, REG_NOSUB | REG_EXTENDED))) {
+                if ((rv = regcomp(&r, patternCursor, REG_NOSUB | REG_EXTENDED | REG_ICASE))) {
                         // Pattern compilation failed, fallback to verbatim match (before monit 5.28.0 there was no support for regular expresion)
                         char error[STRLEN];
 

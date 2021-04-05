@@ -170,7 +170,16 @@ int main(int argc, char **argv) {
 #endif
         init_env();
         List_T arguments = List_new();
-        handle_options(argc, argv, arguments);
+        TRY
+        {
+                handle_options(argc, argv, arguments);
+        }
+        ELSE
+        {
+                Log_error("%s\n", Exception_frame.message);
+                exit(1);
+        }
+        END_TRY;
         do_init();
         do_action(arguments);
         List_free(&arguments);
@@ -681,8 +690,7 @@ static void handle_options(int argc, char **argv, List_T arguments) {
                                         if (f[0] != SEPARATOR_CHAR)
                                                 f = File_getRealPath(optarg, realpath);
                                         if (! f)
-                                                THROW(AssertException, "The control file '%s' does not exist at %s",
-                                                      Str_trunc(optarg, 80), Dir_cwd((char[STRLEN]){}, STRLEN));
+                                                THROW(AssertException, "The control file '%s' does not exist at %s", Str_trunc(optarg, 80), Dir_cwd((char[STRLEN]){}, STRLEN));
                                         if (! File_isFile(f))
                                                 THROW(AssertException, "The control file '%s' is not a file", Str_trunc(f, 80));
                                         if (! File_isReadable(f))
