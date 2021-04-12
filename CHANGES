@@ -11,7 +11,7 @@ Fixed: Issue #966: Service name pattern for CLI commands was case-sensitive in 5
 
 Fixed: Issue #968: The systemd and upstart templates used to set the path to the configuration file in the sysconfdir,
 which is optionally set during the compilation. That path wasn't fully expanded. The template now doesn't specify the
-explicit path and lets monit search for the configuration file in all supported locations (includes the sysconfdir).
+explicit path and lets monit search for the configuration file in all supported locations (including the sysconfdir).
 
 
 Version 5.28.0
