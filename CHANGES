@@ -16,6 +16,9 @@ explicit path and lets monit search for the configuration file in all supported 
 Fixed: Issue #971: The optional "ELSE" part of the "IF LINK UP THEN <action> ELSE IF FAILED THEN <action>" and
 "IF LINK DOWN THEN <action> ELSE IF SUCCEDED THEN <action>".
 
+Fixed: Issue #976: If the space free test recovered, it did always report percent free, regadless of the test unit.
+If absolute bytes limit is set, Monit will report absolute bytes value of current space free as well.
+
 
 Version 5.28.0
 

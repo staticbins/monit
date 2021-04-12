@@ -1279,19 +1279,22 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                 if (Util_evalDoubleQExpression(td->operator, 100. - s->inf.filesystem->space_percent, td->limit_percent)) {
                                         Event_post(s, Event_Resource, State_Failed, td->action, "space free %.1f%% matches resource limit [space free %s %.1f%%]", 100. - s->inf.filesystem->space_percent, operatorshortnames[td->operator], td->limit_percent);
                                         return State_Failed;
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, td->action, "space free test succeeded [current space free = %.1f%%]", 100. - s->inf.filesystem->space_percent);
                                 }
                         } else {
+                                char buf1[10];
 				long long bytesFreeTotal = s->inf.filesystem->f_blocksfreetotal * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
+                                Convert_bytes2str(bytesFreeTotal, buf1);
                                 if (Util_evalQExpression(td->operator, bytesFreeTotal, td->limit_absolute)) {
-                                        char buf1[10];
                                         char buf2[10];
-                                        Convert_bytes2str(bytesFreeTotal, buf1);
                                         Convert_bytes2str(td->limit_absolute, buf2);
                                         Event_post(s, Event_Resource, State_Failed, td->action, "space free %s matches resource limit [space free %s %s]", buf1, operatorshortnames[td->operator], buf2);
                                         return State_Failed;
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, td->action, "space free test succeeded [current space free = %s]", buf1);
                                 }
                         }
-                        Event_post(s, Event_Resource, State_Succeeded, td->action, "space free test succeeded [current space free = %.1f%%]", 100. - s->inf.filesystem->space_percent);
                         return State_Succeeded;
 
                 case Resource_ReadBytes:
