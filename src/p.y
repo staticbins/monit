@@ -3048,12 +3048,12 @@ linkstatus   : IF FAILED LINK rate1 THEN action1 recovery_success { /* Deprecate
                         addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
                         addlinkstatus(current, &linkstatusset);
                   }
-             | IF LINK DOWN rate1 THEN action1 recovery_failure {
+             | IF LINK DOWN rate1 THEN action1 recovery_success {
                         linkstatusset.check_invers = false;
                         addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
                         addlinkstatus(current, &linkstatusset);
                   }
-             | IF LINK UP rate1 THEN action1 recovery_success {
+             | IF LINK UP rate1 THEN action1 recovery_failure {
                         linkstatusset.check_invers = true;
                         addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
                         addlinkstatus(current, &linkstatusset);

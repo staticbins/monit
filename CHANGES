@@ -13,6 +13,9 @@ Fixed: Issue #968: The systemd and upstart templates used to set the path to the
 which is optionally set during the compilation. That path wasn't fully expanded. The template now doesn't specify the
 explicit path and lets monit search for the configuration file in all supported locations (including the sysconfdir).
 
+Fixed: Issue #971: The optional "ELSE" part of the "IF LINK UP THEN <action> ELSE IF FAILED THEN <action>" and
+"IF LINK DOWN THEN <action> ELSE IF SUCCEDED THEN <action>".
+
 
 Version 5.28.0
 
