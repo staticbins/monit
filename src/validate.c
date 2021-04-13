@@ -1225,14 +1225,17 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                 if (Util_evalDoubleQExpression(td->operator, s->inf.filesystem->inode_percent, td->limit_percent)) {
                                         Event_post(s, Event_Resource, State_Failed, td->action, "inode usage %.1f%% matches resource limit [inode usage %s %.1f%%]", s->inf.filesystem->inode_percent, operatorshortnames[td->operator], td->limit_percent);
                                         return State_Failed;
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, td->action, "inode usage test succeeded [current inode usage = %.1f%%]", s->inf.filesystem->inode_percent);
                                 }
                         } else {
                                 if (Util_evalQExpression(td->operator, s->inf.filesystem->f_filesused, td->limit_absolute)) {
                                         Event_post(s, Event_Resource, State_Failed, td->action, "inode usage %lld matches resource limit [inode usage %s %lld]", s->inf.filesystem->f_filesused, operatorshortnames[td->operator], td->limit_absolute);
                                         return State_Failed;
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, td->action, "inode usage test succeeded [current inode usage = %lld]", s->inf.filesystem->f_filesused);
                                 }
                         }
-                        Event_post(s, Event_Resource, State_Succeeded, td->action, "inode usage test succeeded [current inode usage = %.1f%%]", s->inf.filesystem->inode_percent);
                         return State_Succeeded;
 
                 case Resource_InodeFree:
@@ -1244,14 +1247,17 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                 if (Util_evalDoubleQExpression(td->operator, 100. - s->inf.filesystem->inode_percent, td->limit_percent)) {
                                         Event_post(s, Event_Resource, State_Failed, td->action, "inode free %.1f%% matches resource limit [inode free %s %.1f%%]", 100. - s->inf.filesystem->inode_percent, operatorshortnames[td->operator], td->limit_percent);
                                         return State_Failed;
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, td->action, "inode free test succeeded [current inode free = %.1f%%]", 100. - s->inf.filesystem->inode_percent);
                                 }
                         } else {
                                 if (Util_evalQExpression(td->operator, s->inf.filesystem->f_filesfree, td->limit_absolute)) {
                                         Event_post(s, Event_Resource, State_Failed, td->action, "inode free %lld matches resource limit [inode free %s %lld]", s->inf.filesystem->f_filesfree, operatorshortnames[td->operator], td->limit_absolute);
                                         return State_Failed;
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, td->action, "inode free test succeeded [current inode free = %lld]", s->inf.filesystem->f_filesfree);
                                 }
                         }
-                        Event_post(s, Event_Resource, State_Succeeded, td->action, "inode free test succeeded [current inode free = %.1f%%]", 100. - s->inf.filesystem->inode_percent);
                         return State_Succeeded;
 
                 case Resource_Space:
@@ -1259,19 +1265,22 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                 if (Util_evalDoubleQExpression(td->operator, s->inf.filesystem->space_percent, td->limit_percent)) {
                                         Event_post(s, Event_Resource, State_Failed, td->action, "space usage %.1f%% matches resource limit [space usage %s %.1f%%]", s->inf.filesystem->space_percent, operatorshortnames[td->operator], td->limit_percent);
                                         return State_Failed;
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, td->action, "space usage test succeeded [current space usage = %.1f%%]", s->inf.filesystem->space_percent);
                                 }
                         } else {
                                 long long bytesUsed = s->inf.filesystem->f_blocksused * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
+                                char buf1[10];
+                                Convert_bytes2str(bytesUsed, buf1);
                                 if (Util_evalQExpression(td->operator, bytesUsed, td->limit_absolute)) {
-                                        char buf1[10];
                                         char buf2[10];
-                                        Convert_bytes2str(bytesUsed, buf1);
                                         Convert_bytes2str(td->limit_absolute, buf2);
                                         Event_post(s, Event_Resource, State_Failed, td->action, "space usage %s matches resource limit [space usage %s %s]", buf1, operatorshortnames[td->operator], buf2);
                                         return State_Failed;
+                                } else {
+                                        Event_post(s, Event_Resource, State_Succeeded, td->action, "space usage test succeeded [current space usage = %s]", buf1);
                                 }
                         }
-                        Event_post(s, Event_Resource, State_Succeeded, td->action, "space usage test succeeded [current space usage = %.1f%%]", s->inf.filesystem->space_percent);
                         return State_Succeeded;
 
                 case Resource_SpaceFree:
