@@ -317,6 +317,13 @@ AC_COMPUTE_INT([STDC_VERSION],[__STDC_VERSION__],,[STDC_VERSION=0])
 AS_IF([test "$STDC_VERSION" -ge 201112],[CFLAGS="$CFLAGS -std=c11"],[CFLAGS="$CFLAGS -std=c99"])
 AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
 
+AC_ARG_ENABLE([werror],
+        [AS_HELP_STRING([--enable-werror],
+                [Treat warnings as errors (default: warnings are not errors)])],
+                [enable_werror="$enableval"],
+                [enable_werror=no])
+AS_IF([test "x$enable_werror" = "xyes"], [CFLAGS="$CFLAGS -Werror"])
+
 # ------------------------------------------------------------------------
 # IPv6 Support
 # ------------------------------------------------------------------------
