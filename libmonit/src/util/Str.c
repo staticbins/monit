@@ -368,7 +368,7 @@ char *Str_trunc(char *s, int n) {
 }
 
 
-char *Str_curtail(char *s, char *t) {
+char *Str_curtail(char *s, const char *t) {
         if (s) {
                 char *x = Str_sub(s, t);
                 if (x) *x = 0;

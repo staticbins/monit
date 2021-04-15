@@ -98,7 +98,7 @@ static void steplinenobycr(char *);
 static void save_arg(void);
 static void include_file(char *);
 static char *handle_quoted_string(char *);
-static void push_buffer_state(YY_BUFFER_STATE, char*);
+static void push_buffer_state(YY_BUFFER_STATE, const char*);
 static int  pop_buffer_state(void);
 static URL_T create_URL(char *proto);
 
@@ -1060,7 +1060,7 @@ static void _include(const char *path) {
         if (! _yyin)
                 yyerror("Cannot include file '%s' -- %s", path, STRERROR);
         else
-                push_buffer_state(yy_create_buffer(_yyin, YY_BUF_SIZE), (char *)path);
+                push_buffer_state(yy_create_buffer(_yyin, YY_BUF_SIZE), path);
 }
 
 
@@ -1081,7 +1081,7 @@ static void include_file(char *pattern) {
 }
 
 
-static void push_buffer_state(YY_BUFFER_STATE buffer, char *filename) {
+static void push_buffer_state(YY_BUFFER_STATE buffer, const char *filename) {
         if (buffer_stack_ptr >= MAX_STACK_DEPTH) {
                 yyerror("include files limit reached");
                 exit( 1 );

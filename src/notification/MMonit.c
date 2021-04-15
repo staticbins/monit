@@ -96,7 +96,7 @@ static bool _send(Socket_T socket, Mmonit_T C, StringBuffer_T sb) {
                               C->compress == MmonitCompress_Yes ? "Content-Encoding: gzip\r\n" : "",
                               auth ? auth : "");
         FREE(auth);
-        if (rv < 0 || Socket_write(socket, (unsigned char *)body, bodyLength) < 0) {
+        if (rv < 0 || Socket_write(socket, body, bodyLength) < 0) {
                 Log_error("M/Monit: error sending data to %s -- %s\n", C->url->url, STRERROR);
                 return false;
         }

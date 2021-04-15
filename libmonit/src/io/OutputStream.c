@@ -475,7 +475,7 @@ int OutputStream_write(T S, const void *b, int size) {
         assert(S);
         assert(b);
         S->sessionWritten = 0;
-        for (uchar_t *t = (uchar_t*)b; (size-- > 0); t++)
+        for (const uchar_t *t = (const uchar_t*)b; (size-- > 0); t++)
                 if (write_byte(S, *t) < 0)
                         break;
         return S->isclosed ? -1 : S->sessionWritten;

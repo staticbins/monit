@@ -146,9 +146,9 @@ void sha1_finish(sha1_context_t *context, unsigned char digest[SHA1_DIGEST_SIZE]
 
         for (i = 0; i < 8; i++)
                 finalcount[i] = (unsigned char)((context->count[(i >= 4 ? 0 : 1)] >> ((3-(i & 3)) * 8) ) & 255);  /* Endian independent */
-        sha1_append(context, (unsigned char *)"\200", 1);
+        sha1_append(context, (const unsigned char *)"\200", 1);
         while ((context->count[0] & 504) != 448)
-                sha1_append(context, (unsigned char *)"\0", 1);
+                sha1_append(context, (const unsigned char *)"\0", 1);
         sha1_append(context, finalcount, 8);  /* Should cause a sha1_transform() */
         for (i = 0; i < SHA1_DIGEST_SIZE; i++)
                 digest[i] = (unsigned char)((context->state[i >> 2] >> ((3-(i & 3)) * 8) ) & 255);

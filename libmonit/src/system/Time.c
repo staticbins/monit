@@ -1343,7 +1343,7 @@ int Time_year(time_t time) {
 }
 
 
-char *Time_string(time_t time, char *result) {
+char *Time_string(time_t time, char result[static 26]) {
         if (result) {
                 char x[2];
                 struct tm ts;
@@ -1375,7 +1375,7 @@ char *Time_string(time_t time, char *result) {
 }
 
 
-char *Time_gmtstring(time_t time, char *result) {
+char *Time_gmtstring(time_t time, char result[static 30]) {
         if (result) {
                 char x[2];
                 struct tm ts;
@@ -1418,7 +1418,7 @@ char *Time_fmt(char *result, int size, const char *format, time_t time) {
 }
 
 
-char *Time_uptime(time_t sec, char *result) {
+char *Time_uptime(time_t sec, char result[static 24]) {
         // Write max 24 bytes to result
         if (result) {
                 int n = 0;

@@ -154,7 +154,7 @@ bool Util_isurlsafe(const char *url);
  * @param isParameterValue true if the string is url parameter value
  * @return the escaped string
  */
-char *Util_urlEncode(char *string, bool isParameterValue);
+char *Util_urlEncode(const char *string, bool isParameterValue);
 
 
 /**

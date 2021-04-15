@@ -160,10 +160,10 @@ static int _fill(T S, int timeout) {
 
 static int _getPort(const struct sockaddr *addr) {
         if (addr->sa_family == AF_INET)
-                return ntohs(((struct sockaddr_in *)addr)->sin_port);
+                return ntohs(((const struct sockaddr_in *)addr)->sin_port);
 #ifdef HAVE_IPV6
         else if (addr->sa_family == AF_INET6)
-                return ntohs(((struct sockaddr_in6 *)addr)->sin6_port);
+                return ntohs(((const struct sockaddr_in6 *)addr)->sin6_port);
 #endif
         else
                 return -1;
@@ -173,7 +173,7 @@ static int _getPort(const struct sockaddr *addr) {
 static char *_addressToString(const struct sockaddr *addr, socklen_t addrlen, char *buf, int buflen) {
         int oerrno = errno;
         if (addr->sa_family == AF_UNIX) {
-                snprintf(buf, buflen, "%s", ((struct sockaddr_un *)addr)->sun_path);
+                snprintf(buf, buflen, "%s", ((const struct sockaddr_un *)addr)->sun_path);
         } else {
                 char ip[NI_MAXHOST];
                 char port[NI_MAXSERV];
@@ -701,7 +701,7 @@ int Socket_write(T S, const void *b, size_t size) {
 #endif
                 if (n <= 0)
                         break;
-                p = (unsigned char *)p + n;
+                p = (const unsigned char *)p + n;
                 size -= n;
 
         }
@@ -709,7 +709,7 @@ int Socket_write(T S, const void *b, size_t size) {
                 /* No write or a partial write is an error */
                 return -1;
         }
-        return  (int)((unsigned char *)p - (unsigned char *)b);
+        return  (int)((const unsigned char *)p - (const unsigned char *)b);
 }
 
 
