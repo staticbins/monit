@@ -602,7 +602,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         }
 
         // Update memory total (physical memory can be added to the online system on some machines, also LXC/KVM containers MemTotal is dynamic and changes frequently
-        if (sscanf(line, "MemTotal: %llu", &mem_total) == 1) {
+        if ((ptr = strstr(buf, "MemTotal:")) && sscanf(ptr + 9, "%lu", &mem_total) == 1) {
                 systeminfo.memory.size = mem_total * 1024;
         }
 
