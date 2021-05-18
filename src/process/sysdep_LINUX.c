@@ -586,6 +586,7 @@ int getloadavg_sysdep(double *loadv, int nelem) {
 bool used_system_memory_sysdep(SystemInfo_T *si) {
         char          *ptr;
         char           buf[2048];
+        unsigned long  mem_total = 0UL;
         unsigned long  mem_available = 0UL;
         unsigned long  mem_free = 0UL;
         unsigned long  buffers = 0UL;
@@ -600,12 +601,12 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 goto error;
         }
 
-        /*
-         * Memory
-         *
-         * First, check if the "MemAvailable" value is available on this system. If it is, we will
-         * use it. Otherwise we will attempt to calculate the amount of available memory ourself.
-         */
+        // Update memory total (physical memory can be added to the online system on some machines, also LXC/KVM containers MemTotal is dynamic and changes frequently
+        if (sscanf(line, "MemTotal: %llu", &mem_total) == 1) {
+                systeminfo.memory.size = mem_total * 1024;
+        }
+
+        // Check if the "MemAvailable" value is available on this system. If it is, we will use it. Otherwise we will attempt to calculate the amount of available memory ourself
         if ((ptr = strstr(buf, "MemAvailable:")) && sscanf(ptr + 13, "%lu", &mem_available) == 1) {
                 si->memory.usage.bytes = systeminfo.memory.size - (unsigned long long)mem_available * 1024;
         } else {
@@ -633,7 +634,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 si->memory.usage.bytes = systeminfo.memory.size - zfsarcsize - (unsigned long long)(mem_free + buffers + cached + slabreclaimable) * 1024;
         }
 
-        /* Swap */
+        // Swap
         if (! (ptr = strstr(buf, "SwapTotal:")) || sscanf(ptr + 10, "%lu", &swap_total) != 1) {
                 Log_error("system statistic error -- cannot get swap total amount\n");
                 goto error;

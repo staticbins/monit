@@ -4,6 +4,9 @@
 
 Version 5.28.1
 
+Fixed: Issue #960: The memory usage may report wrong value if system memory size changes after Monit start. The problem
+was frequent on KVM/LXC containers where MemTotal is dynamicaly updated.
+
 Fixed: Issue #965: If you run monit CLI with custom configuration file, via the -c option, and the file cannot be read
 by monit, AssertException was thrown. Monit will report normal error instead of the exception now.
 
