@@ -1057,13 +1057,13 @@ sethttpd        : SET HTTPD httpdlist {
                                 if (sslset.pemfile) {
                                         if (sslset.pemchain || sslset.pemkey) {
                                                 yyerror("SSL server option pemfile and pemchain|pemkey are mutually exclusive");
-                                        } else if (! file_checkStat(sslset.pemfile, "SSL server PEM file", S_IRWXU)) {
+                                        } else if (! file_checkStat(sslset.pemfile, "SSL server PEM file", S_IRWXU | S_IRGRP | S_IXGRP)) {
                                                 yyerror("SSL server PEM file permissions check failed");
                                         } else {
                                                 _setSSLOptions(&(Run.httpd.socket.net.ssl));
                                         }
                                 } else if (sslset.pemchain && sslset.pemkey) {
-                                        if (! file_checkStat(sslset.pemkey, "SSL server private key PEM file", S_IRWXU)) {
+                                        if (! file_checkStat(sslset.pemkey, "SSL server private key PEM file", S_IRWXU | S_IRGRP | S_IXGRP)) {
                                                 yyerror("SSL server private key PEM file permissions check failed");
                                         } else {
                                                 _setSSLOptions(&(Run.httpd.socket.net.ssl));

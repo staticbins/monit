@@ -22,6 +22,9 @@ Fixed: Issue #971: The optional "ELSE" part of the "IF LINK UP THEN <action> ELS
 Fixed: Issue #976: If the space free test recovered, it did always report percent free, regadless of the test unit.
 If absolute bytes limit is set, Monit will report absolute bytes value of current space free as well.
 
+Changed: Issue #984: The permission check of the SSL PEM key file allows also group permissions now (originally
+monit enforced that the file is readable only by the owner).
+
 
 Version 5.28.0
 
