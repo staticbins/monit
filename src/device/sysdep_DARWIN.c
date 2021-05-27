@@ -179,12 +179,14 @@ static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
                 char *description;
         } t[]= {
                 {MNT_RDONLY, "ro"},
+                {MNT_REMOVABLE, "removable"},
                 {MNT_SYNCHRONOUS, "synchronous"},
                 {MNT_NOEXEC, "noexec"},
                 {MNT_NOSUID, "nosuid"},
                 {MNT_NODEV, "nodev"},
                 {MNT_UNION, "union"},
                 {MNT_ASYNC, "async"},
+                {MNT_DOVOLFS, "dovolfs"},
 #ifdef MNT_CPROTECT
                 {MNT_CPROTECT, "content protection"},
 #endif
@@ -200,7 +202,9 @@ static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
                 {MNT_NOUSERXATTR, "nouserxattr"},
                 {MNT_DEFWRITE, "defer writes"},
                 {MNT_MULTILABEL, "multilabel"},
-                {MNT_NOATIME, "noatime"}
+                {MNT_NOATIME, "noatime"},
+                {MNT_SNAPSHOT, "snapshot"},
+                {MNT_STRICTATIME, "strictatime"}
         };
         for (size_t i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
                 if (flags & t[i].flag) {
