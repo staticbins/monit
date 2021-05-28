@@ -1527,8 +1527,8 @@ int validate() {
                                         s->monitor = Monitor_Yes;
                                 if (state == State_Failed)
                                         errors++;
+                                gettimeofday(&s->collected, NULL);
                         }
-                        gettimeofday(&s->collected, NULL);
                 }
         }
         return errors;
