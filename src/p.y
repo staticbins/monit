@@ -224,14 +224,14 @@ static Digest_Type digesttype = Digest_Cleartext;
 
 static void  preparse(void);
 static void  postparse(void);
-static bool _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing);
+static bool _parseOutgoingAddress(char *ip, Outgoing_T *outgoing);
 static void  addmail(char *, Mail_T, Mail_T *);
 static Service_T createservice(Service_Type, char *, char *, State_Type (*)(Service_T));
 static void  addservice(Service_T);
 static void  adddependant(char *);
 static void  addservicegroup(char *);
 static void  addport(Port_T *, Port_T);
-static void  addhttpheader(Port_T, const char *);
+static void  addhttpheader(Port_T, char *);
 static void  addresource(Resource_T);
 static void  addtimestamp(Timestamp_T);
 static void  addactionrate(ActionRate_T);
@@ -1057,13 +1057,13 @@ sethttpd        : SET HTTPD httpdlist {
                                 if (sslset.pemfile) {
                                         if (sslset.pemchain || sslset.pemkey) {
                                                 yyerror("SSL server option pemfile and pemchain|pemkey are mutually exclusive");
-                                        } else if (! file_checkStat(sslset.pemfile, "SSL server PEM file", S_IRWXU)) {
+                                        } else if (! file_checkStat(sslset.pemfile, "SSL server PEM file", S_IRWXU | S_IRGRP | S_IXGRP)) {
                                                 yyerror("SSL server PEM file permissions check failed");
                                         } else {
                                                 _setSSLOptions(&(Run.httpd.socket.net.ssl));
                                         }
                                 } else if (sslset.pemchain && sslset.pemkey) {
-                                        if (! file_checkStat(sslset.pemkey, "SSL server private key PEM file", S_IRWXU)) {
+                                        if (! file_checkStat(sslset.pemkey, "SSL server private key PEM file", S_IRWXU | S_IRGRP | S_IXGRP)) {
                                                 yyerror("SSL server private key PEM file permissions check failed");
                                         } else {
                                                 _setSSLOptions(&(Run.httpd.socket.net.ssl));
@@ -3048,12 +3048,12 @@ linkstatus   : IF FAILED LINK rate1 THEN action1 recovery_success { /* Deprecate
                         addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
                         addlinkstatus(current, &linkstatusset);
                   }
-             | IF LINK DOWN rate1 THEN action1 recovery_failure {
+             | IF LINK DOWN rate1 THEN action1 recovery_success {
                         linkstatusset.check_invers = false;
                         addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
                         addlinkstatus(current, &linkstatusset);
                   }
-             | IF LINK UP rate1 THEN action1 recovery_success {
+             | IF LINK UP rate1 THEN action1 recovery_failure {
                         linkstatusset.check_invers = true;
                         addeventaction(&(linkstatusset).action, $<number>6, $<number>7);
                         addlinkstatus(current, &linkstatusset);
@@ -3443,11 +3443,11 @@ static void postparse() {
 }
 
 
-static bool _parseOutgoingAddress(const char *ip, Outgoing_T *outgoing) {
+static bool _parseOutgoingAddress(char *ip, Outgoing_T *outgoing) {
         struct addrinfo *result, hints = {.ai_flags = AI_NUMERICHOST};
         int status = getaddrinfo(ip, NULL, &hints, &result);
         if (status == 0) {
-                outgoing->ip = (char *)ip;
+                outgoing->ip = ip;
                 outgoing->addrlen = result->ai_addrlen;
                 memcpy(&(outgoing->addr), result->ai_addr, result->ai_addrlen);
                 freeaddrinfo(result);
@@ -3771,14 +3771,14 @@ static void addport(Port_T *list, Port_T port) {
 }
 
 
-static void addhttpheader(Port_T port, const char *header) {
+static void addhttpheader(Port_T port, char *header) {
         if (! port->parameters.http.headers) {
                 port->parameters.http.headers = List_new();
         }
         if (Str_startsWith(header, "Connection:") && ! Str_sub(header, "close")) {
                 yywarning("We don't recommend setting the Connection header. Monit will always close the connection even if 'keep-alive' is set\n");
         }
-        List_append(port->parameters.http.headers, (char *)header);
+        List_append(port->parameters.http.headers, header);
 }
 
 

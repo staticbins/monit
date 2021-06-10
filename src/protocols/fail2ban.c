@@ -50,7 +50,7 @@ void check_fail2ban(Socket_T socket) {
         const unsigned char ping[] = "(lp0\nS'ping'\np1\na.<F2B_END_COMMAND>"; // pickle protocol version 0
 
         // Send PING
-        if (Socket_write(socket, (void *)ping, sizeof(ping)) < 0) {
+        if (Socket_write(socket, ping, sizeof(ping)) < 0) {
                 THROW(IOException, "FAIL2BAN: PING command error -- %s", STRERROR);
         }
 

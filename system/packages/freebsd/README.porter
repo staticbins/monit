@@ -35,6 +35,9 @@
     HW:         Any
     OS:         Any
 
+  Put the link to the changelog to the URL field like this:
+        https://mmonit.com/monit/changes/#5.28.0
+
   Attach the following files:
         monit.patch (set maintainer-approval+ if you're maintainer)
         portlint.txt

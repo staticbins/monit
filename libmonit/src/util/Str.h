@@ -372,7 +372,7 @@ char *Str_trunc(char *s, int n);
  * @param t The sub-string to shorten the string <code>s</code> from
  * @return A pointer to s
  */
-char *Str_curtail(char *s, char *t);
+char *Str_curtail(char *s, const char *t);
 
 
 /**

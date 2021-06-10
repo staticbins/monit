@@ -1015,6 +1015,13 @@ AC_ARG_ENABLE(optimized,
     ]
 )
 
+AC_ARG_ENABLE([werror],
+        [AS_HELP_STRING([--enable-werror],
+                [Treat warnings as errors (default: warnings are not errors)])],
+                [enable_werror="$enableval"],
+                [enable_werror=no])
+AS_IF([test "x$enable_werror" = "xyes"], [CFLAGS="$CFLAGS -Werror"])
+
 AC_ARG_ENABLE(profiling,
         AS_HELP_STRING([--enable-profiling],
                 [Build with debug and profiling options]),
