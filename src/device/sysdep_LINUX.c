@@ -338,7 +338,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
         inf->filesystem->object.generation = _statistics.generation;
         bool mounted = false;
         struct mntent *mnt;
-        char flags[STRLEN];
+        char flags[STRLEN] = {};
         while ((mnt = getmntent(f))) {
                 // Scan all entries for overlay mounts (common for rootfs)
                 if (compare(path, mnt)) {
@@ -385,13 +385,9 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
         if (! mounted) {
                 Log_error("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MOUNTS);
         } else {
-                // Evaluate filesystem flags for the last matching mount (overlay mounts for the same filesystem may have different mount flags)
-                if (! IS(flags, inf->filesystem->flags)) {
-                        if (*(inf->filesystem->flags)) {
-                                inf->filesystem->flagsChanged = true;
-                        }
-                        snprintf(inf->filesystem->flags, sizeof(inf->filesystem->flags), "%s", flags);
-                }
+                // Store the flags value at the end. The same filesystem may have overlay mounts (with different flags), we don't want to corrupt the flags in the monit status, until we find the (last) matching filesystem
+                Util_swapFilesystemFlags(&(inf->filesystem->flags));
+                snprintf(inf->filesystem->flags.current, sizeof(inf->filesystem->flags.current), "%s", flags);
         }
         return mounted;
 }

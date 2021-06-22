@@ -1068,6 +1068,13 @@ typedef struct TimestampInfo_T {
 } *TimestampInfo_T;
 
 
+typedef struct FilesystemFlags_T {
+        char value[2][STRLEN];
+        char *current;
+        char *previous;
+} *FilesystemFlags_T;
+
+
 typedef struct FileSystemInfo_T {
         long long  f_blocks;              /**< Total data blocks in filesystem */
         long long  f_blocksfree;   /**< Free blocks available to non-superuser */
@@ -1082,8 +1089,7 @@ typedef struct FileSystemInfo_T {
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
         int mode;                                              /**< Permission */
-        char flags[STRLEN];                              /**< Filesystem flags */
-        bool flagsChanged;          /**< True if filesystem flags changed */
+        struct FilesystemFlags_T flags;                  /**< Filesystem flags */
         struct IOStatistics_T read;                       /**< Read statistics */
         struct IOStatistics_T write;                     /**< Write statistics */
         struct {

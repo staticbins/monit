@@ -349,10 +349,17 @@ char *Util_commandDescription(command_t command, char s[STRLEN]);
 
 /**
  * Return string presentation of TIME_* unit
- *  @param time The TIME_* unit (see monit.h)
- *  @return string
+ * @param time The TIME_* unit (see monit.h)
+ * @return string
  */
 const char *Util_timestr(int time);
+
+
+/**
+ * Swap previous and current filesystem flags in the ringbuffer
+ * @flags Filesystem flags
+ */
+void Util_swapFilesystemFlags(FilesystemFlags_T flags);
 
 
 #endif

@@ -1189,15 +1189,15 @@ final1:
  */
 static State_Type _checkFilesystemFlags(Service_T s) {
         ASSERT(s);
-        if (*(s->inf.filesystem->flags)) {
-                if (s->inf.filesystem->flagsChanged) {
-                        s->inf.filesystem->flagsChanged = false;
+        FilesystemFlags_T f = &(s->inf.filesystem->flags);
+        if (*(f->current) && *(f->previous)) {
+                if (! IS(f->previous, f->current)) {
                         for (FsFlag_T l = s->fsflaglist; l; l = l->next)
-                                Event_post(s, Event_FsFlag, State_Changed, l->action, "filesystem flags changed to %s", s->inf.filesystem->flags);
+                                Event_post(s, Event_FsFlag, State_Changed, l->action, "filesystem flags changed from '%s' to '%s'", f->previous, f->current);
                         return State_Changed;
                 }
                 for (FsFlag_T l = s->fsflaglist; l; l = l->next)
-                        Event_post(s, Event_FsFlag, State_ChangedNot, l->action, "filesystem flags has not changed [current flags %s]", s->inf.filesystem->flags);
+                        Event_post(s, Event_FsFlag, State_ChangedNot, l->action, "filesystem flags has not changed [current flags '%s']", f->current);
                 return State_ChangedNot;
         }
         return State_Init;

@@ -1584,6 +1584,21 @@ bool Util_checkCredentials(char *uname, char *outside) {
 }
 
 
+void Util_swapFilesystemFlags(FilesystemFlags_T flags) {
+        char *temp = flags->previous;
+        flags->previous = flags->current;
+        flags->current = temp;
+        *(flags->current) = 0;
+}
+
+
+static void _resetFilesystemFlags(FilesystemFlags_T flags) {
+        flags->previous = flags->value[0];
+        flags->current = flags->value[1];
+        *(flags->current) = 0;
+        *(flags->previous) = 0;
+}
+
 static void _resetIOStatistics(IOStatistics_T S) {
         Statistics_reset(&(S->operations));
         Statistics_reset(&(S->bytes));
@@ -1603,11 +1618,10 @@ void Util_resetInfo(Service_T s) {
                         s->inf.filesystem->f_filesused = 0LL;
                         s->inf.filesystem->inode_percent = 0.;
                         s->inf.filesystem->space_percent = 0.;
-                        s->inf.filesystem->flagsChanged = false;
-                        *(s->inf.filesystem->flags) = 0;
                         s->inf.filesystem->mode = -1;
                         s->inf.filesystem->uid = -1;
                         s->inf.filesystem->gid = -1;
+                        _resetFilesystemFlags(&(s->inf.filesystem->flags));
                         _resetIOStatistics(&(s->inf.filesystem->read));
                         _resetIOStatistics(&(s->inf.filesystem->write));
                         Statistics_reset(&(s->inf.filesystem->time.read));
