@@ -387,7 +387,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
         } else {
                 // Store the flags value at the end. The same filesystem may have overlay mounts (with different flags), we don't want to corrupt the flags in the monit status, until we find the (last) matching filesystem
                 Util_swapFilesystemFlags(&(inf->filesystem->flags));
-                snprintf(inf->filesystem->flags.current, sizeof(inf->filesystem->flags.current), "%s", flags);
+                snprintf(inf->filesystem->flags.current, sizeof(inf->filesystem->flags.value[0]), "%s", flags);
         }
         return mounted;
 }
@@ -414,6 +414,8 @@ static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char 
         if (inf->filesystem->object.generation != _statistics.generation || _statistics.fd == -1) {
                 DEBUG("Reloading mount information for filesystem '%s'\n", path);
                 _setDevice(inf, path, compare);
+        } else {
+                strncpy(inf->filesystem->flags.previous, inf->filesystem->flags.current, sizeof(inf->filesystem->flags.value[0]));
         }
         if (inf->filesystem->object.mounted) {
                 return (inf->filesystem->object.getDiskUsage(inf) && inf->filesystem->object.getDiskActivity(inf));

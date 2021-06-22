@@ -228,10 +228,8 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                                         } else {
                                                 inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
                                         }
-                                        if ((mntItem->f_flags & MNT_VISFLAGMASK) != inf->filesystem->object.flags || ! *inf->filesystem->flags.current) {
-                                                inf->filesystem->object.flags = mntItem->f_flags & MNT_VISFLAGMASK;
-                                                _filesystemFlagsToString(inf, inf->filesystem->object.flags);
-                                        }
+                                        inf->filesystem->object.flags = mntItem->f_flags & MNT_VISFLAGMASK;
+                                        _filesystemFlagsToString(inf, inf->filesystem->object.flags);
                                         strncpy(inf->filesystem->object.device, mntItem->f_mntfromname, sizeof(inf->filesystem->object.device) - 1);
                                         strncpy(inf->filesystem->object.mountpoint, mntItem->f_mntonname, sizeof(inf->filesystem->object.mountpoint) - 1);
                                         strncpy(inf->filesystem->object.type, mntItem->f_fstypename, sizeof(inf->filesystem->object.type) - 1);
