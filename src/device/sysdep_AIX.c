@@ -206,12 +206,8 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                         strncpy(inf->filesystem->object.device, mnt->mnt_fsname, sizeof(inf->filesystem->object.device) - 1);
                         strncpy(inf->filesystem->object.mountpoint, mnt->mnt_dir, sizeof(inf->filesystem->object.mountpoint) - 1);
                         strncpy(inf->filesystem->object.type, mnt->mnt_type, sizeof(inf->filesystem->object.type) - 1);
-                        if (! IS(mnt->mnt_opts, inf->filesystem->flags)) {
-                                if (*(inf->filesystem->flags)) {
-                                        inf->filesystem->flagsChanged = true;
-                                }
-                                snprintf(inf->filesystem->flags, sizeof(inf->filesystem->flags), "%s", mnt->mnt_opts);
-                        }
+                        Util_swapFilesystemFlags(&(inf->filesystem->flags));
+                        snprintf(inf->filesystem->flags.current, sizeof(inf->filesystem->flags.value[0]), "%s", mnt->mnt_opts);
                         inf->filesystem->object.getDiskUsage = _getDiskUsage;
                         if (Str_startsWith(mnt->mnt_type, "jfs")) {
                                 inf->filesystem->object.getDiskActivity = _getDiskActivity;
