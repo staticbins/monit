@@ -1530,7 +1530,7 @@ int validate() {
                                         if (state == State_Failed)
                                                 errors++;
                                         //FIXME: the Service_Program is executed each cycle to collect exit value ... record the last data collection timestamp only on the real non-skip cycle
-                                        if (! skip || s->type != Service_Program)
+                                        if (! skip)
                                                 gettimeofday(&s->collected, NULL);
                                 }
                         }
