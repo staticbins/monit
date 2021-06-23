@@ -1518,16 +1518,21 @@ int validate() {
         int errors = 0;
         /* Check the services */
         for (Service_T s = servicelist; s && ! interrupt(); s = s->next) {
-                // FIXME: The Service_Program must collect the exit value from last run, even if the program start should be skipped in this cycle => let check program always run the test (to be refactored with new scheduler)
-                if (! _doScheduledAction(s) && s->monitor && (s->type == Service_Program || ! _checkSkip(s))) {
-                        _checkTimeout(s); // Can disable monitoring => need to check s->monitor again
-                        if (s->monitor) {
-                                State_Type state = s->check(s);
-                                if (state != State_Init && s->monitor != Monitor_Not) // The monitoring can be disabled by some matching rule in s->check so we have to check again before setting to Monitor_Yes
-                                        s->monitor = Monitor_Yes;
-                                if (state == State_Failed)
-                                        errors++;
-                                gettimeofday(&s->collected, NULL);
+                if (! _doScheduledAction(s) && s->monitor) {
+                        bool skip = _checkSkip(s);
+                        // FIXME: The Service_Program must collect the exit value from last run, even if the program start should be skipped in this cycle => let check program always run the test (to be refactored with new scheduler)
+                        if (! skip || s->type == Service_Program) {
+                                _checkTimeout(s); // Can disable monitoring => need to check s->monitor again
+                                if (s->monitor) {
+                                        State_Type state = s->check(s);
+                                        if (state != State_Init && s->monitor != Monitor_Not) // The monitoring can be disabled by some matching rule in s->check so we have to check again before setting to Monitor_Yes
+                                                s->monitor = Monitor_Yes;
+                                        if (state == State_Failed)
+                                                errors++;
+                                        //FIXME: the Service_Program is executed each cycle to collect exit value ... record the last data collection timestamp only on the real non-skip cycle
+                                        if (! skip || s->type != Service_Program)
+                                                gettimeofday(&s->collected, NULL);
+                                }
                         }
                 }
         }
