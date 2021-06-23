@@ -318,14 +318,20 @@ static bool _compareDevice(const char *device, struct mntent *mnt) {
         int mnt_major, mnt_minor;
         int device_major, device_minor;
         char target[PATH_MAX] = {};
-        return (
+        if (Str_isEqual(device, mnt->mnt_fsname)) {
                 // lookup the device as is first (support for NFS/CIFS/SSHFS/etc.)
-                Str_isEqual(device, mnt->mnt_fsname) ||
+                DEBUG("device %s matches filesystem %s (mounted on %s)\n", device, mnt->mnt_fsname, mnt->mnt_dir);
+                return true;
+        } else if (realpath(mnt->mnt_fsname, target) && Str_isEqual(device, target)) {
                 // The device listed in /etc/mtab can be a device mapper symlink (e.g. /dev/mapper/centos-root -> /dev/dm-1), i.e. try realpath
-                (realpath(mnt->mnt_fsname, target) && Str_isEqual(device, target)) ||
+                DEBUG("device %s matches real path %s for filesystem %s (mounted on %s)\n", device, target, mnt->mnt_fsname, mnt->mnt_dir);
+                return true;
+        } else if (_getDeviceNumbers(device, &device_major, &device_minor) && _getDeviceNumbers(mnt->mnt_fsname, &mnt_major, &mnt_minor) && (mnt_major == device_major) && (mnt_minor == device_minor)) {
                 // The same filesystem may have multiple independent device nodes with the same major+minor number (e.g. block devices /dev/root and /dev/xvda1 for the same filesystem) => if path didn't match, compare major+minor
-                (_getDeviceNumbers(device, &device_major, &device_minor) && _getDeviceNumbers(mnt->mnt_fsname, &mnt_major, &mnt_minor) && (mnt_major == device_major) && (mnt_minor == device_minor))
-        );
+                DEBUG("device %s with major=%d and minor=%d number matches filesystem %s (mounted on %s)\n", device, mnt_major, mnt_minor, mnt->mnt_fsname, mnt->mnt_dir);
+                return true;
+        }
+        return false;
 }
 
 
