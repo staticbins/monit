@@ -310,7 +310,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<total>%.1lf</total>"
                                         "</block>",
                                         S->inf.filesystem->object.type,
-                                        S->inf.filesystem->flags,
+                                        S->inf.filesystem->flags.current,
                                         S->inf.filesystem->mode & 07777,
                                         (int)S->inf.filesystem->uid,
                                         (int)S->inf.filesystem->gid,

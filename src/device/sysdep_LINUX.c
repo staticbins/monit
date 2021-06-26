@@ -318,14 +318,20 @@ static bool _compareDevice(const char *device, struct mntent *mnt) {
         int mnt_major, mnt_minor;
         int device_major, device_minor;
         char target[PATH_MAX] = {};
-        return (
+        if (Str_isEqual(device, mnt->mnt_fsname)) {
                 // lookup the device as is first (support for NFS/CIFS/SSHFS/etc.)
-                Str_isEqual(device, mnt->mnt_fsname) ||
+                DEBUG("device %s matches filesystem %s (mounted on %s)\n", device, mnt->mnt_fsname, mnt->mnt_dir);
+                return true;
+        } else if (realpath(mnt->mnt_fsname, target) && Str_isEqual(device, target)) {
                 // The device listed in /etc/mtab can be a device mapper symlink (e.g. /dev/mapper/centos-root -> /dev/dm-1), i.e. try realpath
-                (realpath(mnt->mnt_fsname, target) && Str_isEqual(device, target)) ||
+                DEBUG("device %s matches real path %s for filesystem %s (mounted on %s)\n", device, target, mnt->mnt_fsname, mnt->mnt_dir);
+                return true;
+        } else if (_getDeviceNumbers(device, &device_major, &device_minor) && _getDeviceNumbers(mnt->mnt_fsname, &mnt_major, &mnt_minor) && (mnt_major == device_major) && (mnt_minor == device_minor)) {
                 // The same filesystem may have multiple independent device nodes with the same major+minor number (e.g. block devices /dev/root and /dev/xvda1 for the same filesystem) => if path didn't match, compare major+minor
-                (_getDeviceNumbers(device, &device_major, &device_minor) && _getDeviceNumbers(mnt->mnt_fsname, &mnt_major, &mnt_minor) && (mnt_major == device_major) && (mnt_minor == device_minor))
-        );
+                DEBUG("device %s with major=%d and minor=%d number matches filesystem %s (mounted on %s)\n", device, mnt_major, mnt_minor, mnt->mnt_fsname, mnt->mnt_dir);
+                return true;
+        }
+        return false;
 }
 
 
@@ -338,7 +344,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
         inf->filesystem->object.generation = _statistics.generation;
         bool mounted = false;
         struct mntent *mnt;
-        char flags[STRLEN];
+        char flags[STRLEN] = {};
         while ((mnt = getmntent(f))) {
                 // Scan all entries for overlay mounts (common for rootfs)
                 if (compare(path, mnt)) {
@@ -385,13 +391,9 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
         if (! mounted) {
                 Log_error("Lookup for '%s' filesystem failed  -- not found in %s\n", path, MOUNTS);
         } else {
-                // Evaluate filesystem flags for the last matching mount (overlay mounts for the same filesystem may have different mount flags)
-                if (! IS(flags, inf->filesystem->flags)) {
-                        if (*(inf->filesystem->flags)) {
-                                inf->filesystem->flagsChanged = true;
-                        }
-                        snprintf(inf->filesystem->flags, sizeof(inf->filesystem->flags), "%s", flags);
-                }
+                // Store the flags value at the end. The same filesystem may have overlay mounts (with different flags), we don't want to corrupt the flags in the monit status, until we find the (last) matching filesystem
+                Util_swapFilesystemFlags(&(inf->filesystem->flags));
+                snprintf(inf->filesystem->flags.current, sizeof(inf->filesystem->flags.value[0]), "%s", flags);
         }
         return mounted;
 }
@@ -418,6 +420,8 @@ static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char 
         if (inf->filesystem->object.generation != _statistics.generation || _statistics.fd == -1) {
                 DEBUG("Reloading mount information for filesystem '%s'\n", path);
                 _setDevice(inf, path, compare);
+        } else {
+                strncpy(inf->filesystem->flags.previous, inf->filesystem->flags.current, sizeof(inf->filesystem->flags.value[0]));
         }
         if (inf->filesystem->object.mounted) {
                 return (inf->filesystem->object.getDiskUsage(inf) && inf->filesystem->object.getDiskActivity(inf));

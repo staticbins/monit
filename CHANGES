@@ -28,6 +28,8 @@ skipped in the given cycle. The timestamp is now updated only when the check was
 Changed: Issue #984: The permission check of the SSL PEM key file allows also group permissions now (originally
 monit enforced that the file is readable only by the owner).
 
+New: Issue #979: Show old values for filesystem flags, so it is easier to see what changed
+
 
 Version 5.28.0
 

@@ -505,7 +505,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
 
                         case Service_Filesystem:
                                 _formatStatus("filesystem type", Event_Null, type, res, s, *(s->inf.filesystem->object.type), "%s", s->inf.filesystem->object.type);
-                                _formatStatus("filesystem flags", Event_FsFlag, type, res, s, *(s->inf.filesystem->flags), "%s", s->inf.filesystem->flags);
+                                _formatStatus("filesystem flags", Event_FsFlag, type, res, s, *(s->inf.filesystem->flags.current), "%s", s->inf.filesystem->flags.current);
                                 _formatStatus("permission", Event_Permission, type, res, s, s->inf.filesystem->mode >= 0, "%o", s->inf.filesystem->mode & 07777);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.filesystem->uid >= 0, "%d", s->inf.filesystem->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.filesystem->gid >= 0, "%d", s->inf.filesystem->gid);

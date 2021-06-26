@@ -206,9 +206,10 @@ static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
                 {MNT_SNAPSHOT, "snapshot"},
                 {MNT_STRICTATIME, "strictatime"}
         };
+        Util_swapFilesystemFlags(&(inf->filesystem->flags));
         for (size_t i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
                 if (flags & t[i].flag) {
-                        snprintf(inf->filesystem->flags + strlen(inf->filesystem->flags), sizeof(inf->filesystem->flags) - strlen(inf->filesystem->flags) - 1, "%s%s", count++ ? ", " : "", t[i].description);
+                        snprintf(inf->filesystem->flags.current + strlen(inf->filesystem->flags.current), sizeof(inf->filesystem->flags.value[0]) - strlen(inf->filesystem->flags.current) - 1, "%s%s", count++ ? ", " : "", t[i].description);
                 }
         }
 }
@@ -227,13 +228,8 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                                         } else {
                                                 inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
                                         }
-                                        if ((mntItem->f_flags & MNT_VISFLAGMASK) != inf->filesystem->object.flags) {
-                                                if (inf->filesystem->object.flags) {
-                                                        inf->filesystem->flagsChanged = true;
-                                                }
-                                                inf->filesystem->object.flags = mntItem->f_flags & MNT_VISFLAGMASK;
-                                                _filesystemFlagsToString(inf, inf->filesystem->object.flags);
-                                        }
+                                        inf->filesystem->object.flags = mntItem->f_flags & MNT_VISFLAGMASK;
+                                        _filesystemFlagsToString(inf, inf->filesystem->object.flags);
                                         strncpy(inf->filesystem->object.device, mntItem->f_mntfromname, sizeof(inf->filesystem->object.device) - 1);
                                         strncpy(inf->filesystem->object.mountpoint, mntItem->f_mntonname, sizeof(inf->filesystem->object.mountpoint) - 1);
                                         strncpy(inf->filesystem->object.type, mntItem->f_fstypename, sizeof(inf->filesystem->object.type) - 1);

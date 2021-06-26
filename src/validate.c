@@ -1189,15 +1189,15 @@ final1:
  */
 static State_Type _checkFilesystemFlags(Service_T s) {
         ASSERT(s);
-        if (*(s->inf.filesystem->flags)) {
-                if (s->inf.filesystem->flagsChanged) {
-                        s->inf.filesystem->flagsChanged = false;
+        FilesystemFlags_T f = &(s->inf.filesystem->flags);
+        if (*(f->current) && *(f->previous)) {
+                if (! IS(f->previous, f->current)) {
                         for (FsFlag_T l = s->fsflaglist; l; l = l->next)
-                                Event_post(s, Event_FsFlag, State_Changed, l->action, "filesystem flags changed to %s", s->inf.filesystem->flags);
+                                Event_post(s, Event_FsFlag, State_Changed, l->action, "filesystem flags changed from '%s' to '%s'", f->previous, f->current);
                         return State_Changed;
                 }
                 for (FsFlag_T l = s->fsflaglist; l; l = l->next)
-                        Event_post(s, Event_FsFlag, State_ChangedNot, l->action, "filesystem flags has not changed [current flags %s]", s->inf.filesystem->flags);
+                        Event_post(s, Event_FsFlag, State_ChangedNot, l->action, "filesystem flags has not changed [current flags '%s']", f->current);
                 return State_ChangedNot;
         }
         return State_Init;
@@ -1518,16 +1518,21 @@ int validate() {
         int errors = 0;
         /* Check the services */
         for (Service_T s = servicelist; s && ! interrupt(); s = s->next) {
-                // FIXME: The Service_Program must collect the exit value from last run, even if the program start should be skipped in this cycle => let check program always run the test (to be refactored with new scheduler)
-                if (! _doScheduledAction(s) && s->monitor && (s->type == Service_Program || ! _checkSkip(s))) {
-                        _checkTimeout(s); // Can disable monitoring => need to check s->monitor again
-                        if (s->monitor) {
-                                State_Type state = s->check(s);
-                                if (state != State_Init && s->monitor != Monitor_Not) // The monitoring can be disabled by some matching rule in s->check so we have to check again before setting to Monitor_Yes
-                                        s->monitor = Monitor_Yes;
-                                if (state == State_Failed)
-                                        errors++;
-                                gettimeofday(&s->collected, NULL);
+                if (! _doScheduledAction(s) && s->monitor) {
+                        bool skip = _checkSkip(s);
+                        // FIXME: The Service_Program must collect the exit value from last run, even if the program start should be skipped in this cycle => let check program always run the test (to be refactored with new scheduler)
+                        if (! skip || s->type == Service_Program) {
+                                _checkTimeout(s); // Can disable monitoring => need to check s->monitor again
+                                if (s->monitor) {
+                                        State_Type state = s->check(s);
+                                        if (state != State_Init && s->monitor != Monitor_Not) // The monitoring can be disabled by some matching rule in s->check so we have to check again before setting to Monitor_Yes
+                                                s->monitor = Monitor_Yes;
+                                        if (state == State_Failed)
+                                                errors++;
+                                        //FIXME: the Service_Program is executed each cycle to collect exit value ... record the last data collection timestamp only on the real non-skip cycle
+                                        if (! skip)
+                                                gettimeofday(&s->collected, NULL);
+                                }
                         }
                 }
         }
