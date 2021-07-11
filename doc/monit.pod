@@ -2788,8 +2788,8 @@ Example:
 
 =head2 PID TEST
 
-Monit can test the process's PID. This test is implicit and Monit will
-send an alert in case the PID changed outside of Monit's control.
+Monit can test the process's PID. Monit will send an alert in case the PID
+changed outside of Monit's control.
 
 Syntax:
 
@@ -2811,9 +2811,8 @@ replaced by a new instance:
 
 =head2 PPID TEST
 
-Monit can test the process's parent PID (PPID) for changes. This
-test is implicit and Monit will send alert in the case that the
-PPID changed outside of Monit control.
+Monit can test the process's parent PID (PPID) for changes. Monit will
+send alert in the case that the PPID changed outside of Monit control.
 
 The syntax for the ppid statement is:
 
