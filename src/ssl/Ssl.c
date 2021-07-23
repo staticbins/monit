@@ -756,7 +756,7 @@ int Ssl_getCertificateValidDays(T C) {
         if (C && C->certificate) {
                 // Certificates which expired already are caught in preverify => we don't need to handle them here
                 volatile int deltadays = 0;
-                const ASN1_TIME *nat = NULL;
+                ASN1_TIME *nat = NULL;
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
                 nat = X509_get_notAfter(C->certificate);
 #else
