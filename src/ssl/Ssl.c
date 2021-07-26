@@ -758,9 +758,9 @@ int Ssl_getCertificateValidDays(T C) {
                 volatile int deltadays = 0;
                 ASN1_TIME *nat = NULL;
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-                nat = X509_get_notAfter(C->certificate);
+                nat = (ASN1_TIME  *)X509_get_notAfter(C->certificate);
 #else
-                nat = X509_get0_notAfter(C->certificate);
+                nat = (ASN1_TIME *)X509_get0_notAfter(C->certificate);
 #endif
                 if (! nat) {
                         THROW(IOException, "unable to get certificate notAfter field");
