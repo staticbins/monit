@@ -243,7 +243,7 @@ static void _updateStart(Service_T S, int nstart, int ncycle) {
 
 
 static void _updateMonitor(Service_T S, Monitor_State monitor) {
-        if (systeminfo.booted == booted || S->onreboot == Onreboot_Laststate) {
+        if (! State_reboot() || S->onreboot == Onreboot_Laststate) {
                 // Monit reload or restart within the same boot session OR persistent state => restore the monitoring state
                 if (monitor == Monitor_Not)
                         S->monitor = Monitor_Not;
@@ -650,7 +650,7 @@ void State_restore() {
                                         Log_warning("State file '%s': incompatible version %d\n", Run.files.state, version);
                                         break;
                         }
-                        if (version != StateVersionLatest || booted != systeminfo.booted) {
+                        if (version != StateVersionLatest || State_reboot()) {
                                 _stateDirty  = true;
                         }
                 }
