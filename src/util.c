@@ -969,6 +969,7 @@ void Util_printService(Service_T s) {
                 if (o->responsetime.limit > -1.)
                         StringBuffer_append(buf2, " and responsetime %s %s", operatornames[o->responsetime.operator], Convert_time2str(o->responsetime.limit, (char[11]){}));
                 printf(" %-20s = %s\n", "Unix Socket", StringBuffer_toString(Util_printRule(o->check_invers, buf, o->action, "%s", StringBuffer_toString(buf2))));
+                StringBuffer_free(&buf2);
         }
 
         for (Timestamp_T o = s->timestamplist; o; o = o->next) {

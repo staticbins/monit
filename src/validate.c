@@ -1385,10 +1385,10 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                 double deltaOperations = Statistics_delta(&(s->inf.filesystem->read.operations)) + Statistics_delta(&(s->inf.filesystem->write.operations));
                                 double serviceTime = deltaOperations > 0. ? deltaTime / deltaOperations : 0.;
                                 if (Util_evalDoubleQExpression(td->operator, serviceTime, td->limit_absolute)) {
-                                        Event_post(s, Event_Resource, State_Failed, td->action, "service time %.3fms/operation matches resource limit [service time %s %s/operation]", serviceTime, operatorshortnames[td->operator], Convert_time2str(td->limit_absolute, (char[11]){}));
+                                        Event_post(s, Event_Resource, State_Failed, td->action, "service time %s/operation matches resource limit [service time %s %s/operation]", Convert_time2str(serviceTime, (char[11]){}), operatorshortnames[td->operator], Convert_time2str(td->limit_absolute, (char[11]){}));
                                         return State_Failed;
                                 }
-                                Event_post(s, Event_Resource, State_Succeeded, td->action, "service time test succeeded [current service time = %.3f ms/operations]", serviceTime);
+                                Event_post(s, Event_Resource, State_Succeeded, td->action, "service time test succeeded [current service time = %s/operation]", Convert_time2str(serviceTime, (char[11]){}));
                         }
                         return State_Succeeded;
 

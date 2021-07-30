@@ -756,17 +756,22 @@ int Ssl_getCertificateValidDays(T C) {
         if (C && C->certificate) {
                 // Certificates which expired already are caught in preverify => we don't need to handle them here
                 volatile int deltadays = 0;
+                ASN1_TIME *nat = NULL;
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
+                nat = (ASN1_TIME  *)X509_get_notAfter(C->certificate);
+#else
+                nat = (ASN1_TIME *)X509_get0_notAfter(C->certificate);
+#endif
+                if (! nat) {
+                        THROW(IOException, "unable to get certificate notAfter field");
+                }
 #ifdef HAVE_ASN1_TIME_DIFF
                 int deltaseconds;
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-                if (! ASN1_TIME_diff((int *)&deltadays, &deltaseconds, NULL, X509_get_notAfter(C->certificate))) {
-#else
-                if (! ASN1_TIME_diff((int *)&deltadays, &deltaseconds, NULL, X509_get0_notAfter(C->certificate))) {
-#endif
+                if (! ASN1_TIME_diff((int *)&deltadays, &deltaseconds, NULL, nat)) {
                         THROW(IOException, "invalid time format in certificate's notAfter field");
                 }
 #else
-                ASN1_GENERALIZEDTIME *t = ASN1_TIME_to_generalizedtime(X509_get_notAfter(C->certificate), NULL);
+                ASN1_GENERALIZEDTIME *t = ASN1_TIME_to_generalizedtime(nat, NULL);
                 if (! t) {
                         THROW(IOException, "invalid time format (in certificate's notAfter field)");
                 }

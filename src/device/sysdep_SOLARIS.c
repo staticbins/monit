@@ -217,7 +217,10 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                         } else if (IS(mnt.mnt_fstype, MNTTYPE_ZFS)) {
                                 strncpy(inf->filesystem->object.module, "zfs", sizeof(inf->filesystem->object.module) - 1);
                                 char *slash = strchr(mnt.mnt_special, '/');
-                                strncpy(inf->filesystem->object.key, mnt.mnt_special, slash ? slash - mnt.mnt_special : sizeof(inf->filesystem->object.key) - 1);
+                                if (slash)
+                                        strncpy(inf->filesystem->object.key, mnt.mnt_special, slash - mnt.mnt_special);
+                                else
+                                        strncpy(inf->filesystem->object.key, mnt.mnt_special, sizeof(inf->filesystem->object.key) - 1);
                                 inf->filesystem->object.getDiskActivity = _getZfsDiskActivity;
                                 rv = true;
                         } else if (IS(mnt.mnt_fstype, MNTTYPE_UFS)) {

@@ -25,6 +25,8 @@ If absolute bytes limit is set, Monit will report absolute bytes value of curren
 Fixed: Issue #986: Services with custom check schedule did set the data collection timestamp even if the monitoring was
 skipped in the given cycle. The timestamp is now updated only when the check was performed.
 
+Fixed: Issue #990: Monit built with libressl may crash during verification of expired certificate.
+
 Changed: Issue #984: The permission check of the SSL PEM key file allows also group permissions now (originally
 monit enforced that the file is readable only by the owner).
 
