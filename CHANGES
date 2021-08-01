@@ -1,6 +1,13 @@
-                     CHANGES version 5.28.1
+                     CHANGES version 5.28.2
 
            This file summarizes changes made since 5.0
+
+Version 5.28.2
+
+Fixed: Issue #991: MacOS: Monit didn't compie on MacOS 10.13 or older, as
+mount flags that were added in Monit 5.28.1 were not defined. Thanks to Lutz
+Mader.
+
 
 Version 5.28.1
 
