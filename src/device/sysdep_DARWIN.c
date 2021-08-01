@@ -179,7 +179,9 @@ static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
                 char *description;
         } t[]= {
                 {MNT_RDONLY, "ro"},
+#ifdef MNT_REMOVABLE
                 {MNT_REMOVABLE, "removable"},
+#endif
                 {MNT_SYNCHRONOUS, "synchronous"},
                 {MNT_NOEXEC, "noexec"},
                 {MNT_NOSUID, "nosuid"},
@@ -203,8 +205,12 @@ static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
                 {MNT_DEFWRITE, "defer writes"},
                 {MNT_MULTILABEL, "multilabel"},
                 {MNT_NOATIME, "noatime"},
+#ifdef MNT_SNAPSHOT
                 {MNT_SNAPSHOT, "snapshot"},
+#endif
+#ifdef MNT_STRICTATIME
                 {MNT_STRICTATIME, "strictatime"}
+#endif
         };
         Util_swapFilesystemFlags(&(inf->filesystem->flags));
         for (size_t i = 0, count = 0; i < sizeof(t) / sizeof(t[0]); i++) {
