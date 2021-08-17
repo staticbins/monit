@@ -1,10 +1,19 @@
-                     CHANGES version 5.28.2
+                     CHANGES version 5.29.0
 
            This file summarizes changes made since 5.0
 
-Version 5.28.2
+Version 5.29.0
 
-Fixed: Issue #991: MacOS: Monit didn't compie on MacOS 10.13 or older, as
+New: Issue #715: The PostgreSQL protocol test was extended with username, password and database options. Example:
+    if failed port 5432 protocol pgsql username "myusername" password "123456" database "test" then alert
+Monit will perform full authentication (curently only 'password' and 'md5' methods are supported). The previous
+Monit version used hardcoded user=root and database=root, which may trigger thousands of messages like this in the
+postgresql log a day:
+        root@root FATAL:  password authentication failed for user "root"
+        root@root DETAIL:  Role "root" does not exist.
+If no username option is set, monit will keep using the hardcoded credentials (for backward compatibility).
+
+Fixed: Issue #991: MacOS: Monit didn't compile on MacOS 10.13 or older, as
 mount flags that were added in Monit 5.28.1 were not defined. Thanks to Lutz
 Mader.
 

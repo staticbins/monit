@@ -447,6 +447,7 @@ instance          { return INSTANCE; }
 hostname          { return HOSTNAME; }
 username          { return USERNAME; }
 password          { return PASSWORD; }
+database          { return DATABASE; }
 credentials       { return CREDENTIALS; }
 register          { return REGISTER; }
 fsflag(s)?        { return FSFLAG; }

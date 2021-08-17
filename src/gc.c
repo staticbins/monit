@@ -415,6 +415,10 @@ static void _gcportlist(Port_T *p) {
                 FREE((*p)->parameters.mysql.username);
                 FREE((*p)->parameters.mysql.password);
                 FREE((*p)->parameters.mysql.rsaChecksum);
+        } else if ((*p)->protocol->check == check_pgsql) {
+                FREE((*p)->parameters.postgresql.username);
+                FREE((*p)->parameters.postgresql.password);
+                FREE((*p)->parameters.postgresql.database);
         } else if ((*p)->protocol->check == check_sip) {
                 FREE((*p)->parameters.sip.target);
         } else if ((*p)->protocol->check == check_smtp) {

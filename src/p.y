@@ -354,7 +354,7 @@ static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Typ
 %token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE
 %token CORE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT CPUNICE CPUHARDIRQ CPUSOFTIRQ CPUSTEAL CPUGUEST CPUGUESTNICE
 %token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
-%token UID EUID GID MMONIT INSTANCE USERNAME PASSWORD
+%token UID EUID GID MMONIT INSTANCE USERNAME PASSWORD DATABASE
 %token TIME ATIME CTIME MTIME CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH 
 %token SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 TLSV13 CERTMD5 AUTO
 %token NOSSLV2 NOSSLV3 NOTLSV1 NOTLSV11 NOTLSV12 NOTLSV13
@@ -1416,6 +1416,11 @@ password        : PASSWORD STRING {
                   }
                 ;
 
+database        : DATABASE STRING {
+                        $<string>$ = $2;
+                  }
+                ;
+
 hostname        : /* EMPTY */     {
                         $<string>$ = NULL;
                   }
@@ -1641,6 +1646,9 @@ outgoing        : ADDRESS STRING {
 protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                         portset.protocol = Protocol_get(Protocol_APACHESTATUS);
                   }
+                | PROTOCOL CLAMAV {
+                        portset.protocol = Protocol_get(Protocol_CLAMAV);
+                  }
                 | PROTOCOL DEFAULT {
                         portset.protocol = Protocol_get(Protocol_DEFAULT);
                   }
@@ -1655,6 +1663,9 @@ protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                 }
                 | PROTOCOL FTP {
                         portset.protocol = Protocol_get(Protocol_FTP);
+                  }
+                | PROTOCOL GPS {
+                        portset.protocol = Protocol_get(Protocol_GPS);
                   }
                 | PROTOCOL HTTP httplist {
                         portset.protocol = Protocol_get(Protocol_HTTP);
@@ -1672,14 +1683,17 @@ protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                         portset.type = Socket_Tcp;
                         portset.protocol = Protocol_get(Protocol_IMAP);
                   }
-                | PROTOCOL CLAMAV {
-                        portset.protocol = Protocol_get(Protocol_CLAMAV);
-                  }
                 | PROTOCOL LDAP2 {
                         portset.protocol = Protocol_get(Protocol_LDAP2);
                   }
                 | PROTOCOL LDAP3 {
                         portset.protocol = Protocol_get(Protocol_LDAP3);
+                  }
+                | PROTOCOL LMTP {
+                        portset.protocol = Protocol_get(Protocol_LMTP);
+                  }
+                | PROTOCOL MEMCACHE {
+                        portset.protocol = Protocol_get(Protocol_MEMCACHE);
                   }
                 | PROTOCOL MONGODB  {
                         portset.protocol = Protocol_get(Protocol_MONGODB);
@@ -1694,9 +1708,6 @@ protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                         sslset.flags = SSL_StartTLS;
                         portset.protocol = Protocol_get(Protocol_MYSQL);
                   }
-                | PROTOCOL SIP siplist {
-                        portset.protocol = Protocol_get(Protocol_SIP);
-                  }
                 | PROTOCOL NNTP {
                         portset.protocol = Protocol_get(Protocol_NNTP);
                   }
@@ -1704,8 +1715,8 @@ protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                         portset.protocol = Protocol_get(Protocol_NTP3);
                         portset.type = Socket_Udp;
                   }
-                | PROTOCOL POSTFIXPOLICY {
-                        portset.protocol = Protocol_get(Protocol_POSTFIXPOLICY);
+                | PROTOCOL PGSQL postgresqllist {
+                        portset.protocol = Protocol_get(Protocol_PGSQL);
                   }
                 | PROTOCOL POP {
                         portset.protocol = Protocol_get(Protocol_POP);
@@ -1715,8 +1726,26 @@ protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                         portset.type = Socket_Tcp;
                         portset.protocol = Protocol_get(Protocol_POP);
                   }
+                | PROTOCOL POSTFIXPOLICY {
+                        portset.protocol = Protocol_get(Protocol_POSTFIXPOLICY);
+                  }
+                | PROTOCOL RADIUS radiuslist {
+                        portset.protocol = Protocol_get(Protocol_RADIUS);
+                  }
+                | PROTOCOL RDATE {
+                        portset.protocol = Protocol_get(Protocol_RDATE);
+                  }
+                | PROTOCOL REDIS  {
+                        portset.protocol = Protocol_get(Protocol_REDIS);
+                  }
+                | PROTOCOL RSYNC {
+                        portset.protocol = Protocol_get(Protocol_RSYNC);
+                  }
                 | PROTOCOL SIEVE {
                         portset.protocol = Protocol_get(Protocol_SIEVE);
+                  }
+                | PROTOCOL SIP siplist {
+                        portset.protocol = Protocol_get(Protocol_SIP);
                   }
                 | PROTOCOL SMTP smtplist {
                         portset.protocol = Protocol_get(Protocol_SMTP);
@@ -1732,32 +1761,8 @@ protocol        : PROTOCOL APACHESTATUS apache_stat_list {
                 | PROTOCOL SSH  {
                         portset.protocol = Protocol_get(Protocol_SSH);
                   }
-                | PROTOCOL RDATE {
-                        portset.protocol = Protocol_get(Protocol_RDATE);
-                  }
-                | PROTOCOL REDIS  {
-                        portset.protocol = Protocol_get(Protocol_REDIS);
-                  }
-                | PROTOCOL RSYNC {
-                        portset.protocol = Protocol_get(Protocol_RSYNC);
-                  }
                 | PROTOCOL TNS {
                         portset.protocol = Protocol_get(Protocol_TNS);
-                  }
-                | PROTOCOL PGSQL {
-                        portset.protocol = Protocol_get(Protocol_PGSQL);
-                  }
-                | PROTOCOL LMTP {
-                        portset.protocol = Protocol_get(Protocol_LMTP);
-                  }
-                | PROTOCOL GPS {
-                        portset.protocol = Protocol_get(Protocol_GPS);
-                  }
-                | PROTOCOL RADIUS radiuslist {
-                        portset.protocol = Protocol_get(Protocol_RADIUS);
-                  }
-                | PROTOCOL MEMCACHE {
-                        portset.protocol = Protocol_get(Protocol_MEMCACHE);
                   }
                 | PROTOCOL WEBSOCKET websocketlist {
                         portset.protocol = Protocol_get(Protocol_WEBSOCKET);
@@ -1860,6 +1865,20 @@ mysql           : username {
                         portset.parameters.mysql.rsaChecksumType = Hash_Sha1;
                   }
                 ;
+
+postgresqllist  : /* EMPTY */
+                | postgresqllist postgresql
+                ;
+
+postgresql      : username {
+                        portset.parameters.postgresql.username = $<string>1;
+                  }
+                | password {
+                        portset.parameters.postgresql.password = $<string>1;
+                  }
+                | database {
+                        portset.parameters.postgresql.database = $<string>1;
+                  }
                 ;
 
 target          : TARGET MAILADDR {
