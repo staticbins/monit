@@ -128,7 +128,7 @@ typedef struct postgresql_passwordmessage_t {
 } __attribute__((__packed__)) *postgresql_passwordmessage_t;
 
 
-// See Terminatei at https://www.postgresql.org/docs/current/protocol-message-formats.html
+// See Terminate at https://www.postgresql.org/docs/current/protocol-message-formats.html
 typedef struct postgresql_terminatemessage_t {
         PostgreSQLPacket type;
         uint32_t length;
