@@ -361,19 +361,22 @@ static void _handleAuthentication(postgresql_t postgresql, postgresql_response_t
 }
 
 
+static void _readResponse(postgresql_t postgresql, void *buffer, int length, char *description) {
+        int rv = Socket_read(postgresql->socket, buffer, length);
+        if (rv < 0)
+                THROW(IOException, "PGSQL: response %s read error -- %s", description, STRERROR);
+        else if (rv != length)
+                THROW(IOException, "PGSQL: response %s read error -- %d bytes expected, got %d bytes", description, length, rv);
+}
+
 static void _handleResponse(postgresql_t postgresql) {
         struct postgresql_response_t response = {};
 
         // Read in the response header (packet type and payload length)
-        int rv = Socket_read(postgresql->socket, &response, sizeof(struct postgresql_response_header_t));
-        if (rv < 0)
-                THROW(IOException, "PGSQL: response header read error -- %s", STRERROR);
-        else if (rv != sizeof(struct postgresql_response_header_t))
-                THROW(IOException, "PGSQL: response header read error -- %d bytes expected, got %d bytes", sizeof(struct postgresql_response_header_t), rv);
+        _readResponse(postgresql, &response, sizeof(struct postgresql_response_header_t), "header");
 
         // Payload length to host order
         int payloadLength = ntohl(response.header.length);
-        DEBUG("PGSQL: response payload %d bytes\n", payloadLength);
 
         // Subtract the payload part which we read already (the 'length' attribute size)
         size_t remainingPayloadLength = payloadLength - sizeof(response.header.length);
@@ -383,11 +386,7 @@ static void _handleResponse(postgresql_t postgresql) {
                 THROW(IOException, "PGSQL: response message is too large: %d bytes received (maximum %d)", remainingPayloadLength, sizeof(response.data.buffer));
 
         // Read the response payload
-        rv = Socket_read(postgresql->socket, &response.data.buffer, remainingPayloadLength);
-        if (rv < 0)
-                THROW(IOException, "PGSQL: response payload read error -- %s", STRERROR);
-        else if (rv != (int)remainingPayloadLength)
-                THROW(IOException, "PGSQL: response payload read error -- %d bytes expected, got %d bytes", remainingPayloadLength, rv);
+        _readResponse(postgresql, &(response.data.buffer), remainingPayloadLength, "payload");
 
         if (response.header.type == PostgreSQLPacket_Error)
                 _handleError(postgresql, &response);
