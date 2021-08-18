@@ -38,6 +38,7 @@
 #include "checksum.h"
 
 // libmonit
+#include "system/Net.h"
 #include "exceptions/IOException.h"
 #include "exceptions/ProtocolException.h"
 
@@ -230,6 +231,8 @@ static void _authenticateMd5(postgresql_t postgresql) {
         // Send the password message
         if (Socket_write(postgresql->socket, (unsigned char *)&passwordMessage, length + 1) != length + 1)
                 THROW(IOException, "PGSQL: error sending clear text password message -- %s", STRERROR);
+
+        DEBUG("PGSQL: DEBUG: MD5 authentication message sent\n");
 }
 
 
@@ -237,17 +240,23 @@ static void _authenticateMd5(postgresql_t postgresql) {
 //   PasswordMessage                 at https://www.postgresql.org/docs/current/protocol-message-formats.html
 //   AuthenticationCleartextPassword at https://www.postgresql.org/docs/current/protocol-flow.html#id-1.10.5.7.3
 static void _authenticateClearPassword(postgresql_t postgresql) {
-        int length = 0;
         struct postgresql_passwordmessage_t passwordMessage = {
                 .type = PostgreSQLPacket_PasswordMessage
         };
+        int length = sizeof(passwordMessage.length);
 
-        if (postgresql->port->parameters.postgresql.password) {
-                length += sizeof(passwordMessage.length) + snprintf(passwordMessage.data, sizeof(passwordMessage.data), "%s", postgresql->port->parameters.postgresql.password) + 1;
-        }
+        // Add clear text password (if set)
+        if (postgresql->port->parameters.postgresql.password)
+                length += snprintf(passwordMessage.data, sizeof(passwordMessage.data), "%s", postgresql->port->parameters.postgresql.password);
+
+        // Add null terminator
+        length += 1;
+
         passwordMessage.length = htonl(length);
         if (Socket_write(postgresql->socket, (unsigned char *)&passwordMessage, length + 1) != length + 1)
                 THROW(IOException, "PGSQL: error sending clear text password message -- %s", STRERROR);
+
+        DEBUG("PGSQL: DEBUG: clear password authentication message sent\n");
 }
 
 
@@ -283,6 +292,8 @@ static void _requestStartup(postgresql_t postgresql) {
 
         if (Socket_write(postgresql->socket, (unsigned char *)&startupMessage, length) != length)
                 THROW(IOException, "PGSQL: error sending startup message -- %s", STRERROR);
+
+        DEBUG("PGSQL: DEBUG: startup message sent\n");
 }
 
 
@@ -293,6 +304,8 @@ static void _requestTerminate(postgresql_t postgresql) {
         };
         if (Socket_write(postgresql->socket, (unsigned char *)&terminateMessage, sizeof(struct postgresql_terminatemessage_t)) != sizeof(struct postgresql_terminatemessage_t))
                 THROW(IOException, "PGSQL: error sending terminate message -- %s", STRERROR);
+
+        DEBUG("PGSQL: DEBUG: terminate message sent\n");
 }
 
 
@@ -300,6 +313,7 @@ static void _requestTerminate(postgresql_t postgresql) {
 
 
 static void _handleError(postgresql_t postgresql, postgresql_response_t response) {
+        DEBUG("PGSQL: DEBUG: error message received\n");
         // Process subset of error messages, that will help to diagnoze the startup message failure (full list: https://www.postgresql.org/docs/current/protocol-error-fields.html)
         postgresql_error_t errorSeverity = NULL;
         postgresql_error_t errorCode = NULL;
@@ -325,7 +339,7 @@ static void _handleError(postgresql_t postgresql, postgresql_response_t response
         if (postgresql->state == PostgreSQL_Init && ! postgresql->port->parameters.postgresql.username && ! postgresql->port->parameters.postgresql.database) {
                 // Backward compatibility: Monit < 5.29.0 used a hardcoded user and database, hence it interpreted the error as a sign that the server is able to respond (regardless of result). 
                 // Monit > 5.29.0 allows to set custom user and database, hence we expect successful response here and will throw error.
-                DEBUG("PGSQL: error message received, but as no custom user or database is set, accept it for backward compatibility with Monit < 5.29.0 -- Severity=%s, Code=%s, Message=%s\n", PGERROR(errorSeverity), PGERROR(errorCode), PGERROR(errorMessage));
+                DEBUG("PGSQL: DEBUG: error message received, but as no custom user or database is set, accept it for backward compatibility with Monit < 5.29.0 -- Severity=%s, Code=%s, Message=%s\n", PGERROR(errorSeverity), PGERROR(errorCode), PGERROR(errorMessage));
         } else {
                 THROW(IOException, "PGSQL: startup message error -- Severity=%s, Code=%s, Message=%s", PGERROR(errorSeverity), PGERROR(errorCode), PGERROR(errorMessage));
         }
@@ -336,62 +350,81 @@ static void _handleError(postgresql_t postgresql, postgresql_response_t response
 static void _handleAuthentication(postgresql_t postgresql, postgresql_response_t response) {
         postgresql_response_authentication_t a = &(response->data.authentication);
         PostgreSQLAuthentication authenticationType = ntohl(a->type);
-        DEBUG("PGSQL: authentication message received, type=%d\n", authenticationType);
+        DEBUG("PGSQL: DEBUG: authentication message received, type=%d\n", authenticationType);
         switch (authenticationType) {
                 case PostgreSQLAuthentication_Ok:
-                        DEBUG("PGSQL: authentication OK\n");
+                        DEBUG("PGSQL: DEBUG: authentication OK\n");
                         postgresql->state = PostgreSQL_AuthenticationOk;
                         break;
                 case PostgreSQLAuthentication_CleartextPassword:
-                        DEBUG("PGSQL: clear text password authentication required\n");
+                        DEBUG("PGSQL: DEBUG: clear text password authentication required\n");
                         postgresql->authentication.callback = _authenticateClearPassword;
                         postgresql->state = PostgreSQL_AuthenticationNeeded;
                         break;
                 case PostgreSQLAuthentication_MD5Password:
-                        DEBUG("PGSQL: MD5 password authentication required, salt %.2x%.2x%.2x%.2x\n", a->data.md5.salt[0], a->data.md5.salt[1], a->data.md5.salt[2], a->data.md5.salt[3]);
+                        DEBUG("PGSQL: DEBUG: MD5 password authentication required, salt %.2x%.2x%.2x%.2x\n", a->data.md5.salt[0], a->data.md5.salt[1], a->data.md5.salt[2], a->data.md5.salt[3]);
                         postgresql->state = PostgreSQL_AuthenticationNeeded;
                         memcpy(postgresql->authentication.salt, a->data.md5.salt, sizeof(a->data.md5.salt));
                         postgresql->authentication.callback = _authenticateMd5;
                         break;
                 default:
-                        DEBUG("PGSQL: authentication method type %d not supported, stopping the protocol test here with success (server communicates)\n", authenticationType);
+                        DEBUG("PGSQL: DEBUG: authentication method type %d not supported, stopping the protocol test here with success (server communicates)\n", authenticationType);
                         postgresql->state = PostgreSQL_AuthenticationNeededUnknownType;
                         break;
         }
 }
 
 
-static void _readResponse(postgresql_t postgresql, void *buffer, int length, char *description) {
+static int _readResponse(postgresql_t postgresql, void *buffer, int length, char *description, bool eofAllowed) {
         int rv = Socket_read(postgresql->socket, buffer, length);
-        if (rv < 0)
+        DEBUG("PGSQL: DEBUG: read %s -- %d bytes received\n", description, rv);
+        if (rv == 0 && eofAllowed)
+                return 0;
+        else if (rv < 0)
                 THROW(IOException, "PGSQL: response %s read error -- %s", description, STRERROR);
         else if (rv != length)
                 THROW(IOException, "PGSQL: response %s read error -- %d bytes expected, got %d bytes", description, length, rv);
+        return rv;
 }
 
 static void _handleResponse(postgresql_t postgresql) {
+        DEBUG("PGSQL: DEBUG: trying to read response\n");
+
+        // PostgreSQL may send several messages in response, for example:
+        //      authentication ok message can be immediately followed by error message if the database doesn't exist
+        //      if authentication passed and the database exists, the server sends set of ParameterStatus messages with information about the server (version, timezone, encoding, etc.)
+        bool eofAllowed = false; // We need to read at least one message in response
+        int s = Socket_getSocket(postgresql->socket);
+        int timeout = Socket_getTimeout(postgresql->socket);
         struct postgresql_response_t response = {};
+        while (Net_canRead(s, timeout) && _readResponse(postgresql, &response, sizeof(struct postgresql_response_header_t), "header", eofAllowed)) { // Read in the response header (packet type and payload length)
+                // Payload length to host order
+                int payloadLength = ntohl(response.header.length);
 
-        // Read in the response header (packet type and payload length)
-        _readResponse(postgresql, &response, sizeof(struct postgresql_response_header_t), "header");
+                // Subtract the payload part which we read already (the 'length' attribute size)
+                size_t remainingPayloadLength = payloadLength - sizeof(response.header.length);
+                if (remainingPayloadLength > 0) {
+                        // Sanity check (our current limit is 1Kb as we don't implement SQL queries and need only session setup messages)
+                        if (remainingPayloadLength > sizeof(response.data.buffer))
+                                THROW(IOException, "PGSQL: response message is too large: %d bytes received (maximum %d)", remainingPayloadLength, sizeof(response.data.buffer));
 
-        // Payload length to host order
-        int payloadLength = ntohl(response.header.length);
+                        // Read the response payload
+                        _readResponse(postgresql, &(response.data.buffer), remainingPayloadLength, "payload", false);
+                }
 
-        // Subtract the payload part which we read already (the 'length' attribute size)
-        size_t remainingPayloadLength = payloadLength - sizeof(response.header.length);
+                if (response.header.type == PostgreSQLPacket_Error)
+                        _handleError(postgresql, &response);
+                else if (response.header.type == PostgreSQLPacket_Authentication)
+                        _handleAuthentication(postgresql, &response);
+                else
+                        DEBUG("PGSQL: DEBUG: message type '%c' received -- skipping\n", response.header.type);
 
-        // Sanity check (our current limit is 1Kb as we don't implement SQL queries and need only session setup messages)
-        if (remainingPayloadLength > sizeof(response.data.buffer))
-                THROW(IOException, "PGSQL: response message is too large: %d bytes received (maximum %d)", remainingPayloadLength, sizeof(response.data.buffer));
+                // We need to retry to see if there are more messages in the response, but EOF for header read is also acceptable at this point (server may close the connection if it sends error).
+                eofAllowed = true;
+                // Lower the timeout to 50ms to not block after the last message in the response stream (when session remains open)
+                timeout = 50;
+        }
 
-        // Read the response payload
-        _readResponse(postgresql, &(response.data.buffer), remainingPayloadLength, "payload");
-
-        if (response.header.type == PostgreSQLPacket_Error)
-                _handleError(postgresql, &response);
-        else if (response.header.type == PostgreSQLPacket_Authentication)
-                _handleAuthentication(postgresql, &response);
 }
 
 
@@ -424,15 +457,8 @@ void check_pgsql(Socket_T S) {
                 _handleResponse(&postgresql);
         }
 
-        /*FIXME:
-          handle packets that may follow authentication response:
-                        1) if database doesn't exist, but the authentication succeeded, authentication ok message is returned, followed by error (standalone message), that specifies details about the invalid database
-                        2) if authentication succeeded and there was no error, the auth ok packet is followed by bunch of ParameterStatus packets, that provide for example info about the db server version ... log it?
-                        3) ditto 2, but the last ParameterStatus is followed by ReadyForQuery packet ... should we check for it? (i.e. the protocol test doesn't succeed until ReadyForQuery is received?)
-         */
-
         // Terminate the session
-        if (postgresql.port->family != Socket_Unix)
+        if (postgresql.port->family != Socket_Unix && postgresql.state == PostgreSQL_AuthenticationOk)
                 _requestTerminate(&postgresql);
 }
 
