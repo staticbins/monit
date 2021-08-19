@@ -3764,6 +3764,48 @@ You can enable the TLS encryption for the test by using MYSQLS as protocol name:
      then alert
 
 
+=head4 PGSQL
+
+Syntax:
+
+ PROTOCOL PGSQL [USERNAME string] [PASSWORD string] [DATABASE string]]
+
+I<USERNAME> PostgreSQL username.
+
+I<PASSWORD> PostgreSQL password (special characters can be used, but for non-alphanumerics
+the password has to be quoted).
+
+I<DATABASE> PostgreSQL database (defaults to the database that matches the username if not set).
+
+Username and password (credentials) are B<optional> and if not set, Monit will perform the
+test with hardcoded user=root and database=root, which may trigger errors in PostgreSQL logs.
+
+If credentials are set, Monit will try to login. You might want to create standalone user
+for Monit to use when testing.
+
+Monit currently supports only 'password' and 'md5' PostgreSQL authentication methods. If the server
+asks for authentication method that Monit doesn't support (such as 'scram-sha-256'), Monit terminates the
+connection and the test succeeds (although monit cannot authenticate, the server is communicating).
+
+To allow access to Monit for testing purposes, one can create an account and allow access for
+example like this:
+
+PostgreSQL pg_hba.conf entry example:
+
+ # TYPE  DATABASE   USER   ADDRESS       METHOD
+   host  test       monit  127.0.0.1/32  md5
+
+Monit configurations example:
+
+ check process postgresql with pidfile /var/run/postgresql/12-main.pid
+     start program = "/bin/systemctl postgresql start"
+     stop program = "/bin/systemctl postgresql stop"
+     if failed
+        port 5432
+        protocol pgsql username "monit" password "123456" database "test"
+     then alert
+
+
 =head4 RADIUS
 
 Syntax:

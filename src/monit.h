@@ -727,6 +727,11 @@ typedef struct Port_T {
                         Hash_Type rsaChecksumType;
                 } mysql;
                 struct {
+                        char *username;
+                        char *password;
+                        char *database;
+                } postgresql;
+                struct {
                         char *secret;
                 } radius;
                 struct {
