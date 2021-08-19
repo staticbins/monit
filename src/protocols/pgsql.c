@@ -336,7 +336,7 @@ static void _handleError(postgresql_t postgresql, postgresql_response_t response
                                 break;
                 }
         }
-        if (postgresql->state == PostgreSQL_Init && ! postgresql->port->parameters.postgresql.username && ! postgresql->port->parameters.postgresql.database) {
+        if (! postgresql->port->parameters.postgresql.username && ! postgresql->port->parameters.postgresql.database) {
                 // Backward compatibility: Monit < 5.29.0 used a hardcoded user and database, hence it interpreted the error as a sign that the server is able to respond (regardless of result). 
                 // Monit > 5.29.0 allows to set custom user and database, hence we expect successful response here and will throw error.
                 DEBUG("PGSQL: DEBUG: error message received, but as no custom user or database is set, accept it for backward compatibility with Monit < 5.29.0 -- Severity=%s, Code=%s, Message=%s\n", PGERROR(errorSeverity), PGERROR(errorCode), PGERROR(errorMessage));
