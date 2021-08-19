@@ -16,6 +16,9 @@ Fixed: Issue #991: MacOS: Monit didn't compile on MacOS 10.13 or older, as
 mount flags that were added in Monit 5.28.1 were not defined. Thanks to Lutz
 Mader.
 
+Fixed: Issue #994 (Monit 5.28.1 regression): The 'check program' with custom test schedule (using the 'every' statement)
+doesn't work.
+
 
 Version 5.28.1
 
