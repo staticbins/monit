@@ -24,6 +24,9 @@ doesn't work.
 Fixed: Issue #995: The Monit start delay is vulnerable to time jumps while Monit is waiting for the interval to pass.
 Thanks to Daniel Crowe.
 
+Fixed: Issue #975: Monit CLI: Monit didn't return any warning if -s, -p, -l, -g or -c command-line options were specified
+multiple times and silently used the last value only. Monit will generate a warning now.
+
 
 Version 5.28.1
 
