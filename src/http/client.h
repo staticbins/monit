@@ -37,10 +37,11 @@ bool HttpClient_action(const char *action, List_T services);
 
 /**
  * Print service report
+ * @param group Service group or NULL
  * @param type Report type or NULL
  * @return true if succeeded otherwise false
  */
-bool HttpClient_report(const char *type);
+bool HttpClient_report(const char *group, const char *type);
 
 
 /**

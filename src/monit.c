@@ -499,7 +499,7 @@ static void do_action(List_T arguments) {
                         exit(1);
         } else if (IS(action, "report")) {
                 char *type = List_pop(arguments);
-                if (! HttpClient_report(type))
+                if (! HttpClient_report(Run.mygroup, type))
                         exit(1);
         } else if (IS(action, "procmatch")) {
                 char *pattern = List_pop(arguments);
