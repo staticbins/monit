@@ -219,7 +219,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                             S->doaction);
         if (S->every.type != Every_Cycle) {
                 StringBuffer_append(B, "<every><type>%d</type>", S->every.type);
-                if (S->every.type == 1)
+                if (S->every.type == Every_SkipCycles)
                         StringBuffer_append(B, "<counter>%d</counter><number>%d</number>", S->every.spec.cycle.counter, S->every.spec.cycle.number);
                 else
                         StringBuffer_append(B, "<cron>%s</cron>", S->every.spec.cron);
