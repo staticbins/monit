@@ -318,6 +318,7 @@ static void _setSSLVersion(short version);
 static void _unsetSSLVersion(short version);
 static void addsecurityattribute(char *, Action_Type, Action_Type);
 static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Type, Action_Type);
+static void _sanityCheckEveryStatement(Service_T s);
 
 %}
 
@@ -2251,14 +2252,17 @@ formatoption    : MAILFROM ADDRESSOBJECT { mailset.from = $<address>1; }
                 ;
 
 every           : EVERY NUMBER CYCLE {
+                        _sanityCheckEveryStatement(current);
                         current->every.type = Every_SkipCycles;
                         current->every.spec.cycle.counter = current->every.spec.cycle.number = $2;
                  }
                 | EVERY TIMESPEC {
+                        _sanityCheckEveryStatement(current);
                         current->every.type = Every_Cron;
                         current->every.spec.cron = $2;
                  }
                 | NOTEVERY TIMESPEC {
+                        _sanityCheckEveryStatement(current);
                         current->every.type = Every_NotInCron;
                         current->every.spec.cron = $2;
                  }
@@ -3622,6 +3626,10 @@ static void addservice(Service_T s) {
                 default:
                         break;
         }
+
+        // No "every" statement was used, monitor each cycle
+        if (s->every.type == Every_Initializing)
+                s->every.type = Every_Cycle;
 
         /* Add the service to the end of the service list */
         if (tail != NULL) {
@@ -5359,6 +5367,7 @@ static void addsecurityattribute(char *value, Action_Type failed, Action_Type su
         current->secattrlist = attr;
 }
 
+
 static void addfiledescriptors(Operator_Type operator, bool total, long long value_absolute, float value_percent, Action_Type failed, Action_Type succeeded) {
         Filedescriptors_T fds;
         NEW(fds);
@@ -5369,5 +5378,19 @@ static void addfiledescriptors(Operator_Type operator, bool total, long long val
         fds->operator = operator;
         fds->next = current->filedescriptorslist;
         current->filedescriptorslist = fds;
+}
+
+static void _sanityCheckEveryStatement(Service_T s) {
+        if (s->every.type != Every_Initializing) {
+                yywarning2("The 'every' statement can be specified only once, the last value will be used\n");
+                switch (s->every.type) {
+                        case Every_Cron:
+                        case Every_NotInCron:
+                                FREE(s->every.spec.cron);
+                                break;
+                        default:
+                                break;
+                }
+        }
 }
 

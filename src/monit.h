@@ -172,7 +172,8 @@ typedef enum {
 
 
 typedef enum {
-        Every_Cycle = 0,
+        Every_Initializing = 0,
+        Every_Cycle,
         Every_SkipCycles,
         Every_Cron,
         Every_NotInCron
@@ -826,7 +827,7 @@ typedef struct ActionRate_T {
 /** Defines when to run a check for a service. This type supports both the old
  cycle based every statement and the new cron-format version */
 typedef struct Every_T {
-        Every_Type type; /**< 0 = not set, 1 = cycle, 2 = cron, 3 = negated cron */
+        Every_Type type;
         time_t last_run;
         union {
                 struct {

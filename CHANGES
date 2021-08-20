@@ -32,6 +32,9 @@ the log file is very large. Also the _viewlog URL was not support via the HTTP G
 error on refresh:
        404 There is no service named "_viewlog"
 
+Fixed: Issue #955: The 'every' statement can be used only once in the given service context and only the last value is used.
+Report warning if multiple 'every' statements are found.
+
 
 Version 5.28.1
 
