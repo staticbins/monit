@@ -27,6 +27,11 @@ Thanks to Daniel Crowe.
 Fixed: Issue #975: Monit CLI: Monit didn't return any warning if -s, -p, -l, -g or -c command-line options were specified
 multiple times and silently used the last value only. Monit will generate a warning now.
 
+Fixed: Issue #972: Monit GUI: The log view had no limit when reading the Monit log file, so it may block the browser when
+the log file is very large. Also the _viewlog URL was not support via the HTTP GET method, so it returned the following
+error on refresh:
+       404 There is no service named "_viewlog"
+
 
 Version 5.28.1
 
