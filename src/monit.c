@@ -593,7 +593,7 @@ static void do_default() {
 
                 if (Run.startdelay) {
                         if (State_reboot()) {
-                                time_t now = Time_now();
+                                time_t now = Time_monotonic();
                                 time_t delay = now + Run.startdelay;
 
                                 Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
@@ -603,7 +603,7 @@ static void do_default() {
                                         sleep((unsigned int)(delay - now));
                                         if (Run.flags & Run_Stopped)
                                                 do_exit(false);
-                                        now = Time_now();
+                                        now = Time_monotonic();
                                 }
                         } else {
                                 DEBUG("Monit delay %ds skipped -- the system boot time has not changed since last Monit start\n", Run.startdelay);
