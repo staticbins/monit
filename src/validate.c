@@ -1518,7 +1518,7 @@ int validate() {
         int errors = 0;
         /* Check the services */
         for (Service_T s = servicelist; s && ! interrupt(); s = s->next) {
-                // FIXME: The Service_Program must collect the exit value from last run, even if the program start should be skipped in this cycle => let check program always run the test (to be refactored with new scheduler)
+                // FIXME: The Service_Program must collect the exit value from last run, even if the program start should be skipped in this cycle => let check program always run the test (to be refactored with new scheduler) WARNING: do not(!) call the _checkSkip for Service_Program here
                 if (! _doScheduledAction(s) && s->monitor && (s->type == Service_Program || ! _checkSkip(s))) {
                         _checkTimeout(s); // Can disable monitoring => need to check s->monitor again
                         if (s->monitor) {
@@ -1878,8 +1878,10 @@ State_Type check_program(Service_T s) {
                 s->program->exitStatus = Process_exitStatus(P); // Save exit status for web-view display
                 StringBuffer_trim(s->program->inprogressOutput);
                 // Swap program output (instance finished)
+                const char *lastOutput = StringBuffer_toString(s->program->inprogressOutput);
                 StringBuffer_clear(s->program->lastOutput);
-                StringBuffer_append(s->program->lastOutput, "%s", StringBuffer_toString(s->program->inprogressOutput));
+                StringBuffer_append(s->program->lastOutput, "%s", lastOutput);
+
                 // Evaluate program's exit status against our status checks.
                 const char *output = StringBuffer_length(s->program->inprogressOutput) ? StringBuffer_toString(s->program->inprogressOutput) : "no output";
                 for (Status_T status = s->statuslist; status; status = status->next) {
@@ -1904,6 +1906,15 @@ State_Type check_program(Service_T s) {
                                 }
                         }
                 }
+
+                // Check the program content (we check the whole program output at once, not line-by-line)
+                for (Match_T ml = s->matchlist; ml; ml = ml->next) {
+                        if ((_checkPattern(ml, lastOutput) == 0) ^ (ml->not))
+                                Event_post(s, Event_Content, State_Changed, ml->action, "content match on program output:\n%s\n", lastOutput);
+                        else
+                                Event_post(s, Event_Content, State_ChangedNot, ml->action,  "content doesn't match on program output:\n%s", lastOutput);
+                }
+
                 Process_free(&s->program->P);
         } else {
                 rv = State_Init;

@@ -609,6 +609,7 @@ optprogram      : start
                 | group
                 | depend
                 | statusvalue
+                | programmatch
                 ;
 
 setalert        : SET alertmail formatlist reminder {
@@ -2903,6 +2904,15 @@ permission      : IF FAILED PERMISSION NUMBER rate1 THEN action1 recovery_succes
                   }
                 ;
 
+programmatch    : IF CONTENT urloperator STRING rate1 THEN action1 {
+                        matchset.not = $<number>3 == Operator_Equal ? false : true;
+                        matchset.ignore = false;
+                        matchset.match_path = NULL;
+                        matchset.match_string = $4;
+                        addmatch(&matchset, $<number>7, 0);
+                  }
+                ;
+
 match           : IF CONTENT urloperator PATH rate1 THEN action1 {
                         matchset.not = $<number>3 == Operator_Equal ? false : true;
                         matchset.ignore = false;
@@ -3569,8 +3579,8 @@ static void addservice(Service_T s) {
                         break;
                 case Service_Program:
                         // Verify that a program test has a status test
-                        if (! s->statuslist) {
-                                Log_error("'check program %s' is incomplete: Please add an 'if status != n' test\n", s->name);
+                        if (! s->statuslist && ! s->matchlist) {
+                                Log_error("'check program %s' is incomplete: Please add a 'status' or 'content' test\n", s->name);
                                 cfg_errflag++;
                         }
                         char program[PATH_MAX];
