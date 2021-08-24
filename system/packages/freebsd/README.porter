@@ -10,8 +10,7 @@
 
 2.) modify the port:
 
-  portsnap fetch
-  portsnap update
+  portsnap auto
   cd /usr/ports/sysutils
   rm -rf monit-new
   cp -rp monit monit-new
