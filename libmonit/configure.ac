@@ -242,6 +242,7 @@ architecture=`uname`
 if test "$architecture" = "Linux"  
 then
    CFLAGS="$CFLAGS -D _REENTRANT"
+   LDFLAGS="$LDFLAGS -lrt"
    AC_DEFINE([LINUX], 1, [Define to 1 if the system is Linux])
 elif test "$architecture" = "FreeBSD"
 then
