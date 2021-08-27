@@ -156,59 +156,34 @@ static void document_foot(StringBuffer_T B) {
 }
 
 
+static void _ioStatisticsPrint(StringBuffer_T B, const char *name, Statistics_T statistics) {
+        if (Statistics_initialized(statistics)) {
+                StringBuffer_append(B,
+                        "<%s>"
+                        "<count>%.0lf</count>" // per second
+                        "<total>%llu</total>"  // since boot
+                        "</%s>",
+                        name,
+                        Statistics_deltaNormalize(statistics),
+                        Statistics_raw(statistics),
+                        name);
+        }
+}
+
+
 static void _ioStatisticsProcess(StringBuffer_T B, const char *name, IOStatistics_T statistics) {
         StringBuffer_append(B, "<%s>", name);
-        if (Statistics_initialized(&(statistics->bytes))) {
-                StringBuffer_append(B,
-                        "<bytesgeneric>"
-                        "<count>%.0lf</count>"     // bytes per second
-                        "<total>%llu</total>" // bytes since boot
-                        "</bytesgeneric>",
-                        Statistics_deltaNormalize(&(statistics->bytes)),
-                        Statistics_raw(&(statistics->bytes)));
-        }
-        if (Statistics_initialized(&(statistics->bytesPhysical))) {
-                StringBuffer_append(B,
-                        "<bytes>"
-                        "<count>%.0lf</count>"     // bytes per second
-                        "<total>%llu</total>" // bytes since boot
-                        "</bytes>",
-                        Statistics_deltaNormalize(&(statistics->bytesPhysical)),
-                        Statistics_raw(&(statistics->bytesPhysical)));
-        }
-        if (Statistics_initialized(&(statistics->operations))) {
-                StringBuffer_append(B,
-                        "<operations>"
-                        "<count>%.0lf</count>"     // operations per second
-                        "<total>%llu</total>" // operations since boot
-                        "</operations>",
-                        Statistics_deltaNormalize(&(statistics->operations)),
-                        Statistics_raw(&(statistics->operations)));
-        }
+        _ioStatisticsPrint(B, "bytesgeneric", &(statistics->bytes));
+        _ioStatisticsPrint(B, "bytes", &(statistics->bytesPhysical));
+        _ioStatisticsPrint(B, "operations", &(statistics->operations));
         StringBuffer_append(B, "</%s>", name);
 }
 
 
 static void _ioStatisticsFilesystem(StringBuffer_T B, const char *name, IOStatistics_T statistics) {
         StringBuffer_append(B, "<%s>", name);
-        if (Statistics_initialized(&(statistics->bytes))) {
-                StringBuffer_append(B,
-                        "<bytes>"
-                        "<count>%.0lf</count>"     // bytes per second
-                        "<total>%llu</total>" // bytes since boot
-                        "</bytes>",
-                        Statistics_deltaNormalize(&(statistics->bytesPhysical)),
-                        Statistics_raw(&(statistics->bytesPhysical)));
-        }
-        if (Statistics_initialized(&(statistics->operations))) {
-                StringBuffer_append(B,
-                        "<operations>"
-                        "<count>%.0lf</count>"     // operations per second
-                        "<total>%llu</total>" // operations since boot
-                        "</operations>",
-                        Statistics_deltaNormalize(&(statistics->operations)),
-                        Statistics_raw(&(statistics->operations)));
-        }
+        _ioStatisticsPrint(B, "bytes", &(statistics->bytes));
+        _ioStatisticsPrint(B, "operations", &(statistics->operations));
         StringBuffer_append(B, "</%s>", name);
 }
 
