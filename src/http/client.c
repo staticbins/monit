@@ -224,8 +224,10 @@ bool HttpClient_action(const char *action, List_T services) {
 }
 
 
-bool HttpClient_report(const char *type) {
+bool HttpClient_report(const char *group, const char *type) {
         StringBuffer_T data = StringBuffer_create(64);
+        if (STR_DEF(group))
+                _argument(data, "group", group);
         if (STR_DEF(type))
                 _argument(data, "type", type);
         bool rv = _client("/_report", data);

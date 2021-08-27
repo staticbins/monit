@@ -156,35 +156,34 @@ static void document_foot(StringBuffer_T B) {
 }
 
 
-static void _ioStatistics(StringBuffer_T B, const char *name, IOStatistics_T statistics) {
+static void _ioStatisticsPrint(StringBuffer_T B, const char *name, Statistics_T statistics) {
+        if (Statistics_initialized(statistics)) {
+                StringBuffer_append(B,
+                        "<%s>"
+                        "<count>%.0lf</count>" // per second
+                        "<total>%llu</total>"  // since boot
+                        "</%s>",
+                        name,
+                        Statistics_deltaNormalize(statistics),
+                        Statistics_raw(statistics),
+                        name);
+        }
+}
+
+
+static void _ioStatisticsProcess(StringBuffer_T B, const char *name, IOStatistics_T statistics) {
         StringBuffer_append(B, "<%s>", name);
-        if (Statistics_initialized(&(statistics->bytes))) {
-                StringBuffer_append(B,
-                        "<bytesgeneric>"
-                        "<count>%.0lf</count>"     // bytes per second
-                        "<total>%llu</total>" // bytes since boot
-                        "</bytesgeneric>",
-                        Statistics_deltaNormalize(&(statistics->bytes)),
-                        Statistics_raw(&(statistics->bytes)));
-        }
-        if (Statistics_initialized(&(statistics->bytesPhysical))) {
-                StringBuffer_append(B,
-                        "<bytes>"
-                        "<count>%.0lf</count>"     // bytes per second
-                        "<total>%llu</total>" // bytes since boot
-                        "</bytes>",
-                        Statistics_deltaNormalize(&(statistics->bytesPhysical)),
-                        Statistics_raw(&(statistics->bytesPhysical)));
-        }
-        if (Statistics_initialized(&(statistics->operations))) {
-                StringBuffer_append(B,
-                        "<operations>"
-                        "<count>%.0lf</count>"     // operations per second
-                        "<total>%llu</total>" // operations since boot
-                        "</operations>",
-                        Statistics_deltaNormalize(&(statistics->operations)),
-                        Statistics_raw(&(statistics->operations)));
-        }
+        _ioStatisticsPrint(B, "bytesgeneric", &(statistics->bytes));
+        _ioStatisticsPrint(B, "bytes", &(statistics->bytesPhysical));
+        _ioStatisticsPrint(B, "operations", &(statistics->operations));
+        StringBuffer_append(B, "</%s>", name);
+}
+
+
+static void _ioStatisticsFilesystem(StringBuffer_T B, const char *name, IOStatistics_T statistics) {
+        StringBuffer_append(B, "<%s>", name);
+        _ioStatisticsPrint(B, "bytes", &(statistics->bytes));
+        _ioStatisticsPrint(B, "operations", &(statistics->operations));
         StringBuffer_append(B, "</%s>", name);
 }
 
@@ -219,7 +218,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                             S->doaction);
         if (S->every.type != Every_Cycle) {
                 StringBuffer_append(B, "<every><type>%d</type>", S->every.type);
-                if (S->every.type == 1)
+                if (S->every.type == Every_SkipCycles)
                         StringBuffer_append(B, "<counter>%d</counter><number>%d</number>", S->every.spec.cycle.counter, S->every.spec.cycle.number);
                 else
                         StringBuffer_append(B, "<cron>%s</cron>", S->every.spec.cron);
@@ -328,8 +327,8 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 S->inf.filesystem->f_filesused,
                                                 S->inf.filesystem->f_files);
                                 }
-                                _ioStatistics(B, "read", &(S->inf.filesystem->read));
-                                _ioStatistics(B, "write", &(S->inf.filesystem->write));
+                                _ioStatisticsFilesystem(B, "read", &(S->inf.filesystem->read));
+                                _ioStatisticsFilesystem(B, "write", &(S->inf.filesystem->write));
                                 bool hasReadTime = Statistics_initialized(&(S->inf.filesystem->time.read));
                                 bool hasWriteTime = Statistics_initialized(&(S->inf.filesystem->time.write));
                                 bool hasWaitTime = Statistics_initialized(&(S->inf.filesystem->time.wait));
@@ -449,8 +448,8 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                                 S->inf.process->filedescriptors.limit.soft,
                                                 S->inf.process->filedescriptors.limit.hard);
                                 }
-                                _ioStatistics(B, "read", &(S->inf.process->read));
-                                _ioStatistics(B, "write", &(S->inf.process->write));
+                                _ioStatisticsProcess(B, "read", &(S->inf.process->read));
+                                _ioStatisticsProcess(B, "write", &(S->inf.process->write));
                                 break;
 
                         default:

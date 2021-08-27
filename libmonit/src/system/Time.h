@@ -116,6 +116,16 @@ time_t Time_now(void);
 
 
 /**
+ * Returns the monotonic time since some unspecified starting point. This
+ * clock is not affected by NTP time jumps, but may change in frequency
+ * on platforms that don't support CLOCK_MONOTONIC_RAW.
+ * @return A time_t representing the number of seconds since clock start.
+ * @exception AssertException If time could not be obtained
+ */
+time_t Time_monotonic(void);
+
+
+/**
  * Returns the time since the epoch measured in milliseconds.
  * @return A 64 bits long representing the systems notion of milliseconds
  * since the <strong>epoch</strong> (January 1, 1970, 00:00:00 GMT) in

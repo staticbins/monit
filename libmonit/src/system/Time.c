@@ -1278,6 +1278,18 @@ time_t Time_now(void) {
 }
 
 
+time_t Time_monotonic(void) {
+	struct timespec t;
+#ifdef CLOCK_MONOTONIC_RAW
+	if (clock_gettime(CLOCK_MONOTONIC_RAW, &t) != 0)
+#else
+	if (clock_gettime(CLOCK_MONOTONIC, &t) != 0)
+#endif
+                THROW(AssertException, "%s", System_getLastError());
+	return t.tv_sec;
+}
+
+
 long long Time_milli(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)

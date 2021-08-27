@@ -1,6 +1,11 @@
-                     CHANGES version 5.29.0
+                     CHANGES version 5.29.1
 
            This file summarizes changes made since 5.0
+
+Version 5.29.1
+
+Fixed: The disk read/write bytes didn't show up in M/Monit for Monit 5.27.0 or later.
+
 
 Version 5.29.0
 
@@ -12,12 +17,34 @@ this in the postgresql log a day:
         root@root DETAIL:  Role "root" does not exist.
 If no username option is set, monit will keep using the hardcoded credentials (for backward compatibility).
 
-Fixed: Issue #991: MacOS: Monit didn't compile on MacOS 10.13 or older, as
-mount flags that were added in Monit 5.28.1 were not defined. Thanks to Lutz
-Mader.
+New: Issue #973: The program test no allows to check the program output using a regular expression. Syntax:
+        IF CONTENT [!]= <regex> THEN action
+Example:
+        check program disk0_smart with path "/usr/sbin/nvme smart-log /dev/nvme0"
+            if content != "critical_warning[ ]+: 0" then alert
+
+New: Issue #974: Monit CLI: Add support for the '-g' option to the 'report' command. Example:
+        monit -g database report
+
+Fixed: Issue #991: MacOS: Monit didn't compile on MacOS 10.13 or older, as mount flags that were added in Monit 5.28.1
+were not defined. Thanks to Lutz Mader.
 
 Fixed: Issue #994 (Monit 5.28.1 regression): The 'check program' with custom test schedule (using the 'every' statement)
 doesn't work.
+
+Fixed: Issue #995: The Monit start delay is vulnerable to time jumps while Monit is waiting for the interval to pass.
+Thanks to Daniel Crowe.
+
+Fixed: Issue #975: Monit CLI: Monit didn't return any warning if -s, -p, -l, -g or -c command-line options were specified
+multiple times and silently used the last value only. Monit will generate a warning now.
+
+Fixed: Issue #972: Monit GUI: The log view had no limit when reading the Monit log file, so it may block the browser when
+the log file is very large. Also the _viewlog URL was not support via the HTTP GET method, so it returned the following
+error on refresh:
+       404 There is no service named "_viewlog"
+
+Fixed: Issue #955: The 'every' statement can be used only once in the given service context and only the last value is used.
+Report warning if multiple 'every' statements are found.
 
 
 Version 5.28.1

@@ -499,7 +499,7 @@ static void do_action(List_T arguments) {
                         exit(1);
         } else if (IS(action, "report")) {
                 char *type = List_pop(arguments);
-                if (! HttpClient_report(type))
+                if (! HttpClient_report(Run.mygroup, type))
                         exit(1);
         } else if (IS(action, "procmatch")) {
                 char *pattern = List_pop(arguments);
@@ -593,7 +593,7 @@ static void do_default() {
 
                 if (Run.startdelay) {
                         if (State_reboot()) {
-                                time_t now = Time_now();
+                                time_t now = Time_monotonic();
                                 time_t delay = now + Run.startdelay;
 
                                 Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
@@ -603,7 +603,7 @@ static void do_default() {
                                         sleep((unsigned int)(delay - now));
                                         if (Run.flags & Run_Stopped)
                                                 do_exit(false);
-                                        now = Time_now();
+                                        now = Time_monotonic();
                                 }
                         } else {
                                 DEBUG("Monit delay %ds skipped -- the system boot time has not changed since last Monit start\n", Run.startdelay);
@@ -687,6 +687,10 @@ static void handle_options(int argc, char **argv, List_T arguments) {
                                 {
                                         char *f = optarg;
                                         char realpath[PATH_MAX] = {};
+                                        if (Run.files.control) {
+                                                Log_warning("WARNING: The -c option was specified multiple times, only the last value will be used\n");
+                                                FREE(Run.files.control);
+                                        }
                                         if (f[0] != SEPARATOR_CHAR)
                                                 f = File_getRealPath(optarg, realpath);
                                         if (! f)
@@ -709,11 +713,19 @@ static void handle_options(int argc, char **argv, List_T arguments) {
                                 }
                                 case 'g':
                                 {
+                                        if (Run.mygroup) {
+                                                Log_warning("WARNING: The -g option was specified multiple times, only the last value will be used\n");
+                                                FREE(Run.mygroup);
+                                        }
                                         Run.mygroup = Str_dup(optarg);
                                         break;
                                 }
                                 case 'l':
                                 {
+                                        if (Run.files.log) {
+                                                Log_warning("WARNING: The -l option was specified multiple times, only the last value will be used\n");
+                                                FREE(Run.files.log);
+                                        }
                                         Run.files.log = Str_dup(optarg);
                                         if (IS(Run.files.log, "syslog"))
                                                 Run.flags |= Run_UseSyslog;
@@ -722,11 +734,19 @@ static void handle_options(int argc, char **argv, List_T arguments) {
                                 }
                                 case 'p':
                                 {
+                                        if (Run.files.pid) {
+                                                Log_warning("WARNING: The -p option was specified multiple times, only the last value will be used\n");
+                                                FREE(Run.files.pid);
+                                        }
                                         Run.files.pid = Str_dup(optarg);
                                         break;
                                 }
                                 case 's':
                                 {
+                                        if (Run.files.state) {
+                                                Log_warning("WARNING: The -s option was specified multiple times, only the last value will be used\n");
+                                                FREE(Run.files.state);
+                                        }
                                         Run.files.state = Str_dup(optarg);
                                         break;
                                 }

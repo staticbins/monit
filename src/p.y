@@ -318,6 +318,7 @@ static void _setSSLVersion(short version);
 static void _unsetSSLVersion(short version);
 static void addsecurityattribute(char *, Action_Type, Action_Type);
 static void addfiledescriptors(Operator_Type, bool, long long, float, Action_Type, Action_Type);
+static void _sanityCheckEveryStatement(Service_T s);
 
 %}
 
@@ -608,6 +609,7 @@ optprogram      : start
                 | group
                 | depend
                 | statusvalue
+                | programmatch
                 ;
 
 setalert        : SET alertmail formatlist reminder {
@@ -2251,14 +2253,17 @@ formatoption    : MAILFROM ADDRESSOBJECT { mailset.from = $<address>1; }
                 ;
 
 every           : EVERY NUMBER CYCLE {
+                        _sanityCheckEveryStatement(current);
                         current->every.type = Every_SkipCycles;
                         current->every.spec.cycle.counter = current->every.spec.cycle.number = $2;
                  }
                 | EVERY TIMESPEC {
+                        _sanityCheckEveryStatement(current);
                         current->every.type = Every_Cron;
                         current->every.spec.cron = $2;
                  }
                 | NOTEVERY TIMESPEC {
+                        _sanityCheckEveryStatement(current);
                         current->every.type = Every_NotInCron;
                         current->every.spec.cron = $2;
                  }
@@ -2896,6 +2901,15 @@ permission      : IF FAILED PERMISSION NUMBER rate1 THEN action1 recovery_succes
                         permset.test_changes = true;
                         addeventaction(&(permset).action, $<number>6, Action_Ignored);
                         addperm(&permset);
+                  }
+                ;
+
+programmatch    : IF CONTENT urloperator STRING rate1 THEN action1 {
+                        matchset.not = $<number>3 == Operator_Equal ? false : true;
+                        matchset.ignore = false;
+                        matchset.match_path = NULL;
+                        matchset.match_string = $4;
+                        addmatch(&matchset, $<number>7, 0);
                   }
                 ;
 
@@ -3565,8 +3579,8 @@ static void addservice(Service_T s) {
                         break;
                 case Service_Program:
                         // Verify that a program test has a status test
-                        if (! s->statuslist) {
-                                Log_error("'check program %s' is incomplete: Please add an 'if status != n' test\n", s->name);
+                        if (! s->statuslist && ! s->matchlist) {
+                                Log_error("'check program %s' is incomplete: Please add a 'status' or 'content' test\n", s->name);
                                 cfg_errflag++;
                         }
                         char program[PATH_MAX];
@@ -3622,6 +3636,10 @@ static void addservice(Service_T s) {
                 default:
                         break;
         }
+
+        // No "every" statement was used, monitor each cycle
+        if (s->every.type == Every_Initializing)
+                s->every.type = Every_Cycle;
 
         /* Add the service to the end of the service list */
         if (tail != NULL) {
@@ -5359,6 +5377,7 @@ static void addsecurityattribute(char *value, Action_Type failed, Action_Type su
         current->secattrlist = attr;
 }
 
+
 static void addfiledescriptors(Operator_Type operator, bool total, long long value_absolute, float value_percent, Action_Type failed, Action_Type succeeded) {
         Filedescriptors_T fds;
         NEW(fds);
@@ -5369,5 +5388,19 @@ static void addfiledescriptors(Operator_Type operator, bool total, long long val
         fds->operator = operator;
         fds->next = current->filedescriptorslist;
         current->filedescriptorslist = fds;
+}
+
+static void _sanityCheckEveryStatement(Service_T s) {
+        if (s->every.type != Every_Initializing) {
+                yywarning2("The 'every' statement can be specified only once, the last value will be used\n");
+                switch (s->every.type) {
+                        case Every_Cron:
+                        case Every_NotInCron:
+                                FREE(s->every.spec.cron);
+                                break;
+                        default:
+                                break;
+                }
+        }
 }
 

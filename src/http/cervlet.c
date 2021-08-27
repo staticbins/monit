@@ -105,6 +105,9 @@
 #define DOACTION    "/_doaction"
 #define FAVICON     "/favicon.ico"
 
+// Limit for the viewlog response
+#define VIEWLOG_LIMIT 1048576
+
 
 typedef enum {
         TXT = 0,
@@ -128,6 +131,15 @@ typedef struct ServiceMap_T {
                 } summary;
         } data;
 } *ServiceMap_T;
+
+
+typedef struct ReportStatics_T {
+        float up;
+        float down;
+        float init;
+        float unmonitored;
+        float total;
+} *ReportStatics_T;
 
 
 /* Private prototypes */
@@ -717,6 +729,8 @@ static void doGet(HttpRequest req, HttpResponse res) {
                 print_summary(req, res);
         } else if (ACTION(REPORT)) {
                 _printReport(req, res);
+        } else if (ACTION(VIEWLOG)) {
+                do_viewlog(req, res);
         } else {
                 handle_service(req, res);
         }
@@ -1068,9 +1082,11 @@ static void do_viewlog(HttpRequest req, HttpResponse res) {
                 FILE *f = fopen(Run.files.log, "r");
                 if (f) {
                         size_t n;
+                        size_t total = 0;
                         char buf[512];
                         StringBuffer_append(res->outputbuffer, "<br><p><form><textarea cols=120 rows=30 readonly>");
-                        while ((n = fread(buf, sizeof(char), sizeof(buf) - 1, f)) > 0) {
+                        while (total < VIEWLOG_LIMIT && (n = fread(buf, sizeof(char), sizeof(buf) - 1, f)) > 0) {
+                                total += n;
                                 buf[n] = 0;
                                 escapeHTML(res->outputbuffer, buf);
                         }
@@ -2629,58 +2645,59 @@ static void print_summary(HttpRequest req, HttpResponse res) {
 }
 
 
+static void _updateReportStatistics(Service_T s, ReportStatics_T statistics) {
+        if (s->monitor == Monitor_Not)
+                statistics->unmonitored++;
+        else if (s->monitor & Monitor_Init)
+                statistics->init++;
+        else if (s->error)
+                statistics->down++;
+        else
+                statistics->up++;
+        statistics->total++;
+}
+
+
 static void _printReport(HttpRequest req, HttpResponse res) {
         set_content_type(res, "text/plain");
         const char *type = get_parameter(req, "type");
-        int count = 0;
-        if (! type) {
-                float up = 0, down = 0, init = 0, unmonitored = 0, total = 0;
-                for (Service_T s = servicelist; s; s = s->next) {
-                        if (s->monitor == Monitor_Not)
-                                unmonitored++;
-                        else if (s->monitor & Monitor_Init)
-                                init++;
-                        else if (s->error)
-                                down++;
-                        else
-                                up++;
-                        total++;
+        const char *group = Util_urlDecode((char *)get_parameter(req, "group"));
+        struct ReportStatics_T reportStatics = {};
+        if (group) {
+                for (ServiceGroup_T sg = servicegrouplist; sg; sg = sg->next) {
+                        if (IS(group, sg->name)) {
+                                for (list_t m = sg->members->head; m; m = m->next) {
+                                        _updateReportStatistics(m->e, &reportStatics);
+                                }
+                        }
                 }
+        } else {
+                for (Service_T s = servicelist; s; s = s->next) {
+                        _updateReportStatistics(s, &reportStatics);
+                }
+        }
+        if (! type) {
                 StringBuffer_append(res->outputbuffer,
                         "up:           %*.0f (%.1f%%)\n"
                         "down:         %*.0f (%.1f%%)\n"
                         "initialising: %*.0f (%.1f%%)\n"
                         "unmonitored:  %*.0f (%.1f%%)\n"
                         "total:        %*.0f services\n",
-                        3, up, 100. * up / total,
-                        3, down, 100. * down / total,
-                        3, init, 100. * init / total,
-                        3, unmonitored, 100. * unmonitored / total,
-                        3, total);
+                        3, reportStatics.up, 100. * reportStatics.up / reportStatics.total,
+                        3, reportStatics.down, 100. * reportStatics.down / reportStatics.total,
+                        3, reportStatics.init, 100. * reportStatics.init / reportStatics.total,
+                        3, reportStatics.unmonitored, 100. * reportStatics.unmonitored / reportStatics.total,
+                        3, reportStatics.total);
         } else if (Str_isEqual(type, "up")) {
-                for (Service_T s = servicelist; s; s = s->next)
-                        if (s->monitor != Monitor_Not && ! (s->monitor & Monitor_Init) && ! s->error)
-                                count++;
-                StringBuffer_append(res->outputbuffer, "%d\n", count);
+                StringBuffer_append(res->outputbuffer, "%.0f\n", reportStatics.up);
         } else if (Str_isEqual(type, "down")) {
-                for (Service_T s = servicelist; s; s = s->next)
-                        if (s->monitor != Monitor_Not && ! (s->monitor & Monitor_Init) && s->error)
-                                count++;
-                StringBuffer_append(res->outputbuffer, "%d\n", count);
+                StringBuffer_append(res->outputbuffer, "%.0f\n", reportStatics.down);
         } else if (Str_startsWith(type, "initiali")) { // allow 'initiali(s|z)ing'
-                for (Service_T s = servicelist; s; s = s->next)
-                        if (s->monitor & Monitor_Init)
-                                count++;
-                StringBuffer_append(res->outputbuffer, "%d\n", count);
+                StringBuffer_append(res->outputbuffer, "%.0f\n", reportStatics.init);
         } else if (Str_isEqual(type, "unmonitored")) {
-                for (Service_T s = servicelist; s; s = s->next)
-                        if (s->monitor == Monitor_Not)
-                                count++;
-                StringBuffer_append(res->outputbuffer, "%d\n", count);
+                StringBuffer_append(res->outputbuffer, "%.0f\n", reportStatics.unmonitored);
         } else if (Str_isEqual(type, "total")) {
-                for (Service_T s = servicelist; s; s = s->next)
-                        count++;
-                StringBuffer_append(res->outputbuffer, "%d\n", count);
+                StringBuffer_append(res->outputbuffer, "%.0f\n", reportStatics.total);
         } else {
                 send_error(req, res, SC_BAD_REQUEST, "Invalid report type: '%s'", type);
         }
