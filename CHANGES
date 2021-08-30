@@ -6,6 +6,9 @@ Version 5.29.1
 
 Fixed: The disk read/write bytes didn't show up in M/Monit for Monit 5.27.0 or later.
 
+Fixed: Issue #998: Old platforms without clock_gettime() and monotonic clock fail to compile Monit 5.29.0.
+Thanks to Lutz Mader.
+
 
 Version 5.29.0
 
@@ -17,7 +20,7 @@ this in the postgresql log a day:
         root@root DETAIL:  Role "root" does not exist.
 If no username option is set, monit will keep using the hardcoded credentials (for backward compatibility).
 
-New: Issue #973: The program test no allows to check the program output using a regular expression. Syntax:
+New: Issue #973: The program test now allows to check the program output using a regular expression. Syntax:
         IF CONTENT [!]= <regex> THEN action
 Example:
         check program disk0_smart with path "/usr/sbin/nvme smart-log /dev/nvme0"

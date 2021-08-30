@@ -1279,14 +1279,23 @@ time_t Time_now(void) {
 
 
 time_t Time_monotonic(void) {
+#ifdef HAVE_CLOCK_GETTIME
 	struct timespec t;
-#ifdef CLOCK_MONOTONIC_RAW
-	if (clock_gettime(CLOCK_MONOTONIC_RAW, &t) != 0)
-#else
-	if (clock_gettime(CLOCK_MONOTONIC, &t) != 0)
-#endif
+        clockid_t clockid;
+    #ifdef CLOCK_MONOTONIC_RAW
+        clockid = CLOCK_MONOTONIC_RAW;
+    #elif defined CLOCK_MONOTONIC
+        clockid = CLOCK_MONOTONIC;
+    #else
+        #error "clock_gettime() present but no monotonic clock available"
+    #endif
+	if (clock_gettime(clockid, &t) != 0)
                 THROW(AssertException, "%s", System_getLastError());
 	return t.tv_sec;
+#else
+        #warning "no monotonic clock available, fall back to gettimeofday"
+	return Time_now();
+#endif
 }
 
 
