@@ -586,7 +586,7 @@ int getloadavg_sysdep(double *loadv, int nelem) {
 bool used_system_memory_sysdep(SystemInfo_T *si) {
         char          *ptr;
         char           buf[2048];
-        unsigned long  mem_total = 0UL;
+        unsigned long long  mem_total = 0UL;
         unsigned long  mem_available = 0UL;
         unsigned long  mem_free = 0UL;
         unsigned long  buffers = 0UL;
@@ -602,7 +602,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         }
 
         // Update memory total (physical memory can be added to the online system on some machines, also LXC/KVM containers MemTotal is dynamic and changes frequently
-        if ((ptr = strstr(buf, "MemTotal:")) && sscanf(ptr + 9, "%lu", &mem_total) == 1) {
+        if ((ptr = strstr(buf, "MemTotal:")) && sscanf(ptr + 9, "%llu", &mem_total) == 1) {
                 systeminfo.memory.size = mem_total * 1024;
         }
 
