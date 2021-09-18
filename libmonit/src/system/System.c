@@ -114,15 +114,15 @@ bool System_random(void *buf, size_t nbytes) {
 #else
         int fd = open("/dev/urandom", O_RDONLY);
         if (fd >= 0) {
-                int bytes = read(fd, buf, nbytes);
+                ssize_t bytes = read(fd, buf, nbytes);
                 close(fd);
-                if (bytes == nbytes) {
+                if (bytes >= 0 && (size_t)bytes == nbytes) {
                         return true;
                 }
         }
         // Fallback to random()
         char *_buf = buf;
-        for (int i = 0; i < nbytes; i++) {
+        for (size_t i = 0; i < nbytes; i++) {
                 _buf[i] = random() % 256;
         }
         return true;
