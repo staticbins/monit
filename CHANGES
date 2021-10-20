@@ -11,6 +11,9 @@ Thanks to Lutz Mader.
 
 Fixed: Issue #1002: 32-bit Linux with more then 4GB of RAM reported wrong system memory and swap value.
 
+Fixed: Issue #1005: When the port statement is used with the generic protocol and the server returned zeros
+in the response, Monit may crash. The problem was introduced in Monit 5.20.0.
+
 
 Version 5.29.0
 
