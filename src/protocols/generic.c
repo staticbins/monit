@@ -43,7 +43,7 @@ static char *_escapeZeroInExpectBuffer(char *buf, int buflen, int n) {
         for (int i = 0, j = 0; i < n && j < buflen; i++, j++) {
                 if (buf[j] == '\0') {
                         if (j + 1 < buflen) {
-                                memmove(buf + j + 1, buf + j, n - i);
+                                memmove(buf + j + 1, buf + j, n - i++);
                                 buf[j] = '\\';
                                 buf[j + 1] = '0';
                                 j++;
