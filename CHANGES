@@ -4,6 +4,8 @@
 
 Version 5.29.1
 
+Fixed: Issue #1009: Redirect back to the same url so a reload in the browser does not perform a POST again
+
 Fixed: The disk read/write bytes didn't show up in M/Monit for Monit 5.27.0 or later.
 
 Fixed: Issue #998: Old platforms without clock_gettime() and monotonic clock fail to compile Monit 5.29.0.
