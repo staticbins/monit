@@ -4,6 +4,8 @@
 
 Version 5.29.1
 
+Fixed: Issue #1009: Redirect back to the same url so a reload in the browser does not perform a POST again
+
 Fixed: The disk read/write bytes didn't show up in M/Monit for Monit 5.27.0 or later.
 
 Fixed: Issue #998: Old platforms without clock_gettime() and monotonic clock fail to compile Monit 5.29.0.
@@ -13,6 +15,8 @@ Fixed: Issue #1002: 32-bit Linux with more then 4GB of RAM reported wrong system
 
 Fixed: Issue #1005: When the port statement is used with the generic protocol and the server returned zeros
 in the response, Monit may crash. The problem was introduced in Monit 5.20.0.
+
+Fixed: Issue #1011: Increase the include files count limit from 512 to 1024.
 
 
 Version 5.29.0

@@ -59,7 +59,7 @@
 // we don't use yyinput => do not generate it
 #define YY_NO_INPUT
 
-#define MAX_STACK_DEPTH 512
+#define MAX_STACK_DEPTH 1024
 
 int buffer_stack_ptr = 0;
 
