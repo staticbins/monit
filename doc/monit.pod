@@ -600,6 +600,9 @@ An example,
 This will load any file matching the globstring. That is, all
 files in I</etc/monit.d> that ends with the prefix I<.cfg>.
 
+Up to 1024 include files are supported. If this limit is exceeded,
+Monit will report an error.
+
 
 =head1 SSL OPTIONS
 
