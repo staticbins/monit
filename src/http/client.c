@@ -57,6 +57,7 @@
 #include "device.h"
 #include "TextColor.h"
 #include "TextBox.h"
+#include "httpstatus.h"
 #include "client.h"
 
 // libmonit
@@ -104,7 +105,13 @@ static void _parseHttpResponse(Socket_T S) {
         int status;
         if (! sscanf(buf, "%*s %d", &status))
                 THROW(IOException, "Cannot parse status in response: %s", buf);
-        if (status >= 300) {
+        if (status < 300 || status == SC_MOVED_TEMPORARILY) {
+                // Skip HTTP headers
+                while (Socket_readLine(S, buf, sizeof(buf))) {
+                         if (! strncmp(buf, "\r\n", sizeof(buf)))
+                                break;
+                }
+        } else {
                 int content_length = 0;
                 // Read HTTP headers
                 while (Socket_readLine(S, buf, sizeof(buf))) {
@@ -126,12 +133,6 @@ static void _parseHttpResponse(Socket_T S) {
                         }
                 }
                 THROW(AssertException, "%s", message ? message : "cannot parse response");
-        } else {
-                // Skip HTTP headers
-                while (Socket_readLine(S, buf, sizeof(buf))) {
-                         if (! strncmp(buf, "\r\n", sizeof(buf)))
-                                break;
-                }
         }
 }
 
