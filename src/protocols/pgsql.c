@@ -379,7 +379,7 @@ static void _handleAuthentication(postgresql_t postgresql, postgresql_response_t
 }
 
 
-static int _readResponse(postgresql_t postgresql, void *buffer, int length, char *description, bool eofAllowed) {
+static int _readResponse(postgresql_t postgresql, void *buffer, int length, const char *description, bool eofAllowed) {
         int rv = Socket_read(postgresql->socket, buffer, length);
         DEBUG("PGSQL: DEBUG: read %s -- %d bytes received\n", description, rv);
         if (rv == 0 && eofAllowed)
