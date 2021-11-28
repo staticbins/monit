@@ -18,6 +18,9 @@ in the response, Monit may crash. The problem was introduced in Monit 5.20.0.
 
 Fixed: Issue #1011: Increase the include files count limit from 512 to 1024.
 
+Fixed: Issue #1015: The 'set httpd' statement supports only one 'address' option. Shows warning if multiple
+'address' options are used.
+
 
 Version 5.29.0
 

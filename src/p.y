@@ -1171,6 +1171,10 @@ signature       : sigenable  {
                 ;
 
 bindaddress     : ADDRESS STRING {
+                        if (Run.httpd.socket.net.address) {
+                                yywarning2("The 'address' option can be specified only once, the last value will be used\n");
+                                FREE(Run.httpd.socket.net.address);
+                        }
                         Run.httpd.socket.net.address = $2;
                   }
                 ;
