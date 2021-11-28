@@ -196,7 +196,7 @@ typedef struct postgresql_t {
 
 
 // Compute MD5 hash of the concatenated string
-void _getMd5Hash(const char *s1, int s1Length, const char *s2, int s2Length, MD_T result) {
+static void _getMd5Hash(const char *s1, int s1Length, const char *s2, int s2Length, MD_T result) {
         MD_T digest;
         md5_context_t ctx;
         
