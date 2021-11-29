@@ -720,14 +720,17 @@ void Util_printRunList() {
                 if (Run.httpd.flags & Httpd_Net) {
                         printf(" %-18s = %s\n", "httpd bind address", Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "Any/All");
                         printf(" %-18s = %d\n", "httpd portnumber", Run.httpd.socket.net.port);
+                        printf(" %-18s = %s\n", "httpd net readonly", Run.httpd.socket.net.readonly ? "Enabled" : "Disabled");
 #ifdef HAVE_OPENSSL
                         const char *options = Ssl_printOptions(&(Run.httpd.socket.net.ssl), (char[STRLEN]){}, STRLEN);
                         if (options && *options)
                                 printf(" %-18s = %s\n", "httpd encryption", options);
 #endif
                 }
-                if (Run.httpd.flags & Httpd_Unix)
+                if (Run.httpd.flags & Httpd_Unix) {
                         printf(" %-18s = %s\n", "httpd unix socket", Run.httpd.socket.unix.path);
+                        printf(" %-18s = %s\n", "httpd unix readonly", Run.httpd.socket.unix.readonly ? "Enabled" : "Disabled");
+                }
                 printf(" %-18s = %s\n", "httpd signature", Run.httpd.flags & Httpd_Signature ? "Enabled" : "Disabled");
                 printf(" %-18s = %s\n", "httpd auth. style",
                        Run.httpd.credentials && Engine_hasAllow() ? "Basic Authentication and Host/Net allow list" : Run.httpd.credentials ? "Basic Authentication" : Engine_hasAllow() ? "Host/Net allow list" : "No authentication!");

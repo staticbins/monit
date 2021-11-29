@@ -180,7 +180,8 @@ static bool _client(const char *request, StringBuffer_T data) {
                 return status;
         }
         Socket_T S = NULL;
-        if (Run.httpd.flags & Httpd_Net) {
+        // Connect via http if enabled except if set readonly and a unix socket was configured not readonly
+        if ((Run.httpd.flags & Httpd_Net) && !(Run.httpd.socket.net.readonly && (Run.httpd.flags & Httpd_Unix) && !Run.httpd.socket.unix.readonly)) {
                 S = Socket_create(Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "localhost", Run.httpd.socket.net.port, Socket_Tcp, Socket_Ip, &(Run.httpd.socket.net.ssl), Run.limits.networkTimeout);
         } else if (Run.httpd.flags & Httpd_Unix) {
                 S = Socket_createUnix(Run.httpd.socket.unix.path, Socket_Tcp, Run.limits.networkTimeout);
