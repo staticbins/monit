@@ -1340,12 +1340,14 @@ struct Run_T {
                                 int  port;
                                 char *address;
                                 struct SslOptions_T ssl;
+                                bool readonly;
                         } net;
                         struct {
                                 int uid;
                                 int gid;
                                 int permission;
                                 char *path;
+                                bool readonly;
                         } unix;
                 } socket;
                 Auth_T credentials;

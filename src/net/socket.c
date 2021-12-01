@@ -502,6 +502,11 @@ Socket_Type Socket_getType(T S) {
         return S->type;
 }
 
+Socket_Family Socket_getFamily(T S) {
+        ASSERT(S);
+        return S->family;
+}
+
 
 void *Socket_getPort(T S) {
         ASSERT(S);

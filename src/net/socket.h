@@ -159,6 +159,12 @@ int Socket_getSocket(T S);
  */
 Socket_Type Socket_getType(T S);
 
+/**
+ * Get the family of this socket.
+ * @param S A Socket_T object
+ * @return The socket family
+ */
+Socket_Family Socket_getFamily(T S);
 
 /**
  * Get the Port object used to create this socket. If no Port object

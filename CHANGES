@@ -1,8 +1,18 @@
-                     CHANGES version 5.29.1
+                     CHANGES version 5.30.0
 
            This file summarizes changes made since 5.0
 
-Version 5.29.1
+Version 5.30.0
+
+New: Add a 'read-only' option to the httpd statement. The option can be used on the TCP socket, the unix
+socket or both. Example for setting the whole TCP socket read-only and the unix socket read-write (so the
+Monit CLI actions like service start/stop will work):
+    set httpd
+        port 2812
+            read-only
+            allow localhost
+        unixsocket /run/monit.socket
+Thanks to Christian Goettsche for contributing this feature.
 
 Fixed: Issue #1009: Redirect back to the same url so a reload in the browser does not perform a POST again
 

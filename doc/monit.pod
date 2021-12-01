@@ -1034,7 +1034,7 @@ example 1 above.
 
 =head4 Read-only users
 
-Finally it is possible to define some users as read-only. A
+Further it is possible to define some users as read-only. A
 read-only user can read the Monit web pages but will I<not> get
 access to push-buttons and cannot change a service from the web
 interface.
@@ -1049,6 +1049,20 @@ A user is set to read-only by using the I<read-only> keyword
 B<after> username:password. In the above example the user I<hauk>
 is defined as a read-only user, while the I<admin> user has all
 access rights.
+
+=head4 Read-only http server
+
+Finally is is possible to restrict the entire web interface as
+read-only. All users, regardless if defined with or without
+the I<read-only> keyword, have only the permissions described above.
+When using this setting it is recommend to set up a B<UNIXSOCKET> as
+well, otherwise the monit CLI will B<not> work.
+
+  set httpd
+      port 2812
+          read-only
+      unixsocket /run/monit.socket
+      allow @users
 
 
 =head1 ALERT MESSAGES
