@@ -546,17 +546,17 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 if (hasReadTime && hasWriteTime) {
                                         double readTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf.filesystem->time.read)) / deltaOperations : 0.;
                                         double writeTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf.filesystem->time.write)) / deltaOperations : 0.;
-                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms/operation (of which read %.3fms, write %.3fms)", readTime + writeTime, readTime, writeTime);
+                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3f ms/operation (of which read %.3f ms, write %.3f ms)", readTime + writeTime, readTime, writeTime);
                                 } else if (hasWaitTime && hasRunTime) {
                                         double waitTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf.filesystem->time.wait)) / deltaOperations : 0.;
                                         double runTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf.filesystem->time.run)) / deltaOperations : 0.;
-                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms/operation (of which queue %.3fms, active %.3fms)", waitTime + runTime, waitTime, runTime);
+                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3f ms/operation (of which queue %.3f ms, active %.3f ms)", waitTime + runTime, waitTime, runTime);
                                 } else if (hasWaitTime) {
                                         double waitTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf.filesystem->time.wait)) / deltaOperations : 0.;
-                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms/operation", waitTime);
+                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3f ms/operation", waitTime);
                                 } else if (hasRunTime) {
                                         double runTime = deltaOperations > 0. ? Statistics_deltaNormalize(&(s->inf.filesystem->time.run)) / deltaOperations : 0.;
-                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3fms/operation", runTime);
+                                        _formatStatus("service time", Event_Null, type, res, s, true, "%.3f ms/operation", runTime);
                                 }
                                 break;
 
