@@ -382,7 +382,7 @@ static int _saveAndCheckServerCertificates(T C, X509_STORE_CTX *ctx) {
 static int _verifyServerCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
         T C = SSL_get_app_data(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
         if (! C) {
-                Log_error("SSL: cannot get application data");
+                Log_error("SSL: cannot get application data\n");
                 return 0;
         }
         *C->error = 0;
@@ -409,7 +409,7 @@ static int _verifyServerCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
 static int _verifyClientCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
         T C = SSL_get_app_data(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
         if (! C) {
-                Log_error("SSL: cannot get application data");
+                Log_error("SSL: cannot get application data\n");
                 return 0;
         }
         if (! preverify_ok) {

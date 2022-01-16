@@ -122,12 +122,12 @@ static bool _parseDevice(const char *path, Device_T device) {
                 // Get the disk map
                 size_t len = 0;
                 if (sysctlbyname("kern.geom.conftxt", NULL, &len, NULL, 0)) {
-                        Log_error("system statistics error -- cannot get kern.geom.conftxt size");
+                        Log_error("system statistics error -- cannot get kern.geom.conftxt size\n");
                         return false;
                 }
                 char buf[len + 1];
                 if (sysctlbyname("kern.geom.conftxt", buf, &len, NULL, 0)) {
-                        Log_error("system statistics error -- cannot get kern.geom.conftxt");
+                        Log_error("system statistics error -- cannot get kern.geom.conftxt\n");
                         return false;
                 }
                 buf[len] = 0;
