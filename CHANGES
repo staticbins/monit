@@ -4,6 +4,9 @@
 
 Version 5.31.0
 
+Fixed: Issue #1025: If Monit 5.30.0 CLI action was executed for non-existent service name, the error
+message was not reported properly. Thanks to Lutz Mader for fix.
+
 
 Version 5.30.0
 
