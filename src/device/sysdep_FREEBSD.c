@@ -206,6 +206,169 @@ static bool _getBlockDiskActivity(void *_inf) {
 }
 
 
+static unsigned long _mibGetValueByNameUlong(const char *name) {
+        long long value = 0LL;
+        size_t valueLength = sizeof(value);
+        if (sysctlbyname(name, &value, &valueLength, NULL, 0)) {
+                Log_error("system statistics error -- cannot get %s value: %s\n", name, STRERROR);
+                return -1;
+        }
+        return value;
+}
+
+
+static bool _updateZfsStatistics(Info_T inf) {
+        char memberName[PATH_MAX] = {};
+
+        snprintf(memberName, sizeof(memberName), "kstat.zfs.%s.dataset.objset-0x%s.nread", inf->filesystem->object.key, inf->filesystem->object.module);
+        long long nread = _mibGetValueByNameUlong(memberName);
+
+        snprintf(memberName, sizeof(memberName), "kstat.zfs.%s.dataset.objset-0x%s.reads", inf->filesystem->object.key, inf->filesystem->object.module);
+        long long reads = _mibGetValueByNameUlong(memberName);
+
+        snprintf(memberName, sizeof(memberName), "kstat.zfs.%s.dataset.objset-0x%s.nwritten", inf->filesystem->object.key, inf->filesystem->object.module);
+        long long nwritten = _mibGetValueByNameUlong(memberName);
+
+        snprintf(memberName, sizeof(memberName), "kstat.zfs.%s.dataset.objset-0x%s.writes", inf->filesystem->object.key, inf->filesystem->object.module);
+        long long writes = _mibGetValueByNameUlong(memberName);
+
+        if (nread >= 0 && reads >= 0 && nwritten >= 0 && writes >= 0) {
+                unsigned long long now = Time_milli();
+                Statistics_update(&(inf->filesystem->read.bytes), now, nread);
+                Statistics_update(&(inf->filesystem->read.operations), now, reads);
+                Statistics_update(&(inf->filesystem->write.bytes), now, nwritten);
+                Statistics_update(&(inf->filesystem->write.operations), now, writes);
+                return true;
+        } else {
+                return false;
+        }
+}
+
+
+static bool _getZfsObjsetId(Info_T inf) {
+        char previousObjsetId[STRLEN] = {};
+
+        // Prepare the zpool statistics path name (kstat.zfs.<zpool>.dataset).
+        char mibZfsStatsName[STRLEN] = {};
+        snprintf(mibZfsStatsName, sizeof(mibZfsStatsName), "kstat.zfs.%s.dataset", inf->filesystem->object.key);
+
+        // Translate the kstat.zfs.<zpool>.dataset name to OID
+        int    mibZfsStatsQueryOid[CTL_MAXNAME] = {CTL_SYSCTL, CTL_SYSCTL_NAME2OID};
+        size_t mibZfsStatsQueryOidLength = 2;
+        int    mibZfsStatsRootOid[CTL_MAXNAME] = {};
+        size_t mibZfsStatsRootOidLength = sizeof(mibZfsStatsRootOid);
+        if (sysctl(mibZfsStatsQueryOid, mibZfsStatsQueryOidLength, mibZfsStatsRootOid, &mibZfsStatsRootOidLength, mibZfsStatsName, strlen(mibZfsStatsName)) == -1) {
+                Log_error("system statistics error -- sysctl for %s -> OID failed: %s\n", mibZfsStatsName, STRERROR);
+                return false;
+        }
+        mibZfsStatsRootOidLength /= sizeof(int);
+
+        //
+        // Traverse the kstat.zfs.<zpool>.dataset.* OID tree
+        //
+
+        // Set the OID query
+        mibZfsStatsQueryOid[0] = CTL_SYSCTL;
+        mibZfsStatsQueryOid[1] = CTL_SYSCTL_NEXT;
+        memcpy(mibZfsStatsQueryOid + 2, mibZfsStatsRootOid, mibZfsStatsRootOidLength * sizeof(int)); // Copy the tree root to the MIB query
+
+        // Set the OID query length: the MIB header objects (CTL_SYSCTL + CTL_SYSCTL_NEXT) + the OID to traverse
+        mibZfsStatsQueryOidLength = 2 + mibZfsStatsRootOidLength;
+
+        // Walk tree members
+        while (true) {
+                int    mibZfsStatsMemberOid[CTL_MAXNAME] = {};
+                size_t mibZfsStatsMemberOidLength = sizeof(mibZfsStatsMemberOid);
+
+                // Get next object
+                if (sysctl(mibZfsStatsQueryOid, mibZfsStatsQueryOidLength, mibZfsStatsMemberOid, &mibZfsStatsMemberOidLength, 0, 0) == -1) {
+                        if (errno != ENOENT)
+                                Log_error("system statistics error -- sysctl for next %s object failed: %s\n", mibZfsStatsName, STRERROR);
+                        else
+                                break; // No more objects under kstat.zfs.<zpool>.dataset.* tree
+                }
+
+                // sysctl result: convert OID byte length to object nesting level
+                mibZfsStatsMemberOidLength /= sizeof(int);
+
+                // if whole kstat.zfs.<zpool>.dataset.* tree was traversed, sysctl will continue with next object past the tree => quick check the OID level matches expectation
+                if (mibZfsStatsMemberOidLength < mibZfsStatsRootOidLength)
+                        break; // We left the kstat.zfs.<zpool>.dataset.* tree
+
+                // make sure the returned object is still within the kstat.zfs.<zpool>.dataset tree
+                for (size_t i = 0; i < mibZfsStatsRootOidLength; i++)
+                        if (mibZfsStatsMemberOid[i] != mibZfsStatsRootOid[i])
+                                return false; // We left the kstat.zfs.<zpool>.dataset tree without finding statistics for this dataset
+
+                //
+                // Translate the OID to object name
+                //
+
+                // Set the name query
+                int mibZfsStatsQueryName[CTL_MAXNAME] = {CTL_SYSCTL, CTL_SYSCTL_NAME};
+                memcpy(mibZfsStatsQueryName + 2, mibZfsStatsMemberOid, mibZfsStatsMemberOidLength * sizeof(int)); // Copy the member OID the MIB name query
+                // Set the name query length: the MIB header objects (CTL_SYSCTL + CTL_SYSCTL_NAME) + the OID to get name for
+                size_t mibZfsStatsQueryNameLength = 2 + mibZfsStatsMemberOidLength;
+
+                // translate the OID to name
+                char   objsetName[PATH_MAX] = {};
+                size_t objsetNameLength = sizeof(objsetName);
+                if (sysctl(mibZfsStatsQueryName, mibZfsStatsQueryNameLength, objsetName, &objsetNameLength, 0, 0) == -1 || objsetNameLength <= 0)
+                        Log_error("system statistics error -- sysctl for OID -> name failed: %s\n", STRERROR);
+
+                // Process the given objset ID data
+                snprintf(mibZfsStatsName, sizeof(mibZfsStatsName), "kstat.zfs.%s.dataset.objset-0x", inf->filesystem->object.key);
+                if (Str_startsWith(objsetName, mibZfsStatsName)) {
+                        // Dissect objset-0x<hex> from the object name (example: kstat.zfs.zroot.dataset.objset-0x4f.nunlinked).
+                        char *objsetId = objsetName + strlen(mibZfsStatsName);
+                        Str_replaceChar(objsetId, '.', 0);
+
+                        // If we found new objset ID, fetch the dataset_name value and if matching the filesystem we're testing, fetch data and stop, otherwise continue
+                        if (! Str_isByteEqual(objsetId, previousObjsetId)) {
+                                strncpy(previousObjsetId, objsetId, sizeof(previousObjsetId) - 1);
+
+                                char   memberName[PATH_MAX] = {};
+                                char   datasetName[STRLEN];
+                                size_t datasetNameLength = sizeof(datasetName);
+                                snprintf(memberName, sizeof(memberName), "kstat.zfs.%s.dataset.objset-0x%s.dataset_name", inf->filesystem->object.key, objsetId);
+                                if (sysctlbyname(memberName, datasetName, &datasetNameLength, NULL, 0)) {
+                                        Log_error("system statistics error -- cannot get %s\n", memberName);
+                                        return false;
+                                }
+
+                                if (Str_isByteEqual(datasetName, inf->filesystem->object.device)) {
+                                        // Cache the objset ID, so we can fetch the data directly next time
+                                        strncpy(inf->filesystem->object.module, objsetId, sizeof(inf->filesystem->object.module) - 1);
+                                        return true;
+                                }
+                        }
+                }
+                // Update the query for the next cycle with the current member
+                memcpy(mibZfsStatsQueryOid + 2, mibZfsStatsMemberOid, mibZfsStatsMemberOidLength * sizeof(int));
+                mibZfsStatsQueryOidLength = 2 + mibZfsStatsMemberOidLength;
+        }
+        return false;
+}
+
+
+static bool _getZfsDiskActivity(void *_inf) {
+        Info_T inf = _inf;
+
+        if (STR_UNDEF(inf->filesystem->object.key)) {
+                // Skip if no zpool name is available
+                return true;
+        }
+
+        // We cache the objset ID in the object.module ... if not set, scan the system information
+        if (STR_UNDEF(inf->filesystem->object.module)) {
+                if (! _getZfsObjsetId(inf))
+                        return false;
+        }
+
+        return _updateZfsStatistics(inf);
+}
+
+
 static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statfs usage;
@@ -299,8 +462,11 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                                                         DEBUG("I/O monitoring for filesystem '%s' skipped - unable to parse the device %s\n", path, mntItem->f_mntfromname);
                                                 }
                                         } else {
-                                                //FIXME: can add ZFS support (see sysdep_SOLARIS.c), but libzfs headers are not installed on FreeBSD by default (part of "cddl" set)
-                                                inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
+                                                // ZFS
+                                                inf->filesystem->object.getDiskActivity = _getZfsDiskActivity;
+                                                // Need base zpool name for kstat.zfs.<NAME> lookup:
+                                                snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s", inf->filesystem->object.device);
+                                                Str_replaceChar(inf->filesystem->object.key, '/', 0);
                                         }
                                         inf->filesystem->object.flags = mntItem->f_flags & MNT_VISFLAGMASK;
                                         _filesystemFlagsToString(inf, inf->filesystem->object.flags);
