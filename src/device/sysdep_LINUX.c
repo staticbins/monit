@@ -233,6 +233,9 @@ static bool _getZfsObjsetId(Info_T inf) {
                                                 strncpy(inf->filesystem->object.module, globbuf.gl_pathv[i], sizeof(inf->filesystem->object.module) - 1);
                                                 fclose(f);
                                                 return true;
+                                        } else {
+                                                // The dataset name doesn't match, try next objset file
+                                                break;
                                         }
                                 }
                         }
