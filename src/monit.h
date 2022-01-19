@@ -1059,7 +1059,7 @@ typedef struct Device_T {
         char device[PATH_MAX];
         char mountpoint[PATH_MAX];
         char key[PATH_MAX];
-        char module[256];
+        char module[PATH_MAX];
         char type[64];
         unsigned long long flags;
         bool (*getDiskUsage)(void *);

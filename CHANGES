@@ -4,7 +4,9 @@
 
 Version 5.31.0
 
-New: Issue #555: Add support for FreeBSD ZFS statistics (requires FreeBSD 12.x or later).
+New: Issue #1021: Add support for Linux OpenZFS 2.x I/O statistics
+
+New: Issue #555: Add support for FreeBSD ZFS I/O statistics (requires FreeBSD 12.x or later).
 
 Fixed: Issue #1025: If Monit 5.30.0 CLI action was executed for non-existent service name, the error
 message was not reported properly. Thanks to Lutz Mader for fix.
