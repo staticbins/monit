@@ -272,9 +272,12 @@ static bool _updateZfsStatistics(Info_T inf) {
                         Statistics_update(&(inf->filesystem->write.bytes), now, nwritten);
                         Statistics_update(&(inf->filesystem->write.operations), now, writes);
                         return true;
+                } else {
+                        Log_error("filesystem statistic error: cannot parse ZFS statistics from %s\n", inf->filesystem->object.module);
                 }
+        } else {
+                Log_error("filesystem statistic error: cannot read ZFS statistics from %s -- %s\n", inf->filesystem->object.module, STRERROR);
         }
-        Log_error("filesystem statistic error: cannot read ZFS statistics from %s\n", inf->filesystem->object.module);
         return false;
 }
 
