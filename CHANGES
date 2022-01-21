@@ -11,6 +11,9 @@ New: Issue #555: Add support for FreeBSD ZFS I/O statistics (requires FreeBSD 12
 Fixed: Issue #1025: If Monit 5.30.0 CLI action was executed for non-existent service name, the error
 message was not reported properly. Thanks to Lutz Mader for fix.
 
+Fixed: Issue #1026: If Monit is reloaded during the start delay, do not wait for the delay to pass
+and reload the configuration immediately.
+
 
 Version 5.30.0
 

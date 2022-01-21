@@ -109,7 +109,7 @@
 
 
 static void  do_init(void);                   /* Initialize this application */
-static void  do_reinit(void);       /* Re-initialize the runtime application */
+static void  do_reinit(bool full);  /* Re-initialize the runtime application */
 static void  do_action(List_T);          /* Dispatch to the submitted action */
 static void  do_exit(bool);                           /* Finalize monit */
 static void  do_default(void);                          /* Do default action */
@@ -339,7 +339,7 @@ static void do_init() {
  * Re-Initialize the application - called if a
  * monit daemon receives the SIGHUP signal.
  */
-static void do_reinit() {
+static void do_reinit(bool full) {
         Log_info("Reinitializing Monit -- control file '%s'\n", Run.files.control);
 
         /* Wait non-blocking for any children that has exited. Since we
@@ -363,7 +363,8 @@ static void do_reinit() {
                 monit_http(Httpd_Stop);
 
         /* Save the current state (no changes are possible now since the http thread is stopped) */
-        State_save();
+        if (full)
+                State_save();
         State_close();
 
         /* Run the garbage collector */
@@ -400,16 +401,18 @@ static void do_reinit() {
                 exit(1);
         State_restore();
 
-        /* Start http interface */
-        if (can_http())
-                monit_http(Httpd_Start);
+        if (full) {
+                /* Start http interface */
+                if (can_http())
+                        monit_http(Httpd_Start);
 
-        /* send the monit startup notification */
-        Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit reloaded");
+                /* send the monit startup notification */
+                Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit reloaded");
 
-        if (Run.mmonits) {
-                Thread_create(heartbeatThread, heartbeat, NULL);
-                heartbeatRunning = true;
+                if (Run.mmonits) {
+                        Thread_create(heartbeatThread, heartbeat, NULL);
+                        heartbeatRunning = true;
+                }
         }
 }
 
@@ -591,6 +594,7 @@ static void do_default() {
 
                 atexit(file_finalize);
 
+reload:
                 if (Run.startdelay) {
                         if (State_reboot()) {
                                 time_t now = Time_monotonic();
@@ -601,8 +605,12 @@ static void do_default() {
                                 /* sleep can be interrupted by signal => make sure we paused long enough */
                                 while (now < delay) {
                                         sleep((unsigned int)(delay - now));
-                                        if (Run.flags & Run_Stopped)
+                                        if (Run.flags & Run_Stopped) {
                                                 do_exit(false);
+                                        } else if (Run.flags & Run_DoReload) {
+                                                do_reinit(false);
+                                                goto reload;
+                                        }
                                         now = Time_monotonic();
                                 }
                         } else {
@@ -636,7 +644,7 @@ static void do_default() {
                         if (Run.flags & Run_Stopped) {
                                 do_exit(true);
                         } else if (Run.flags & Run_DoReload) {
-                                do_reinit();
+                                do_reinit(true);
                         } else {
                                 State_saveIfDirty();
                         }
