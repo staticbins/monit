@@ -220,16 +220,16 @@ static unsigned long _mibGetValueByNameUlong(const char *name) {
 static bool _updateZfsStatistics(Info_T inf) {
         char memberName[PATH_MAX] = {};
 
-        snprintf(memberName, sizeof(memberName), "kstat.zfs.%s.dataset.objset-0x%s.nread", inf->filesystem->object.key, inf->filesystem->object.module);
+        snprintf(memberName, sizeof(memberName), "kstat.zfs.%.256s.dataset.objset-0x%.256s.nread", inf->filesystem->object.key, inf->filesystem->object.module);
         long long nread = _mibGetValueByNameUlong(memberName);
 
-        snprintf(memberName, sizeof(memberName), "kstat.zfs.%s.dataset.objset-0x%s.reads", inf->filesystem->object.key, inf->filesystem->object.module);
+        snprintf(memberName, sizeof(memberName), "kstat.zfs.%.256s.dataset.objset-0x%.256s.reads", inf->filesystem->object.key, inf->filesystem->object.module);
         long long reads = _mibGetValueByNameUlong(memberName);
 
-        snprintf(memberName, sizeof(memberName), "kstat.zfs.%s.dataset.objset-0x%s.nwritten", inf->filesystem->object.key, inf->filesystem->object.module);
+        snprintf(memberName, sizeof(memberName), "kstat.zfs.%.256s.dataset.objset-0x%.256s.nwritten", inf->filesystem->object.key, inf->filesystem->object.module);
         long long nwritten = _mibGetValueByNameUlong(memberName);
 
-        snprintf(memberName, sizeof(memberName), "kstat.zfs.%s.dataset.objset-0x%s.writes", inf->filesystem->object.key, inf->filesystem->object.module);
+        snprintf(memberName, sizeof(memberName), "kstat.zfs.%.256s.dataset.objset-0x%.256s.writes", inf->filesystem->object.key, inf->filesystem->object.module);
         long long writes = _mibGetValueByNameUlong(memberName);
 
         if (nread >= 0 && reads >= 0 && nwritten >= 0 && writes >= 0) {
@@ -249,8 +249,8 @@ static bool _getZfsObjsetId(Info_T inf) {
         char previousObjsetId[STRLEN] = {};
 
         // Prepare the zpool statistics path name (kstat.zfs.<zpool>.dataset).
-        char mibZfsStatsName[STRLEN] = {};
-        snprintf(mibZfsStatsName, sizeof(mibZfsStatsName), "kstat.zfs.%s.dataset", inf->filesystem->object.key);
+        char mibZfsStatsName[PATH_MAX] = {};
+        snprintf(mibZfsStatsName, sizeof(mibZfsStatsName), "kstat.zfs.%.256s.dataset", inf->filesystem->object.key);
 
         // Translate the kstat.zfs.<zpool>.dataset name to OID
         int    mibZfsStatsQueryOid[CTL_MAXNAME] = {CTL_SYSCTL, CTL_SYSCTL_NAME2OID};
@@ -317,7 +317,7 @@ static bool _getZfsObjsetId(Info_T inf) {
                         Log_error("system statistics error -- sysctl for OID -> name failed: %s\n", STRERROR);
 
                 // Process the given objset ID data
-                snprintf(mibZfsStatsName, sizeof(mibZfsStatsName), "kstat.zfs.%s.dataset.objset-0x", inf->filesystem->object.key);
+                snprintf(mibZfsStatsName, sizeof(mibZfsStatsName), "kstat.zfs.%.256s.dataset.objset-0x", inf->filesystem->object.key);
                 if (Str_startsWith(objsetName, mibZfsStatsName)) {
                         // Dissect objset-0x<hex> from the object name (example: kstat.zfs.zroot.dataset.objset-0x4f.nunlinked).
                         char *objsetId = objsetName + strlen(mibZfsStatsName);
@@ -330,7 +330,7 @@ static bool _getZfsObjsetId(Info_T inf) {
                                 char   memberName[PATH_MAX] = {};
                                 char   datasetName[STRLEN];
                                 size_t datasetNameLength = sizeof(datasetName);
-                                snprintf(memberName, sizeof(memberName), "kstat.zfs.%s.dataset.objset-0x%s.dataset_name", inf->filesystem->object.key, objsetId);
+                                snprintf(memberName, sizeof(memberName), "kstat.zfs.%.256s.dataset.objset-0x%s.dataset_name", inf->filesystem->object.key, objsetId);
                                 if (sysctlbyname(memberName, datasetName, &datasetNameLength, NULL, 0)) {
                                         Log_error("system statistics error -- cannot get %s\n", memberName);
                                         return false;
