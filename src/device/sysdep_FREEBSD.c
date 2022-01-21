@@ -461,12 +461,14 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                                                         inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
                                                         DEBUG("I/O monitoring for filesystem '%s' skipped - unable to parse the device %s\n", path, mntItem->f_mntfromname);
                                                 }
-                                        } else {
+                                        } else if (IS(mntItem->f_fstypename, "zfs")) {
                                                 // ZFS
                                                 inf->filesystem->object.getDiskActivity = _getZfsDiskActivity;
                                                 // Need base zpool name for kstat.zfs.<NAME> lookup:
                                                 snprintf(inf->filesystem->object.key, sizeof(inf->filesystem->object.key), "%s", inf->filesystem->object.device);
                                                 Str_replaceChar(inf->filesystem->object.key, '/', 0);
+                                        } else {
+						inf->filesystem->object.getDiskActivity = _getDummyDiskActivity;
                                         }
                                         inf->filesystem->object.flags = mntItem->f_flags & MNT_VISFLAGMASK;
                                         _filesystemFlagsToString(inf, inf->filesystem->object.flags);
