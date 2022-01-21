@@ -211,7 +211,7 @@ static bool _getNfsDiskActivity(void *_inf) {
 static bool _getZfsObjsetId(Info_T inf) {
         // Find all objset files in the /proc/spl/kstat/zfs/<zpool>/ directory
         char path[PATH_MAX] = {};
-        snprintf(path, sizeof(path), "/proc/spl/kstat/zfs/%s/objset-0x[a-fA-F0-9]*", inf->filesystem->object.key);
+        snprintf(path, sizeof(path), "/proc/spl/kstat/zfs/%.256s/objset-0x[a-fA-F0-9]*", inf->filesystem->object.key);
 
         glob_t globbuf;
         int rv = glob(path, 0, NULL, &globbuf);
