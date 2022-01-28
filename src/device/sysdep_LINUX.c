@@ -46,6 +46,10 @@
 #include <strings.h>
 #endif
 
+#ifdef HAVE_GLOB_H
+#include <glob.h>
+#endif
+
 #ifdef HAVE_SYS_STATVFS_H
 # include <sys/statvfs.h>
 #endif
@@ -204,6 +208,80 @@ static bool _getNfsDiskActivity(void *_inf) {
 }
 
 
+static bool _getZfsObjsetId(Info_T inf) {
+        // Find all objset files in the /proc/spl/kstat/zfs/<zpool>/ directory
+        char path[PATH_MAX] = {};
+        snprintf(path, sizeof(path), "/proc/spl/kstat/zfs/%.256s/objset-0x[a-fA-F0-9]*", inf->filesystem->object.key);
+
+        glob_t globbuf;
+        int rv = glob(path, 0, NULL, &globbuf);
+        if (rv) {
+                Log_error("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
+                return false;
+        }
+
+        // Scan objset list and find the matching dataset
+        char datasetName[STRLEN] = {};
+        for (size_t i = 0; i < globbuf.gl_pathc; i++) {
+                FILE *f = fopen(globbuf.gl_pathv[i], "r");
+                if (f) {
+                        char line[STRLEN];
+                        while (fgets(line, sizeof(line), f)) {
+                                if (sscanf(line, "dataset_name %*d %255s", datasetName) == 1) {
+                                        if (Str_isByteEqual(datasetName, inf->filesystem->object.device)) {
+                                                // Cache the path to statistics, so we can fetch the data directly next time
+                                                strncpy(inf->filesystem->object.module, globbuf.gl_pathv[i], sizeof(inf->filesystem->object.module) - 1);
+                                                fclose(f);
+                                                return true;
+                                        } else {
+                                                // The dataset name doesn't match, try next objset file
+                                                break;
+                                        }
+                                }
+                        }
+                        fclose(f);
+                }
+        }
+        return false;
+}
+
+
+static bool _updateZfsStatistics(Info_T inf) {
+        FILE *f = fopen(inf->filesystem->object.module, "r");
+        if (f) {
+                char line[STRLEN];
+                long long nread    = -1LL;
+                long long reads    = -1LL;
+                long long nwritten = -1LL;
+                long long writes   = -1LL;
+                while (fgets(line, sizeof(line), f)) {
+                        if (sscanf(line, "nread %*d %lld", &nread) == 1)
+                                continue;
+                        else if (sscanf(line, "reads %*d %lld", &reads) == 1)
+                                continue;
+                        else if (sscanf(line, "nwritten %*d %lld", &nwritten) == 1)
+                                continue;
+                        else if (sscanf(line, "writes %*d %lld", &writes) == 1)
+                                continue;
+                }
+                fclose(f);
+                if (nread >= 0 && reads >= 0 && nwritten >= 0 && writes >= 0) {
+                        unsigned long long now = Time_milli();
+                        Statistics_update(&(inf->filesystem->read.bytes), now, nread);
+                        Statistics_update(&(inf->filesystem->read.operations), now, reads);
+                        Statistics_update(&(inf->filesystem->write.bytes), now, nwritten);
+                        Statistics_update(&(inf->filesystem->write.operations), now, writes);
+                        return true;
+                } else {
+                        Log_error("filesystem statistic error: cannot parse ZFS statistics from %s\n", inf->filesystem->object.module);
+                }
+        } else {
+                Log_error("filesystem statistic error: cannot read ZFS statistics from %s -- %s\n", inf->filesystem->object.module, STRERROR);
+        }
+        return false;
+}
+
+
 static bool _getZfsDiskActivity(void *_inf) {
         Info_T inf = _inf;
         char path[2 * PATH_MAX];
@@ -228,9 +306,16 @@ static bool _getZfsDiskActivity(void *_inf) {
                 }
                 fclose(f);
                 return true;
+        } else {
+                // OpenZFS 2.x
+
+                // We cache the objset ID in the object.module ... if not set, scan the system information
+                if (STR_UNDEF(inf->filesystem->object.module)) {
+                        if (! _getZfsObjsetId(inf))
+                                return false;
+                }
+                return _updateZfsStatistics(inf);
         }
-        Log_error("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
-        return false;
 }
 
 

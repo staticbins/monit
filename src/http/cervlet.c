@@ -697,9 +697,12 @@ static void doPost(HttpRequest req, HttpResponse res) {
         else
                 handle_service_action(req, res);
         if (STR_DEF(req->url)) {
+            // Send a proper status to handle errors
+            if (res->status <= 300) {
                 // #1009: Redirect back to the same url so a reload in the browser does not perform a POST again
                 set_status(res, SC_MOVED_TEMPORARILY);
                 set_header(res, "Location", "%s", req->url);
+            }
         }
 }
 

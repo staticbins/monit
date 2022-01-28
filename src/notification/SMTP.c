@@ -258,27 +258,27 @@ void SMTP_auth(T S, const char *username, const char *password) {
                 _send(S, "AUTH LOGIN\r\n");
                 _receive(S, 334, NULL);
                 strncpy(buffer, username, sizeof(buffer) - 1);
-                char *b64 = encode_base64(strlen(buffer), (unsigned char *)buffer);
+                char *username_b64 = encode_base64(strlen(buffer), (unsigned char *)buffer);
                 TRY
                 {
-                        _send(S, "%s\r\n", b64);
+                        _send(S, "%s\r\n", username_b64);
                         _receive(S, 334, NULL);
                 }
                 FINALLY
                 {
-                        FREE(b64);
+                        FREE(username_b64);
                 }
                 END_TRY;
                 strncpy(buffer, password, sizeof(buffer) - 1);
-                b64 = encode_base64(strlen(buffer), (unsigned char *)buffer);
+                char *password_b64 = encode_base64(strlen(buffer), (unsigned char *)buffer);
                 TRY
                 {
-                        _send(S, "%s\r\n", b64);
+                        _send(S, "%s\r\n", password_b64);
                         _receive(S, 235, NULL);
                 }
                 FINALLY
                 {
-                        FREE(b64);
+                        FREE(password_b64);
                 }
                 END_TRY;
         } else {

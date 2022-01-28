@@ -1056,10 +1056,10 @@ typedef struct Device_T {
                 int minor;
         } number;
         char partition;
-        char device[PATH_MAX];
-        char mountpoint[PATH_MAX];
-        char key[PATH_MAX];
-        char module[256];
+        char device[PATH_MAX + 1];
+        char mountpoint[PATH_MAX + 1];
+        char key[PATH_MAX + 1];
+        char module[PATH_MAX + 1];
         char type[64];
         unsigned long long flags;
         bool (*getDiskUsage)(void *);
