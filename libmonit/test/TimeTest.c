@@ -20,8 +20,10 @@
 
 int main(void) {
 
-        setenv("TZ", "CET", 1);
-        tzset();
+        // Note: When the bellow setenv() is present on Alpine linux with MUSL, the test Time_string test fails and returns UTC time. The tzset() is called automatically
+        //       by localtime_r(). The test may fail though, if it is executed on machine, which is not in CET timezone.
+        //setenv("TZ", "CET", 1);
+        //tzset();
         
         Bootstrap(); // Need to initialize library
 
