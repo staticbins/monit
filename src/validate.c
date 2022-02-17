@@ -1437,12 +1437,6 @@ static bool _incron(Service_T s, time_t now) {
 static bool _checkSkip(Service_T s) {
         ASSERT(s);
         time_t now = Time_now();
-        if (! s->onrebootRestored) {
-                // If the service state was not restored (e.g. new service or state file is missing), handle the onreboot flag
-                if (s->onreboot == Onreboot_Nostart)
-                        s->monitor = Monitor_Not;
-                s->onrebootRestored = true;
-        }
         if (s->every.type == Every_SkipCycles) {
                 s->every.spec.cycle.counter++;
                 if (s->every.spec.cycle.counter < s->every.spec.cycle.number) {

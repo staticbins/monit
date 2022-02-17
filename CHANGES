@@ -4,6 +4,11 @@
 
 Version 5.32.0
 
+Fixed: Issue #1028: When the Monit statefile was removed, the "monit start <service>" action for
+services with "onreboot nostart" option started the service, but didn't enable the monitoring.
+The same problem occurred if a new "onreboot nostart" service was added, even if the statefile
+existed.
+
 
 Version 5.31.0
 
