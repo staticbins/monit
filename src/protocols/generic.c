@@ -38,15 +38,19 @@
 #include "exceptions/IOException.h"
 #include "exceptions/ProtocolException.h"
 
-/* Escape zero i.e. '\0' in expect buffer with "\0" so zero can be tested in expect strings as "\0". If there are no '\0' in the buffer it is returned as it is */
-static char *_escapeZeroInExpectBuffer(char *buf, int buflen, int n) {
-        for (int i = 0, j = 0; i < n && j < buflen; i++, j++) {
-                if (buf[j] == '\0') {
-                        if (j + 1 < buflen) {
-                                memmove(buf + j + 1, buf + j, n - i++);
-                                buf[j] = '\\';
-                                buf[j + 1] = '0';
-                                j++;
+// Escape zero i.e. '\0' in expect buffer with "\0" so zero can be tested in expect strings as "\0". If there are no '\0' in the buffer it is returned as it is
+static char *_escapeZeroInExpectBuffer(char *buf, int bufferLength, int contentLength) {
+        int currentByteIndex = 0;
+        for (int bytesProcessed = 0; bytesProcessed < contentLength && currentByteIndex < bufferLength; bytesProcessed++, currentByteIndex++) {
+                if (buf[currentByteIndex] == '\0') {
+                        // Escape the zero, unless we run out of space in the buffer
+                        if (currentByteIndex + 1 < bufferLength) {
+                                // Shift the remaining content by one to the right, to make space for '\'. If there's no space for all remaining bytes, we'll truncate the data
+                                memmove(buf + currentByteIndex + 1, buf + currentByteIndex, MIN(contentLength - bytesProcessed, bufferLength - currentByteIndex - 1));
+                                // Escape 0 with "\0"
+                                buf[currentByteIndex] = '\\';
+                                buf[currentByteIndex + 1] = '0';
+                                currentByteIndex++;
                         }
                 }
         }
