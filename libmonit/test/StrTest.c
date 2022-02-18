@@ -1,6 +1,7 @@
 #include "Config.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <stdarg.h>
@@ -12,6 +13,13 @@
 /**
  * Str.c unity tests
  */
+
+
+static void testEscaping(char *buf, int buflen, int n, const char *expect) {
+        Str_escapeZero(buf, buflen, n);
+        printf("\tExpect: \"%s\", got: \"%s\"\n", expect, buf);
+        assert(Str_isByteEqual(buf, expect) == true);
+}
 
 
 int main(void) {
@@ -526,6 +534,97 @@ int main(void) {
                 assert(Str_cmp("foo", "bar") != 0);
         }
         printf("=> Test25: OK\n\n");
+
+        printf("=> Test26: Str_escapeZero\n");
+        {
+            int buflen = 10;
+            char *buf = calloc(buflen + 1, 1);
+
+            // No escaping
+            buf[0] = 'a';
+            buf[1] = 'b';
+            buf[2] = 'c';
+            buf[3] = 'd';
+            testEscaping(buf, buflen, 4, "abcd");
+
+            // Leading zero escape (tests also nul-termination, as previous string was longer)
+            buf[0] = '\0';
+            buf[1] = 'b';
+            testEscaping(buf, buflen, 2, "\\0b");
+
+            // No space for escaping, test truncation (the last byte is used for nul-terminator, so there'll be just four escaped zeros)
+            buf[0] = '\0';
+            buf[1] = '\0';
+            buf[2] = '\0';
+            buf[3] = '\0';
+            buf[4] = '\0';
+            buf[5] = '\0';
+            buf[6] = '\0';
+            buf[7] = '\0';
+            buf[8] = '\0';
+            buf[9] = '\0';
+            testEscaping(buf, buflen, 10, "\\0\\0\\0\\0");
+
+            // No data
+            buf[0] = '\0';
+            testEscaping(buf, buflen, 0, "");
+
+            // One zero
+            buf[0] = '\0';
+            testEscaping(buf, buflen, 1, "\\0");
+
+            // One character (no escaping)
+            buf[0] = 'a';
+            testEscaping(buf, buflen, 1, "a");
+
+            // One character including nul-terminator, which will be escaped
+            buf[0] = 'a';
+            buf[1] = '\0';
+            testEscaping(buf, buflen, 2, "a\\0");
+
+            // Mixed escaping
+            buf[0] = 'a';
+            buf[1] = '\0';
+            buf[2] = '\0';
+            buf[3] = 'b';
+            buf[4] = 'c';
+            buf[5] = '\0';
+            buf[6] = '\0';
+            buf[7] = '\0';
+            buf[8] = '\0';
+            buf[9] = '\0';
+            testEscaping(buf, buflen, 6, "a\\0\\0bc\\0");
+
+            // No space for escaping, test truncation with odd count of characters (no space for last character escaping)
+            buf[0] = 'a';
+            buf[1] = '\0';
+            buf[2] = '\0';
+            buf[3] = 'b';
+            buf[4] = 'c';
+            buf[5] = '\0';
+            buf[6] = '\0';
+            buf[7] = '\0';
+            buf[8] = '\0';
+            buf[9] = '\0';
+            testEscaping(buf, buflen, 10, "a\\0\\0bc\\0");
+
+            // Test nul-termination
+            buf[0] = 'z';
+            buf[1] = 'z';
+            buf[2] = 'z';
+            buf[3] = 'z';
+            buf[4] = 'z';
+            buf[5] = 'z';
+            buf[6] = 'z';
+            buf[7] = 'z';
+            buf[8] = 'z';
+            buf[9] = 'z';
+            testEscaping(buf, buflen, 3, "zzz"); // The buffer contained unterminated data, we want to escape only 3 bytes and expect it'll be nul-terminated
+
+            // No data
+            free(buf);
+        }
+        printf("=> Test26: OK\n\n");
 
         printf("============> Str Tests: OK\n\n");
         return 0;
