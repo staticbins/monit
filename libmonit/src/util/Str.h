@@ -445,5 +445,14 @@ int Str_cmp(const void *x, const void *y);
 int Str_compareConstantTime(const void *x, const void *y);
 
 
+/**
+ * Escape zero i.e. '\0' in the buffer with "\0". If there are no '\0' in
+ * the buffer it is returned as it is. In the case that the buffer is not
+ * large enough for escaping, the data will be truncated. The buffer will
+ * be always nul-terminated.
+ */
+char *Str_escapeZero(char *buf, int bufferLength, int contentLength);
+
+
 #endif
 

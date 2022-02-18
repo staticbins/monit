@@ -660,6 +660,15 @@ void State_restore() {
                 Log_error("State file '%s': %s\n", Run.files.state, Exception_frame.message);
         }
         END_TRY;
+
+        // If the service state was not restored (e.g. new service or state file is missing), handle the onreboot flag
+        for (Service_T s = servicelist; s; s = s->next) {
+                if (! s->onrebootRestored) {
+                        if (s->onreboot == Onreboot_Nostart)
+                                s->monitor = Monitor_Not;
+                        s->onrebootRestored = true;
+                }
+        }
 }
 
 

@@ -1,6 +1,17 @@
-                     CHANGES version 5.31.0
+                     CHANGES version 5.32.0
 
            This file summarizes changes made since 5.0
+
+Version 5.32.0
+
+Fixed: Issue #1028: When the Monit statefile was removed, the "monit start <service>" action for
+services with "onreboot nostart" option started the service, but didn't enable the monitoring.
+The same problem occurred if a new "onreboot nostart" service was added, even if the statefile
+existed.
+
+Fixed: Issue #1029: The generic protocol test truncated the received data in the case that it
+contained zeros.
+
 
 Version 5.31.0
 

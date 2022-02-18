@@ -37,21 +37,7 @@
 // libmonit
 #include "exceptions/IOException.h"
 #include "exceptions/ProtocolException.h"
-
-/* Escape zero i.e. '\0' in expect buffer with "\0" so zero can be tested in expect strings as "\0". If there are no '\0' in the buffer it is returned as it is */
-static char *_escapeZeroInExpectBuffer(char *buf, int buflen, int n) {
-        for (int i = 0, j = 0; i < n && j < buflen; i++, j++) {
-                if (buf[j] == '\0') {
-                        if (j + 1 < buflen) {
-                                memmove(buf + j + 1, buf + j, n - i++);
-                                buf[j] = '\\';
-                                buf[j + 1] = '0';
-                                j++;
-                        }
-                }
-        }
-        return buf;
-}
+#include "util/Str.h"
 
 
 /**
@@ -66,7 +52,7 @@ void check_generic(Socket_T socket) {
         if (Socket_getPort(socket))
                 g = ((Port_T)(Socket_getPort(socket)))->parameters.generic.sendexpect;
 
-        char *buf = CALLOC(sizeof(char), Run.limits.sendExpectBuffer + 1);
+        char *buf = CALLOC(sizeof(char), Run.limits.sendExpectBuffer + 1); // Allocate one extra byte for nul-terminator
 
         while (g != NULL) {
 
@@ -100,7 +86,7 @@ void check_generic(Socket_T socket) {
                         int n = Socket_read(socket, buf + 1, Run.limits.sendExpectBuffer - 1) + 1;
                         buf[n] = 0;
                         if (n > 0)
-                                _escapeZeroInExpectBuffer(buf, Run.limits.sendExpectBuffer, n);
+                                Str_escapeZero(buf, Run.limits.sendExpectBuffer + 1, n); // We pass the whole buffer length, including the byte reserved for nul-terminator
                         Socket_setTimeout(socket, timeout); // Reset back original timeout for next send/expect
                         int regex_return = regexec(g->expect, buf, 0, NULL, 0);
                         if (regex_return != 0) {
