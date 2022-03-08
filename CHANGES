@@ -15,6 +15,9 @@ contained zeros.
 Fixed: PAM authentication: Users with a valid password for disabled account can login to Monit.
 Thanks to Youssef Rebahi-Gilbert.
 
+Fixed: Monit may crash or the HTTP interface can block if long stream of HTTP headers is send to
+the Monit HTTP interface. Thanks to Youssef Rebahi-Gilbert for report.
+
 
 Version 5.31.0
 
