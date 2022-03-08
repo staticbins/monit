@@ -712,12 +712,15 @@ static void destroy_HttpResponse(HttpResponse res) {
  * HttpParameter are of this type.
  */
 static void destroy_entry(void *p) {
-        struct entry *h = p;
-        if (h->next)
-                destroy_entry(h->next);
-        FREE(h->name);
-        FREE(h->value);
-        FREE(h);
+        struct entry *next;
+        for (struct entry *h = p; h; h = next) {
+                if (h) {
+                        next = h->next;
+                        FREE(h->name);
+                        FREE(h->value);
+                        FREE(h);
+                }
+        }
 }
 
 
