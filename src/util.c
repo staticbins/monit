@@ -390,10 +390,10 @@ static bool PAMcheckPasswd(const char *login, const char *passwd) {
                 return false;
         }
 
-        rv = pam_authenticate(pamh, PAM_SILENT);
+        if ((rv = pam_authenticate(pamh, PAM_SILENT)) == PAM_SUCCESS)
+                rv = pam_acct_mgmt(pamh, PAM_SILENT);
 
-        if (pam_end(pamh, rv) != PAM_SUCCESS)
-                pamh = NULL;
+        pam_end(pamh, rv);
 
         return rv == PAM_SUCCESS ? true : false;
 }

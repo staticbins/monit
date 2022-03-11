@@ -110,7 +110,7 @@ static void do_service(Socket_T);
 static void destroy_entry(void *);
 static char *get_date(char *, int);
 static char *get_server(char *, int);
-static void create_headers(HttpRequest);
+static bool create_headers(HttpRequest);
 static void send_response(HttpRequest, HttpResponse);
 static bool basic_authenticate(HttpRequest);
 static void done(HttpRequest, HttpResponse);
@@ -559,13 +559,18 @@ static HttpRequest create_HttpRequest(Socket_T S) {
         req->url = Str_dup(url);
         req->method = Str_dup(method);
         req->protocol = Str_dup(protocol);
-        create_headers(req);
-        if (! create_parameters(req)) {
+        if (! create_headers(req)) {
+                internal_error(S, SC_BAD_REQUEST, "Headers length exceeds the content limit");
                 destroy_HttpRequest(req);
+                return NULL;
+        }
+        if (! create_parameters(req)) {
                 internal_error(S, SC_BAD_REQUEST, "Cannot parse Request parameters");
+                destroy_HttpRequest(req);
                 return NULL;
         }
         return req;
+
 }
 
 
@@ -590,9 +595,14 @@ static HttpResponse create_HttpResponse(Socket_T S) {
 /**
  * Create HTTP headers for the given request
  */
-static void create_headers(HttpRequest req) {
-        char line[REQ_STRLEN] = {0};
+static bool create_headers(HttpRequest req) {
+        unsigned contentLength = 0;
+        char line[REQ_STRLEN] = {};
         while (Socket_readLine(req->S, line, sizeof(line)) && ! (Str_isEqual(line, "\r\n") || Str_isEqual(line, "\n"))) {
+                contentLength += strlen(line);
+                if (contentLength >= Run.limits.httpContentBuffer)
+                        return false;
+
                 char *value = strchr(line, ':');
                 if (value) {
                         HttpHeader header = NULL;
@@ -607,6 +617,7 @@ static void create_headers(HttpRequest req) {
                         req->headers = header;
                 }
         }
+        return true;
 }
 
 
@@ -712,12 +723,15 @@ static void destroy_HttpResponse(HttpResponse res) {
  * HttpParameter are of this type.
  */
 static void destroy_entry(void *p) {
-        struct entry *h = p;
-        if (h->next)
-                destroy_entry(h->next);
-        FREE(h->name);
-        FREE(h->value);
-        FREE(h);
+        struct entry *next;
+        for (struct entry *h = p; h; h = next) {
+                if (h) {
+                        next = h->next;
+                        FREE(h->name);
+                        FREE(h->value);
+                        FREE(h);
+                }
+        }
 }
 
 
