@@ -719,6 +719,12 @@ limit           : SENDEXPECTBUFFER ':' NUMBER unit {
                 | RESTARTTIMEOUT ':' NUMBER SECOND {
                         Run.limits.restartTimeout = $3 * 1000;
                   }
+                | EXECTIMEOUT ':' NUMBER MILLISECOND {
+                        Run.limits.execTimeout = $3;
+                  }
+                | EXECTIMEOUT ':' NUMBER SECOND {
+                        Run.limits.execTimeout = $3 * 1000;
+                  }
                 ;
 
 setfips         : SET FIPS {
@@ -2621,6 +2627,18 @@ totaltime       : MINUTE      { $<number>$ = Time_Minute; }
 currenttime     : /* EMPTY */ { $<number>$ = Time_Second; }
                 | SECOND      { $<number>$ = Time_Second; }
 
+// Add timeout to the test action exec command
+exectimeout     : /* EMPTY */ {
+                        timeout = Run.limits.execTimeout;
+                  }
+                | TIMEOUT NUMBER SECOND {
+                        if ($<number>3 < 0) {
+                                yyerror2("The timeout must be greater or equal to 0");
+                        }
+                        timeout = $2 * 1000; // milliseconds internally
+                  }
+                ;
+
 repeat          : /* EMPTY */ {
                         repeat = 0;
                   }
@@ -2638,10 +2656,10 @@ repeat          : /* EMPTY */ {
 action          : ALERT {
                         $<number>$ = Action_Alert;
                   }
-                | EXEC argumentlist repeat {
+                | EXEC argumentlist exectimeout repeat {
                         $<number>$ = Action_Exec;
                   }
-                | EXEC argumentlist useroptionlist repeat
+                | EXEC argumentlist useroptionlist exectimeout repeat
                   {
                         $<number>$ = Action_Exec;
                   }
