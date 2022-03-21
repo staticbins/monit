@@ -215,6 +215,7 @@ static char * htpasswd_file = NULL;
 static unsigned int repeat = 0;
 static unsigned int repeat1 = 0;
 static unsigned int repeat2 = 0;
+static unsigned int timeout = 0;
 static Digest_Type digesttype = Digest_Cleartext;
 
 #define BITMAP_MAX (sizeof(long long) * 8)
@@ -3385,6 +3386,7 @@ static void preparse() {
         Run.limits.stopTimeout       = LIMIT_STOPTIMEOUT;
         Run.limits.startTimeout      = LIMIT_STARTTIMEOUT;
         Run.limits.restartTimeout    = LIMIT_RESTARTTIMEOUT;
+        Run.limits.execTimeout       = LIMIT_EXECTIMEOUT;
         Run.onreboot                 = Onreboot_Start;
         Run.mmonitcredentials        = NULL;
         Run.httpd.flags              = Httpd_Disabled | Httpd_Signature;
