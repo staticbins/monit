@@ -422,6 +422,7 @@ programtimeout    { return PROGRAMTIMEOUT; }
 stoptimeout       { return STOPTIMEOUT; }
 starttimeout      { return STARTTIMEOUT; }
 restarttimeout    { return RESTARTTIMEOUT; }
+exectimeout       { return EXECTIMEOUT; }
 cleartext         { return CLEARTEXT; }
 md5               { return MD5HASH; }
 sha1              { return SHA1HASH; }
