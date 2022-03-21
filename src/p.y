@@ -2682,6 +2682,8 @@ action1         : action {
                         if ($<number>1 == Action_Exec && command) {
                                 repeat1 = repeat;
                                 repeat = 0;
+                                command->timeout = timeout;
+                                timeout = 0;
                                 command1 = command;
                                 command = NULL;
                         }
@@ -2693,6 +2695,8 @@ action2         : action {
                         if ($<number>1 == Action_Exec && command) {
                                 repeat2 = repeat;
                                 repeat = 0;
+                                command->timeout = timeout;
+                                timeout = 0;
                                 command2 = command;
                                 command = NULL;
                         }
