@@ -135,9 +135,9 @@ cpusoftirq     cpu[ ]*(usage)*[ ]*\([ ]*softirq[ ]*\)
 cpusteal       cpu[ ]*(usage)*[ ]*\([ ]*steal[ ]*\)
 cpuguest       cpu[ ]*(usage)*[ ]*\([ ]*guest[ ]*\)
 cpuguestnice   cpu[ ]*(usage)*[ ]*\([ ]*guestnice[ ]*\)
-startarg       start{ws}?(program)?{ws}?([=]{ws})?["]
-stoparg        stop{ws}?(program)?{ws}?([=]{ws})?["]
-restartarg     restart{ws}?(program)?{ws}?([=]{ws})?["]
+startarg       start{ws}?(program)?{ws}?([=]{ws}?)?["]
+stoparg        stop{ws}?(program)?{ws}?([=]{ws}?)?["]
+restartarg     restart{ws}?(program)?{ws}?([=]{ws}?)?["]
 execarg        exec(ute)?{ws}?["]
 pathtokarg     path{ws}?["]
 percent        ("percent"|"%")
