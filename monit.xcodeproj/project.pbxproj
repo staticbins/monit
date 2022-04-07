@@ -10,13 +10,11 @@
 		523753E71F34BC1C001522CD /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9397E3081D897CCA008CAD1F /* libz.tbd */; };
 		5295A9EF245849FF007E3C4C /* Statistics.c in Sources */ = {isa = PBXBuildFile; fileRef = 522A1D292458487200773F8A /* Statistics.c */; };
 		5295AA0624584CDA007E3C4C /* Link.c in Sources */ = {isa = PBXBuildFile; fileRef = 5295AA0524584CDA007E3C4C /* Link.c */; };
-		52A1311D13A7886800583257 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A1311C13A7886800583257 /* libmonit.a */; };
 		52AE77CC14037DA300D2861D /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 52AE77CA14037DA300D2861D /* sha1.c */; };
 		52AE77CF14037E6A00D2861D /* md5_crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 52AE77CD14037E6A00D2861D /* md5_crypt.c */; };
-		52BB060623B49C5F008E61F1 /* libssl.1.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52BB060523B49C5F008E61F1 /* libssl.1.1.dylib */; };
-		52BB060723B49C5F008E61F1 /* libssl.1.1.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 52BB060523B49C5F008E61F1 /* libssl.1.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		52BB060A23B49C7E008E61F1 /* libcrypto.1.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52BB060923B49C7E008E61F1 /* libcrypto.1.1.dylib */; };
-		52BB060B23B49C7E008E61F1 /* libcrypto.1.1.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 52BB060923B49C7E008E61F1 /* libcrypto.1.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		52DE1EB327FF3B3C00C4269C /* libcrypto.1.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52DE1EB127FF3B3C00C4269C /* libcrypto.1.1.dylib */; };
+		52DE1EB427FF3B3C00C4269C /* libssl.1.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52DE1EB227FF3B3C00C4269C /* libssl.1.1.dylib */; };
+		52DE1EB927FF3F8A00C4269C /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52DDC12A13C59D46003AA75C /* libmonit.a */; };
 		52F67BDD1BD7AC5A0092111B /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 52F67BDC1BD7AC5A0092111B /* libpam.tbd */; };
 		52F6E80513A74F220023F87A /* alert.c in Sources */ = {isa = PBXBuildFile; fileRef = 52F6E74413A74F220023F87A /* alert.c */; };
 		52F6E80713A74F220023F87A /* control.c in Sources */ = {isa = PBXBuildFile; fileRef = 52F6E74913A74F220023F87A /* control.c */; };
@@ -193,8 +191,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				52BB060723B49C5F008E61F1 /* libssl.1.1.dylib in Embed Libraries */,
-				52BB060B23B49C7E008E61F1 /* libcrypto.1.1.dylib in Embed Libraries */,
 			);
 			name = "Embed Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -247,6 +243,10 @@
 		52D25EDF17C0E8680039D3E4 /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		52D25EE017C0E8680039D3E4 /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
 		52D25EE217C0E8680039D3E4 /* monitrc */ = {isa = PBXFileReference; lastKnownFileType = text; path = monitrc; sourceTree = "<group>"; };
+		52DE1EB127FF3B3C00C4269C /* libcrypto.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.1.dylib; path = ../../../../../opt/local/libexec/openssl11/lib/libcrypto.1.1.dylib; sourceTree = "<group>"; };
+		52DE1EB227FF3B3C00C4269C /* libssl.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.1.1.dylib; path = ../../../../../opt/local/libexec/openssl11/lib/libssl.1.1.dylib; sourceTree = "<group>"; };
+		52DE1EB527FF3B5500C4269C /* libcrypto.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.1.dylib; path = ../../../../../opt/local/libexec/openssl11/lib/libcrypto.1.1.dylib; sourceTree = "<group>"; };
+		52DE1EB627FF3B5500C4269C /* libssl.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.1.1.dylib; path = ../../../../../opt/local/libexec/openssl11/lib/libssl.1.1.dylib; sourceTree = "<group>"; };
 		52F67BDC1BD7AC5A0092111B /* libpam.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpam.tbd; path = usr/lib/libpam.tbd; sourceTree = SDKROOT; };
 		52F6E67B13A74F220023F87A /* monit.pod */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; lineEnding = 0; path = monit.pod; sourceTree = "<group>"; };
 		52F6E74413A74F220023F87A /* alert.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = alert.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
@@ -340,8 +340,6 @@
 		9305FD591A96873200B7F8A2 /* Ssl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Ssl.c; sourceTree = "<group>"; };
 		9305FD5A1A96873200B7F8A2 /* Ssl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Ssl.h; sourceTree = "<group>"; };
 		9305FD5D1A96873200B7F8A2 /* SslServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SslServer.h; sourceTree = "<group>"; };
-		930E68261C4FD0D600D9F213 /* libssl.1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.1.0.0.dylib; path = /opt/local/lib/libssl.1.0.0.dylib; sourceTree = "<absolute>"; };
-		930E68281C4FD15900D9F213 /* libcrypto.1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.0.0.dylib; path = /opt/local/lib/libcrypto.1.0.0.dylib; sourceTree = "<absolute>"; };
 		9331C5B41CF4D2D800CFB86A /* xml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = xml.c; sourceTree = "<group>"; };
 		9331C5B61CF4D2E600CFB86A /* MMonit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MMonit.c; sourceTree = "<group>"; };
 		9331C5B71CF4D2E600CFB86A /* MMonit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MMonit.h; sourceTree = "<group>"; };
@@ -378,14 +376,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				52DE1EB927FF3F8A00C4269C /* libmonit.a in Frameworks */,
+				52DE1EB327FF3B3C00C4269C /* libcrypto.1.1.dylib in Frameworks */,
+				52DE1EB427FF3B3C00C4269C /* libssl.1.1.dylib in Frameworks */,
 				523753E71F34BC1C001522CD /* libz.tbd in Frameworks */,
 				9365D2331E28F41500FCF3FB /* CoreFoundation.framework in Frameworks */,
 				9365D2311E28F40800FCF3FB /* DiskArbitration.framework in Frameworks */,
-				52BB060A23B49C7E008E61F1 /* libcrypto.1.1.dylib in Frameworks */,
 				9365D22B1E28F3FC00FCF3FB /* IOKit.framework in Frameworks */,
-				52BB060623B49C5F008E61F1 /* libssl.1.1.dylib in Frameworks */,
 				52F67BDD1BD7AC5A0092111B /* libpam.tbd in Frameworks */,
-				52A1311D13A7886800583257 /* libmonit.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -600,8 +598,8 @@
 		52A1312013A788B900583257 /* libs */ = {
 			isa = PBXGroup;
 			children = (
-				930E68281C4FD15900D9F213 /* libcrypto.1.0.0.dylib */,
-				930E68261C4FD0D600D9F213 /* libssl.1.0.0.dylib */,
+				52DE1EB527FF3B5500C4269C /* libcrypto.1.1.dylib */,
+				52DE1EB627FF3B5500C4269C /* libssl.1.1.dylib */,
 				52F67BDC1BD7AC5A0092111B /* libpam.tbd */,
 				52A1311C13A7886800583257 /* libmonit.a */,
 			);
@@ -811,6 +809,8 @@
 			children = (
 				52BB060923B49C7E008E61F1 /* libcrypto.1.1.dylib */,
 				52BB060523B49C5F008E61F1 /* libssl.1.1.dylib */,
+				52DE1EB127FF3B3C00C4269C /* libcrypto.1.1.dylib */,
+				52DE1EB227FF3B3C00C4269C /* libssl.1.1.dylib */,
 				52BB060423B49C00008E61F1 /* libcrypto.a */,
 				9365D2321E28F41500FCF3FB /* CoreFoundation.framework */,
 				9365D2301E28F40800FCF3FB /* DiskArbitration.framework */,
@@ -1174,11 +1174,13 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/config/Info.plist";
 				LIBRARY_SEARCH_PATHS = (
+					/opt/local/lib,
 					/usr/local/lib,
 					"$(SDKROOT)/usr/lib/system",
-					/opt/local/lib,
+					/opt/local/libexec/openssl3/lib,
+					/opt/local/libexec/openssl11/lib,
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-DDARWIN",
@@ -1217,11 +1219,13 @@
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/config/Info.plist";
 				LIBRARY_SEARCH_PATHS = (
+					/opt/local/lib,
 					/usr/local/lib,
 					"$(SDKROOT)/usr/lib/system",
-					/opt/local/lib,
+					/opt/local/libexec/openssl3/lib,
+					/opt/local/libexec/openssl11/lib,
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-DDARWIN",

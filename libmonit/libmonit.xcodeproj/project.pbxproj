@@ -128,7 +128,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		520568AF249019A00091011E /* InputstreamTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = InputstreamTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		520568AF249019A00091011E /* InputstreamTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = InputstreamTest; path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/InputstreamTest"; sourceTree = "<absolute>"; };
 		5205CE261A59FEA500DB6380 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		521ECE3721D85CFE00F8045E /* Convert.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Convert.h; sourceTree = "<group>"; };
 		521ECE3821D85CFE00F8045E /* Convert.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Convert.c; sourceTree = "<group>"; };
@@ -158,7 +158,7 @@
 		529D79B61A59EBFA003C3931 /* TimeTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TimeTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		529D79B71A59EBFA003C3931 /* StrTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = StrTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		52A31C821A6531D8009D3D83 /* libmonit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmonit.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		52A65E75243024F600F3ED50 /* StringBufferTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = StringBufferTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		52A65E75243024F600F3ED50 /* StringBufferTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = StringBufferTest; path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/StringBufferTest"; sourceTree = "<absolute>"; };
 		52D7964A13A6CE560014CED2 /* Bootstrap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = Bootstrap.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52D7964B13A6CE560014CED2 /* Bootstrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Bootstrap.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		52D7964C13A6CE560014CED2 /* Config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Config.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -300,8 +300,6 @@
 				5274583A13A1009C00C422FE /* test */,
 				52A31C831A6531DF009D3D83 /* Products */,
 				52F8BB431ECE55D60007DF91 /* Frameworks */,
-				52A65E75243024F600F3ED50 /* StringBufferTest */,
-				520568AF249019A00091011E /* InputstreamTest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -858,7 +856,7 @@
 					$SRCROOT/src/net,
 					$SRCROOT/src/util,
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
@@ -908,7 +906,7 @@
 					$SRCROOT/src/net,
 					$SRCROOT/src/util,
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -919,7 +917,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				COPY_PHASE_STRIP = NO;
+				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = NO;
 				EXECUTABLE_PREFIX = lib;
 				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -933,6 +932,7 @@
 					$SRCROOT/src/util,
 				);
 				PRODUCT_NAME = monit;
+				STRIP_STYLE = debugging;
 				SYSTEM_FRAMEWORK_SEARCH_PATHS = "";
 				VALID_ARCHS = x86_64;
 			};
@@ -944,6 +944,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXECUTABLE_PREFIX = lib;
 				GCC_C_LANGUAGE_STANDARD = c11;
@@ -957,6 +958,7 @@
 					$SRCROOT/src/util,
 				);
 				PRODUCT_NAME = monit;
+				STRIP_STYLE = debugging;
 				SYSTEM_FRAMEWORK_SEARCH_PATHS = "";
 				VALID_ARCHS = x86_64;
 			};
