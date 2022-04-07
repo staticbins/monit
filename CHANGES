@@ -1,6 +1,12 @@
-                     CHANGES version 5.32.0
+                     CHANGES version 5.33.0
 
            This file summarizes changes made since 5.0
+
+Version 5.33.0
+
+Fixed: Issue #1035: If the start/stop/restart program statement contains the equal sign, which
+is not followed by a space character, the configuration is not parsed correctly.
+
 
 Version 5.32.0
 
