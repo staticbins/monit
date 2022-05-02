@@ -1547,18 +1547,24 @@ icmp            : IF FAILED ICMP icmptype icmpoptlist rate1 THEN action1 recover
                 | IF FAILED PING icmpoptlist rate1 THEN action1 recovery_success {
                         icmpset.family = Socket_Ip;
                         icmpset.check_invers = false;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
                 | IF FAILED PING4 icmpoptlist rate1 THEN action1 recovery_success {
                         icmpset.family = Socket_Ip4;
                         icmpset.check_invers = false;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
                 | IF FAILED PING6 icmpoptlist rate1 THEN action1 recovery_success {
                         icmpset.family = Socket_Ip6;
                         icmpset.check_invers = false;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
@@ -1574,18 +1580,24 @@ icmp            : IF FAILED ICMP icmptype icmpoptlist rate1 THEN action1 recover
                 | IF SUCCEEDED PING icmpoptlist rate1 THEN action1 recovery_failure {
                         icmpset.family = Socket_Ip;
                         icmpset.check_invers = true;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
                 | IF SUCCEEDED PING4 icmpoptlist rate1 THEN action1 recovery_failure {
                         icmpset.family = Socket_Ip4;
                         icmpset.check_invers = true;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
                 | IF SUCCEEDED PING6 icmpoptlist rate1 THEN action1 recovery_failure {
                         icmpset.family = Socket_Ip6;
                         icmpset.check_invers = true;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
@@ -1599,6 +1611,7 @@ icmpopt         : icmpcount
                 | icmpsize
                 | icmptimeout
                 | icmpoutgoing
+                | responsetime
                 ;
 
 host            : /* EMPTY */ {
