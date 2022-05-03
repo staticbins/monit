@@ -487,12 +487,12 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
 #endif
                 default:
                         Log_error("Invalid socket family %d\n", family);
-                        return response;
+                        return -1.;
         }
         int status = getaddrinfo(hostname, NULL, &hints, &result);
         if (status) {
                 Log_error("Ping for %s -- getaddrinfo failed: %s\n", hostname, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
-                return response;
+                return -1.;
         }
         int s = -1;
         for (struct addrinfo *addr = result; addr && response < 0.; addr = addr->ai_next) {
