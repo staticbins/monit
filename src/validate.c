@@ -174,10 +174,10 @@ retry:
         }
         if (p->responsetime.limit > -1.) {
                 if (Util_evalDoubleQExpression(p->responsetime.operator, p->responsetime.current, p->responsetime.limit)) {
-                        rv = State_Failed;
-                        Event_post(s, Event_Speed, State_Failed, p->action, "response time %s doesn't match limit [time %s %s]", Convert_time2str(p->responsetime.current, (char[11]){}), operatorshortnames[p->responsetime.operator], Convert_time2str(p->responsetime.limit, (char[11]){}));
+                        Event_post(s, Event_Speed, State_Succeeded, p->action, "response time %s succeeded [time %s %s]", Convert_time2str(p->responsetime.current, (char[11]){}), operatorshortnames[p->responsetime.operator], Convert_time2str(p->responsetime.limit, (char[11]){}));
                 } else {
-                        Event_post(s, Event_Speed, State_Failed, p->action, "response time %s matches limit [time %s %s]", Convert_time2str(p->responsetime.current, (char[11]){}), operatorshortnames[p->responsetime.operator], Convert_time2str(p->responsetime.limit, (char[11]){}));
+                        rv = State_Failed;
+                        Event_post(s, Event_Speed, State_Failed, p->action, "response time %s exceeded the limit [time %s %s]", Convert_time2str(p->responsetime.current, (char[11]){}), operatorshortnames[p->responsetime.operator], Convert_time2str(p->responsetime.limit, (char[11]){}));
                 }
         }
         if (p->target.net.ssl.options.flags && p->target.net.ssl.certificate.validDays >= 0 && p->target.net.ssl.certificate.minimumDays > 0) {
@@ -1967,10 +1967,10 @@ State_Type check_remote_host(Service_T s) {
                                         // Check response time
                                         if (icmp->responsetime.limit > -1.) {
                                                 if (Util_evalDoubleQExpression(icmp->responsetime.operator, icmp->responsetime.current, icmp->responsetime.limit)) {
-                                                        rv = State_Failed;
-                                                        Event_post(s, Event_Speed, State_Failed, icmp->action, "response time %s doesn't match limit [time %s %s]", Convert_time2str(icmp->responsetime.current, (char[11]){}), operatorshortnames[icmp->responsetime.operator], Convert_time2str(icmp->responsetime.limit, (char[11]){}));
+                                                        Event_post(s, Event_Speed, State_Succeeded, icmp->action, "response time %s succeeded [time %s %s]", Convert_time2str(icmp->responsetime.current, (char[11]){}), operatorshortnames[icmp->responsetime.operator], Convert_time2str(icmp->responsetime.limit, (char[11]){})); //FIXME
                                                 } else {
-                                                        Event_post(s, Event_Speed, State_Failed, icmp->action, "response time %s matches limit [time %s %s]", Convert_time2str(icmp->responsetime.current, (char[11]){}), operatorshortnames[icmp->responsetime.operator], Convert_time2str(icmp->responsetime.limit, (char[11]){}));
+                                                        rv = State_Failed;
+                                                        Event_post(s, Event_Speed, State_Failed, icmp->action, "response time %s exceeded the limit [time %s %s]", Convert_time2str(icmp->responsetime.current, (char[11]){}), operatorshortnames[icmp->responsetime.operator], Convert_time2str(icmp->responsetime.limit, (char[11]){}));
                                                 }
                                         }
                                 }

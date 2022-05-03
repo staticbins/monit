@@ -7,7 +7,7 @@ Version 5.33.0
 Fixed: Issue #1035: If the start/stop/restart program statement contains the equal sign, which
 is not followed by a space character, the configuration is not parsed correctly.
 
-Fixed: Add support for the "responsetime" option to the ping test.
+Fixed: The "responsetime" option added to the ping test and fixed the port reponse time comparison.
 
 
 Version 5.32.0
