@@ -496,7 +496,7 @@ static void _readResponse(mysql_t *mysql) {
         if (mysql->state == MySQL_Init) {
                 if (! mysql->response.len || mysql->response.len > MYSQL_RESPONSE_BUFFER)
                         THROW(ProtocolException, "Invalid handshake packet length -- not MySQL protocol");
-                if (mysql->response.seq != 0)
+                if (mysql->response.seq > 1)
                         THROW(ProtocolException, "Invalid handshake packet sequence id -- not MySQL protocol");
         }
         if (mysql->response.len > MYSQL_RESPONSE_BUFFER) {
