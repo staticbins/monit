@@ -7,6 +7,9 @@ Version 5.33.0
 Fixed: Issue #1035: If the start/stop/restart program statement contains the equal sign, which
 is not followed by a space character, the configuration is not parsed correctly.
 
+Fixed: Issue #1047: If the MariaDB server doesn't allow access to the host from which Monit test is running,
+Monit reported "Invalid handshake packet sequence id -- not MySQL protocol".
+
 Fixed: The "responsetime" option added to the ping test and fixed the port reponse time comparison.
 
 

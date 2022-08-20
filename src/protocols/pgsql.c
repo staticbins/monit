@@ -203,7 +203,7 @@ static void _getMd5Hash(const char *s1, int s1Length, const char *s2, int s2Leng
         md5_init(&ctx);
         md5_append(&ctx, (const md5_byte_t *)s1, s1Length);
         md5_append(&ctx, (const md5_byte_t *)s2, s2Length);
-        md5_finish(&ctx, digest);
+        md5_finish(&ctx, (md5_byte_t *)digest);
         Checksum_digest2Bytes((unsigned char *)digest, 16, result);
 }
 
@@ -223,7 +223,7 @@ static void _authenticateMd5(postgresql_t postgresql) {
         const char *password = postgresql->port->parameters.postgresql.password ? postgresql->port->parameters.postgresql.password : "";
 
         // Compute the hash of username and password with salt
-        _getMd5Hash(password, strlen(password), username, strlen(username), hash);
+        _getMd5Hash(password, (int)strlen(password), username, (int)strlen(username), hash);
         _getMd5Hash(hash, 32, postgresql->authentication.salt, 4, hash);
 
         // Set the password message
@@ -406,7 +406,7 @@ static void _handleResponse(postgresql_t postgresql) {
                 int payloadLength = ntohl(response.header.length);
 
                 // Subtract the payload part which we read already (the 'length' attribute size)
-                size_t remainingPayloadLength = payloadLength - sizeof(response.header.length);
+                int remainingPayloadLength = payloadLength - sizeof(response.header.length);
                 if (remainingPayloadLength > 0) {
                         // Sanity check (our current limit is 1Kb as we don't implement SQL queries and need only session setup messages)
                         if (remainingPayloadLength > sizeof(response.data.buffer))
