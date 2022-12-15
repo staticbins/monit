@@ -78,10 +78,8 @@ AC_CHECK_LIB([pthread], [pthread_create], [], [AC_MSG_ERROR([POSIX thread librar
 # Header files
 # ------------------------------------------------------------------------
 
-AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_STAT
-AC_HEADER_TIME
 
 AC_CHECK_HEADERS([ \
         alloca.h \
@@ -446,9 +444,10 @@ AC_ARG_WITH(ipv6,
                 #include <sys/types.h>
                 #include <sys/socket.h>
                 #include <netinet/in.h>
+                #include <stdlib.h>
                 /* Make sure the definitions for AF_INET6 and struct sockaddr_in6
                  * are defined, and that we can actually create an IPv6 TCP socket.*/
-                main()
+                int main(void)
                 {
                         int fd;
                         struct sockaddr_in6 foo;
@@ -1074,7 +1073,7 @@ AH_BOTTOM([
 #endif
 ])
 
-AC_CONFIG_HEADER([src/config.h])
+AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([system/startup/monit.upstart])
 AC_CONFIG_FILES([system/startup/monit.service])
