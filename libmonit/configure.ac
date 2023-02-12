@@ -152,7 +152,6 @@ AC_CHECK_LIB([m], [round], [], [AC_MSG_ERROR([Math library is required])])
 # Header files 
 # ---------------------------------------------------------------------------
 
-AC_HEADER_STDC
 AC_CHECK_HEADERS([ctype.h \
                   errno.h \
                   execinfo.h \
@@ -347,9 +346,10 @@ AC_ARG_WITH(ipv6,
                 #include <sys/types.h>
                 #include <sys/socket.h>
                 #include <netinet/in.h>
+                #include <stdlib.h>
                 /* Make sure the definitions for AF_INET6 and struct sockaddr_in6
                  * are defined, and that we can actually create an IPv6 TCP socket.*/
-                main()
+                int main(void)
                 {
                         int fd;
                         struct sockaddr_in6 foo;
