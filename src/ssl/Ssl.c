@@ -883,6 +883,9 @@ SslServer_T SslServer_new(int socket, SslOptions_T options) {
 #ifdef SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION
         SSL_CTX_set_options(S->ctx, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
 #endif
+#ifdef SSL_OP_NO_RENEGOTIATION
+        SSL_CTX_set_options(C->ctx, SSL_OP_NO_RENEGOTIATION);
+#endif
 #ifdef SSL_CTRL_SET_ECDH_AUTO
         SSL_CTX_set_options(S->ctx, SSL_OP_SINGLE_ECDH_USE);
         SSL_CTX_set_ecdh_auto(S->ctx, 1);
