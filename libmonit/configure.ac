@@ -300,7 +300,7 @@ AC_C_BIGENDIAN
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
 # Compiler; tune warnings and make the char type unsigned
-CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
+CFLAGS="$CFLAGS -Wall -Wunused -funsigned-char";
 # does this compiler support -Wno-pointer-sign ?
 svd_CFLAGS="$CFLAGS"
 CFLAGS="-Wno-pointer-sign $CFLAGS"
