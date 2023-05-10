@@ -404,10 +404,6 @@ CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
 # Compiler; tune warnings and make the char type unsigned
 CFLAGS="$CFLAGS -Wall -Wunused -funsigned-char";
-# does this compiler support -Wno-address ?
-svd_CFLAGS="$CFLAGS"
-CFLAGS="-Wno-address $CFLAGS"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
 
 # Require at least C99 and use C11 if available
 AC_COMPUTE_INT([STDC_VERSION],[__STDC_VERSION__],,[STDC_VERSION=0])
