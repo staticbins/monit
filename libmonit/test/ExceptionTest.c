@@ -309,7 +309,7 @@ int main(void) {
         printf("=> Test11: No exception thrown\n");
         {
                 TRY
-                        int i = 0; i++;
+                        __attribute__ ((unused)) int i = 0; i++;
                 ELSE
                         assert(false); // Should not be reached
                 END_TRY;
