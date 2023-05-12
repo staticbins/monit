@@ -44,7 +44,9 @@
  * @return true if s is defined, otherwise false
  * @hideinitializer
  */
-#define STR_DEF(s) ((s) && *(s))
+static inline bool STR_DEF(const char *s) {
+	return s && *s;
+}
 
 
 /**
