@@ -4,7 +4,7 @@
 
 Version 5.34.0
 
-Fixed: Disable SSL session renegotiation iin the Monit HTTP interface (CVE-2011-1473).
+Fixed: Disable SSL session renegotiation in the Monit HTTP interface (CVE-2011-1473).
 
 
 Version 5.33.0

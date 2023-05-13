@@ -409,7 +409,7 @@ static void _handleResponse(postgresql_t postgresql) {
                 int remainingPayloadLength = payloadLength - sizeof(response.header.length);
                 if (remainingPayloadLength > 0) {
                         // Sanity check (our current limit is 1Kb as we don't implement SQL queries and need only session setup messages)
-                        if (remainingPayloadLength > sizeof(response.data.buffer))
+                        if ((size_t)remainingPayloadLength > sizeof(response.data.buffer))
                                 THROW(IOException, "PGSQL: response message is too large: %d bytes received (maximum %d)", remainingPayloadLength, sizeof(response.data.buffer));
 
                         // Read the response payload

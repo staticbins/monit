@@ -403,15 +403,7 @@ AC_C_BIGENDIAN
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
 # Compiler; tune warnings and make the char type unsigned
-CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
-# does this compiler support -Wno-pointer-sign ?
-svd_CFLAGS="$CFLAGS"
-CFLAGS="-Wno-pointer-sign $CFLAGS"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
-# does this compiler support -Wno-address ?
-svd_CFLAGS="$CFLAGS"
-CFLAGS="-Wno-address $CFLAGS"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+CFLAGS="$CFLAGS -Wall -Wunused -funsigned-char";
 
 # Require at least C99 and use C11 if available
 AC_COMPUTE_INT([STDC_VERSION],[__STDC_VERSION__],,[STDC_VERSION=0])
