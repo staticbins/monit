@@ -517,6 +517,7 @@ static void send_response(HttpRequest req, HttpResponse res) {
                 Socket_print(S, "Server: %s\r\n", server);
                 Socket_print(S, "Content-Length: %zu\r\n", bodyLength);
                 Socket_print(S, "Connection: close\r\n");
+                Socket_print(S, "X-Content-Type-Options: nosniff\r\n");
                 Socket_print(S, "X-Frame-Options: SAMEORIGIN\r\n");
                 Socket_print(S, "Content-Security-Policy: frame-ancestors 'self'\r\n");
                 if (headers)
