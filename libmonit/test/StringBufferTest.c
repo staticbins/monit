@@ -313,7 +313,7 @@ int main(void) {
                                     "<cccccccccc></cccccccccc>"
                                     "</bbbbbbbbbb>"
                                     "</aaaaaaaaaa>";
-                const char compressedInput[] = {
+                const unsigned char compressedInput[] = {
                         0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,                                                                                                             // Header
                         0xb3, 0x49, 0x84, 0x03, 0x3b, 0x9b, 0x24, 0x38, 0xb0, 0xb3, 0x49, 0x86, 0x03, 0x3b, 0x1b, 0x7d, 0x64, 0xce, 0xe0, 0x94, 0xd0, 0x47, 0x76, 0xbb, 0x3e, 0x92, 0xa7, 0x00, // Compressed blocks
                         0xdd, 0x84, 0x33, 0xe7,                                                                                                                                                 // CRC
@@ -364,7 +364,7 @@ int main(void) {
                                      "<cccccccccc></cccccccccc>"
                                      "</bbbbbbbbbb>"
                                      "</aaaaaaaaaa>";
-                const char output1[] = {
+                const unsigned char output1[] = {
                         0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,                                                                                                             // Header
                         0xb3, 0x49, 0x84, 0x03, 0x3b, 0x9b, 0x24, 0x38, 0xb0, 0xb3, 0x49, 0x86, 0x03, 0x3b, 0x1b, 0x7d, 0x64, 0xce, 0xe0, 0x94, 0xd0, 0x47, 0x76, 0xbb, 0x3e, 0x92, 0xa7, 0x00, // Compressed blocks
                         0xdd, 0x84, 0x33, 0xe7,                                                                                                                                                 // CRC
@@ -391,7 +391,7 @@ int main(void) {
                                      "<ffffffffff></ffffffffff>"
                                      "</eeeeeeeeee>"
                                      "</dddddddddd>";
-                const char output2[] = {
+                const unsigned char output2[] = {
                         0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,                                                                                     // Header
                         0xb3, 0x49, 0x81, 0x03, 0x3b, 0x9b, 0x54, 0x38, 0xb0, 0xb3, 0x49, 0x83, 0x03, 0x3b, 0x1b, 0x7d, 0x14, 0x0e, 0xb2, 0x2a, 0x7d, 0x24, 0xed, 0x00, // Compressed blocks
                         0xa9, 0x23, 0x54, 0xf5,                                                                                                                         // CRC
@@ -414,7 +414,7 @@ int main(void) {
 
                 printf("\tStage 3: append content + compress\n");
                 const char *input3 = "<gggggggggg></gggggggggg>";
-                const char output3[] = {
+                const unsigned char output3[] = {
                         0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,                                                                                                                               // Header
                         0xb3, 0x49, 0x81, 0x03, 0x3b, 0x9b, 0x54, 0x38, 0xb0, 0xb3, 0x49, 0x83, 0x03, 0x3b, 0x1b, 0x7d, 0x14, 0x0e, 0xb2, 0x2a, 0x7d, 0x64, 0xed, 0xe9, 0x70, 0x00, 0x94, 0x40, 0xe2, 0x00, 0x00, // Compressed blocks
                         0x4c, 0x64, 0x9a, 0x52,                                                                                                                                                                   // CRC
