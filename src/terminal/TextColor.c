@@ -52,7 +52,7 @@
 /* -------------------------------------------------------- Public Methods */
 
 
-bool TextColor_support() {
+bool TextColor_support(void) {
         if (! (Run.flags & Run_Batch) && isatty(STDOUT_FILENO)) {
                 if (getenv("COLORTERM")) {
                         return true;

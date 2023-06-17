@@ -491,7 +491,7 @@ static void _restoreV0(int services) {
 /* ------------------------------------------------------------------ Public */
 
 
-bool State_open() {
+bool State_open(void) {
         State_close();
         if ((file = open(Run.files.state, O_RDWR | O_CREAT, 0600)) == -1) {
                 Log_error("State file '%s': cannot open for write -- %s\n", Run.files.state, STRERROR);
@@ -502,7 +502,7 @@ bool State_open() {
 }
 
 
-void State_close() {
+void State_close(void) {
         if (file != -1) {
                 if (close(file) == -1)
                         Log_error("State file '%s': close error -- %s\n", Run.files.state, STRERROR);
@@ -512,7 +512,7 @@ void State_close() {
 }
 
 
-void State_save() {
+void State_save(void) {
         TRY
         {
                 if (ftruncate(file, 0L) == -1) {
@@ -598,19 +598,19 @@ void State_save() {
 }
 
 
-void State_dirty() {
+void State_dirty(void) {
         _stateDirty = true;
 }
 
 
-void State_saveIfDirty() {
+void State_saveIfDirty(void) {
         if (_stateDirty) {
                 State_save();
         }
 }
 
 
-void State_restore() {
+void State_restore(void) {
         /* Ignore empty state file */
         if ((lseek(file, 0L, SEEK_END) == 0)) {
                 return;
@@ -672,7 +672,7 @@ void State_restore() {
 }
 
 
-bool State_reboot() {
+bool State_reboot(void) {
         return systeminfo.booted == booted ? false : true;
 }
 

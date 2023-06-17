@@ -76,7 +76,7 @@ Sigfunc *signal(int signo, Sigfunc *func) {
 /**
  * Set a collective thread signal block for signals honored by monit
  */
-void set_signal_block() {
+void set_signal_block(void) {
         sigset_t mask;
         sigemptyset(&mask);
         sigaddset(&mask, SIGHUP);

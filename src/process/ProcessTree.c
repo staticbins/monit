@@ -282,7 +282,7 @@ int ProcessTree_init(ProcessEngine_Flags pflags) {
 /**
  * Delete the process tree
  */
-void ProcessTree_delete() {
+void ProcessTree_delete(void) {
         _delete(&ptree, &ptreesize);
 }
 
@@ -494,7 +494,7 @@ bool init_system_info(void) {
 
 
 //FIXME: move to standalone system class
-bool update_system_info() {
+bool update_system_info(void) {
         if (getloadavg_sysdep(systeminfo.loadavg, 3) == -1) {
                 Log_error("'%s' statistic error -- load average data collection failed\n", Run.system->name);
                 goto error1;

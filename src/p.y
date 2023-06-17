@@ -3356,7 +3356,7 @@ bool parse(char *controlfile) {
 /**
  * Initialize objects used by the parser.
  */
-static void preparse() {
+static void preparse(void) {
         servicelist = tail = current = NULL;
         /* Set instance incarnation ID */
         time(&Run.incarnation);
@@ -3430,7 +3430,7 @@ static void preparse() {
 /*
  * Check that values are reasonable after parsing
  */
-static void postparse() {
+static void postparse(void) {
         if (cfg_errflag)
                 return;
 
@@ -4921,7 +4921,7 @@ static void setsyslog(char *facility) {
 /*
  * Reset the current sslset for reuse
  */
-static void reset_sslset() {
+static void reset_sslset(void) {
         memset(&sslset, 0, sizeof(struct SslOptions_T));
         sslset.version = sslset.verify = sslset.allowSelfSigned = -1;
 }
@@ -4930,7 +4930,7 @@ static void reset_sslset() {
 /*
  * Reset the current mailset for reuse
  */
-static void reset_mailset() {
+static void reset_mailset(void) {
         memset(&mailset, 0, sizeof(struct Mail_T));
 }
 
@@ -4938,7 +4938,7 @@ static void reset_mailset() {
 /*
  * Reset the mailserver set to default values
  */
-static void reset_mailserverset() {
+static void reset_mailserverset(void) {
         memset(&mailserverset, 0, sizeof(struct MailServer_T));
         mailserverset.port = PORT_SMTP;
 }
@@ -4947,7 +4947,7 @@ static void reset_mailserverset() {
 /*
  * Reset the mmonit set to default values
  */
-static void reset_mmonitset() {
+static void reset_mmonitset(void) {
         memset(&mmonitset, 0, sizeof(struct Mmonit_T));
         mmonitset.timeout = Run.limits.networkTimeout;
 }
@@ -4956,7 +4956,7 @@ static void reset_mmonitset() {
 /*
  * Reset the Port set to default values
  */
-static void reset_portset() {
+static void reset_portset(void) {
         memset(&portset, 0, sizeof(struct Port_T));
         portset.check_invers = false;
         portset.socket = -1;
@@ -4972,7 +4972,7 @@ static void reset_portset() {
 /*
  * Reset the Proc set to default values
  */
-static void reset_resourceset() {
+static void reset_resourceset(void) {
         resourceset.resource_id = 0;
         resourceset.limit = 0;
         resourceset.action = NULL;
@@ -4983,7 +4983,7 @@ static void reset_resourceset() {
 /*
  * Reset the Timestamp set to default values
  */
-static void reset_timestampset() {
+static void reset_timestampset(void) {
         timestampset.type = Timestamp_Default;
         timestampset.operator = Operator_Equal;
         timestampset.time = 0;
@@ -4996,7 +4996,7 @@ static void reset_timestampset() {
 /*
  * Reset the ActionRate set to default values
  */
-static void reset_actionrateset() {
+static void reset_actionrateset(void) {
         actionrateset.count = 0;
         actionrateset.cycle = 0;
         actionrateset.action = NULL;
@@ -5006,7 +5006,7 @@ static void reset_actionrateset() {
 /*
  * Reset the Size set to default values
  */
-static void reset_sizeset() {
+static void reset_sizeset(void) {
         sizeset.operator = Operator_Equal;
         sizeset.size = 0;
         sizeset.test_changes = false;
@@ -5017,32 +5017,32 @@ static void reset_sizeset() {
 /*
  * Reset the Uptime set to default values
  */
-static void reset_uptimeset() {
+static void reset_uptimeset(void) {
         uptimeset.operator = Operator_Equal;
         uptimeset.uptime = 0;
         uptimeset.action = NULL;
 }
 
 
-static void reset_responsetimeset() {
+static void reset_responsetimeset(void) {
         responsetimeset.operator = Operator_Less;
         responsetimeset.current = 0.;
         responsetimeset.limit = -1.;
 }
 
 
-static void reset_linkstatusset() {
+static void reset_linkstatusset(void) {
         linkstatusset.check_invers = false;
         linkstatusset.action = NULL;
 }
 
 
-static void reset_linkspeedset() {
+static void reset_linkspeedset(void) {
         linkspeedset.action = NULL;
 }
 
 
-static void reset_linksaturationset() {
+static void reset_linksaturationset(void) {
         linksaturationset.limit = 0.;
         linksaturationset.operator = Operator_Equal;
         linksaturationset.action = NULL;
@@ -5052,7 +5052,7 @@ static void reset_linksaturationset() {
 /*
  * Reset the Bandwidth set to default values
  */
-static void reset_bandwidthset() {
+static void reset_bandwidthset(void) {
         bandwidthset.operator = Operator_Equal;
         bandwidthset.limit = 0ULL;
         bandwidthset.action = NULL;
@@ -5062,7 +5062,7 @@ static void reset_bandwidthset() {
 /*
  * Reset the Pid set to default values
  */
-static void reset_pidset() {
+static void reset_pidset(void) {
         pidset.action = NULL;
 }
 
@@ -5070,7 +5070,7 @@ static void reset_pidset() {
 /*
  * Reset the PPid set to default values
  */
-static void reset_ppidset() {
+static void reset_ppidset(void) {
         ppidset.action = NULL;
 }
 
@@ -5078,7 +5078,7 @@ static void reset_ppidset() {
 /*
  * Reset the Fsflag set to default values
  */
-static void reset_fsflagset() {
+static void reset_fsflagset(void) {
         fsflagset.action = NULL;
 }
 
@@ -5086,12 +5086,12 @@ static void reset_fsflagset() {
 /*
  * Reset the Nonexist set to default values
  */
-static void reset_nonexistset() {
+static void reset_nonexistset(void) {
         nonexistset.action = NULL;
 }
 
 
-static void reset_existset() {
+static void reset_existset(void) {
         existset.action = NULL;
 }
 
@@ -5099,7 +5099,7 @@ static void reset_existset() {
 /*
  * Reset the Checksum set to default values
  */
-static void reset_checksumset() {
+static void reset_checksumset(void) {
         checksumset.type         = Hash_Unknown;
         checksumset.test_changes = false;
         checksumset.action       = NULL;
@@ -5110,7 +5110,7 @@ static void reset_checksumset() {
 /*
  * Reset the Perm set to default values
  */
-static void reset_permset() {
+static void reset_permset(void) {
         permset.test_changes = false;
         permset.perm = 0;
         permset.action = NULL;
@@ -5120,7 +5120,7 @@ static void reset_permset() {
 /*
  * Reset the Status set to default values
  */
-static void reset_statusset() {
+static void reset_statusset(void) {
         statusset.initialized = false;
         statusset.return_value = 0;
         statusset.operator = Operator_Equal;
@@ -5131,7 +5131,7 @@ static void reset_statusset() {
 /*
  * Reset the Uid set to default values
  */
-static void reset_uidset() {
+static void reset_uidset(void) {
         uidset.uid = 0;
         uidset.action = NULL;
 }
@@ -5140,7 +5140,7 @@ static void reset_uidset() {
 /*
  * Reset the Gid set to default values
  */
-static void reset_gidset() {
+static void reset_gidset(void) {
         gidset.gid = 0;
         gidset.action = NULL;
 }
@@ -5149,7 +5149,7 @@ static void reset_gidset() {
 /*
  * Reset the Filesystem set to default values
  */
-static void reset_filesystemset() {
+static void reset_filesystemset(void) {
         filesystemset.resource = 0;
         filesystemset.operator = Operator_Equal;
         filesystemset.limit_absolute = -1;
@@ -5161,7 +5161,7 @@ static void reset_filesystemset() {
 /*
  * Reset the ICMP set to default values
  */
-static void reset_icmpset() {
+static void reset_icmpset(void) {
         icmpset.type = ICMP_ECHO;
         icmpset.size = ICMP_SIZE;
         icmpset.count = ICMP_ATTEMPT_COUNT;
@@ -5220,7 +5220,7 @@ static int check_perm(int perm) {
  * by doing a topological sort, thereby finding any cycles.
  * Assures that graph is a Directed Acyclic Graph (DAG).
  */
-static void check_depend() {
+static void check_depend(void) {
         Service_T depends_on = NULL;
         Service_T* dlt = &depend_list; /* the current tail of it                                 */
         bool done;                /* no unvisited nodes left?                               */

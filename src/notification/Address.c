@@ -44,7 +44,7 @@
 /* ------------------------------------------------------------------ Public */
 
 
-T Address_new() {
+T Address_new(void) {
         Address_T A;
         NEW(A);
         return A;

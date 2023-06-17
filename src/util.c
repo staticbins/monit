@@ -590,7 +590,7 @@ Service_T Util_getService(const char *name) {
 }
 
 
-int Util_getNumberOfServices() {
+        int Util_getNumberOfServices(void) {
         int i = 0;
         Service_T s;
         for (s = servicelist; s; s = s->next)
@@ -605,7 +605,7 @@ bool Util_existService(const char *name) {
 }
 
 
-void Util_printRunList() {
+        void Util_printRunList(void) {
         char buf[10];
         printf("Runtime constants:\n");
         printf(" %-18s = %s\n", "Control file", is_str_defined(Run.files.control));
@@ -1322,7 +1322,7 @@ void Util_printService(Service_T s) {
 }
 
 
-void Util_printServiceList() {
+        void Util_printServiceList(void) {
         Service_T s;
         char ruler[STRLEN];
 
@@ -1491,7 +1491,7 @@ char *Util_getBasicAuthHeader(char *username, char *password) {
 }
 
 
-void Util_redirectStdFds() {
+        void Util_redirectStdFds(void) {
         for (int i = 0; i < 3; i++) {
                 if (close(i) == -1 || open("/dev/null", O_RDWR) != i) {
                         Log_error("Cannot reopen standard file descriptor (%d) -- %s\n", i, STRERROR);
@@ -1500,7 +1500,7 @@ void Util_redirectStdFds() {
 }
 
 
-void Util_closeFds() {
+        void Util_closeFds(void) {
         for (int i = 3, descriptors = System_getDescriptorsGuarded(); i < descriptors; i++) {
                 close(i);
         }

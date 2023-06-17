@@ -92,7 +92,7 @@ static void _gcfiledescriptors(Filedescriptors_T *);
 /* ------------------------------------------------------------------ Public */
 
 
-void gc() {
+void gc(void) {
         Engine_destroyAllow();
         if (Run.flags & Run_ProcessEngineEnabled)
                 ProcessTree_delete();

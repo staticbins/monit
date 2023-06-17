@@ -80,7 +80,7 @@
 /* ------------------------------------------------------------------ Public */
 
 
-void file_init() {
+void file_init(void) {
         char pidfile[STRLEN];
         char buf[STRLEN];
         /* Check if the pidfile was already set during configfile parsing */
@@ -107,13 +107,13 @@ void file_init() {
 }
 
 
-void file_finalize() {
+void file_finalize(void) {
         Engine_cleanup();
         unlink(Run.files.pid);
 }
 
 
-char *file_findControlFile() {
+char *file_findControlFile(void) {
         char *rcfile = CALLOC(sizeof(char), STRLEN + 1);
         snprintf(rcfile, STRLEN, "%s/.%s", Run.Env.home, MONITRC);
         if (File_exist(rcfile)) {
