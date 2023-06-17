@@ -60,7 +60,7 @@
 
 void check_ntp3(Socket_T socket) {
         int  br;
-        char ntpRequest[NTPLEN] = {};
+        unsigned char ntpRequest[NTPLEN] = {};
         char ntpResponse[NTPLEN] = {};
 
         ASSERT(socket);
