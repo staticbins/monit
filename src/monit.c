@@ -192,7 +192,7 @@ int main(int argc, char **argv) {
  * Wakeup a sleeping monit daemon.
  * Returns true on success otherwise false
  */
-bool do_wakeupcall() {
+bool do_wakeupcall(void) {
         pid_t pid;
 
         if ((pid = exist_daemon()) > 0) {
@@ -206,7 +206,7 @@ bool do_wakeupcall() {
 }
 
 
-bool interrupt() {
+bool interrupt(void) {
         return Run.flags & Run_Stopped || Run.flags & Run_DoReload;
 }
 
@@ -229,7 +229,7 @@ static void _validateOnce(void) {
  * Parse the control file and initialize the program's
  * datastructures and the log system.
  */
-static void do_init() {
+static void do_init(void) {
         /*
          * Register interest for the SIGTERM signal,
          * in case we run in daemon mode this signal
@@ -565,7 +565,7 @@ static void do_exit(bool saveState) {
  * run validate() between sleeps. If not, just run validate() once.
  * Also, if specified, start the monit http server if in daemon mode.
  */
-static void do_default() {
+static void do_default(void) {
         if (Run.flags & Run_Daemon) {
                 if (do_wakeupcall())
                         exit(0);
@@ -875,7 +875,7 @@ static void handle_options(int argc, char **argv, List_T arguments) {
 /**
  * Print the program's help message
  */
-static void help() {
+static void help(void) {
         printf(
                "Usage: %s [options]+ [command]\n"
                "Options are as follows:\n"
@@ -920,7 +920,7 @@ static void help() {
 /**
  * Print version information
  */
-static void version() {
+static void version(void) {
         printf("This is Monit version %s\n", VERSION);
         printf("Built with");
 #ifndef HAVE_OPENSSL

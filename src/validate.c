@@ -1494,7 +1494,7 @@ static bool _doScheduledAction(Service_T s) {
  *  validate function check services in the service list to see if
  *  they will pass all defined tests.
  */
-int validate() {
+int validate(void) {
         Run.handler_flag = Handler_Succeeded;
         Event_queue_process();
 

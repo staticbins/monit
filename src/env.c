@@ -81,7 +81,7 @@
  *
  * @see https://bitbucket.org/tildeslash/monit/commits/cd545838378517f84bdb0989cadf461a19d8ba11
  */
-void init_env() {
+void init_env(void) {
         Util_closeFds();
         // Ensure that std descriptors (0, 1 and 2) are open
         int devnull = open("/dev/null", O_RDWR);

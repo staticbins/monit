@@ -228,7 +228,7 @@ static char *get_service_status(Output_Type, Service_T, char *, int);
  * Callback hook to the Processor module for registering this modules
  * doGet and doPost methods.
  */
-void init_service() {
+void init_service(void) {
         add_Impl(doGet, doPost);
 }
 

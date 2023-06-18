@@ -487,7 +487,7 @@ static bool _setClientCertificate(T C, const char *file) {
 /* ------------------------------------------------------------------ Public */
 
 
-void Ssl_start() {
+void Ssl_start(void) {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         SSL_library_init();
         SSL_load_error_strings();
@@ -507,7 +507,7 @@ void Ssl_start() {
 }
 
 
-void Ssl_stop() {
+void Ssl_stop(void) {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         CRYPTO_THREADID_set_callback(NULL);
         CRYPTO_set_locking_callback(NULL);
@@ -521,7 +521,7 @@ void Ssl_stop() {
 }
 
 
-void Ssl_threadCleanup() {
+void Ssl_threadCleanup(void) {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         ERR_remove_thread_state(NULL);
 #endif

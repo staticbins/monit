@@ -402,8 +402,8 @@ AC_C_BIGENDIAN
 # -std=cXX compiler switch which only include a minimum of C headers
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
-# Compiler; tune warnings and make the char type unsigned
-CFLAGS="$CFLAGS -Wall -Wunused -funsigned-char";
+# Compiler; tune warnings
+CFLAGS="$CFLAGS -Wall -Wunused ";
 
 # Require at least C99 and use C11 if available
 AC_COMPUTE_INT([STDC_VERSION],[__STDC_VERSION__],,[STDC_VERSION=0])

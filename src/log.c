@@ -220,7 +220,7 @@ void vsyslog(int facility_priority, const char *format, va_list arglist) {
  * Initialize the log system and 'log' function
  * @return true if the log system was successfully initialized
  */
-bool Log_init() {
+bool Log_init(void) {
         if (! (Run.flags & Run_Log))
                 return true;
         if (! _open())
@@ -478,7 +478,7 @@ void Log_vdebug(const char *s, va_list ap) {
 /**
  * Close the log file or syslog
  */
-void Log_close() {
+void Log_close(void) {
         if (Run.flags & Run_UseSyslog) {
                 closelog();
         }

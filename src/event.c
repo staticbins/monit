@@ -540,7 +540,7 @@ const char *Event_get_action_description(Event_T E) {
 /**
  * Reprocess the partially handled event queue
  */
-void Event_queue_process() {
+void Event_queue_process(void) {
         /* return in the case that the eventqueue is not enabled or empty */
         if (! Run.eventlist_dir || (! (Run.flags & Run_HandlerInit) && ! Run.handler_queue[Handler_Alert] && ! Run.handler_queue[Handler_Mmonit]))
                 return;

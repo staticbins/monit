@@ -95,7 +95,7 @@ void System_error(const char *e, ...) {
 }
 
 
-int System_getDescriptorsGuarded() {
+int System_getDescriptorsGuarded(void) {
         int max = 2<<15;
         int fileDescriptors = (int)sysconf(_SC_OPEN_MAX);
         if (fileDescriptors < 2)
@@ -112,7 +112,7 @@ bool System_random(void *buf, size_t nbytes) {
 #elif defined HAVE_GETRANDOM
         return (getrandom(buf, nbytes, 0) == (ssize_t)nbytes);
 #else
-        int fd = open("/dev/urandom", O_RDONLY);
+        int fd = File_open("/dev/urandom", O_RDONLY);
         if (fd >= 0) {
                 ssize_t bytes = read(fd, buf, nbytes);
                 close(fd);
@@ -130,7 +130,7 @@ bool System_random(void *buf, size_t nbytes) {
 }
 
 
-unsigned long long System_randomNumber() {
+unsigned long long System_randomNumber(void) {
         unsigned long long random;
         System_random(&random, sizeof(random));
         return random;

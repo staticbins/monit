@@ -482,7 +482,7 @@ error:
 /* ------------------------------------------------------------------ Public */
 
 
-void Engine_start() {
+void Engine_start(void) {
         if (Run.flags & Run_Stopped) {
                 return;
         }
@@ -524,12 +524,12 @@ void Engine_setStopped(bool stop) {
 }
 
 
-void Engine_stop() {
+void Engine_stop(void) {
         Engine_setStopped(true);
 }
 
 
-void Engine_cleanup() {
+void Engine_cleanup(void) {
         myServerSocketsCount = 0;
         if (Run.httpd.flags & Httpd_Unix && Run.httpd.socket.unix.path)
                 unlink(Run.httpd.socket.unix.path);
@@ -544,12 +544,12 @@ bool Engine_addAllow(char *pattern) {
 }
 
 
-bool Engine_hasAllow() {
+bool Engine_hasAllow(void) {
         return allowlist ? true : false;
 }
 
 
-void Engine_destroyAllow() {
+void Engine_destroyAllow(void) {
         for (HostsAllow_T current = allowlist, next = NULL; current; current = next) {
                 next = current->next;
                 FREE(current);

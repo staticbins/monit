@@ -167,7 +167,7 @@ void add_Impl(void(*doGet)(HttpRequest, HttpResponse), void(*doPost)(HttpRequest
 }
 
 
-void Processor_setHttpPostLimit() {
+void Processor_setHttpPostLimit(void) {
         // Base buffer size (space for e.g. "action=<name>")
         _httpPostLimit = STRLEN;
         // Add space for each service
