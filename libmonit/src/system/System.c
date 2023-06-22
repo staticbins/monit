@@ -112,7 +112,7 @@ bool System_random(void *buf, size_t nbytes) {
 #elif defined HAVE_GETRANDOM
         return (getrandom(buf, nbytes, 0) == (ssize_t)nbytes);
 #else
-        int fd = File_open("/dev/urandom", O_RDONLY);
+        int fd = File_open("/dev/urandom", "r");
         if (fd >= 0) {
                 ssize_t bytes = read(fd, buf, nbytes);
                 close(fd);
