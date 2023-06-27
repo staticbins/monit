@@ -448,12 +448,13 @@ char *Util_replaceString(char **src, const char *old, const char *new) {
         ASSERT(old);
         ASSERT(new);
 
-        int i = Util_countWords(*src, old);
+        size_t i = Util_countWords(*src, old);
         if (i) {
                 size_t l = strlen(old);
-                size_t d = strlen(new) - l;
-                if (d > 0) {
-                        d *= i;
+                size_t new_len = strlen(new);
+                size_t d;
+                if (new_len > l) {
+                        d = (new_len - l) * i;
                 } else {
                         d = 0;
                 }
@@ -476,9 +477,9 @@ char *Util_replaceString(char **src, const char *old, const char *new) {
 }
 
 
-int Util_countWords(char *s, const char *word) {
-        int i = 0;
-        char *p = s;
+size_t Util_countWords(const char *s, const char *word) {
+        size_t i = 0;
+        const char *p = s;
 
         ASSERT(s && word);
 

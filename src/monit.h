@@ -1274,7 +1274,7 @@ typedef struct Service_T {
                 State_Type        state;                                 /**< Test state */
                 bool         state_changed;              /**< true if state changed */
                 Handler_Type      flag;                     /**< The handlers state flag */
-                long long         state_map;           /**< Event bitmap for last cycles */
+                unsigned long long state_map;          /**< Event bitmap for last cycles */
                 unsigned int      count;                             /**< The event rate */
                 char             *message;    /**< Optional message describing the event */
                 EventAction_T     action;           /**< Description of the event action */

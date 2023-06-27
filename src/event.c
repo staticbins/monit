@@ -151,7 +151,7 @@ static bool _checkState(Event_T E, State_Type S) {
         /* Compare as many bits as cycles able to trigger the action */
         for (int i = 0; i < action->cycles; i++) {
                 /* Check the state of the particular cycle given by the bit position */
-                long long flag = (E->state_map >> i) & 0x1;
+                State_Type flag = (E->state_map >> i) & 0x1;
 
                 /* Count occurrences of the posted state */
                 if (flag == state)
@@ -386,6 +386,16 @@ static void _handleEvent(Service_T S, Event_T E) {
 }
 
 
+#if defined(__clang__) && defined(__clang_major__) && __clang_major__ >= 12
+__attribute__((no_sanitize("unsigned-integer-overflow", "unsigned-shift-base")))
+#elif defined(__clang__) && defined(__clang_major__) && __clang_major__ >= 4
+__attribute__((no_sanitize("unsigned-integer-overflow")))
+#endif
+static unsigned long long left_shift(unsigned long long v) {
+        return v << 1;
+}
+
+
 /* ------------------------------------------------------------------ Public */
 
 
@@ -416,7 +426,7 @@ void Event_post(Service_T service, long id, State_Type state, EventAction_T acti
                         gettimeofday(&e->collected, NULL);
 
                         /* Shift the existing event flags to the left and set the first bit based on actual state */
-                        e->state_map <<= 1;
+                        e->state_map = left_shift(e->state_map);
                         e->state_map |= ((state == State_Succeeded || state == State_ChangedNot) ? 0 : 1);
 
                         /* Update the message */

@@ -58,6 +58,11 @@
 
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
+#if defined(__clang__) && defined(__clang_major__) && __clang_major__ >= 12
+__attribute__((no_sanitize("unsigned-integer-overflow", "unsigned-shift-base")))
+#elif defined(__clang__) && defined(__clang_major__) && __clang_major__ >= 4
+__attribute__((no_sanitize("unsigned-integer-overflow")))
+#endif
 static void sha1_transform(unsigned int state[5], const unsigned char buffer[64]) {
         unsigned int a, b, c, d, e;
         typedef union {
