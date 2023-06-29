@@ -464,6 +464,7 @@ optfile         : start
                 | gid
                 | checksum
                 | size
+                | hardlink
                 | match
                 | mode
                 | onreboot
