@@ -513,6 +513,7 @@ optdir          : start
                 | permission
                 | uid
                 | gid
+                | hardlink
                 | mode
                 | onreboot
                 | group
