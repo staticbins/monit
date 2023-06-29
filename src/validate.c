@@ -1030,6 +1030,50 @@ static State_Type _checkSize(Service_T s, off_t size) {
 
 
 /**
+ * Test hardlink
+ */
+static State_Type _checkHardlink(Service_T s, nlink_t nlink) {
+    ASSERT(s);
+    if (nlink >= 0) {
+        State_Type rv = State_Succeeded;
+        if (s->nlinklist) {
+            for (NLink_T sl = s->nlinklist; sl; sl = sl->next) {
+                /* if we are testing for changes only, the value is variable */
+                if (sl->test_changes) {
+                    if (! sl->initialized) {
+                        /* the size was not initialized during monit start, so set the size now
+                         * and allow further size change testing */
+                        sl->initialized = true;
+                        sl->nlink = nlink;
+                    } else {
+                        if ((nlink_t)sl->nlink != nlink) {
+                            rv = State_Changed;
+                            Event_post(s, Event_Resource, State_Changed, sl->action, "hardlink for %s changed to %llu", s->path, (unsigned long long)nlink);
+                            /* reset expected value for next cycle */
+                            sl->nlink = nlink;
+                        } else {
+                            Event_post(s, Event_Resource, State_ChangedNot, sl->action, "hardlink has not changed [current hardlink = %llu]", (unsigned long long)nlink);
+                        }
+                    }
+                } else {
+                    /* we are testing constant value for failed or succeeded state */
+                    if (Util_evalQExpression(sl->operator, nlink, sl->nlink)) {
+                        rv = State_Failed;
+                        Event_post(s, Event_Resource, State_Failed, sl->action, "hardlink test failed for %s -- current hardlink is %llu", s->path, (unsigned long long)nlink);
+                    } else {
+                        Event_post(s, Event_Resource, State_Succeeded, sl->action, "hardlink check succeeded [current hardlink = %llu]", (unsigned long long)nlink);
+                    }
+                }
+            }
+        }
+        return rv;
+    } else {
+        return State_Init;
+    }
+}
+
+
+/**
  * Test uptime
  */
 static State_Type _checkUptime(Service_T s, long long uptime) {
