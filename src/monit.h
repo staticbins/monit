@@ -325,7 +325,8 @@ typedef enum {
         Resource_ServiceTime,
         Resource_LoadAveragePerCore1m,
         Resource_LoadAveragePerCore5m,
-        Resource_LoadAveragePerCore15m
+        Resource_LoadAveragePerCore15m,
+        Resource_HardLink                   // Used by check file, fifo and directory
 } __attribute__((__packed__)) Resource_Type;
 
 
