@@ -374,6 +374,7 @@ static void _sanityCheckEveryStatement(Service_T s);
 %token FIPS
 %token SECURITY ATTRIBUTE
 %token FILEDESCRIPTORS
+%token HARDLINK
 
 %left GREATER GREATEROREQUAL LESS LESSOREQUAL EQUAL NOTEQUAL
 
