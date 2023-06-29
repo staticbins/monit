@@ -3019,6 +3019,20 @@ size            : IF SIZE operator NUMBER unit rate1 THEN action1 recovery_succe
                   }
                 ;
 
+hardlink        : IF HARDLINK operator NUMBER rate1 THEN action1 recovery_success {
+                        nlinkset.operator = $<number>3;
+                        nlinkset.nlink = ((unsigned long long)$4);
+                        addeventaction(&(nlinkset).action, $<number>7, $<number>8);
+                        addnlink(&nlinkset);
+                  }
+                | IF CHANGED HARDLINK rate1 THEN action1 {
+                        nlinkset.test_changes = true;
+                        addeventaction(&(nlinkset).action, $<number>6, Action_Ignored);
+                        addnlink(&nlinkset);
+                  }
+                ;
+
+
 uid             : IF FAILED UID STRING rate1 THEN action1 recovery_success {
                         uidset.uid = get_uid($4, 0);
                         addeventaction(&(uidset).action, $<number>7, $<number>8);
