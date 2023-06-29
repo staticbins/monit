@@ -1662,6 +1662,7 @@ void Util_resetInfo(Service_T s) {
                         s->inf.directory->mode = -1;
                         s->inf.directory->uid = -1;
                         s->inf.directory->gid = -1;
+                        s->inf.directory->nlink = -1;
                         s->inf.directory->timestamp.access = 0;
                         s->inf.directory->timestamp.change = 0;
                         s->inf.directory->timestamp.modify = 0;
