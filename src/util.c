@@ -1671,6 +1671,7 @@ void Util_resetInfo(Service_T s) {
                         s->inf.fifo->mode = -1;
                         s->inf.fifo->uid = -1;
                         s->inf.fifo->gid = -1;
+                        s->inf.fifo->nlink = -1;
                         s->inf.fifo->timestamp.access = 0;
                         s->inf.fifo->timestamp.change = 0;
                         s->inf.fifo->timestamp.modify = 0;
