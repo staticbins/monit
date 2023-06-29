@@ -483,6 +483,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 _formatStatus("permission", Event_Permission, type, res, s, s->inf.directory->mode >= 0, "%o", s->inf.directory->mode & 07777);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.directory->uid >= 0, "%d", s->inf.directory->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.directory->gid >= 0, "%d", s->inf.directory->gid);
+                                _formatStatus("hardlink", Event_Resource, type, res, s, true, "%llu", (unsigned long long)s->inf.directory->nlink);
                                 _formatStatus("access timestamp", Event_Timestamp, type, res, s, s->inf.directory->timestamp.access > 0, "%s", Time_string(s->inf.directory->timestamp.access, (char[32]){}));
                                 _formatStatus("change timestamp", Event_Timestamp, type, res, s, s->inf.directory->timestamp.change > 0, "%s", Time_string(s->inf.directory->timestamp.change, (char[32]){}));
                                 _formatStatus("modify timestamp", Event_Timestamp, type, res, s, s->inf.directory->timestamp.modify > 0, "%s", Time_string(s->inf.directory->timestamp.modify, (char[32]){}));
