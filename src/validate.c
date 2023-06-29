@@ -1739,6 +1739,7 @@ State_Type check_file(Service_T s) {
                 s->inf.file->uid = stat_buf.st_uid;
                 s->inf.file->gid = stat_buf.st_gid;
                 s->inf.file->size = stat_buf.st_size;
+                s->inf.file->nlink = stat_buf.st_nlink;
                 s->inf.file->timestamp.access = stat_buf.st_atime;
                 s->inf.file->timestamp.change = stat_buf.st_ctime;
                 s->inf.file->timestamp.modify = stat_buf.st_mtime;
@@ -1769,6 +1770,8 @@ State_Type check_file(Service_T s) {
         if (_checkGid(s, s->inf.file->gid) == State_Failed)
                 rv = State_Failed;
         if (_checkSize(s, s->inf.file->size) == State_Failed)
+                rv = State_Failed;
+        if (_checkHardlink(s, s->inf.file->nlink) == State_Failed)
                 rv = State_Failed;
         if (_checkTimestamps(s, s->inf.file->timestamp.access, s->inf.file->timestamp.change, s->inf.file->timestamp.modify) == State_Failed)
                 rv = State_Failed;
