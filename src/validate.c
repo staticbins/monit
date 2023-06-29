@@ -1858,6 +1858,7 @@ State_Type check_fifo(Service_T s) {
                 s->inf.fifo->mode = stat_buf.st_mode;
                 s->inf.fifo->uid = stat_buf.st_uid;
                 s->inf.fifo->gid = stat_buf.st_gid;
+                s->inf.fifo->nlink = stat_buf.st_nlink;
                 s->inf.fifo->timestamp.access = stat_buf.st_atime;
                 s->inf.fifo->timestamp.change = stat_buf.st_ctime;
                 s->inf.fifo->timestamp.modify = stat_buf.st_mtime;
@@ -1883,6 +1884,8 @@ State_Type check_fifo(Service_T s) {
         if (_checkUid(s, s->inf.fifo->uid) == State_Failed)
                 rv = State_Failed;
         if (_checkGid(s, s->inf.fifo->gid) == State_Failed)
+                rv = State_Failed;
+        if (_checkHardlink(s, s->inf.fifo->nlink) == State_Failed)
                 rv = State_Failed;
         if (_checkTimestamps(s, s->inf.fifo->timestamp.access, s->inf.fifo->timestamp.change, s->inf.fifo->timestamp.modify) == State_Failed)
                 rv = State_Failed;
