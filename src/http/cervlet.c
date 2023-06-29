@@ -187,6 +187,7 @@ static void print_service_rules_timestamp(HttpResponse, Service_T);
 static void print_service_rules_fsflags(HttpResponse, Service_T);
 static void print_service_rules_filesystem(HttpResponse, Service_T);
 static void print_service_rules_size(HttpResponse, Service_T);
+static void print_service_rules_nlink(HttpResponse, Service_T);
 static void print_service_rules_linkstatus(HttpResponse, Service_T);
 static void print_service_rules_linkspeed(HttpResponse, Service_T);
 static void print_service_rules_linksaturation(HttpResponse, Service_T);
@@ -1292,6 +1293,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
         print_service_rules_fsflags(res, s);
         print_service_rules_filesystem(res, s);
         print_service_rules_size(res, s);
+        print_service_rules_nlink(res, s);
         print_service_rules_linkstatus(res, s);
         print_service_rules_linkspeed(res, s);
         print_service_rules_linksaturation(res, s);
@@ -2216,6 +2218,19 @@ static void print_service_rules_size(HttpResponse res, Service_T s) {
                 else
                         Util_printRule(false, sb, sl->action, "If %s %llu byte(s)", operatornames[sl->operator], sl->size);
                 _displayTableRow(res, true, "rule", "Size", "%s", StringBuffer_toString(sb));
+                StringBuffer_free(&sb);
+        }
+}
+
+
+static void print_service_rules_nlink(HttpResponse res, Service_T s) {
+        for (NLink_T sl = s->nlinklist; sl; sl = sl->next) {
+                StringBuffer_T sb = StringBuffer_create(256);
+                if (sl->test_changes)
+                        Util_printRule(false, sb, sl->action, "If changed");
+                else
+                        Util_printRule(false, sb, sl->action, "If %s %llu", operatornames[sl->operator], sl->nlink);
+                _displayTableRow(res, true, "rule", "Hardlink", "%s", StringBuffer_toString(sb));
                 StringBuffer_free(&sb);
         }
 }
