@@ -1128,6 +1128,7 @@ typedef struct FileInfo_T {
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
         off_t size;                                                  /**< Size */
+        nlink_t nlink;                               /**< Number of hard links */
         off_t readpos;                        /**< Position for regex matching */
         ino_t inode;                                                /**< Inode */
         ino_t inode_prev;               /**< Previous inode for regex matching */
