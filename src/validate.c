@@ -1802,6 +1802,7 @@ State_Type check_directory(Service_T s) {
                 s->inf.directory->mode = stat_buf.st_mode;
                 s->inf.directory->uid = stat_buf.st_uid;
                 s->inf.directory->gid = stat_buf.st_gid;
+                s->inf.directory->nlink = stat_buf.st_nlink;
                 s->inf.directory->timestamp.access = stat_buf.st_atime;
                 s->inf.directory->timestamp.change = stat_buf.st_ctime;
                 s->inf.directory->timestamp.modify = stat_buf.st_mtime;
@@ -1827,6 +1828,8 @@ State_Type check_directory(Service_T s) {
         if (_checkUid(s, s->inf.directory->uid) == State_Failed)
                 rv = State_Failed;
         if (_checkGid(s, s->inf.directory->gid) == State_Failed)
+                rv = State_Failed;
+        if (_checkHardlink(s, s->inf.directory->nlink) == State_Failed)
                 rv = State_Failed;
         if (_checkTimestamps(s, s->inf.directory->timestamp.access, s->inf.directory->timestamp.change, s->inf.directory->timestamp.modify) == State_Failed)
                 rv = State_Failed;
