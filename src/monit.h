@@ -1150,6 +1150,7 @@ typedef struct FifoInfo_T {
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
+        nlink_t nlink;                               /**< Number of hard links */
 } *FifoInfo_T;
 
 
