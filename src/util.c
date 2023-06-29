@@ -997,6 +997,17 @@ void Util_printService(Service_T s) {
                        );
         }
 
+        for (NLink_T o = s->nlinklist; o; o = o->next) {
+                StringBuffer_clear(buf);
+                printf(" %-20s = %s\n", "Hardlink",
+                       o->test_changes
+                       ?
+                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if changed"))
+                       :
+                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %llu", operatornames[o->operator], o->nlink))
+                       );
+        }
+
         for (LinkStatus_T o = s->linkstatuslist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 printf(" %-20s = %s\n", "Link status", StringBuffer_toString(Util_printRule(o->check_invers, buf, o->action, "if %s", o->check_invers ? "up" : "down")));
