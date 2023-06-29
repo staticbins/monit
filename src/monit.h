@@ -876,6 +876,19 @@ typedef struct Size_T {
 } *Size_T;
 
 
+/** Defines nlink object */
+typedef struct NLink_T {
+        bool initialized;                   /**< true if size was initialized */
+        bool test_changes;       /**< true if we only should test for changes */
+        Operator_Type operator;                           /**< Comparison operator */
+        unsigned long long nlink;                        /**< Hard links watermark */
+        EventAction_T action; /**< Description of the action upon event occurrence */
+
+        /** For internal use */
+        struct NLink_T *next;                             /**< next nlink in chain */
+} *NLink_T;
+
+
 /** Defines uptime object */
 typedef struct Uptime_T {
         Operator_Type operator;                           /**< Comparison operator */
