@@ -1241,6 +1241,7 @@ typedef struct Service_T {
         Port_T      socketlist;                         /**< Unix sockets to check */
         Resource_T  resourcelist;                         /**< Resource check list */
         Size_T      sizelist;                                 /**< Size check list */
+        NLink_T     nlinklist;                /**< Number of hard links check list */
         Uptime_T    uptimelist;                             /**< Uptime check list */
         Match_T     matchlist;                             /**< Content Match list */
         Match_T     matchignorelist;                /**< Content Match ignore list */
