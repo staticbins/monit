@@ -3425,6 +3425,7 @@ static void preparse(void) {
         reset_gidset();
         reset_statusset();
         reset_sizeset();
+        reset_nlinkset();
         reset_mailset();
         reset_sslset();
         reset_mailserverset();
