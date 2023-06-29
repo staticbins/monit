@@ -287,6 +287,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<mode>%o</mode>"
                                         "<uid>%d</uid>"
                                         "<gid>%d</gid>"
+                                        "<hardlink>%llu</hardlink>"
                                         "<timestamps>"
                                         "<access>%llu</access>"
                                         "<change>%llu</change>"
@@ -295,6 +296,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         S->inf.fifo->mode & 07777,
                                         (int)S->inf.fifo->uid,
                                         (int)S->inf.fifo->gid,
+                                        (unsigned long long)S->inf.fifo->nlink,
                                         S->inf.fifo->timestamp.access,
                                         S->inf.fifo->timestamp.change,
                                         S->inf.fifo->timestamp.modify);
