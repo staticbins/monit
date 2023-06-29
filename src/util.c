@@ -1652,6 +1652,7 @@ void Util_resetInfo(Service_T s) {
                         s->inf.file->mode = -1;
                         s->inf.file->uid = -1;
                         s->inf.file->gid = -1;
+                        s->inf.file->nlink = -1;
                         s->inf.file->timestamp.access = 0;
                         s->inf.file->timestamp.change = 0;
                         s->inf.file->timestamp.modify = 0;
