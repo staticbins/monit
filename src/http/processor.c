@@ -873,6 +873,7 @@ static void internal_error(Socket_T S, int status, const char *msg) {
                      "Server: %s\r\n"
                      "Content-Type: text/html\r\n"
                      "Connection: close\r\n"
+                     "X-Content-Type-Options: nosniff\r\n"
                      "X-Frame-Options: SAMEORIGIN\r\n"
                      "Content-Security-Policy: frame-ancestors 'self'\r\n"
                      "\r\n"
