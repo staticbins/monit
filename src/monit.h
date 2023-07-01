@@ -1128,7 +1128,7 @@ typedef struct FileInfo_T {
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
         off_t size;                                                  /**< Size */
-        nlink_t nlink;                               /**< Number of hard links */
+        long long nlink;                             /**< Number of hard links */
         off_t readpos;                        /**< Position for regex matching */
         ino_t inode;                                                /**< Inode */
         ino_t inode_prev;               /**< Previous inode for regex matching */
@@ -1141,7 +1141,7 @@ typedef struct DirectoryInfo_T {
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
-        nlink_t nlink;                               /**< Number of hard links */
+        long long nlink;                             /**< Number of hard links */
 } *DirectoryInfo_T;
 
 
@@ -1150,7 +1150,7 @@ typedef struct FifoInfo_T {
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
-        nlink_t nlink;                               /**< Number of hard links */
+        long long nlink;                             /**< Number of hard links */
 } *FifoInfo_T;
 
 
