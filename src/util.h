@@ -53,7 +53,7 @@ char *Util_replaceString(char **src, const char *old, const char *new);
  * @param s The String to search for word in
  * @param word The sub-string to count in s
  */
-int Util_countWords(char *s, const char *word);
+size_t Util_countWords(const char *s, const char *word);
 
 
 /**

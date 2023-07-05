@@ -228,11 +228,15 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                 switch (S->type) {
                         case Service_System:
                                 StringBuffer_append(B,
+                                        "<uptime>%lld</uptime>"
+                                        "<boottime>%lld</boottime>"
                                         "<filedescriptors>"
                                         "<allocated>%lld</allocated>"
                                         "<unused>%lld</unused>"
                                         "<maximum>%lld</maximum>"
                                         "</filedescriptors>",
+                                        (long long)(Time_now() - systeminfo.booted),
+                                        (long long)(systeminfo.booted),
                                         systeminfo.filedescriptors.allocated,
                                         systeminfo.filedescriptors.unused,
                                         systeminfo.filedescriptors.maximum);

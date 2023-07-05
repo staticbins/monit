@@ -198,7 +198,7 @@ typedef struct mysql_t {
         struct {
                 mysql_authentication_t type;
                 int hashLength;
-                char *(*getPassword)(char *result, const char *password, const char *salt);
+                unsigned char *(*getPassword)(unsigned char *result, const char *password, const char *salt);
         } authentication;
         mysql_response_t response;
         mysql_request_t request;
@@ -301,7 +301,7 @@ static void _setUInt4(mysql_request_t *request, uint32_t value) {
 }
 
 
-static void _setData(mysql_request_t *request, const char *data, unsigned long length) {
+static void _setData(mysql_request_t *request, const void *data, size_t length) {
         if (request->cursor + length > request->limit)
                 THROW(ProtocolException, "Maximum packet size exceeded");
         memcpy(request->cursor, data, length);
@@ -358,7 +358,7 @@ static void _responseAuthMoreData(mysql_t *mysql) {
 
 
 // Get the password (see http://dev.mysql.com/doc/internals/en/secure-password-authentication.html):
-static char *_getNativePassword(char result[static SHA1_DIGEST_SIZE], const char *password, const char *salt) {
+static unsigned char *_getNativePassword(unsigned char result[static SHA1_DIGEST_SIZE], const char *password, const char *salt) {
         sha1_context_t ctx;
         // SHA1(password)
         uint8_t stage1[SHA1_DIGEST_SIZE];
@@ -384,7 +384,7 @@ static char *_getNativePassword(char result[static SHA1_DIGEST_SIZE], const char
 
 
 // Get the password (see https://dev.mysql.com/doc/internals/en/sha256.html and https://dev.mysql.com/doc/dev/mysql-server/8.0.11/page_caching_sha2_authentication_exchanges.html):
-static char *_getCachingSha2Password(char result[static SHA256_DIGEST_LENGTH], const char *password, const char *salt) {
+static unsigned char *_getCachingSha2Password(unsigned char result[static SHA256_DIGEST_LENGTH], const char *password, const char *salt) {
 #ifdef HAVE_OPENSSL
         // SHA256(password)
         uint8_t stage1[SHA256_DIGEST_LENGTH];
@@ -571,7 +571,7 @@ static void _sendHandshake(mysql_t *mysql) {
                 _setData(&mysql->request, mysql->port->parameters.mysql.username, strlen(mysql->port->parameters.mysql.username)); // username
         _setPadding(&mysql->request, 1);                                                                                           // NUL
         if (STR_DEF(mysql->port->parameters.mysql.password)) {
-                char password[SHA256_DIGEST_LENGTH] = {};
+                unsigned char password[SHA256_DIGEST_LENGTH] = {};
                 _setUInt1(&mysql->request, mysql->authentication.hashLength); // authdatalen
                 _setData(&mysql->request, mysql->authentication.getPassword(password, mysql->port->parameters.mysql.password, mysql->salt), mysql->authentication.hashLength); // password
         } else {
@@ -739,8 +739,8 @@ void check_mysql(Socket_T S) {
                 if (mysql.state == MySQL_AuthSwitch) {
                         if (STR_DEF(mysql.port->parameters.mysql.password)) {
                                 // Resend the password encoded per requested plugin rules
-                                char password[SHA256_DIGEST_LENGTH] = {};
-                                _sendPassword(&mysql, (unsigned char *)mysql.authentication.getPassword(password, mysql.port->parameters.mysql.password, mysql.salt), mysql.authentication.hashLength);
+                                unsigned char password[SHA256_DIGEST_LENGTH] = {};
+                                _sendPassword(&mysql, mysql.authentication.getPassword(password, mysql.port->parameters.mysql.password, mysql.salt), mysql.authentication.hashLength);
                         } else {
                                 // Send plain password
                                 _sendPassword(&mysql, (const unsigned char *)"", 0);
