@@ -520,6 +520,7 @@ static void send_response(HttpRequest req, HttpResponse res) {
                 Socket_print(S, "X-Content-Type-Options: nosniff\r\n");
                 Socket_print(S, "X-Frame-Options: SAMEORIGIN\r\n");
                 Socket_print(S, "Content-Security-Policy: frame-ancestors 'self'\r\n");
+                Socket_print(S, "X-XSS-Protection 1; mode=block\r\n");
                 if (headers)
                         Socket_print(S, "%s", headers);
                 Socket_print(S, "\r\n");
