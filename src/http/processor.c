@@ -521,6 +521,7 @@ static void send_response(HttpRequest req, HttpResponse res) {
                 Socket_print(S, "X-Frame-Options: SAMEORIGIN\r\n");
                 Socket_print(S, "Content-Security-Policy: frame-ancestors 'self'\r\n");
                 Socket_print(S, "X-XSS-Protection 1; mode=block\r\n");
+                Socket_print(S, "Referrer-Policy: same-origin\r\n");
                 if (headers)
                         Socket_print(S, "%s", headers);
                 Socket_print(S, "\r\n");
@@ -877,6 +878,8 @@ static void internal_error(Socket_T S, int status, const char *msg) {
                      "X-Content-Type-Options: nosniff\r\n"
                      "X-Frame-Options: SAMEORIGIN\r\n"
                      "Content-Security-Policy: frame-ancestors 'self'\r\n"
+                     "X-XSS-Protection 1; mode=block\r\n"
+                     "Referrer-Policy: same-origin\r\n"
                      "\r\n"
                      "<html><head><title>%s</title></head>"
                      "<body bgcolor=#FFFFFF><h2>%s</h2>%s<p>"
