@@ -522,6 +522,7 @@ static void send_response(HttpRequest req, HttpResponse res) {
                 Socket_print(S, "Content-Security-Policy: frame-ancestors 'self'\r\n");
                 Socket_print(S, "X-XSS-Protection 1; mode=block\r\n");
                 Socket_print(S, "Referrer-Policy: same-origin\r\n");
+                Socket_print(S, "Permissions-Policy: geolocation=(),camera=(),microphone=()\r\n");
                 if (headers)
                         Socket_print(S, "%s", headers);
                 Socket_print(S, "\r\n");
@@ -880,6 +881,7 @@ static void internal_error(Socket_T S, int status, const char *msg) {
                      "Content-Security-Policy: frame-ancestors 'self'\r\n"
                      "X-XSS-Protection 1; mode=block\r\n"
                      "Referrer-Policy: same-origin\r\n"
+                     "Permissions-Policy: geolocation=(),camera=(),microphone=()\r\n"
                      "\r\n"
                      "<html><head><title>%s</title></head>"
                      "<body bgcolor=#FFFFFF><h2>%s</h2>%s<p>"
