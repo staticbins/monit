@@ -445,7 +445,7 @@ static void do_service(Socket_T s) {
         volatile HttpRequest req = create_HttpRequest(s);
         if (res && req) {
                 if (Run.httpd.socket.net.ssl.flags & SSL_Enabled)
-                        set_header(res, "Strict-Transport-Security", "max-age=63072000; includeSubdomains; preload");
+                        set_header(res, "Strict-Transport-Security", "max-age=63072000");
                 if (is_authenticated(req, res)) {
                         set_header(res, "Set-Cookie", "securitytoken=%s; Max-Age=600; HttpOnly; SameSite=strict%s", res->token, (Run.httpd.socket.net.ssl.flags & SSL_Enabled) ? "; Secure" : "");
                         if (IS(req->method, METHOD_GET))
