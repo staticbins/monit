@@ -445,7 +445,7 @@ static void do_service(Socket_T s) {
         volatile HttpRequest req = create_HttpRequest(s);
         if (res && req) {
                 if (Run.httpd.socket.net.ssl.flags & SSL_Enabled)
-                        set_header(res, "Strict-Transport-Security", "max-age=63072000; includeSubdomains; preload");
+                        set_header(res, "Strict-Transport-Security", "max-age=63072000");
                 if (is_authenticated(req, res)) {
                         set_header(res, "Set-Cookie", "securitytoken=%s; Max-Age=600; HttpOnly; SameSite=strict%s", res->token, (Run.httpd.socket.net.ssl.flags & SSL_Enabled) ? "; Secure" : "");
                         if (IS(req->method, METHOD_GET))
@@ -520,6 +520,9 @@ static void send_response(HttpRequest req, HttpResponse res) {
                 Socket_print(S, "X-Content-Type-Options: nosniff\r\n");
                 Socket_print(S, "X-Frame-Options: SAMEORIGIN\r\n");
                 Socket_print(S, "Content-Security-Policy: frame-ancestors 'self'\r\n");
+                Socket_print(S, "X-XSS-Protection 1; mode=block\r\n");
+                Socket_print(S, "Referrer-Policy: same-origin\r\n");
+                Socket_print(S, "Permissions-Policy: geolocation=(),camera=(),microphone=()\r\n");
                 if (headers)
                         Socket_print(S, "%s", headers);
                 Socket_print(S, "\r\n");
@@ -876,6 +879,9 @@ static void internal_error(Socket_T S, int status, const char *msg) {
                      "X-Content-Type-Options: nosniff\r\n"
                      "X-Frame-Options: SAMEORIGIN\r\n"
                      "Content-Security-Policy: frame-ancestors 'self'\r\n"
+                     "X-XSS-Protection 1; mode=block\r\n"
+                     "Referrer-Policy: same-origin\r\n"
+                     "Permissions-Policy: geolocation=(),camera=(),microphone=()\r\n"
                      "\r\n"
                      "<html><head><title>%s</title></head>"
                      "<body bgcolor=#FFFFFF><h2>%s</h2>%s<p>"
