@@ -252,14 +252,16 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<change>%llu</change>"
                                         "<modify>%llu</modify>"
                                         "</timestamps>"
-                                        "<size>%lld</size>",
+                                        "<size>%lld</size>"
+                                        "<hardlink>%lld</hardlink>",
                                         S->inf.file->mode & 07777,
                                         (int)S->inf.file->uid,
                                         (int)S->inf.file->gid,
                                         S->inf.file->timestamp.access,
                                         S->inf.file->timestamp.change,
                                         S->inf.file->timestamp.modify,
-                                        (long long)S->inf.file->size);
+                                        (long long)S->inf.file->size,
+                                        (long long)S->inf.file->nlink);
                                 if (S->checksum)
                                         StringBuffer_append(B, "<checksum type=\"%s\">%s</checksum>", checksumnames[S->checksum->type], S->inf.file->cs_sum);
                                 break;
@@ -269,6 +271,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<mode>%o</mode>"
                                         "<uid>%d</uid>"
                                         "<gid>%d</gid>"
+                                        "<hardlink>%lld</hardlink>"
                                         "<timestamps>"
                                         "<access>%llu</access>"
                                         "<change>%llu</change>"
@@ -277,6 +280,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         S->inf.directory->mode & 07777,
                                         (int)S->inf.directory->uid,
                                         (int)S->inf.directory->gid,
+                                        (long long)S->inf.directory->nlink,
                                         S->inf.directory->timestamp.access,
                                         S->inf.directory->timestamp.change,
                                         S->inf.directory->timestamp.modify);
@@ -287,6 +291,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<mode>%o</mode>"
                                         "<uid>%d</uid>"
                                         "<gid>%d</gid>"
+                                        "<hardlink>%lld</hardlink>"
                                         "<timestamps>"
                                         "<access>%llu</access>"
                                         "<change>%llu</change>"
@@ -295,6 +300,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         S->inf.fifo->mode & 07777,
                                         (int)S->inf.fifo->uid,
                                         (int)S->inf.fifo->gid,
+                                        (long long)S->inf.fifo->nlink,
                                         S->inf.fifo->timestamp.access,
                                         S->inf.fifo->timestamp.change,
                                         S->inf.fifo->timestamp.modify);

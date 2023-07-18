@@ -325,7 +325,8 @@ typedef enum {
         Resource_ServiceTime,
         Resource_LoadAveragePerCore1m,
         Resource_LoadAveragePerCore5m,
-        Resource_LoadAveragePerCore15m
+        Resource_LoadAveragePerCore15m,
+        Resource_HardLink                   // Used by check file, fifo and directory
 } __attribute__((__packed__)) Resource_Type;
 
 
@@ -875,6 +876,19 @@ typedef struct Size_T {
 } *Size_T;
 
 
+/** Defines nlink object */
+typedef struct NLink_T {
+        bool initialized;                   /**< true if size was initialized */
+        bool test_changes;       /**< true if we only should test for changes */
+        Operator_Type operator;                           /**< Comparison operator */
+        unsigned long long nlink;                        /**< Hard links watermark */
+        EventAction_T action; /**< Description of the action upon event occurrence */
+
+        /** For internal use */
+        struct NLink_T *next;                             /**< next nlink in chain */
+} *NLink_T;
+
+
 /** Defines uptime object */
 typedef struct Uptime_T {
         Operator_Type operator;                           /**< Comparison operator */
@@ -1114,6 +1128,7 @@ typedef struct FileInfo_T {
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
         off_t size;                                                  /**< Size */
+        long long nlink;                             /**< Number of hard links */
         off_t readpos;                        /**< Position for regex matching */
         ino_t inode;                                                /**< Inode */
         ino_t inode_prev;               /**< Previous inode for regex matching */
@@ -1126,6 +1141,7 @@ typedef struct DirectoryInfo_T {
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
+        long long nlink;                             /**< Number of hard links */
 } *DirectoryInfo_T;
 
 
@@ -1134,6 +1150,7 @@ typedef struct FifoInfo_T {
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
+        long long nlink;                             /**< Number of hard links */
 } *FifoInfo_T;
 
 
@@ -1224,6 +1241,7 @@ typedef struct Service_T {
         Port_T      socketlist;                         /**< Unix sockets to check */
         Resource_T  resourcelist;                         /**< Resource check list */
         Size_T      sizelist;                                 /**< Size check list */
+        NLink_T     nlinklist;                /**< Number of hard links check list */
         Uptime_T    uptimelist;                             /**< Uptime check list */
         Match_T     matchlist;                             /**< Content Match list */
         Match_T     matchignorelist;                /**< Content Match ignore list */

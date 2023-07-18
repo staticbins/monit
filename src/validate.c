@@ -1030,6 +1030,51 @@ static State_Type _checkSize(Service_T s, off_t size) {
 
 
 /**
+ * Test hardlink
+ * The number of used hard links does not fit to nlink_t, sometimes.
+ */
+static State_Type _checkHardlink(Service_T s, long long nlink) {
+        ASSERT(s);
+        if (nlink >= 0) {
+                State_Type rv = State_Succeeded;
+                if (s->nlinklist) {
+                        for (NLink_T sl = s->nlinklist; sl; sl = sl->next) {
+                                /* if we are testing for changes only, the value is variable */
+                                if (sl->test_changes) {
+                                        if (! sl->initialized) {
+                                                /* the size was not initialized during monit start, so set the size now
+                                                 * and allow further size change testing */
+                                                sl->initialized = true;
+                                                sl->nlink = nlink;
+                                        } else {
+                                                if ((long long)sl->nlink != nlink) {
+                                                        rv = State_Changed;
+                                                        Event_post(s, Event_Resource, State_Changed, sl->action, "hardlink for %s changed to %llu", s->path, (unsigned long long)nlink);
+                                                        /* reset expected value for next cycle */
+                                                        sl->nlink = nlink;
+                                                } else {
+                                                        Event_post(s, Event_Resource, State_ChangedNot, sl->action, "hardlink has not changed [current hardlink = %llu]", (unsigned long long)nlink);
+                                                }
+                                        }
+                                } else {
+                                        /* we are testing constant value for failed or succeeded state */
+                                        if (Util_evalQExpression(sl->operator, nlink, sl->nlink)) {
+                                                rv = State_Failed;
+                                                Event_post(s, Event_Resource, State_Failed, sl->action, "hardlink test failed for %s -- current hardlink is %llu", s->path, (unsigned long long)nlink);
+                                        } else {
+                                                Event_post(s, Event_Resource, State_Succeeded, sl->action, "hardlink check succeeded [current hardlink = %llu]", (unsigned long long)nlink);
+                                        }
+                                }
+                        }
+                }
+                return rv;
+        } else {
+                return State_Init;
+        }
+}
+
+
+/**
  * Test uptime
  */
 static State_Type _checkUptime(Service_T s, long long uptime) {
@@ -1040,9 +1085,9 @@ static State_Type _checkUptime(Service_T s, long long uptime) {
         for (Uptime_T ul = s->uptimelist; ul; ul = ul->next) {
                 if (Util_evalQExpression(ul->operator, uptime, ul->uptime)) {
                         rv = State_Failed;
-                        Event_post(s, Event_Uptime, State_Failed, ul->action, "uptime test failed for %s -- current uptime is %llu seconds", s->path, (unsigned long long)uptime);
+                        Event_post(s, Event_Uptime, State_Failed, ul->action, "uptime test failed for %s -- current uptime is %s", Convert_time2str(ul->uptime, (char[11]){}), Convert_time2str(uptime, (char[11]){}));
                 } else {
-                        Event_post(s, Event_Uptime, State_Succeeded, ul->action, "uptime test succeeded [current uptime = %llu seconds]", (unsigned long long)uptime);
+                        Event_post(s, Event_Uptime, State_Succeeded, ul->action, "uptime test succeeded [current uptime = %s]", Convert_time2str(uptime, (char[11]){}));
                 }
         }
         return rv;
@@ -1695,6 +1740,7 @@ State_Type check_file(Service_T s) {
                 s->inf.file->uid = stat_buf.st_uid;
                 s->inf.file->gid = stat_buf.st_gid;
                 s->inf.file->size = stat_buf.st_size;
+                s->inf.file->nlink = stat_buf.st_nlink;
                 s->inf.file->timestamp.access = stat_buf.st_atime;
                 s->inf.file->timestamp.change = stat_buf.st_ctime;
                 s->inf.file->timestamp.modify = stat_buf.st_mtime;
@@ -1726,6 +1772,8 @@ State_Type check_file(Service_T s) {
                 rv = State_Failed;
         if (_checkSize(s, s->inf.file->size) == State_Failed)
                 rv = State_Failed;
+        if (_checkHardlink(s, s->inf.file->nlink) == State_Failed)
+                rv = State_Failed;
         if (_checkTimestamps(s, s->inf.file->timestamp.access, s->inf.file->timestamp.change, s->inf.file->timestamp.modify) == State_Failed)
                 rv = State_Failed;
         if (_checkMatch(s) == State_Failed)
@@ -1755,6 +1803,7 @@ State_Type check_directory(Service_T s) {
                 s->inf.directory->mode = stat_buf.st_mode;
                 s->inf.directory->uid = stat_buf.st_uid;
                 s->inf.directory->gid = stat_buf.st_gid;
+                s->inf.directory->nlink = stat_buf.st_nlink;
                 s->inf.directory->timestamp.access = stat_buf.st_atime;
                 s->inf.directory->timestamp.change = stat_buf.st_ctime;
                 s->inf.directory->timestamp.modify = stat_buf.st_mtime;
@@ -1780,6 +1829,8 @@ State_Type check_directory(Service_T s) {
         if (_checkUid(s, s->inf.directory->uid) == State_Failed)
                 rv = State_Failed;
         if (_checkGid(s, s->inf.directory->gid) == State_Failed)
+                rv = State_Failed;
+        if (_checkHardlink(s, s->inf.directory->nlink) == State_Failed)
                 rv = State_Failed;
         if (_checkTimestamps(s, s->inf.directory->timestamp.access, s->inf.directory->timestamp.change, s->inf.directory->timestamp.modify) == State_Failed)
                 rv = State_Failed;
@@ -1808,6 +1859,7 @@ State_Type check_fifo(Service_T s) {
                 s->inf.fifo->mode = stat_buf.st_mode;
                 s->inf.fifo->uid = stat_buf.st_uid;
                 s->inf.fifo->gid = stat_buf.st_gid;
+                s->inf.fifo->nlink = stat_buf.st_nlink;
                 s->inf.fifo->timestamp.access = stat_buf.st_atime;
                 s->inf.fifo->timestamp.change = stat_buf.st_ctime;
                 s->inf.fifo->timestamp.modify = stat_buf.st_mtime;
@@ -1833,6 +1885,8 @@ State_Type check_fifo(Service_T s) {
         if (_checkUid(s, s->inf.fifo->uid) == State_Failed)
                 rv = State_Failed;
         if (_checkGid(s, s->inf.fifo->gid) == State_Failed)
+                rv = State_Failed;
+        if (_checkHardlink(s, s->inf.fifo->nlink) == State_Failed)
                 rv = State_Failed;
         if (_checkTimestamps(s, s->inf.fifo->timestamp.access, s->inf.fifo->timestamp.change, s->inf.fifo->timestamp.modify) == State_Failed)
                 rv = State_Failed;
