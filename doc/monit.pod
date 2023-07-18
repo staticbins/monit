@@ -2803,6 +2803,37 @@ Example:
        if failed gid "shadow" then alert
 
 
+=head2 HARDLINK TEST
+
+The hardlink statement may be used in a check file, fifo or directory
+service entry. If specified in the control file, Monit will
+compute the number of hard links for a file, fifo or directory.
+
+Testing a specific value:
+
+ IF HARDLINK [[operator] value] THEN action
+
+Testing hardlink changes:
+
+ IF CHANGED HARDLINK THEN action
+
+I<operator> is a choice of "<", ">", "!=", "==" in C notation,
+"GT", "LT", "EQ", "NE" in shell sh notation and "GREATER",
+"LESS", "EQUAL", "NOTEQUAL" in human readable form (if not
+specified, default is EQUAL).
+
+I<value> is a watermark.
+
+I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
+"EXEC" or "UNMONITOR".
+
+For example to send an alert if the used number of hard links in a
+directory is too large:
+
+ check directory upload with path /data/upload
+       if hardlink > 32000 then alert
+
+
 =head2 PID TEST
 
 Monit can test the process's PID. Monit will send an alert in case the PID

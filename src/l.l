@@ -393,6 +393,7 @@ free              { return TFREE; }
 perm(ission)?     { return PERMISSION; }
 exec(ute)?        { return EXEC; }
 size              { return SIZE; }
+hardlink(s)?      { return HARDLINK; }
 uptime            { return UPTIME; }
 responsetime      { return RESPONSETIME; }
 basedir           { return BASEDIR; }
