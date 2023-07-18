@@ -4,6 +4,10 @@
 
 Version 5.34.0
 
+New: Issue #1074: Added a hardlink test to file, directory and fifo checks. Thanks to Lutz Mader. Example:
+    check directory upload with path /data/upload
+       if hardlink > 32000 then alert
+
 New: Issue #1070: Added the system boot time and uptime to the XML interface. Thanks
 to Lutz Mader.
 
