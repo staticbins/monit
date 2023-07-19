@@ -4,10 +4,16 @@
 
 Version 5.34.0
 
+New: Issue #1074: Added a hardlink test to file, directory and fifo checks. Thanks to Lutz Mader. Example:
+    check directory upload with path /data/upload
+       if hardlink > 32000 then alert
+
 New: Issue #1070: Added the system boot time and uptime to the XML interface. Thanks
 to Lutz Mader.
 
 New: Set the header X-Content-Type-Options to prevent MIME type sniffing. Thanks to Christian Goettsche.
+
+Fixed: Issue #1082: Wrong error message for the uptime test. Thanks to Lutz Mader.
 
 Fixed: Disable SSL session renegotiation in the Monit HTTP interface (CVE-2011-1473).
 

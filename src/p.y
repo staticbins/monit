@@ -189,6 +189,7 @@ static struct Exist_T existset = {};
 static struct Status_T statusset = {};
 static struct Perm_T permset = {};
 static struct Size_T sizeset = {};
+static struct NLink_T nlinkset = {};
 static struct Uptime_T uptimeset = {};
 static struct ResponseTime_T responsetimeset = {};
 static struct LinkStatus_T linkstatusset = {};
@@ -236,6 +237,7 @@ static void  addresource(Resource_T);
 static void  addtimestamp(Timestamp_T);
 static void  addactionrate(ActionRate_T);
 static void  addsize(Size_T);
+static void  addnlink(NLink_T);
 static void  adduptime(Uptime_T);
 static void  addpid(Pid_T);
 static void  addppid(Pid_T);
@@ -283,6 +285,7 @@ static void  reset_resourceset(void);
 static void  reset_timestampset(void);
 static void  reset_actionrateset(void);
 static void  reset_sizeset(void);
+static void  reset_nlinkset(void);
 static void  reset_uptimeset(void);
 static void  reset_responsetimeset(void);
 static void  reset_pidset(void);
@@ -371,6 +374,7 @@ static void _sanityCheckEveryStatement(Service_T s);
 %token FIPS
 %token SECURITY ATTRIBUTE
 %token FILEDESCRIPTORS
+%token HARDLINK
 
 %left GREATER GREATEROREQUAL LESS LESSOREQUAL EQUAL NOTEQUAL
 
@@ -460,6 +464,7 @@ optfile         : start
                 | gid
                 | checksum
                 | size
+                | hardlink
                 | match
                 | mode
                 | onreboot
@@ -508,6 +513,7 @@ optdir          : start
                 | permission
                 | uid
                 | gid
+                | hardlink
                 | mode
                 | onreboot
                 | group
@@ -588,6 +594,7 @@ optfifo         : start
                 | permission
                 | uid
                 | gid
+                | hardlink
                 | mode
                 | onreboot
                 | group
@@ -3015,6 +3022,20 @@ size            : IF SIZE operator NUMBER unit rate1 THEN action1 recovery_succe
                   }
                 ;
 
+hardlink        : IF HARDLINK operator NUMBER rate1 THEN action1 recovery_success {
+                        nlinkset.operator = $<number>3;
+                        nlinkset.nlink = ((unsigned long long)$4);
+                        addeventaction(&(nlinkset).action, $<number>7, $<number>8);
+                        addnlink(&nlinkset);
+                  }
+                | IF CHANGED HARDLINK rate1 THEN action1 {
+                        nlinkset.test_changes = true;
+                        addeventaction(&(nlinkset).action, $<number>6, Action_Ignored);
+                        addnlink(&nlinkset);
+                  }
+                ;
+
+
 uid             : IF FAILED UID STRING rate1 THEN action1 recovery_success {
                         uidset.uid = get_uid($4, 0);
                         addeventaction(&(uidset).action, $<number>7, $<number>8);
@@ -3404,6 +3425,7 @@ static void preparse(void) {
         reset_gidset();
         reset_statusset();
         reset_sizeset();
+        reset_nlinkset();
         reset_mailset();
         reset_sslset();
         reset_mailserverset();
@@ -3933,6 +3955,34 @@ static void addsize(Size_T ss) {
         current->sizelist = s;
 
         reset_sizeset();
+}
+
+
+/*
+ * Add a new NLink object to the current service nlink list
+ */
+static void addnlink(NLink_T ss) {
+        NLink_T s;
+        struct stat buf;
+    
+        ASSERT(ss);
+    
+        NEW(s);
+        s->operator     = ss->operator;
+        s->nlink        = ss->nlink;
+        s->action       = ss->action;
+        s->test_changes = ss->test_changes;
+        /* Get the initial size for future comparison */
+        if (s->test_changes) {
+                s->initialized = ! stat(current->path, &buf);
+                if (s->initialized)
+                        s->nlink = (unsigned long long)buf.st_nlink;
+        }
+    
+        s->next = current->nlinklist;
+        current->nlinklist = s;
+    
+        reset_nlinkset();
 }
 
 
@@ -5011,6 +5061,17 @@ static void reset_sizeset(void) {
         sizeset.size = 0;
         sizeset.test_changes = false;
         sizeset.action = NULL;
+}
+
+
+/*
+ * Reset the NLink set to default values
+ */
+static void reset_nlinkset(void) {
+        nlinkset.operator = Operator_Equal;
+        nlinkset.nlink = 0;
+        nlinkset.test_changes = false;
+        nlinkset.action = NULL;
 }
 
 

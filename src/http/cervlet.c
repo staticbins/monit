@@ -187,6 +187,7 @@ static void print_service_rules_timestamp(HttpResponse, Service_T);
 static void print_service_rules_fsflags(HttpResponse, Service_T);
 static void print_service_rules_filesystem(HttpResponse, Service_T);
 static void print_service_rules_size(HttpResponse, Service_T);
+static void print_service_rules_nlink(HttpResponse, Service_T);
 static void print_service_rules_linkstatus(HttpResponse, Service_T);
 static void print_service_rules_linkspeed(HttpResponse, Service_T);
 static void print_service_rules_linksaturation(HttpResponse, Service_T);
@@ -469,6 +470,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.file->uid >= 0, "%d", s->inf.file->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.file->gid >= 0, "%d", s->inf.file->gid);
                                 _formatStatus("size", Event_Size, type, res, s, s->inf.file->size >= 0, "%s", Convert_bytes2str(s->inf.file->size, (char[10]){}));
+                                _formatStatus("hardlink", Event_Resource, type, res, s, s->inf.file->nlink != -1LL, "%llu", (unsigned long long)s->inf.file->nlink);
                                 _formatStatus("access timestamp", Event_Timestamp, type, res, s, s->inf.file->timestamp.access > 0, "%s", Time_string(s->inf.file->timestamp.access, (char[32]){}));
                                 _formatStatus("change timestamp", Event_Timestamp, type, res, s, s->inf.file->timestamp.change > 0, "%s", Time_string(s->inf.file->timestamp.change, (char[32]){}));
                                 _formatStatus("modify timestamp", Event_Timestamp, type, res, s, s->inf.file->timestamp.modify > 0, "%s", Time_string(s->inf.file->timestamp.modify, (char[32]){}));
@@ -482,6 +484,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 _formatStatus("permission", Event_Permission, type, res, s, s->inf.directory->mode >= 0, "%o", s->inf.directory->mode & 07777);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.directory->uid >= 0, "%d", s->inf.directory->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.directory->gid >= 0, "%d", s->inf.directory->gid);
+                                _formatStatus("hardlink", Event_Resource, type, res, s, s->inf.directory->nlink != -1LL, "%llu", (unsigned long long)s->inf.directory->nlink);
                                 _formatStatus("access timestamp", Event_Timestamp, type, res, s, s->inf.directory->timestamp.access > 0, "%s", Time_string(s->inf.directory->timestamp.access, (char[32]){}));
                                 _formatStatus("change timestamp", Event_Timestamp, type, res, s, s->inf.directory->timestamp.change > 0, "%s", Time_string(s->inf.directory->timestamp.change, (char[32]){}));
                                 _formatStatus("modify timestamp", Event_Timestamp, type, res, s, s->inf.directory->timestamp.modify > 0, "%s", Time_string(s->inf.directory->timestamp.modify, (char[32]){}));
@@ -491,6 +494,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 _formatStatus("permission", Event_Permission, type, res, s, s->inf.fifo->mode >= 0, "%o", s->inf.fifo->mode & 07777);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.fifo->uid >= 0, "%d", s->inf.fifo->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.fifo->gid >= 0, "%d", s->inf.fifo->gid);
+                                _formatStatus("hardlink", Event_Resource, type, res, s, s->inf.fifo->nlink != -1LL, "%llu", (unsigned long long)s->inf.fifo->nlink);
                                 _formatStatus("access timestamp", Event_Timestamp, type, res, s, s->inf.fifo->timestamp.access > 0, "%s", Time_string(s->inf.fifo->timestamp.access, (char[32]){}));
                                 _formatStatus("change timestamp", Event_Timestamp, type, res, s, s->inf.fifo->timestamp.change > 0, "%s", Time_string(s->inf.fifo->timestamp.change, (char[32]){}));
                                 _formatStatus("modify timestamp", Event_Timestamp, type, res, s, s->inf.fifo->timestamp.modify > 0, "%s", Time_string(s->inf.fifo->timestamp.modify, (char[32]){}));
@@ -1289,6 +1293,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
         print_service_rules_fsflags(res, s);
         print_service_rules_filesystem(res, s);
         print_service_rules_size(res, s);
+        print_service_rules_nlink(res, s);
         print_service_rules_linkstatus(res, s);
         print_service_rules_linkspeed(res, s);
         print_service_rules_linksaturation(res, s);
@@ -2213,6 +2218,19 @@ static void print_service_rules_size(HttpResponse res, Service_T s) {
                 else
                         Util_printRule(false, sb, sl->action, "If %s %llu byte(s)", operatornames[sl->operator], sl->size);
                 _displayTableRow(res, true, "rule", "Size", "%s", StringBuffer_toString(sb));
+                StringBuffer_free(&sb);
+        }
+}
+
+
+static void print_service_rules_nlink(HttpResponse res, Service_T s) {
+        for (NLink_T sl = s->nlinklist; sl; sl = sl->next) {
+                StringBuffer_T sb = StringBuffer_create(256);
+                if (sl->test_changes)
+                        Util_printRule(false, sb, sl->action, "If changed");
+                else
+                        Util_printRule(false, sb, sl->action, "If %s %llu", operatornames[sl->operator], sl->nlink);
+                _displayTableRow(res, true, "rule", "Hardlink", "%s", StringBuffer_toString(sb));
                 StringBuffer_free(&sb);
         }
 }

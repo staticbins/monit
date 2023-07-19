@@ -57,6 +57,7 @@ static void _gc_action(Action_T *);
 static void _gc_eventaction(EventAction_T *);
 static void _gcpdl(Dependant_T *);
 static void _gcso(Size_T *);
+static void _gcnlink(NLink_T *);
 static void _gclinkstatus(LinkStatus_T *);
 static void _gclinkspeed(LinkSpeed_T *);
 static void _gclinksaturation(LinkSaturation_T *);
@@ -215,6 +216,8 @@ static void _gc_service(Service_T *s) {
                 _gcparl(&(*s)->actionratelist);
         if ((*s)->sizelist)
                 _gcso(&(*s)->sizelist);
+        if ((*s)->nlinklist)
+                _gcnlink(&(*s)->nlinklist);
         if ((*s)->linkstatuslist)
                 _gclinkstatus(&(*s)->linkstatuslist);
         if ((*s)->linkspeedlist)
@@ -504,6 +507,15 @@ static void _gcso(Size_T *s) {
         ASSERT(s);
         if ((*s)->next)
                 _gcso(&(*s)->next);
+        if ((*s)->action)
+                _gc_eventaction(&(*s)->action);
+        FREE(*s);
+}
+
+static void _gcnlink(NLink_T *s) {
+        ASSERT(s);
+        if ((*s)->next)
+                _gcnlink(&(*s)->next);
         if ((*s)->action)
                 _gc_eventaction(&(*s)->action);
         FREE(*s);

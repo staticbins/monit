@@ -998,6 +998,17 @@ void Util_printService(Service_T s) {
                        );
         }
 
+        for (NLink_T o = s->nlinklist; o; o = o->next) {
+                StringBuffer_clear(buf);
+                printf(" %-20s = %s\n", "Hardlink",
+                       o->test_changes
+                       ?
+                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if changed"))
+                       :
+                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %llu", operatornames[o->operator], o->nlink))
+                       );
+        }
+
         for (LinkStatus_T o = s->linkstatuslist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 printf(" %-20s = %s\n", "Link status", StringBuffer_toString(Util_printRule(o->check_invers, buf, o->action, "if %s", o->check_invers ? "up" : "down")));
@@ -1642,6 +1653,7 @@ void Util_resetInfo(Service_T s) {
                         s->inf.file->mode = -1;
                         s->inf.file->uid = -1;
                         s->inf.file->gid = -1;
+                        s->inf.file->nlink = -1;
                         s->inf.file->timestamp.access = 0;
                         s->inf.file->timestamp.change = 0;
                         s->inf.file->timestamp.modify = 0;
@@ -1651,6 +1663,7 @@ void Util_resetInfo(Service_T s) {
                         s->inf.directory->mode = -1;
                         s->inf.directory->uid = -1;
                         s->inf.directory->gid = -1;
+                        s->inf.directory->nlink = -1;
                         s->inf.directory->timestamp.access = 0;
                         s->inf.directory->timestamp.change = 0;
                         s->inf.directory->timestamp.modify = 0;
@@ -1659,6 +1672,7 @@ void Util_resetInfo(Service_T s) {
                         s->inf.fifo->mode = -1;
                         s->inf.fifo->uid = -1;
                         s->inf.fifo->gid = -1;
+                        s->inf.fifo->nlink = -1;
                         s->inf.fifo->timestamp.access = 0;
                         s->inf.fifo->timestamp.change = 0;
                         s->inf.fifo->timestamp.modify = 0;
