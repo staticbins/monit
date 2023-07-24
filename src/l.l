@@ -285,7 +285,7 @@ noalert           { return NOALERT; }
 mail-format       { return MAILFORMAT; }
 resource          { return RESOURCE; }
 restart(s)?       { return RESTART; }
-cycle(s)?         { return CYCLE;}
+cycle(s)?         { return CYCLE; }
 timeout           { return TIMEOUT; }
 retry             { return RETRY; }
 checksum          { return CHECKSUM; }
@@ -937,6 +937,11 @@ group[ \t]+       {
                     BEGIN(INITIAL);
                     save_arg();
                     return TIMESPEC;
+                  }
+
+  cycle(s)?       {
+                    BEGIN(INITIAL);
+                    return CYCLE;
                   }
 
   .               {
