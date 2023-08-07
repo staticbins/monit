@@ -2827,7 +2827,7 @@ I<value> is a watermark.
 I<action> is a choice of "ALERT", "RESTART", "START", "STOP",
 "EXEC" or "UNMONITOR".
 
-For example to send an alert if the used number of hard links in a
+For example to send an alert if the number of used hard links of a
 directory is too large:
 
  check directory upload with path /data/upload
