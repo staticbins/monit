@@ -454,7 +454,7 @@ bool init_process_info_sysdep(void) {
                 return false;
         }
 
-        if ((systeminfo.cpu.count = sysconf(_SC_NPROCESSORS_CONF)) < 0) {
+        if ((systeminfo.cpu.count = sysconf(_SC_NPROCESSORS_ONLN)) < 0) {
                 DEBUG("system statistic error -- cannot get cpu count: %s\n", STRERROR);
                 return false;
         } else if (systeminfo.cpu.count == 0) {

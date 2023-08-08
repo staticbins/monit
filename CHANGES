@@ -17,6 +17,8 @@ Fixed: Issue #1082: Wrong error message for the uptime test. Thanks to Lutz Made
 
 Fixed: Disable SSL session renegotiation in the Monit HTTP interface (CVE-2011-1473).
 
+Fixed: Monit reported wrong number of CPUs in the VMWare virtual host in Debian 12.x
+
 
 
 Version 5.33.0
