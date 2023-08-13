@@ -739,6 +739,8 @@ setlog          : SET LOGFILE PATH   {
                                 setlogfile($3);
                                 Run.flags &= ~Run_UseSyslog;
                                 Run.flags |= Run_Log;
+                        } else {
+                                FREE($3);
                         }
                   }
                 | SET LOGFILE SYSLOG {
@@ -776,6 +778,8 @@ setpid          : SET PIDFILE PATH {
                         if (! Run.files.pid || ihp.pidfile) {
                                 ihp.pidfile = true;
                                 setpidfile($3);
+                        } else {
+                                FREE($3);
                         }
                   }
                 ;
