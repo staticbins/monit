@@ -278,6 +278,8 @@ static void  prepare_urlrequest(URL_T U);
 static void  seturlrequest(int, char *);
 static void  setlogfile(char *);
 static void  setpidfile(char *);
+static void  setidfile(char *);
+static void  setstatefile(char *);
 static void  reset_sslset(void);
 static void  reset_mailset(void);
 static void  reset_mailserverset(void);
@@ -767,12 +769,22 @@ seteventqueue   : SET EVENTQUEUE BASEDIR PATH {
                 ;
 
 setidfile       : SET IDFILE PATH {
-                        Run.files.id = $3;
+                        if (! Run.files.id || ihp.idfile) {
+                                ihp.idfile = true;
+                                setidfile($3);
+                        } else {
+                                FREE($3);
+                        }
                   }
                 ;
 
 setstatefile    : SET STATEFILE PATH {
-                        Run.files.state = $3;
+                        if (! Run.files.state || ihp.statefile) {
+                                ihp.statefile = true;
+                                setstatefile($3);
+                        } else {
+                                FREE($3);
+                        }
                   }
                 ;
 
@@ -4779,6 +4791,38 @@ static void setpidfile(char *pidfile) {
                 }
         }
         Run.files.pid = pidfile;
+}
+
+
+/*
+ * Reset the idfile if changed
+ */
+static void setidfile(char *idfile) {
+        if (Run.files.id) {
+                if (IS(Run.files.id, idfile)) {
+                        FREE(idfile);
+                        return;
+                } else {
+                        FREE(Run.files.id);
+                }
+        }
+        Run.files.id = idfile;
+}
+
+
+/*
+ * Reset the statefile if changed
+ */
+static void setstatefile(char *statefile) {
+        if (Run.files.state) {
+                if (IS(Run.files.state, statefile)) {
+                        FREE(statefile);
+                        return;
+                } else {
+                        FREE(Run.files.state);
+                }
+        }
+        Run.files.state = statefile;
 }
 
 
