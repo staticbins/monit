@@ -146,6 +146,8 @@ struct precedence_t {
         bool daemon;
         bool logfile;
         bool pidfile;
+        bool idfile;
+        bool statefile;
 };
 
 struct rate_t {
@@ -208,7 +210,7 @@ static struct Resource_T resourceset = {};
 static struct Checksum_T checksumset = {};
 static struct Timestamp_T timestampset = {};
 static struct ActionRate_T actionrateset = {};
-static struct precedence_t ihp = {false, false, false};
+static struct precedence_t ihp = {false, false, false, false, false};
 static struct rate_t rate = {1, 1};
 static struct rate_t rate1 = {1, 1};
 static struct rate_t rate2 = {1, 1};
