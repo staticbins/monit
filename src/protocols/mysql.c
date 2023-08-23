@@ -41,6 +41,7 @@
 #endif
 
 #ifdef HAVE_OPENSSL
+// We don't silence deprecation warnings as this will remind us to update for version >= 3
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #endif
