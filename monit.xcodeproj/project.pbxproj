@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		523753E71F34BC1C001522CD /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9397E3081D897CCA008CAD1F /* libz.tbd */; };
+		526614E32A9668CE009B6D86 /* SystemInfo.c in Sources */ = {isa = PBXBuildFile; fileRef = 526614DD2A9663CC009B6D86 /* SystemInfo.c */; };
 		5272D8432A01471300CF8E25 /* libssl.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5272D8412A01471300CF8E25 /* libssl.3.dylib */; };
 		5272D8442A01471300CF8E25 /* libssl.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 5272D8412A01471300CF8E25 /* libssl.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		5272D8452A01471300CF8E25 /* libcrypto.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5272D8422A01471300CF8E25 /* libcrypto.3.dylib */; };
@@ -217,6 +218,8 @@
 		520587A218CF7235006296CB /* rc.monit */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = rc.monit; sourceTree = "<group>"; };
 		522A1D292458487200773F8A /* Statistics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Statistics.c; sourceTree = "<group>"; };
 		522A1D2A2458487200773F8A /* Statistics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Statistics.h; sourceTree = "<group>"; };
+		526614DC2A9663CC009B6D86 /* SystemInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemInfo.h; sourceTree = "<group>"; };
+		526614DD2A9663CC009B6D86 /* SystemInfo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SystemInfo.c; sourceTree = "<group>"; };
 		526E98B02464657E0058BAD8 /* ax_check_compile_flag.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_check_compile_flag.m4; sourceTree = "<group>"; };
 		526E98B52464657E0058BAD8 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5272D8412A01471300CF8E25 /* libssl.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.3.dylib; path = ../../../../../opt/local/libexec/openssl3/lib/libssl.3.dylib; sourceTree = "<group>"; };
@@ -717,8 +720,10 @@
 		52F6E77313A74F220023F87A /* process */ = {
 			isa = PBXGroup;
 			children = (
-				93F515861CEF651000CC00F4 /* ProcessTree.c */,
+				526614DC2A9663CC009B6D86 /* SystemInfo.h */,
+				526614DD2A9663CC009B6D86 /* SystemInfo.c */,
 				93F515871CEF651000CC00F4 /* ProcessTree.h */,
+				93F515861CEF651000CC00F4 /* ProcessTree.c */,
 				52F6E77513A74F220023F87A /* process_sysdep.h */,
 				52F6E77613A74F220023F87A /* sysdep_AIX.c */,
 				52F6E77713A74F220023F87A /* sysdep_DARWIN.c */,
@@ -902,16 +907,18 @@
 		52A20916299AD408004FFCB4 /* InputstreamTest */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
-			path = InputstreamTest;
+			name = InputstreamTest;
+			path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/InputstreamTest";
 			remoteRef = 52A20915299AD408004FFCB4 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
+			sourceTree = "<absolute>";
 		};
 		52AE7B981FEC8EBD00B838B3 /* StringBufferTest */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
-			path = StringBufferTest;
+			name = StringBufferTest;
+			path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/StringBufferTest";
 			remoteRef = 52AE7B971FEC8EBD00B838B3 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
+			sourceTree = "<absolute>";
 		};
 		52DDC12A13C59D46003AA75C /* libmonit.a */ = {
 			isa = PBXReferenceProxy;
@@ -941,6 +948,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				526614E32A9668CE009B6D86 /* SystemInfo.c in Sources */,
 				5295A9EF245849FF007E3C4C /* Statistics.c in Sources */,
 				52F6E80513A74F220023F87A /* alert.c in Sources */,
 				937F5ACE24618E2F006D62AF /* checksum.c in Sources */,

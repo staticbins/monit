@@ -54,7 +54,8 @@ monit_SOURCES	= src/y.tab.c \
 		  src/notification/Address.c \
 		  src/notification/MMonit.c \
 		  src/notification/SMTP.c \
-		  src/process/ProcessTree.c \
+                  src/process/SystemInfo.c \
+                  src/process/ProcessTree.c \
 		  src/process/sysdep_@ARCH@.c \
 		  src/protocols/apache_status.c \
 		  src/protocols/clamav.c \

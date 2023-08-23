@@ -75,6 +75,7 @@
 #endif
 
 #include "monit.h"
+#include "SystemInfo.h"
 #include "ProcessTree.h"
 #include "state.h"
 #include "event.h"
@@ -291,7 +292,7 @@ static void do_init(void) {
         /*
          * Initialize the system information data collecting interface
          */
-        if (init_system_info())
+        if (SystemInfo_init())
                 Run.flags |= Run_ProcessEngineEnabled;
 
         /*

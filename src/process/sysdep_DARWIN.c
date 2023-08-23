@@ -49,6 +49,10 @@
 #include <libproc.h>
 #endif
 
+#ifdef HAVE_COREFOUNDATION_COREFOUNDATION_H
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 #include "monit.h"
 #include "ProcessTree.h"
 #include "process_sysdep.h"
@@ -77,10 +81,40 @@ static long cpu_nice_old = 0;
 static long cpu_syst_old = 0;
 
 
+void static _setOSInfo(void) {
+#ifdef HAVE_COREFOUNDATION_COREFOUNDATION_H
+        CFURLRef url = CFURLCreateWithFileSystemPath(NULL, CFSTR("/System/Library/CoreServices/SystemVersion.plist"), kCFURLPOSIXPathStyle, false);
+        if (url) {
+                CFReadStreamRef stream = CFReadStreamCreateWithFile(NULL, url);
+                if (stream) {
+                        if (CFReadStreamOpen(stream)) {
+                                CFPropertyListRef propertyList = CFPropertyListCreateWithStream(NULL, stream, 0, kCFPropertyListImmutable, NULL, NULL);
+                                if (propertyList) {
+                                        CFStringRef value = CFDictionaryGetValue(propertyList, CFSTR("ProductName"));
+                                        if (value) {
+                                                CFStringGetCString(value, systeminfo.uname.sysname, sizeof(systeminfo.uname.sysname), CFStringGetSystemEncoding());
+                                        }
+                                        value = CFDictionaryGetValue(propertyList, CFSTR("ProductVersion"));
+                                        if (value) {
+                                                CFStringGetCString(value, systeminfo.uname.release, sizeof(systeminfo.uname.release), CFStringGetSystemEncoding());
+                                        }
+                                        CFRelease(propertyList);
+                                }
+                                CFReadStreamClose(stream);
+                        }
+                        CFRelease(stream);
+                }
+                CFRelease(url);
+        }
+#endif
+}
+
+
 /* ------------------------------------------------------------------ Public */
 
 
 bool init_process_info_sysdep(void) {
+        _setOSInfo();
         size_t size = sizeof(systeminfo.cpu.count);
         if (sysctlbyname("hw.logicalcpu", &systeminfo.cpu.count, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.logicalcpu failed: %s\n", STRERROR);
@@ -113,7 +147,6 @@ bool init_process_info_sysdep(void) {
         } else {
                 systeminfo.booted = booted.tv_sec;
         }
-
         return true;
 }
 

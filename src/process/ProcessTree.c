@@ -60,10 +60,6 @@
 #include <unistd.h>
 #endif
 
-#ifdef HAVE_COREFOUNDATION_COREFOUNDATION_H
-#include <CoreFoundation/CoreFoundation.h>
-#endif
-
 #include "monit.h"
 #include "event.h"
 #include "ProcessTree.h"
@@ -451,93 +447,3 @@ void ProcessTree_testMatch(char *pattern) {
         regfree(regex_comp);
         FREE(regex_comp);
 }
-
-
-//FIXME: move to standalone system class
-bool init_system_info(void) {
-        memset(&systeminfo, 0, sizeof(SystemInfo_T));
-        gettimeofday(&systeminfo.collected, NULL);
-        if (uname(&systeminfo.uname) < 0) {
-                Log_error("'%s' resource monitoring initialization error -- uname failed: %s\n", Run.system->name, STRERROR);
-                return false;
-        }
-#ifdef HAVE_COREFOUNDATION_COREFOUNDATION_H
-        CFURLRef url = CFURLCreateWithFileSystemPath(NULL, CFSTR("/System/Library/CoreServices/SystemVersion.plist"), kCFURLPOSIXPathStyle, false);
-        if (url) {
-                CFReadStreamRef stream = CFReadStreamCreateWithFile(NULL, url);
-                if (stream) {
-                        if (CFReadStreamOpen(stream)) {
-                                CFPropertyListRef propertyList = CFPropertyListCreateWithStream(NULL, stream, 0, kCFPropertyListImmutable, NULL, NULL);
-                                if (propertyList) {
-                                        CFStringRef value = CFDictionaryGetValue(propertyList, CFSTR("ProductName"));
-                                        if (value) {
-                                                CFStringGetCString(value, systeminfo.uname.sysname, sizeof(systeminfo.uname.sysname), CFStringGetSystemEncoding());
-                                        }
-                                        value = CFDictionaryGetValue(propertyList, CFSTR("ProductVersion"));
-                                        if (value) {
-                                                CFStringGetCString(value, systeminfo.uname.release, sizeof(systeminfo.uname.release), CFStringGetSystemEncoding());
-                                        }
-                                        CFRelease(propertyList);
-                                }
-                                CFReadStreamClose(stream);
-                        }
-                        CFRelease(stream);
-                }
-                CFRelease(url);
-        }
-#endif
-        systeminfo.cpu.usage.user = -1.;
-        systeminfo.cpu.usage.system = -1.;
-        systeminfo.cpu.usage.iowait = -1.;
-        return (init_process_info_sysdep());
-}
-
-
-//FIXME: move to standalone system class
-bool update_system_info(void) {
-        if (getloadavg_sysdep(systeminfo.loadavg, 3) == -1) {
-                Log_error("'%s' statistic error -- load average data collection failed\n", Run.system->name);
-                goto error1;
-        }
-
-        if (! used_system_memory_sysdep(&systeminfo)) {
-                Log_error("'%s' statistic error -- memory usage data collection failed\n", Run.system->name);
-                goto error2;
-        }
-        systeminfo.memory.usage.percent  = systeminfo.memory.size > 0ULL ? (100. * (double)systeminfo.memory.usage.bytes / (double)systeminfo.memory.size) : 0.;
-        systeminfo.swap.usage.percent = systeminfo.swap.size > 0ULL ? (100. * (double)systeminfo.swap.usage.bytes / (double)systeminfo.swap.size) : 0.;
-
-        if (! used_system_cpu_sysdep(&systeminfo)) {
-                Log_error("'%s' statistic error -- cpu usage data collection failed\n", Run.system->name);
-                goto error3;
-        }
-
-        if (! used_system_filedescriptors_sysdep(&systeminfo)) {
-                Log_error("'%s' statistic error -- filedescriptors usage data collection failed\n", Run.system->name);
-                goto error4;
-        }
-
-        return true;
-
-error1:
-        systeminfo.loadavg[0] = 0;
-        systeminfo.loadavg[1] = 0;
-        systeminfo.loadavg[2] = 0;
-error2:
-        systeminfo.memory.usage.bytes = 0ULL;
-        systeminfo.memory.usage.percent = 0.;
-        systeminfo.swap.usage.bytes = 0ULL;
-        systeminfo.swap.usage.percent = 0.;
-error3:
-        systeminfo.cpu.usage.user = 0.;
-        systeminfo.cpu.usage.system = 0.;
-        systeminfo.cpu.usage.iowait = 0.;
-error4:
-        systeminfo.filedescriptors.allocated = 0LL;
-        systeminfo.filedescriptors.unused = 0LL;
-        systeminfo.filedescriptors.maximum = 0LL;
-
-        return false;
-}
-
-

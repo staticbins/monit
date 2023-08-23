@@ -131,19 +131,5 @@ pid_t ProcessTree_findProcess(Service_T s);
 void ProcessTree_testMatch(char *pattern);
 
 
-/**
- * Initialize the system information
- * @return true if succeeded otherwise false.
- */
-bool init_system_info(void);
-
-
-/**
- * Update system statistic
- * @return true if successful, otherwise false
- */
-bool update_system_info(void);
-
-
 #endif
 

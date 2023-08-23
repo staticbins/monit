@@ -98,6 +98,7 @@
 #include "event.h"
 #include "device.h"
 #include "net/net.h"
+#include "SystemInfo.h"
 #include "ProcessTree.h"
 #include "protocol.h"
 #include "md5.h"
@@ -1535,7 +1536,7 @@ static bool _doScheduledAction(Service_T s) {
 
 
 /**
- *  This function contains the main check machinery for  monit. The
+ *  This function contains the main check machinery for monit. The
  *  validate function check services in the service list to see if
  *  they will pass all defined tests.
  */
@@ -1543,7 +1544,7 @@ int validate(void) {
         Run.handler_flag = Handler_Succeeded;
         Event_queue_process();
 
-        update_system_info();
+        SystemInfo_update();
         ProcessTree_init(ProcessEngine_None);
         gettimeofday(&systeminfo.collected, NULL);
 
