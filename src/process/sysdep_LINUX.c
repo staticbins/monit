@@ -443,7 +443,7 @@ static double _usagePercent(unsigned long long previous, unsigned long long curr
 /* ------------------------------------------------------------------ Public */
 
 
-bool init_process_info_sysdep(void) {
+bool init_systeminfo_sysdep(void) {
         if ((hz = sysconf(_SC_CLK_TCK)) <= 0.) {
                 DEBUG("system statistic error -- cannot get hz: %s\n", STRERROR);
                 return false;
@@ -491,7 +491,7 @@ bool init_process_info_sysdep(void) {
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
         ASSERT(reference);
 
         // Find all processes in the /proc directory

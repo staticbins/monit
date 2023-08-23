@@ -217,7 +217,7 @@ int ProcessTree_init(ProcessEngine_Flags pflags) {
 
         systeminfo.time_prev = systeminfo.time;
         systeminfo.time = Time_milli() / 100.;
-        if ((ptreesize = initprocesstree_sysdep(&ptree, pflags)) <= 0 || ! ptree) {
+        if ((ptreesize = init_processtree_sysdep(&ptree, pflags)) <= 0 || ! ptree) {
                 DEBUG("System statistic -- cannot initialize the process tree -- process resource monitoring disabled\n");
                 Run.flags &= ~Run_ProcessEngineEnabled;
                 if (oldptree)

@@ -109,7 +109,7 @@ static long   old_total = 0;
 
 #define MAXSTRSIZE 80
 
-bool init_process_info_sysdep(void) {
+bool init_systeminfo_sysdep(void) {
         systeminfo.cpu.count = sysconf( _SC_NPROCESSORS_ONLN);
         page_size = getpagesize();
         systeminfo.memory.size = (unsigned long long)sysconf(_SC_PHYS_PAGES) * (unsigned long long)page_size;
@@ -139,7 +139,7 @@ double timestruc_to_tseconds(timestruc_t t) {
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
         ASSERT(reference);
 
         /* Find all processes in the /proc directory */

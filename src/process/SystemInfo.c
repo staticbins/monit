@@ -54,7 +54,7 @@ bool SystemInfo_init(void) {
         systeminfo.cpu.usage.user = -1.;
         systeminfo.cpu.usage.system = -1.;
         systeminfo.cpu.usage.iowait = -1.;
-        return (init_process_info_sysdep());
+        return (init_systeminfo_sysdep());
 }
 
 

@@ -123,7 +123,7 @@ static unsigned long long cpu_syst_old  = 0ULL;
 static unsigned long long cpu_iowait_old  = 0ULL;
 
 
-bool init_process_info_sysdep(void) {
+bool init_systeminfo_sysdep(void) {
         perfstat_memory_total_t mem;
 
         if (perfstat_memory_total(NULL, &mem, sizeof(perfstat_memory_total_t), 1) < 1) {
@@ -182,7 +182,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0.
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
         int treesize;
         pid_t firstproc = 0;
         if ((treesize = getprocs64(NULL, 0, NULL, 0, &firstproc, PID_MAX)) < 0) {

@@ -99,7 +99,7 @@ static long cpu_intr_old = 0;
 /* ------------------------------------------------------------------ Public */
 
 
-bool init_process_info_sysdep(void) {
+bool init_systeminfo_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
         size_t len = sizeof(systeminfo.cpu.count);
         if (sysctl(mib, 2, &systeminfo.cpu.count, &len, NULL, 0) == -1) {
@@ -140,7 +140,7 @@ bool init_process_info_sysdep(void) {
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0.
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
         kvm_t *kvm_handle = kvm_open(NULL, _PATH_DEVNULL, NULL, O_RDONLY, prog);
         if (! kvm_handle) {
                 Log_error("system statistic error -- cannot initialize kvm interface\n");

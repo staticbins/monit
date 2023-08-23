@@ -113,7 +113,7 @@ void static _setOSInfo(void) {
 /* ------------------------------------------------------------------ Public */
 
 
-bool init_process_info_sysdep(void) {
+bool init_systeminfo_sysdep(void) {
         _setOSInfo();
         size_t size = sizeof(systeminfo.cpu.count);
         if (sysctlbyname("hw.logicalcpu", &systeminfo.cpu.count, &size, NULL, 0) == -1) {
@@ -157,7 +157,7 @@ bool init_process_info_sysdep(void) {
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
         size_t pinfo_size = 0;
         int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
         if (sysctl(mib, 4, NULL, &pinfo_size, NULL, 0) < 0) {

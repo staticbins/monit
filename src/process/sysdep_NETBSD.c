@@ -94,7 +94,7 @@ static unsigned int maxslp;
 /* ------------------------------------------------------------------ Public */
 
 
-bool init_process_info_sysdep(void) {
+bool init_systeminfo_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
         size_t len = sizeof(systeminfo.cpu.count);
         if (sysctl(mib, 2, &systeminfo.cpu.count, &len, NULL, 0) == -1) {
@@ -137,7 +137,7 @@ bool init_process_info_sysdep(void) {
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
         size_t size = sizeof(maxslp);
         static int mib_maxslp[] = {CTL_VM, VM_MAXSLP};
         if (sysctl(mib_maxslp, 2, &maxslp, &size, NULL, 0) < 0) {
