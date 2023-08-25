@@ -944,7 +944,7 @@ static void version(void) {
         printf("out");
 #endif
         printf(" large files\n");
-        printf("Copyright (C) 2001-2022 Tildeslash Ltd. All Rights Reserved.\n");
+        printf("Copyright (C) 2001-2023 Tildeslash Ltd. All Rights Reserved.\n");
 }
 
 
@@ -958,7 +958,7 @@ static void *heartbeat(__attribute__ ((unused)) void *args) {
         {
                 while (! interrupt()) {
                         MMonit_send(NULL);
-                        struct timespec wait = {.tv_sec = Time_now() + Run.polltime, .tv_nsec = 0};
+                        struct timespec wait = {.tv_sec = Time_now() + Run.polltime};
                         Sem_timeWait(Heartbeat_Cond, Heartbeat_Mutex, wait);
                 }
         }
