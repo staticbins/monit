@@ -171,7 +171,7 @@ void Processor_setHttpPostLimit(void) {
         // Base buffer size (space for e.g. "action=<name>")
         _httpPostLimit = STRLEN;
         // Add space for each service
-        for (Service_T s = servicelist; s; s = s->next)
+        for (Service_T s = Service_List; s; s = s->next)
                 _httpPostLimit += strlen("&service=") + strlen(s->name);
 }
 

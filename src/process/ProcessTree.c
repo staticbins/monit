@@ -71,13 +71,6 @@
 #include "system/Time.h"
 
 
-/**
- *  General purpose /proc methods.
- *
- *  @file
- */
-
-
 /* ------------------------------------------------------------- Definitions */
 
 
@@ -163,12 +156,12 @@ static void _fillProcessTree(ProcessTree_T *pt, int index) {
  * @return Process's CPU usage [%] since last cycle
  */
 static float _cpuUsage(float rawUsage, unsigned int threads) {
-        if (systeminfo.cpu.count > 0 && rawUsage > 0) {
+        if (System_Info.cpu.count > 0 && rawUsage > 0) {
                 int divisor;
                 if (threads > 1) {
-                        if (threads >= (unsigned)systeminfo.cpu.count) {
+                        if (threads >= (unsigned)System_Info.cpu.count) {
                                 // Multithreaded application with more threads then CPU cores
-                                divisor = systeminfo.cpu.count;
+                                divisor = System_Info.cpu.count;
                         } else {
                                 // Multithreaded application with less threads then CPU cores
                                 divisor = threads;
@@ -188,7 +181,10 @@ static int _match(regex_t *regex) {
         int found = -1;
         // Scan the whole process tree and find the oldest matching process whose parent doesn't match the pattern
         for (int i = 0; i < ptreesize; i++)
-                if (ptree[i].cmdline && regexec(regex, ptree[i].cmdline, 0, NULL, 0) == 0 && (i == ptree[i].parent || ! ptree[ptree[i].parent].cmdline || regexec(regex, ptree[ptree[i].parent].cmdline, 0, NULL, 0) != 0) && (found == -1 || ptree[found].uptime < ptree[i].uptime))
+                if (ptree[i].cmdline
+                    && regexec(regex, ptree[i].cmdline, 0, NULL, 0) == 0
+                    && (i == ptree[i].parent || ! ptree[ptree[i].parent].cmdline || regexec(regex, ptree[ptree[i].parent].cmdline, 0, NULL, 0) != 0)
+                    && (found == -1 || ptree[found].uptime < ptree[i].uptime))
                         found = i;
         return found >= 0 ? ptree[found].pid : -1;
 }
@@ -215,8 +211,8 @@ int ProcessTree_init(ProcessEngine_Flags pflags) {
                 }
         }
 
-        systeminfo.time_prev = systeminfo.time;
-        systeminfo.time = Time_milli() / 100.;
+        System_Info.time_prev = System_Info.time;
+        System_Info.time = Time_milli() / 100.;
         if ((ptreesize = init_processtree_sysdep(&ptree, pflags)) <= 0 || ! ptree) {
                 DEBUG("System statistic -- cannot initialize the process tree -- process resource monitoring disabled\n");
                 Run.flags &= ~Run_ProcessEngineEnabled;
@@ -230,13 +226,13 @@ int ProcessTree_init(ProcessEngine_Flags pflags) {
 
         int root = -1; // Main process. Not all systems have main process with PID 1 (such as Solaris zones and FreeBSD jails), so we try to find process which is parent of itself
         ProcessTree_T *pt = ptree;
-        double time_delta = systeminfo.time - systeminfo.time_prev;
+        double time_delta = System_Info.time - System_Info.time_prev;
         for (int i = 0; i < (volatile int)ptreesize; i ++) {
                 pt[i].cpu.usage.self = -1;
                 if (oldptree) {
                         int oldentry = _findProcess(pt[i].pid, oldptree, oldptreesize);
                         if (oldentry != -1) {
-                                if (systeminfo.cpu.count > 0 && time_delta > 0 && oldptree[oldentry].cpu.time >= 0 && pt[i].cpu.time >= oldptree[oldentry].cpu.time) {
+                                if (System_Info.cpu.count > 0 && time_delta > 0 && oldptree[oldentry].cpu.time >= 0 && pt[i].cpu.time >= oldptree[oldentry].cpu.time) {
                                         pt[i].cpu.usage.self = 100. * (pt[i].cpu.time - oldptree[oldentry].cpu.time) / time_delta;
                                 }
                         }
@@ -320,9 +316,9 @@ bool ProcessTree_updateProcess(Service_T s, pid_t pid) {
                 s->inf.process->filedescriptors.openTotal   = ptree[leaf].filedescriptors.usage_total;
                 s->inf.process->filedescriptors.limit.soft  = ptree[leaf].filedescriptors.limit.soft;
                 s->inf.process->filedescriptors.limit.hard  = ptree[leaf].filedescriptors.limit.hard;
-                if (systeminfo.memory.size > 0) {
-                        s->inf.process->total_mem_percent = ptree[leaf].memory.usage_total >= systeminfo.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage_total / (double)systeminfo.memory.size);
-                        s->inf.process->mem_percent       = ptree[leaf].memory.usage >= systeminfo.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage / (double)systeminfo.memory.size);
+                if (System_Info.memory.size > 0) {
+                        s->inf.process->total_mem_percent = ptree[leaf].memory.usage_total >= System_Info.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage_total / (double)System_Info.memory.size);
+                        s->inf.process->mem_percent       = ptree[leaf].memory.usage >= System_Info.memory.size ? 100. : (100. * (double)ptree[leaf].memory.usage / (double)System_Info.memory.size);
                 }
                 if (ptree[leaf].read.bytes >= 0)
                         Statistics_update(&(s->inf.process->read.bytes), ptree[leaf].read.time, ptree[leaf].read.bytes);

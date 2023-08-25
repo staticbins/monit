@@ -543,7 +543,7 @@ Action_Type Event_get_action(Event_T E) {
  */
 const char *Event_get_action_description(Event_T E) {
         ASSERT(E);
-        return actionnames[Event_get_action(E)];
+        return Action_Names[Event_get_action(E)];
 }
 
 

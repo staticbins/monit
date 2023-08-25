@@ -98,8 +98,8 @@ static unsigned int maxslp;
 
 bool init_systeminfo_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
-        size_t len = sizeof(systeminfo.cpu.count);
-        if (sysctl(mib, 2, &systeminfo.cpu.count, &len, NULL, 0) == -1) {
+        size_t len = sizeof(System_Info.cpu.count);
+        if (sysctl(mib, 2, &System_Info.cpu.count, &len, NULL, 0) == -1) {
                 DEBUG("system statistic error -- cannot get cpu count: %s\n", STRERROR);
                 return false;
         }
@@ -111,7 +111,7 @@ bool init_systeminfo_sysdep(void) {
                 DEBUG("system statistic error -- cannot get real memory amount: %s\n", STRERROR);
                 return false;
         }
-        systeminfo.memory.size = (unsigned long long)physmem;
+        System_Info.memory.size = (unsigned long long)physmem;
 
         mib[1] = HW_PAGESIZE;
         len    = sizeof(pagesize);
@@ -128,7 +128,7 @@ bool init_systeminfo_sysdep(void) {
                 DEBUG("system statistics error -- sysctl kern.boottime failed: %s\n", STRERROR);
                 return false;
         } else {
-                systeminfo.booted = booted.tv_sec;
+                System_Info.booted = booted.tv_sec;
         }
 
         return true;
@@ -195,7 +195,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                         pt[index].cred.uid            = pinfo[i].p_ruid;
                         pt[index].cred.euid           = pinfo[i].p_uid;
                         pt[index].cred.gid            = pinfo[i].p_rgid;
-                        pt[index].uptime              = systeminfo.time / 10. - pinfo[i].p_ustart_sec;
+                        pt[index].uptime              = System_Info.time / 10. - pinfo[i].p_ustart_sec;
                         pt[index].cpu.time            = pinfo[i].p_rtime_sec * 10 + (double)pinfo[i].p_rtime_usec / 100000.;
                         pt[index].memory.usage        = (unsigned long long)pinfo[i].p_vm_rssize * (unsigned long long)pagesize;
                         pt[index].zombie              = pinfo[i].p_stat == SZOMB ? true : false;

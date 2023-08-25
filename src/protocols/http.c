@@ -311,7 +311,7 @@ static void _sendRequest(Socket_T socket, Port_T P) {
         StringBuffer_append(sb,
                             "%s %s HTTP/1.1\r\n"
                             "%s",
-                            httpmethod[P->parameters.http.method],
+                            Httpmethod_Names[P->parameters.http.method],
                             P->parameters.http.request ? P->parameters.http.request : "/",
                             auth ? auth : "");
         FREE(auth);

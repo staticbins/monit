@@ -97,10 +97,10 @@ void gc(void) {
         Engine_destroyAllow();
         if (Run.flags & Run_ProcessEngineEnabled)
                 ProcessTree_delete();
-        if (servicelist)
-                _gc_service_list(&servicelist);
-        if (servicegrouplist)
-                _gc_servicegroup(&servicegrouplist);
+        if (Service_List)
+                _gc_service_list(&Service_List);
+        if (Service_Group_List)
+                _gc_servicegroup(&Service_Group_List);
         if (Run.httpd.credentials)
                 _gcath(&Run.httpd.credentials);
         if (Run.maillist)

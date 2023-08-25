@@ -101,15 +101,15 @@ static long cpu_intr_old = 0;
 
 bool init_systeminfo_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
-        size_t len = sizeof(systeminfo.cpu.count);
-        if (sysctl(mib, 2, &systeminfo.cpu.count, &len, NULL, 0) == -1) {
+        size_t len = sizeof(System_Info.cpu.count);
+        if (sysctl(mib, 2, &System_Info.cpu.count, &len, NULL, 0) == -1) {
                 DEBUG("system statistic error -- cannot get cpu count: %s\n", STRERROR);
                 return false;
         }
 
         mib[1] = HW_PHYSMEM;
-        len    = sizeof(systeminfo.memory.size);
-        if (sysctl(mib, 2, &systeminfo.memory.size, &len, NULL, 0) == -1) {
+        len    = sizeof(System_Info.memory.size);
+        if (sysctl(mib, 2, &System_Info.memory.size, &len, NULL, 0) == -1) {
                 DEBUG("system statistic error -- cannot get real memory amount: %s\n", STRERROR);
                 return false;
         }
@@ -127,7 +127,7 @@ bool init_systeminfo_sysdep(void) {
                 DEBUG("system statistics error -- sysctl kern.boottime failed: %s\n", STRERROR);
                 return false;
         } else {
-                systeminfo.booted = booted.tv_sec;
+                System_Info.booted = booted.tv_sec;
         }
 
         return true;
@@ -168,7 +168,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                 pt[i].cred.euid           = pinfo[i].kp_uid;
                 pt[i].cred.gid            = pinfo[i].kp_rgid;
                 pt[i].threads.self        = pinfo[i].kp_nthreads;
-                pt[i].uptime              = systeminfo.time / 10. - pinfo[i].kp_start.tv_sec;
+                pt[i].uptime              = System_Info.time / 10. - pinfo[i].kp_start.tv_sec;
                 pt[i].cpu.time            = (double)((pinfo[i].kp_lwp.kl_uticks + pinfo[i].kp_lwp.kl_sticks + pinfo[i].kp_lwp.kl_iticks) / 1000000.);
                 pt[i].memory.usage        = (unsigned long long)pinfo[i].kp_vm_rssize * (unsigned long long)pagesize;
                 pt[i].read.bytes          = -1;

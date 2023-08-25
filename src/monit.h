@@ -1398,25 +1398,25 @@ struct Run_T {
 /* -------------------------------------------------------- Global variables */
 
 
-extern const char    *prog;
+extern const char    *Prog;
 extern struct Run_T   Run;
-extern Service_T      servicelist;
-extern Service_T      servicelist_conf;
-extern ServiceGroup_T servicegrouplist;
-extern SystemInfo_T   systeminfo;
+extern Service_T      Service_List;
+extern Service_T      Service_List_Conf;
+extern ServiceGroup_T Service_Group_List;
+extern SystemInfo_T   System_Info;
 
-extern const char *actionnames[];
-extern const char *modenames[];
-extern const char *onrebootnames[];
-extern const char *checksumnames[];
-extern const char *operatornames[];
-extern const char *operatorshortnames[];
-extern const char *servicetypes[];
-extern const char *pathnames[];
-extern const char *icmpnames[];
-extern const char *socketnames[];
-extern const char *timestampnames[];
-extern const char *httpmethod[];
+extern const char *Action_Names[];
+extern const char *Mode_Names[];
+extern const char *onReboot_Names[];
+extern const char *Checksum_Names[];
+extern const char *Operator_Names[];
+extern const char *OperatorShort_Names[];
+extern const char *Servicetype_Names[];
+extern const char *Path_Names[];
+extern const char *Icmp_Names[];
+extern const char *Socket_Names[];
+extern const char *Timestamp_Names[];
+extern const char *Httpmethod_Names[];
 
 
 /* ------------------------------------------------------- Public prototypes */

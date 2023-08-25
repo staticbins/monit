@@ -110,9 +110,9 @@ static long   old_total = 0;
 #define MAXSTRSIZE 80
 
 bool init_systeminfo_sysdep(void) {
-        systeminfo.cpu.count = sysconf( _SC_NPROCESSORS_ONLN);
+        System_Info.cpu.count = sysconf( _SC_NPROCESSORS_ONLN);
         page_size = getpagesize();
-        systeminfo.memory.size = (unsigned long long)sysconf(_SC_PHYS_PAGES) * (unsigned long long)page_size;
+        System_Info.memory.size = (unsigned long long)sysconf(_SC_PHYS_PAGES) * (unsigned long long)page_size;
         kstat_ctl_t *kctl = kstat_open();
         if (kctl) {
                 kstat_t *kstat = kstat_lookup(kctl, "unix", 0, "system_misc");
@@ -120,7 +120,7 @@ bool init_systeminfo_sysdep(void) {
                         if (kstat_read(kctl, kstat, 0) != -1) {
                                 kstat_named_t *knamed = kstat_data_lookup(kstat, "boot_time");
                                 if (knamed)
-                                        systeminfo.booted = (unsigned long long)knamed->value.ul;
+                                        System_Info.booted = (unsigned long long)knamed->value.ul;
                         }
                 }
                 kstat_close(kctl);
@@ -164,7 +164,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                         pt[i].cred.uid     = psinfo->pr_uid;
                         pt[i].cred.euid    = psinfo->pr_euid;
                         pt[i].cred.gid     = psinfo->pr_gid;
-                        pt[i].uptime       = systeminfo.time / 10. - psinfo->pr_start.tv_sec;
+                        pt[i].uptime       = System_Info.time / 10. - psinfo->pr_start.tv_sec;
                         pt[i].zombie       = psinfo->pr_nlwp == 0 ? true : false; // If we don't have any light-weight processes (LWP) then we are definitely a zombie
                         pt[i].memory.usage = (unsigned long long)psinfo->pr_rssize * 1024;
                         if (pflags & ProcessEngine_CollectCommandLine) {
@@ -267,7 +267,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                                 knamed = kstat_data_lookup(kstat, "size");
                                 arcsize = (unsigned long long)knamed->value.ul;
                         }
-                        si->memory.usage.bytes = systeminfo.memory.size - freemem - arcsize;
+                        si->memory.usage.bytes = System_Info.memory.size - freemem - arcsize;
                 }
         }
         kstat_close(kctl);

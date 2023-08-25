@@ -220,7 +220,7 @@ int create_server_socket_tcp(const char *address, int port, Socket_Family family
         snprintf(_port, sizeof(_port), "%d", port);
         int status = getaddrinfo(address, _port, &hints, &result);
         if (status) {
-                snprintf(error, STRLEN, "Cannot translate %s socket [%s]:%d -- %s", socketnames[family], NVLSTR(address), port, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                snprintf(error, STRLEN, "Cannot translate %s socket [%s]:%d -- %s", Socket_Names[family], NVLSTR(address), port, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
                 return -1;
         }
         int flag = 1;

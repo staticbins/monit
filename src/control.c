@@ -381,7 +381,7 @@ static void _doUnmonitor(Service_T s) {
 static bool _doDepend(Service_T s, Action_Type action, bool unmonitor) {
         ASSERT(s);
         bool rv = true;
-        for (Service_T child = servicelist; child; child = child->next) {
+        for (Service_T child = Service_List; child; child = child->next) {
                 for (Dependant_T d = child->dependantlist; d; d = d->next) {
                         if (IS(d->dependant, s->name)) {
                                 if (action == Action_Start) {

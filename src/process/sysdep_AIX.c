@@ -132,14 +132,14 @@ bool init_systeminfo_sysdep(void) {
         }
 
         page_size = getpagesize();
-        systeminfo.memory.size = (unsigned long long)mem.real_total * (unsigned long long)page_size;
-        systeminfo.cpu.count = sysconf(_SC_NPROCESSORS_ONLN);
+        System_Info.memory.size = (unsigned long long)mem.real_total * (unsigned long long)page_size;
+        System_Info.cpu.count = sysconf(_SC_NPROCESSORS_ONLN);
 
         setutxent();
         struct utmpx _booted = {.ut_type = BOOT_TIME};
         struct utmpx *booted = getutxid(&_booted);
         if (booted)
-                systeminfo.booted = booted->ut_tv.tv_sec;
+                System_Info.booted = booted->ut_tv.tv_sec;
         endutxent();
 
         return true;
@@ -207,7 +207,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                 pt[i].ppid                = procs[i].pi_ppid;
                 pt[i].cred.euid           = procs[i].pi_uid;
                 pt[i].threads.self        = procs[i].pi_thcount;
-                pt[i].uptime              = systeminfo.time / 10. - procs[i].pi_start;
+                pt[i].uptime              = System_Info.time / 10. - procs[i].pi_start;
                 pt[i].memory.usage        = (unsigned long long)(procs[i].pi_drss + procs[i].pi_trss) * (unsigned long long)page_size;
                 pt[i].cpu.time            = procs[i].pi_ru.ru_utime.tv_sec * 10 + (double)procs[i].pi_ru.ru_utime.tv_usec / 100000. + procs[i].pi_ru.ru_stime.tv_sec * 10 + (double)procs[i].pi_ru.ru_stime.tv_usec / 100000.;
                 pt[i].read.bytes          = -1;

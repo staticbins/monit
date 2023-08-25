@@ -119,7 +119,7 @@ void Checksum_verify(T context, const char *checksum) {
         }
         MD_T hashString = {};
         if (strncasecmp(Checksum_digest2Bytes(Checksum_finish(context), keyLength, hashString), checksum, keyLength * 2) != 0)
-                THROW(AssertException, "Checksum error: %s mismatch (expected %s got %s)", checksumnames[context->type], checksum, hashString);
+                THROW(AssertException, "Checksum error: %s mismatch (expected %s got %s)", Checksum_Names[context->type], checksum, hashString);
 }
 
 

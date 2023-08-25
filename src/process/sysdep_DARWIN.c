@@ -92,11 +92,11 @@ void static _setOSInfo(void) {
                                 if (propertyList) {
                                         CFStringRef value = CFDictionaryGetValue(propertyList, CFSTR("ProductName"));
                                         if (value) {
-                                                CFStringGetCString(value, systeminfo.uname.sysname, sizeof(systeminfo.uname.sysname), CFStringGetSystemEncoding());
+                                                CFStringGetCString(value, System_Info.uname.sysname, sizeof(System_Info.uname.sysname), CFStringGetSystemEncoding());
                                         }
                                         value = CFDictionaryGetValue(propertyList, CFSTR("ProductVersion"));
                                         if (value) {
-                                                CFStringGetCString(value, systeminfo.uname.release, sizeof(systeminfo.uname.release), CFStringGetSystemEncoding());
+                                                CFStringGetCString(value, System_Info.uname.release, sizeof(System_Info.uname.release), CFStringGetSystemEncoding());
                                         }
                                         CFRelease(propertyList);
                                 }
@@ -115,14 +115,14 @@ void static _setOSInfo(void) {
 
 bool init_systeminfo_sysdep(void) {
         _setOSInfo();
-        size_t size = sizeof(systeminfo.cpu.count);
-        if (sysctlbyname("hw.logicalcpu", &systeminfo.cpu.count, &size, NULL, 0) == -1) {
+        size_t size = sizeof(System_Info.cpu.count);
+        if (sysctlbyname("hw.logicalcpu", &System_Info.cpu.count, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.logicalcpu failed: %s\n", STRERROR);
                 return false;
         }
 
-        size = sizeof(systeminfo.memory.size);
-        if (sysctlbyname("hw.memsize", &systeminfo.memory.size, &size, NULL, 0) == -1) {
+        size = sizeof(System_Info.memory.size);
+        if (sysctlbyname("hw.memsize", &System_Info.memory.size, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.memsize failed: %s\n", STRERROR);
                 return false;
         }
@@ -133,8 +133,8 @@ bool init_systeminfo_sysdep(void) {
                 return false;
         }
 
-        size = sizeof(systeminfo.argmax);
-        if (sysctlbyname("kern.argmax", &systeminfo.argmax, &size, NULL, 0) == -1) {
+        size = sizeof(System_Info.argmax);
+        if (sysctlbyname("kern.argmax", &System_Info.argmax, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl kern.argmax failed: %s\n", STRERROR);
                 return false;
         }
@@ -145,7 +145,7 @@ bool init_systeminfo_sysdep(void) {
                 DEBUG("system statistics error -- sysctl kern.boottime failed: %s\n", STRERROR);
                 return false;
         } else {
-                systeminfo.booted = booted.tv_sec;
+                System_Info.booted = booted.tv_sec;
         }
         return true;
 }
@@ -177,10 +177,10 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
         StringBuffer_T cmdline = NULL;
         if (pflags & ProcessEngine_CollectCommandLine) {
                 cmdline = StringBuffer_create(64);
-                args = CALLOC(1, systeminfo.argmax + 1);
+                args = CALLOC(1, System_Info.argmax + 1);
         }
         for (size_t i = 0; i < treesize; i++) {
-                pt[i].uptime    = systeminfo.time / 10. - pinfo[i].kp_proc.p_starttime.tv_sec;
+                pt[i].uptime    = System_Info.time / 10. - pinfo[i].kp_proc.p_starttime.tv_sec;
                 pt[i].zombie    = pinfo[i].kp_proc.p_stat == SZOMB ? true : false;
                 pt[i].pid       = pinfo[i].kp_proc.p_pid;
                 pt[i].ppid      = pinfo[i].kp_eproc.e_ppid;
@@ -188,7 +188,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                 pt[i].cred.euid = pinfo[i].kp_eproc.e_ucred.cr_uid;
                 pt[i].cred.gid  = pinfo[i].kp_eproc.e_pcred.p_rgid;
                 if (pflags & ProcessEngine_CollectCommandLine) {
-                        size_t size = systeminfo.argmax;
+                        size_t size = System_Info.argmax;
                         mib[0] = CTL_KERN;
                         mib[1] = KERN_PROCARGS2;
                         mib[2] = pt[i].pid;
@@ -206,7 +206,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                                 char *p = args + sizeof(int); // arguments beginning
                                 StringBuffer_clear(cmdline);
                                 p += strlen(p); // skip exename
-                                while (argc && p < args + systeminfo.argmax) {
+                                while (argc && p < args + System_Info.argmax) {
                                         if (*p == 0) { // skip terminating 0 and variable length 0 padding
                                                 p++;
                                                 continue;

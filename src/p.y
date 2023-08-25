@@ -2409,55 +2409,55 @@ resourcecpu     : resourcecpuid operator value PERCENT {
                 ;
 
 resourcecpuid   : CPUUSER {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuUser)
+                        if (System_Info.statisticsAvailable & Statistics_CpuUser)
                                 $<number>$ = Resource_CpuUser;
                         else
                                 yywarning2("The CPU user usage statistics is not available on this system\n");
                   }
                 | CPUSYSTEM {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuSystem)
+                        if (System_Info.statisticsAvailable & Statistics_CpuSystem)
                                 $<number>$ = Resource_CpuSystem;
                         else
                                 yywarning2("The CPU system usage statistics is not available on this system\n");
                   }
                 | CPUWAIT {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait)
+                        if (System_Info.statisticsAvailable & Statistics_CpuIOWait)
                                 $<number>$ = Resource_CpuWait;
                         else
                                 yywarning2("The CPU I/O wait usage statistics is not available on this system\n");
                   }
                 | CPUNICE {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuNice)
+                        if (System_Info.statisticsAvailable & Statistics_CpuNice)
                                 $<number>$ = Resource_CpuNice;
                         else
                                 yywarning2("The CPU nice usage statistics is not available on this system\n");
                   }
                 | CPUHARDIRQ {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuHardIRQ)
+                        if (System_Info.statisticsAvailable & Statistics_CpuHardIRQ)
                                 $<number>$ = Resource_CpuHardIRQ;
                         else
                                 yywarning2("The CPU hardware IRQ usage statistics is not available on this system\n");
                   }
                 | CPUSOFTIRQ {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuSoftIRQ)
+                        if (System_Info.statisticsAvailable & Statistics_CpuSoftIRQ)
                                 $<number>$ = Resource_CpuSoftIRQ;
                         else
                                 yywarning2("The CPU software IRQ usage statistics is not available on this system\n");
                   }
                 | CPUSTEAL {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuSteal)
+                        if (System_Info.statisticsAvailable & Statistics_CpuSteal)
                                 $<number>$ = Resource_CpuSteal;
                         else
                                 yywarning2("The CPU steal usage statistics is not available on this system\n");
                   }
                 | CPUGUEST {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuGuest)
+                        if (System_Info.statisticsAvailable & Statistics_CpuGuest)
                                 $<number>$ = Resource_CpuGuest;
                         else
                                 yywarning2("The CPU guest usage statistics is not available on this system\n");
                   }
                 | CPUGUESTNICE {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuGuestNice)
+                        if (System_Info.statisticsAvailable & Statistics_CpuGuestNice)
                                 $<number>$ = Resource_CpuGuestNice;
                         else
                                 yywarning2("The CPU guest nice usage statistics is not available on this system\n");
@@ -2553,7 +2553,7 @@ resourceloadavg : LOADAVG1  { $<number>$ = Resource_LoadAverage1m; }
                 ;
 
 coremultiplier  : /* EMPTY */ { $<number>$ = 1; }
-                | CORE        { $<number>$ = systeminfo.cpu.count; }
+                | CORE        { $<number>$ = System_Info.cpu.count; }
                 ;
 
 
@@ -3071,13 +3071,13 @@ secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recover
                 ;
 
 filedescriptorssystem : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery_success {
-                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
+                        if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
                                 addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
                         else
                                 yywarning("The per-system filedescriptors statistics is not available on this system\n");
                   }
                 | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery_success {
-                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
+                        if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
                                 addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
                         else
                                 yywarning("The per-system filedescriptors statistics is not available on this system\n");
@@ -3085,13 +3085,13 @@ filedescriptorssystem : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 re
                 ;
 
 filedescriptorsprocess : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery_success {
-                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
+                        if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
                                 addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
                         else
                                 yywarning("The per-process filedescriptors statistics is not available on this system\n");
                   }
                 | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery_success {
-                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcessMax)
+                        if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerProcessMax)
                                 addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
                         else
                                 yywarning("The per-process filedescriptors maximum is not exposed on this system, so we cannot compute usage %%, please use the test with absolute value\n");
@@ -3099,7 +3099,7 @@ filedescriptorsprocess : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 r
                 ;
 
 filedescriptorsprocesstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery_success {
-                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
+                        if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
                                 addfiledescriptors($<number>4, true, (long long)$5, -1., $<number>8, $<number>9);
                         else
                                 yywarning("The per-process filedescriptors statistics is not available on this system\n");
@@ -3340,7 +3340,7 @@ bool parse(char *controlfile) {
 
         currentfile = Str_dup(controlfile);
 
-        available_statistics(&systeminfo);
+        available_statistics(&System_Info);
 
         /*
          * Creation of the global service list is synchronized
@@ -3378,7 +3378,7 @@ bool parse(char *controlfile) {
  * Initialize objects used by the parser.
  */
 static void preparse(void) {
-        servicelist = tail = current = NULL;
+        Service_List = tail = current = NULL;
         /* Set instance incarnation ID */
         time(&Run.incarnation);
         /* Reset lexer */
@@ -3606,7 +3606,7 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
 
 
 /*
- * Add a service object to the servicelist
+ * Add a service object to the Service_List
  */
 static void addservice(Service_T s) {
         ASSERT(s);
@@ -3689,8 +3689,8 @@ static void addservice(Service_T s) {
                 tail->next = s;
                 tail->next_conf = s;
         } else {
-                servicelist = s;
-                servicelist_conf = s;
+                Service_List = s;
+                Service_List_Conf = s;
         }
         tail = s;
 }
@@ -3705,7 +3705,7 @@ static void addservicegroup(char *name) {
         ASSERT(name);
 
         /* Check if service group with the same name is defined already */
-        for (g = servicegrouplist; g; g = g->next)
+        for (g = Service_Group_List; g; g = g->next)
                 if (IS(g->name, name))
                         break;
 
@@ -3713,8 +3713,8 @@ static void addservicegroup(char *name) {
                 NEW(g);
                 g->name = Str_dup(name);
                 g->members = List_new();
-                g->next = servicegrouplist;
-                servicegrouplist = g;
+                g->next = Service_Group_List;
+                Service_Group_List = g;
         }
 
         List_append(g->members, current);
@@ -5286,12 +5286,12 @@ static void check_depend(void) {
         Service_T* dlt = &depend_list; /* the current tail of it                                 */
         bool done;                /* no unvisited nodes left?                               */
         bool found_some;          /* last iteration found anything new ?                    */
-        depend_list = NULL;            /* depend_list will be the topological sorted servicelist */
+        depend_list = NULL;            /* depend_list will be the topological sorted Service_List */
 
         do {
                 done = true;
                 found_some = false;
-                for (Service_T s = servicelist; s; s = s->next) {
+                for (Service_T s = Service_List; s; s = s->next) {
                         Dependant_T d;
                         if (s->visited)
                                 continue;
@@ -5324,7 +5324,7 @@ static void check_depend(void) {
         }
 
         ASSERT(depend_list);
-        servicelist = depend_list;
+        Service_List = depend_list;
 
         for (Service_T s = depend_list; s; s = s->next_depend)
                 s->next = s->next_depend;
