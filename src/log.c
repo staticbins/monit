@@ -153,7 +153,7 @@ static const char *_priorityDescription(int p) {
  */
 __attribute__((format (printf, 2, 0)))
 static void _log(int priority, const char *s, va_list ap) {
-        ASSERT(s);
+        assert(s);
         va_list ap_copy;
         LOCK(_mutex)
         {
@@ -236,7 +236,7 @@ bool Log_init(void) {
  * @param s A formatted (printf-style) string to log
  */
 void Log_emergency(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         va_list ap;
         va_start(ap, s);
         _log(LOG_EMERG, s, ap);
@@ -251,7 +251,7 @@ void Log_emergency(const char *s, ...) {
  * @param ap A variable argument list
  */
 void Log_vemergency(const char *s, va_list ap) {
-        ASSERT(s);
+        assert(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
         _log(LOG_EMERG, s, ap);
@@ -265,7 +265,7 @@ void Log_vemergency(const char *s, va_list ap) {
  * @param s A formatted (printf-style) string to log
  */
 void Log_alert(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         va_list ap;
         va_start(ap, s);
         _log(LOG_ALERT, s, ap);
@@ -280,7 +280,7 @@ void Log_alert(const char *s, ...) {
  * @param ap A variable argument list
  */
 void Log_valert(const char *s, va_list ap) {
-        ASSERT(s);
+        assert(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
         _log(LOG_ALERT, s, ap);
@@ -294,7 +294,7 @@ void Log_valert(const char *s, va_list ap) {
  * @param s A formatted (printf-style) string to log
  */
 void Log_critical(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         va_list ap;
         va_start(ap, s);
         _log(LOG_CRIT, s, ap);
@@ -309,7 +309,7 @@ void Log_critical(const char *s, ...) {
  * @param ap A variable argument list
  */
 void Log_vcritical(const char *s, va_list ap) {
-        ASSERT(s);
+        assert(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
         _log(LOG_CRIT, s, ap);
@@ -323,7 +323,7 @@ void Log_vcritical(const char *s, va_list ap) {
  * error and abort the application
  */
 void Log_abort_handler(const char *s, va_list ap) {
-        ASSERT(s);
+        assert(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
         _log(LOG_CRIT, s, ap);
@@ -339,7 +339,7 @@ void Log_abort_handler(const char *s, va_list ap) {
  * @param s A formatted (printf-style) string to log
  */
 void Log_error(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         va_list ap;
         va_start(ap, s);
         _log(LOG_ERR, s, ap);
@@ -354,7 +354,7 @@ void Log_error(const char *s, ...) {
  * @param ap A variable argument list
  */
 void Log_verror(const char *s, va_list ap) {
-        ASSERT(s);
+        assert(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
         _log(LOG_ERR, s, ap);
@@ -368,7 +368,7 @@ void Log_verror(const char *s, va_list ap) {
  * @param s A formatted (printf-style) string to log
  */
 void Log_warning(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         va_list ap;
         va_start(ap, s);
         _log(LOG_WARNING, s, ap);
@@ -382,7 +382,7 @@ void Log_warning(const char *s, ...) {
  * @param ap A variable argument list
  */
 void Log_vwarning(const char *s, va_list ap) {
-        ASSERT(s);
+        assert(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
         _log(LOG_WARNING, s, ap);
@@ -395,7 +395,7 @@ void Log_vwarning(const char *s, va_list ap) {
  * @param s A formatted (printf-style) string to log
  */
 void Log_notice(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         va_list ap;
         va_start(ap, s);
         _log(LOG_NOTICE, s, ap);
@@ -409,7 +409,7 @@ void Log_notice(const char *s, ...) {
  * @param ap A variable argument list
  */
 void Log_vnotice(const char *s, va_list ap) {
-        ASSERT(s);
+        assert(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
         _log(LOG_NOTICE, s, ap);
@@ -422,7 +422,7 @@ void Log_vnotice(const char *s, va_list ap) {
  * @param s A formatted (printf-style) string to log
  */
 void Log_info(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         va_list ap;
         va_start(ap, s);
         _log(LOG_INFO, s, ap);
@@ -436,7 +436,7 @@ void Log_info(const char *s, ...) {
  * @param ap A variable argument list
  */
 void Log_vinfo(const char *s, va_list ap) {
-        ASSERT(s);
+        assert(s);
         va_list ap_copy;
         va_copy(ap_copy, ap);
         _log(LOG_INFO, s, ap);
@@ -449,7 +449,7 @@ void Log_vinfo(const char *s, va_list ap) {
  * @param s A formatted (printf-style) string to log
  */
 void Log_debug(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         if (Run.debug) {
                 va_list ap;
                 va_start(ap, s);
@@ -465,7 +465,7 @@ void Log_debug(const char *s, ...) {
  * @param ap A variable argument list
  */
 void Log_vdebug(const char *s, va_list ap) {
-        ASSERT(s);
+        assert(s);
         if (Run.debug) {
                 va_list ap_copy;
                 va_copy(ap_copy, ap);

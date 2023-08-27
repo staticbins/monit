@@ -47,7 +47,7 @@ void check_rsync(Socket_T socket) {
         const char  *rsyncd = "@RSYNCD:";
         const char  *rsyncd_exit = "@RSYNCD: EXIT";
 
-        ASSERT(socket);
+        assert(socket);
 
         /* Read and check the greeting */
         if (! Socket_readLine(socket, buf, sizeof(buf)))

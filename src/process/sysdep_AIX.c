@@ -103,7 +103,7 @@
 #include <utmpx.h>
 #endif
 
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 /**
@@ -178,11 +178,11 @@ int getloadavg_sysdep (double *loadv, int nelem) {
 
 /**
  * Read all processes to initialize the process tree
- * @param reference  reference of ProcessTree
+ * @param reference  reference of ProcessTable
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0.
  */
-int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(ProcessTable_T **reference, ProcessEngine_Flags pflags) {
         int treesize;
         pid_t firstproc = 0;
         if ((treesize = getprocs64(NULL, 0, NULL, 0, &firstproc, PID_MAX)) < 0) {
@@ -200,7 +200,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
         }
 
         unsigned long long now = Time_milli();
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
+        ProcessTable_T *pt = CALLOC(sizeof(ProcessTable_T), treesize);
 
         for (int i = 0; i < treesize; i++) {
                 pt[i].pid                 = procs[i].pi_pid;

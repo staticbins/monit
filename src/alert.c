@@ -100,8 +100,8 @@ static char *_getFQDNhostname(char host[256]) {
 
 
 static void _substitute(Mail_T m, Event_T e) {
-        ASSERT(m);
-        ASSERT(e);
+        assert(m);
+        assert(e);
 
         if (Str_sub(m->from->name, "$HOST"))
                 Util_replaceString(&m->from->name, "$HOST", _getFQDNhostname(m->host));
@@ -145,8 +145,8 @@ static void _escape(Mail_T m) {
 
 
 static void _copyMail(Mail_T n, Mail_T o) {
-        ASSERT(n);
-        ASSERT(o);
+        assert(n);
+        assert(o);
 
         n->to = Str_dup(o->to);
         if (o->from) {
@@ -292,7 +292,7 @@ static bool _hasRecipient(Mail_T list, const char *recipient) {
  * @return If failed, return Handler_Alert flag or Handler_Succeeded if succeeded
  */
 Handler_Type handle_alert(Event_T E) {
-        ASSERT(E);
+        assert(E);
 
         Handler_Type rv = Handler_Succeeded;
         Service_T s = E->source;

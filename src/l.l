@@ -1144,7 +1144,7 @@ static void save_arg(void) {
 
 static URL_T create_URL(char *proto) {
         URL_T url;
-        ASSERT(proto);
+        assert(proto);
         NEW(url);
         url->protocol = proto;
         if (IS(url->protocol, "https")) {

@@ -164,7 +164,7 @@ static void _receive(T S, int code, void (*callback)(T S, const char *line)) {
 
 
 T SMTP_new(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
         T S;
         NEW(S);
         S->socket = socket;
@@ -173,7 +173,7 @@ T SMTP_new(Socket_T socket) {
 
 
 void SMTP_free(T *S) {
-        ASSERT(S && *S);
+        assert(S && *S);
         TRY
         {
                 if ((*S)->state != SMTP_Quit && (*S)->state > SMTP_Init)
@@ -192,14 +192,14 @@ void SMTP_free(T *S) {
 
 
 void SMTP_greeting(T S) {
-        ASSERT(S);
+        assert(S);
         _receive(S, 220, NULL);
         S->state = SMTP_Greeting;
 }
 
 
 void SMTP_helo(T S, const char *name) {
-        ASSERT(S);
+        assert(S);
         S->name = name;
         _send(S, "EHLO %s\r\n", name);
         TRY
@@ -218,7 +218,7 @@ void SMTP_helo(T S, const char *name) {
 
 
 void SMTP_starttls(T S, SslOptions_T options) {
-        ASSERT(S);
+        assert(S);
         if (S->flags & MTA_StartTLS) {
                 _send(S, "STARTTLS\r\n");
                 _receive(S, 220, NULL);
@@ -236,9 +236,9 @@ void SMTP_starttls(T S, SslOptions_T options) {
 
 
 void SMTP_auth(T S, const char *username, const char *password) {
-        ASSERT(S);
-        ASSERT(username);
-        ASSERT(password);
+        assert(S);
+        assert(username);
+        assert(password);
         char buffer[STRLEN] = {};
         // PLAIN has precedence
         if (S->flags & MTA_AuthPlain) {
@@ -289,8 +289,8 @@ void SMTP_auth(T S, const char *username, const char *password) {
 
 
 void SMTP_from(T S, const char *from) {
-        ASSERT(S);
-        ASSERT(from);
+        assert(S);
+        assert(from);
         _send(S, "MAIL FROM: <%s>\r\n", from);
         _receive(S, 250, NULL);
         S->state = SMTP_MailFrom;
@@ -298,8 +298,8 @@ void SMTP_from(T S, const char *from) {
 
 
 void SMTP_to(T S, const char *to) {
-        ASSERT(S);
-        ASSERT(to);
+        assert(S);
+        assert(to);
         _send(S, "RCPT TO: <%s>\r\n", to);
         _receive(S, 250, NULL);
         S->state = SMTP_RcptTo;
@@ -307,7 +307,7 @@ void SMTP_to(T S, const char *to) {
 
 
 void SMTP_dataBegin(T S) {
-        ASSERT(S);
+        assert(S);
         _send(S, "DATA\r\n");
         _receive(S, 354, NULL);
         S->state = SMTP_DataBegin;
@@ -315,7 +315,7 @@ void SMTP_dataBegin(T S) {
 
 
 void SMTP_dataCommit(T S) {
-        ASSERT(S);
+        assert(S);
         _send(S, "\r\n.\r\n");
         _receive(S, 250, NULL);
         S->state = SMTP_DataCommit;

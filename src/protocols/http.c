@@ -345,10 +345,10 @@ static void _sendRequest(Socket_T socket, Port_T P) {
 
 
 void check_http(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
 
         Port_T P = Socket_getPort(socket);
-        ASSERT(P);
+        assert(P);
 
         _sendRequest(socket, P);
         _checkResponse(socket, P);

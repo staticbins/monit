@@ -115,7 +115,6 @@
 #include "sha1.h"
 #include "base64.h"
 #include "alert.h"
-#include "ProcessTree.h"
 #include "event.h"
 #include "state.h"
 #include "protocol.h"
@@ -407,7 +406,7 @@ static Auth_T PAMcheckUserGroup(const char *uname) {
         struct passwd *pwd = NULL;
         struct group  *grp = NULL;
 
-        ASSERT(uname);
+        assert(uname);
 
         if (! (pwd = getpwnam(uname)))
                 return NULL;
@@ -443,10 +442,10 @@ static Auth_T PAMcheckUserGroup(const char *uname) {
 
 
 char *Util_replaceString(char **src, const char *old, const char *new) {
-        ASSERT(src);
-        ASSERT(*src);
-        ASSERT(old);
-        ASSERT(new);
+        assert(src);
+        assert(*src);
+        assert(old);
+        assert(new);
 
         size_t i = Util_countWords(*src, old);
         if (i) {
@@ -481,7 +480,7 @@ size_t Util_countWords(const char *s, const char *word) {
         size_t i = 0;
         const char *p = s;
 
-        ASSERT(s && word);
+        assert(s && word);
 
         while ((p = strstr(p, word))) { i++;  p++; }
         return i;
@@ -492,7 +491,7 @@ void Util_handleEscapes(char *buf) {
         int editpos;
         int insertpos;
 
-        ASSERT(buf);
+        assert(buf);
 
         for (editpos = insertpos = 0; *(buf + editpos) != '\0'; editpos++, insertpos++) {
                 if (*(buf + editpos) == '\\' ) {
@@ -556,7 +555,7 @@ int Util_handle0Escapes(char *buf) {
         int editpos;
         int insertpos;
 
-        ASSERT(buf);
+        assert(buf);
 
         for (editpos = insertpos = 0; *(buf + editpos) != '\0'; editpos++, insertpos++) {
                 if (*(buf + editpos) == '\\' ) {
@@ -583,7 +582,7 @@ int Util_handle0Escapes(char *buf) {
 
 
 Service_T Util_getService(const char *name) {
-        ASSERT(name);
+        assert(name);
         for (Service_T s = Service_List; s; s = s->next)
                 if (IS(s->name, name))
                         return s;
@@ -601,7 +600,7 @@ Service_T Util_getService(const char *name) {
 
 
 bool Util_existService(const char *name) {
-        ASSERT(name);
+        assert(name);
         return Util_getService(name) ? true : false;
 }
 
@@ -753,7 +752,7 @@ bool Util_existService(const char *name) {
 
 
 void Util_printService(Service_T s) {
-        ASSERT(s);
+        assert(s);
 
         bool sgheader = false;
         char buffer[STRLEN];
@@ -1362,7 +1361,7 @@ char *Util_getToken(MD_T token) {
 
 
 char *Util_monitId(char *idfile) {
-        ASSERT(idfile);
+        assert(idfile);
         FILE *file = NULL;
         if (! File_exist(idfile)) {
                 // Generate the unique id
@@ -1397,42 +1396,35 @@ char *Util_monitId(char *idfile) {
 
 
 pid_t Util_getPid(char *pidfile) {
+        assert(pidfile);
+        pid_t pid = -1;
         FILE *file = NULL;
-        int pid = -1;
-
-        ASSERT(pidfile);
-
         if (! File_exist(pidfile)) {
                 DEBUG("pidfile '%s' does not exist\n", pidfile);
-                return 0;
+                return -1;
         }
         if (! File_isFile(pidfile)) {
                 DEBUG("pidfile '%s' is not a regular file\n", pidfile);
-                return 0;
+                return -1;
         }
         if ((file = fopen(pidfile,"r")) == (FILE *)NULL) {
                 DEBUG("Error opening the pidfile '%s' -- %s\n", pidfile, STRERROR);
-                return 0;
+                return -1;
         }
         if (fscanf(file, "%d", &pid) != 1) {
                 DEBUG("Error reading pid from file '%s'\n", pidfile);
                 if (fclose(file))
                         DEBUG("Error closing file '%s' -- %s\n", pidfile, STRERROR);
-                return 0;
+                return -1;
         }
         if (fclose(file))
                 DEBUG("Error closing file '%s' -- %s\n", pidfile, STRERROR);
-
-        if (pid < 0)
-                return(0);
-
-        return (pid_t)pid;
-
+        return pid;
 }
 
 
 bool Util_isurlsafe(const char *url) {
-        ASSERT(url && *url);
+        assert(url && *url);
         for (int i = 0; url[i]; i++)
                 if (urlunsafe[(unsigned char)url[i]])
                         return false;
@@ -1799,7 +1791,7 @@ bool Util_evalDoubleQExpression(Operator_Type operator, double left, double righ
 
 
 void Util_monitorSet(Service_T s) {
-        ASSERT(s);
+        assert(s);
         if (s->monitor == Monitor_Not) {
                 s->monitor = Monitor_Init;
                 DEBUG("'%s' monitoring enabled\n", s->name);
@@ -1809,7 +1801,7 @@ void Util_monitorSet(Service_T s) {
 
 
 void Util_monitorUnset(Service_T s) {
-        ASSERT(s);
+        assert(s);
         if (s->monitor != Monitor_Not) {
                 s->monitor = Monitor_Not;
                 DEBUG("'%s' monitoring disabled\n", s->name);
@@ -1829,7 +1821,7 @@ void Util_monitorUnset(Service_T s) {
 int Util_getAction(const char *action) {
         int i = 1; /* the Action_Ignored has index 0 => we will start on next item */
 
-        ASSERT(action);
+        assert(action);
 
         while (strlen(Action_Names[i])) {
                 if (IS(action, Action_Names[i]))
@@ -1873,9 +1865,9 @@ StringBuffer_T Util_printEventratio(Action_T action, StringBuffer_T buf) {
 
 
 StringBuffer_T Util_printRule(bool inverse, StringBuffer_T buf, EventAction_T action, const char *rule, ...) {
-        ASSERT(buf);
-        ASSERT(action);
-        ASSERT(rule);
+        assert(buf);
+        assert(action);
+        assert(rule);
         // Variable part
         va_list ap;
         va_start(ap, rule);
@@ -1947,8 +1939,8 @@ char *Util_portDescription(Port_T p, char *buf, int bufsize) {
 
 
 char *Util_commandDescription(command_t command, char s[STRLEN]) {
-        ASSERT(s);
-        ASSERT(command);
+        assert(s);
+        assert(command);
         int len = 0;
         for (int i = 0; command->arg[i] && len < STRLEN - 1; i++) {
                 len += snprintf(s + len, STRLEN - len, "%s%s", i ? " " : "", command->arg[i]);

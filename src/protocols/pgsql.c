@@ -441,7 +441,7 @@ static void _handleResponse(postgresql_t postgresql) {
  *  @file
  */
 void check_pgsql(Socket_T S) {
-        ASSERT(S);
+        assert(S);
 
         struct postgresql_t postgresql = {
                 .state = PostgreSQL_Init,

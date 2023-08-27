@@ -40,7 +40,7 @@
  *  @file
  */
 void check_spamassassin(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
 
         // Send PING
         if (Socket_print(socket, "PING SPAMC/1.2\r\n") < 0) {

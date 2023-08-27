@@ -179,7 +179,7 @@ static unsigned short _checksum(unsigned char *_addr, int count) {
 
 
 __attribute__((format (printf, 3, 4))) static void _log_warningOrError(int attempt, int maxAttempts, const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         va_list ap;
         va_start(ap, s);
         if (attempt < maxAttempts) {
@@ -466,8 +466,8 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
 
 
 double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoing, int size, int timeout, int maxretries) {
-        ASSERT(hostname);
-        ASSERT(size > 0);
+        assert(hostname);
+        assert(size > 0);
         double response = -1.;
         struct addrinfo *result, hints = {
                 /* filter for only one sockettype to not get back one address multiple times for each protocol and sockettype */

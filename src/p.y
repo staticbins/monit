@@ -125,7 +125,6 @@
 #include "protocol.h"
 #include "engine.h"
 #include "alert.h"
-#include "ProcessTree.h"
 #include "device.h"
 #include "processor.h"
 #include "md5.h"
@@ -3268,7 +3267,7 @@ reminder        : /* EMPTY */           { mailset.reminder = 0; }
  * This routine is automatically called by the lexer!
  */
 void yyerror(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         char *msg = NULL;
         va_list ap;
         va_start(ap, s);
@@ -3284,7 +3283,7 @@ void yyerror(const char *s, ...) {
  * Syntactical warning routine
  */
 void yywarning(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         char *msg = NULL;
         va_list ap;
         va_start(ap, s);
@@ -3299,7 +3298,7 @@ void yywarning(const char *s, ...) {
  * Argument error routine
  */
 void yyerror2(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         char *msg = NULL;
         va_list ap;
         va_start(ap, s);
@@ -3315,7 +3314,7 @@ void yyerror2(const char *s, ...) {
  * Argument warning routine
  */
 void yywarning2(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         char *msg = NULL;
         va_list ap;
         va_start(ap, s);
@@ -3331,7 +3330,7 @@ void yywarning2(const char *s, ...) {
  * Returns true if parsing succeeded, otherwise false
  */
 bool parse(char *controlfile) {
-        ASSERT(controlfile);
+        assert(controlfile);
 
         if ((yyin = fopen(controlfile,"r")) == (FILE *)NULL) {
                 Log_error("Cannot open the control file '%s' -- %s\n", controlfile, STRERROR);
@@ -3540,7 +3539,7 @@ static bool _parseOutgoingAddress(char *ip, Outgoing_T *outgoing) {
  * service list.
  */
 static Service_T createservice(Service_Type type, char *name, char *value, State_Type (*check)(Service_T s)) {
-        ASSERT(name);
+        assert(name);
 
         check_name(name);
 
@@ -3609,7 +3608,7 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
  * Add a service object to the Service_List
  */
 static void addservice(Service_T s) {
-        ASSERT(s);
+        assert(s);
 
         // Test sanity check
         switch (s->type) {
@@ -3702,7 +3701,7 @@ static void addservice(Service_T s) {
 static void addservicegroup(char *name) {
         ServiceGroup_T g;
 
-        ASSERT(name);
+        assert(name);
 
         /* Check if service group with the same name is defined already */
         for (g = Service_Group_List; g; g = g->next)
@@ -3727,7 +3726,7 @@ static void addservicegroup(char *name) {
 static void adddependant(char *dependant) {
         Dependant_T d;
 
-        ASSERT(dependant);
+        assert(dependant);
 
         NEW(d);
 
@@ -3749,7 +3748,7 @@ static void adddependant(char *dependant) {
 static void addmail(char *mailto, Mail_T f, Mail_T *l) {
         Mail_T m;
 
-        ASSERT(mailto);
+        assert(mailto);
 
         NEW(m);
         m->to       = mailto;
@@ -3771,7 +3770,7 @@ static void addmail(char *mailto, Mail_T f, Mail_T *l) {
  * Add the given portset to the current service's portlist
  */
 static void addport(Port_T *list, Port_T port) {
-        ASSERT(port);
+        assert(port);
 
         if (port->protocol->check == check_radius && port->type != Socket_Udp)
                 yyerror("Radius protocol test supports UDP only");
@@ -3866,7 +3865,7 @@ static void addhttpheader(Port_T port, char *header) {
  * Add a new resource object to the current service resource list
  */
 static void addresource(Resource_T rr) {
-        ASSERT(rr);
+        assert(rr);
         if (Run.flags & Run_ProcessEngineEnabled) {
                 Resource_T r;
                 NEW(r);
@@ -3887,7 +3886,7 @@ static void addresource(Resource_T rr) {
  * Add a new file object to the current service timestamp list
  */
 static void addtimestamp(Timestamp_T ts) {
-        ASSERT(ts);
+        assert(ts);
 
         Timestamp_T t;
         NEW(t);
@@ -3910,7 +3909,7 @@ static void addtimestamp(Timestamp_T ts) {
 static void addactionrate(ActionRate_T ar) {
         ActionRate_T a;
 
-        ASSERT(ar);
+        assert(ar);
 
         if (ar->count > ar->cycle)
                 yyerror2("The number of restarts must be less than poll cycles");
@@ -3937,7 +3936,7 @@ static void addsize(Size_T ss) {
         Size_T s;
         struct stat buf;
 
-        ASSERT(ss);
+        assert(ss);
 
         NEW(s);
         s->operator     = ss->operator;
@@ -3965,7 +3964,7 @@ static void addnlink(NLink_T ss) {
         NLink_T s;
         struct stat buf;
     
-        ASSERT(ss);
+        assert(ss);
     
         NEW(s);
         s->operator     = ss->operator;
@@ -3992,7 +3991,7 @@ static void addnlink(NLink_T ss) {
 static void adduptime(Uptime_T uu) {
         Uptime_T u;
 
-        ASSERT(uu);
+        assert(uu);
 
         NEW(u);
         u->operator = uu->operator;
@@ -4010,7 +4009,7 @@ static void adduptime(Uptime_T uu) {
  * Add a new Pid object to the current service pid list
  */
 static void addpid(Pid_T pp) {
-        ASSERT(pp);
+        assert(pp);
 
         Pid_T p;
         NEW(p);
@@ -4027,7 +4026,7 @@ static void addpid(Pid_T pp) {
  * Add a new PPid object to the current service ppid list
  */
 static void addppid(Pid_T pp) {
-        ASSERT(pp);
+        assert(pp);
 
         Pid_T p;
         NEW(p);
@@ -4044,7 +4043,7 @@ static void addppid(Pid_T pp) {
  * Add a new Fsflag object to the current service fsflag list
  */
 static void addfsflag(FsFlag_T ff) {
-        ASSERT(ff);
+        assert(ff);
 
         FsFlag_T f;
         NEW(f);
@@ -4061,7 +4060,7 @@ static void addfsflag(FsFlag_T ff) {
  * Add a new Nonexist object to the current service list
  */
 static void addnonexist(NonExist_T ff) {
-        ASSERT(ff);
+        assert(ff);
 
         NonExist_T f;
         NEW(f);
@@ -4075,7 +4074,7 @@ static void addnonexist(NonExist_T ff) {
 
 
 static void addexist(Exist_T rule) {
-        ASSERT(rule);
+        assert(rule);
         Exist_T r;
         NEW(r);
         r->action = rule->action;
@@ -4089,7 +4088,7 @@ static void addexist(Exist_T rule) {
  * Set Checksum object in the current service
  */
 static void addchecksum(Checksum_T cs) {
-        ASSERT(cs);
+        assert(cs);
 
         cs->initialized = true;
 
@@ -4140,7 +4139,7 @@ static void addchecksum(Checksum_T cs) {
  * Set Perm object in the current service
  */
 static void addperm(Perm_T ps) {
-        ASSERT(ps);
+        assert(ps);
 
         Perm_T p;
         NEW(p);
@@ -4162,7 +4161,7 @@ static void addperm(Perm_T ps) {
 
 
 static void addlinkstatus(Service_T s, LinkStatus_T L) {
-        ASSERT(L);
+        assert(L);
 
         LinkStatus_T l;
 
@@ -4187,7 +4186,7 @@ static void addlinkstatus(Service_T s, LinkStatus_T L) {
 
 
 static void addlinkspeed(Service_T s, LinkSpeed_T L) {
-        ASSERT(L);
+        assert(L);
 
         LinkSpeed_T l;
         NEW(l);
@@ -4201,7 +4200,7 @@ static void addlinkspeed(Service_T s, LinkSpeed_T L) {
 
 
 static void addlinksaturation(Service_T s, LinkSaturation_T L) {
-        ASSERT(L);
+        assert(L);
 
         LinkSaturation_T l;
         NEW(l);
@@ -4220,8 +4219,8 @@ static void addlinksaturation(Service_T s, LinkSaturation_T L) {
  * Return Bandwidth object
  */
 static void addbandwidth(Bandwidth_T *list, Bandwidth_T b) {
-        ASSERT(list);
-        ASSERT(b);
+        assert(list);
+        assert(b);
 
         if (b->rangecount * b->range > 24 * Time_Hour) {
                 yyerror2("Maximum range for total test is 24 hours");
@@ -4270,7 +4269,7 @@ static void appendmatch(Match_T *list, Match_T item) {
 static void addmatch(Match_T ms, int actionnumber, int linenumber) {
         Match_T m;
 
-        ASSERT(ms);
+        assert(ms);
 
         NEW(m);
         NEW(m->regex_comp);
@@ -4299,7 +4298,7 @@ static void addmatch(Match_T ms, int actionnumber, int linenumber) {
 
 
 static void addmatchpath(Match_T ms, Action_Type actionnumber) {
-        ASSERT(ms->match_path);
+        assert(ms->match_path);
 
         FILE *handle = fopen(ms->match_path, "r");
         if (handle == NULL) {
@@ -4327,7 +4326,7 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
 
                 if (actionnumber == Action_Exec) {
                         if (command1 == NULL) {
-                                ASSERT(savecommand);
+                                assert(savecommand);
                                 command1 = copycommand(savecommand);
                         }
                 }
@@ -4346,7 +4345,7 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
  */
 static void addstatus(Status_T status) {
         Status_T s;
-        ASSERT(status);
+        assert(status);
         NEW(s);
         s->initialized = status->initialized;
         s->return_value = status->return_value;
@@ -4363,7 +4362,7 @@ static void addstatus(Status_T status) {
  * Set Uid object in the current service
  */
 static Uid_T adduid(Uid_T u) {
-        ASSERT(u);
+        assert(u);
 
         Uid_T uid;
         NEW(uid);
@@ -4378,7 +4377,7 @@ static Uid_T adduid(Uid_T u) {
  * Set Gid object in the current service
  */
 static Gid_T addgid(Gid_T g) {
-        ASSERT(g);
+        assert(g);
 
         Gid_T gid;
         NEW(gid);
@@ -4395,7 +4394,7 @@ static Gid_T addgid(Gid_T g) {
 static void addfilesystem(FileSystem_T ds) {
         FileSystem_T dev;
 
-        ASSERT(ds);
+        assert(ds);
 
         NEW(dev);
         dev->resource           = ds->resource;
@@ -4418,7 +4417,7 @@ static void addfilesystem(FileSystem_T ds) {
 static void addicmp(Icmp_T is) {
         Icmp_T icmp;
 
-        ASSERT(is);
+        assert(is);
 
         NEW(icmp);
         icmp->family        = is->family;
@@ -4449,7 +4448,7 @@ static void addicmp(Icmp_T is) {
 static void addeventaction(EventAction_T *_ea, Action_Type failed, Action_Type succeeded) {
         EventAction_T ea;
 
-        ASSERT(_ea);
+        assert(_ea);
 
         NEW(ea);
         NEW(ea->failed);
@@ -4460,7 +4459,7 @@ static void addeventaction(EventAction_T *_ea, Action_Type failed, Action_Type s
         ea->failed->count = rate1.count;
         ea->failed->cycles = rate1.cycles;
         if (failed == Action_Exec) {
-                ASSERT(command1);
+                assert(command1);
                 ea->failed->exec = command1;
                 command1 = NULL;
         }
@@ -4470,7 +4469,7 @@ static void addeventaction(EventAction_T *_ea, Action_Type failed, Action_Type s
         ea->succeeded->count = rate2.count;
         ea->succeeded->cycles = rate2.cycles;
         if (succeeded == Action_Exec) {
-                ASSERT(command2);
+                assert(command2);
                 ea->succeeded->exec = command2;
                 command2 = NULL;
         }
@@ -4538,7 +4537,7 @@ static void addcommand(int what, unsigned int timeout) {
  */
 static void addargument(char *argument) {
 
-        ASSERT(argument);
+        assert(argument);
 
         if (! command) {
                 check_exec(argument);
@@ -4559,7 +4558,7 @@ static void addargument(char *argument) {
  */
 static void prepare_urlrequest(URL_T U) {
 
-        ASSERT(U);
+        assert(U);
 
         /* Only the HTTP protocol is supported for URLs currently. See also the lexer if this is to be changed in the future */
         portset.protocol = Protocol_get(Protocol_HTTP);
@@ -4582,7 +4581,7 @@ static void prepare_urlrequest(URL_T U) {
  */
 static void  seturlrequest(int operator, char *regex) {
 
-        ASSERT(regex);
+        assert(regex);
 
         if (! urlrequest)
                 NEW(urlrequest);
@@ -4602,7 +4601,7 @@ static void  seturlrequest(int operator, char *regex) {
  * Add a new data recipient server to the mmonit server list
  */
 static void addmmonit(Mmonit_T mmonit) {
-        ASSERT(mmonit->url);
+        assert(mmonit->url);
 
         Mmonit_T c;
         NEW(c);
@@ -4639,7 +4638,7 @@ static void addmailserver(MailServer_T mailserver) {
 
         MailServer_T s;
 
-        ASSERT(mailserver->host);
+        assert(mailserver->host);
 
         NEW(s);
         s->host        = mailserver->host;
@@ -4786,7 +4785,7 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
         FILE *handle = NULL;
         int credentials_added = 0;
 
-        ASSERT(filename);
+        assert(filename);
 
         handle = fopen(filename, "r");
 
@@ -4848,7 +4847,7 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
 static void addpamauth(char* groupname, int readonly) {
         Auth_T prev = NULL;
 
-        ASSERT(groupname);
+        assert(groupname);
 
         if (! Run.httpd.credentials)
                 NEW(Run.httpd.credentials);
@@ -4887,8 +4886,8 @@ static void addpamauth(char* groupname, int readonly) {
 static bool addcredentials(char *uname, char *passwd, Digest_Type dtype, bool readonly) {
         Auth_T c;
 
-        ASSERT(uname);
-        ASSERT(passwd);
+        assert(uname);
+        assert(passwd);
 
         if (strlen(passwd) > Str_compareConstantTimeStringLength) {
                 yyerror2("Password for user %s is too long, maximum %d allowed", uname, Str_compareConstantTimeStringLength);
@@ -5248,7 +5247,7 @@ static void reset_rateset(struct rate_t *r) {
  * Check for unique service name
  */
 static void check_name(char *name) {
-        ASSERT(name);
+        assert(name);
 
         if (Util_existService(name) || (current && IS(name, current->name)))
                 yyerror2("Service name conflict, %s already defined", name);
@@ -5318,12 +5317,12 @@ static void check_depend(void) {
         } while (found_some && ! done);
 
         if (! done) {
-                ASSERT(depends_on);
+                assert(depends_on);
                 Log_error("Found a depend loop in the control file involving the service '%s'\n", depends_on->name);
                 exit(1);
         }
 
-        ASSERT(depend_list);
+        assert(depend_list);
         Service_List = depend_list;
 
         for (Service_T s = depend_list; s; s = s->next_depend)
@@ -5361,7 +5360,7 @@ static int verifyMaxForward(int mf) {
 static int cleanup_hash_string(char *hashstring) {
         int i = 0, j = 0;
 
-        ASSERT(hashstring);
+        assert(hashstring);
 
         while (hashstring[i]) {
                 if (isxdigit((int)hashstring[i])) {

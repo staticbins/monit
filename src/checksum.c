@@ -45,7 +45,7 @@
 
 
 void Checksum_init(T context, Hash_Type type) {
-        ASSERT(context);
+        assert(context);
         switch (type) {
                 case Hash_Md5:
                         md5_init(&(context->data.md5));
@@ -63,7 +63,7 @@ void Checksum_init(T context, Hash_Type type) {
 
 
 unsigned char *Checksum_finish(T context) {
-        ASSERT(context);
+        assert(context);
         if (! context->finished) {
                 switch (context->type) {
                         case Hash_Md5:
@@ -83,10 +83,10 @@ unsigned char *Checksum_finish(T context) {
 
 
 void Checksum_append(T context, const char *input, int inputLength) {
-        ASSERT(context);
-        ASSERT(input);
-        ASSERT(inputLength >= 0);
-        ASSERT(context->finished == false);
+        assert(context);
+        assert(input);
+        assert(inputLength >= 0);
+        assert(context->finished == false);
         switch (context->type) {
                 case Hash_Md5:
                         md5_append(&(context->data.md5), (const md5_byte_t *)input, inputLength);
@@ -102,8 +102,8 @@ void Checksum_append(T context, const char *input, int inputLength) {
 
 
 void Checksum_verify(T context, const char *checksum) {
-        ASSERT(context);
-        ASSERT(checksum);
+        assert(context);
+        assert(checksum);
         // Compare with string
         int keyLength = 0; // Raw key bytes, not string chars
         switch (context->type) {
@@ -127,7 +127,7 @@ char *Checksum_digest2Bytes(unsigned char *digest, int mdlen, MD_T result) {
         int i;
         unsigned char *tmp = (unsigned char*)result;
         static unsigned char hex[] = "0123456789abcdef";
-        ASSERT(mdlen * 2 < MD_SIZE); // Overflow guard
+        assert(mdlen * 2 < MD_SIZE); // Overflow guard
         for (i = 0; i < mdlen; i++) {
                 *tmp++ = hex[digest[i] >> 4];
                 *tmp++ = hex[digest[i] & 0xf];
@@ -215,9 +215,9 @@ void Checksum_printHash(char *file) {
 bool Checksum_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned long bufsize) {
         int hashlength = 16;
 
-        ASSERT(file);
-        ASSERT(buf);
-        ASSERT(bufsize >= sizeof(MD_T));
+        assert(file);
+        assert(buf);
+        assert(bufsize >= sizeof(MD_T));
 
         switch (hashtype) {
                 case Hash_Md5:

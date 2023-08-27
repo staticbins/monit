@@ -54,7 +54,7 @@
 #endif
 
 #include "monit.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 // libmonit
@@ -120,25 +120,21 @@ bool init_systeminfo_sysdep(void) {
                 DEBUG("system statistics error -- sysctl hw.logicalcpu failed: %s\n", STRERROR);
                 return false;
         }
-
         size = sizeof(System_Info.memory.size);
         if (sysctlbyname("hw.memsize", &System_Info.memory.size, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.memsize failed: %s\n", STRERROR);
                 return false;
         }
-
         size = sizeof(pagesize);
         if (sysctlbyname("hw.pagesize", &pagesize, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.pagesize failed: %s\n", STRERROR);
                 return false;
         }
-
         size = sizeof(System_Info.argmax);
         if (sysctlbyname("kern.argmax", &System_Info.argmax, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl kern.argmax failed: %s\n", STRERROR);
                 return false;
         }
-
         struct timeval booted;
         size = sizeof(booted);
         if (sysctlbyname("kern.boottime", &booted, &size, NULL, 0) == -1) {
@@ -153,11 +149,11 @@ bool init_systeminfo_sysdep(void) {
 
 /**
  * Read all processes to initialize the information tree.
- * @param reference reference of ProcessTree
+ * @param reference reference of ProcessTable
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+size_t init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         size_t pinfo_size = 0;
         int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
         if (sysctl(mib, 4, NULL, &pinfo_size, NULL, 0) < 0) {
@@ -171,8 +167,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                 return 0;
         }
         size_t treesize = pinfo_size / sizeof(struct kinfo_proc);
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
-
+        process_t pt = CALLOC(sizeof(struct process_t), treesize);
         char *args = NULL;
         StringBuffer_T cmdline = NULL;
         if (pflags & ProcessEngine_CollectCommandLine) {
@@ -206,7 +201,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                                 char *p = args + sizeof(int); // arguments beginning
                                 StringBuffer_clear(cmdline);
                                 p += strlen(p); // skip exename
-                                while (argc && p < args + System_Info.argmax) {
+                                while (argc > 0 && p < args + System_Info.argmax) {
                                         if (*p == 0) { // skip terminating 0 and variable length 0 padding
                                                 p++;
                                                 continue;
