@@ -137,7 +137,7 @@ bool init_systeminfo_sysdep(void) {
 
 /**
  * Read all processes to initialize the information tree.
- * @param reference reference of ProcessTable
+ * @param reference a process_t reference 
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
@@ -148,7 +148,6 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         int                       mib_proc[6] = {CTL_KERN, KERN_PROC, KERN_PROC_PID | KERN_PROC_SHOW_THREADS | KERN_PROC_KTHREAD, 0, sizeof(struct kinfo_proc), 0};
         static struct kinfo_proc *pinfo;
         static int                mib_maxslp[] = {CTL_VM, VM_MAXSLP};
-        ProcessTable_T            *pt;
         kvm_t                    *kvm_handle;
 
         if (sysctl(mib_maxslp, 2, &maxslp, &size, NULL, 0) < 0) {
@@ -172,7 +171,7 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
 
         treesize = (int)(size / sizeof(struct kinfo_proc));
 
-        pt = CALLOC(sizeof(ProcessTable_T), treesize);
+        process_t pt = CALLOC(sizeof(struct process_t), treesize);
 
         unsigned long long now = Time_milli();
         if (! (kvm_handle = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, buf))) {

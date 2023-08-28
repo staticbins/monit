@@ -135,7 +135,7 @@ double timestruc_to_tseconds(timestruc_t t) {
 
 /**
  * Read all processes of the proc files system to initialize the process tree
- * @param reference reference of ProcessTable
+ * @param reference a process_t reference
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
@@ -153,7 +153,7 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         int treesize = globbuf.gl_pathc;
 
         /* Allocate the tree */
-        ProcessTable_T *pt = CALLOC(sizeof(ProcessTable_T), treesize);
+        process_t pt = CALLOC(sizeof(struct process_t), treesize);
 
         char buf[4096];
         for (int i = 0; i < treesize; i++) {

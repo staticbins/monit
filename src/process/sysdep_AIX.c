@@ -178,7 +178,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
 
 /**
  * Read all processes to initialize the process tree
- * @param reference  reference of ProcessTable
+ * @param reference  a process_t reference 
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0.
  */
@@ -200,7 +200,7 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         }
 
         unsigned long long now = Time_milli();
-        ProcessTable_T *pt = CALLOC(sizeof(ProcessTable_T), treesize);
+        process_t pt = CALLOC(sizeof(struct process_t), treesize);
 
         for (int i = 0; i < treesize; i++) {
                 pt[i].pid                 = procs[i].pi_pid;

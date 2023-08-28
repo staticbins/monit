@@ -487,7 +487,7 @@ bool init_systeminfo_sysdep(void) {
 
 /**
  * Read all processes of the proc files system to initialize the process tree
- * @param reference reference of ProcessTable
+ * @param reference a process_t reference 
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
@@ -501,8 +501,8 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
                 Log_error("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
                 return 0;
         }
-        ProcessTable_T *pt = CALLOC(sizeof(ProcessTable_T), globbuf.gl_pathc);
 
+        process_t pt = CALLOC(sizeof(struct process_t), globbuf.gl_pathc);
 
         int count = 0;
         struct Proc_T proc = {
