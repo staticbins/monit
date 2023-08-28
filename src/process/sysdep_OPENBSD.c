@@ -66,7 +66,7 @@
 #endif
 
 #include "monit.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 // libmonit
@@ -137,18 +137,18 @@ bool init_systeminfo_sysdep(void) {
 
 /**
  * Read all processes to initialize the information tree.
- * @param reference reference of ProcessTree
+ * @param reference reference of ProcessTable
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         int                       treesize;
         char                      buf[_POSIX2_LINE_MAX];
         size_t                    size = sizeof(maxslp);
         int                       mib_proc[6] = {CTL_KERN, KERN_PROC, KERN_PROC_PID | KERN_PROC_SHOW_THREADS | KERN_PROC_KTHREAD, 0, sizeof(struct kinfo_proc), 0};
         static struct kinfo_proc *pinfo;
         static int                mib_maxslp[] = {CTL_VM, VM_MAXSLP};
-        ProcessTree_T            *pt;
+        ProcessTable_T            *pt;
         kvm_t                    *kvm_handle;
 
         if (sysctl(mib_maxslp, 2, &maxslp, &size, NULL, 0) < 0) {
@@ -172,7 +172,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
 
         treesize = (int)(size / sizeof(struct kinfo_proc));
 
-        pt = CALLOC(sizeof(ProcessTree_T), treesize);
+        pt = CALLOC(sizeof(ProcessTable_T), treesize);
 
         unsigned long long now = Time_milli();
         if (! (kvm_handle = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, buf))) {

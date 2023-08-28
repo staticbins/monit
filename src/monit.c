@@ -76,7 +76,8 @@
 
 #include "monit.h"
 #include "SystemInfo.h"
-#include "ProcessTree.h"
+#include "Proc.h"
+#include "ProcessTable.h"
 #include "state.h"
 #include "event.h"
 #include "engine.h"
@@ -128,12 +129,13 @@ static void waitforchildren(void); /* Wait for any child process not running */
 /* ------------------------------------------------------------------ Global */
 
 
-const char *Prog;                              /**< The Name of this Program */
-struct Run_T Run;                      /**< Struct holding runtime constants */
-Service_T Service_List;                /**< The service list (created in p.y) */
-Service_T Service_List_Conf;   /**< The service list in conf file (c. in p.y) */
+const char *Prog;                                /**< The Name of this Program */
+struct Run_T Run;                        /**< Struct holding runtime constants */
+Service_T Service_List;                 /**< The service list (created in p.y) */
+Service_T Service_List_Conf;    /**< The service list in conf file (c. in p.y) */
 ServiceGroup_T Service_Group_List;/**< The service group list (created in p.y) */
-SystemInfo_T System_Info;                             /**< System information */
+SystemInfo_T System_Info;                              /**< System information */
+ProcessTable_T Process_Table;                        /**< Shared Process Table */
 
 Thread_T Heartbeat_Thread;
 Sem_T    Heartbeat_Cond;
@@ -292,8 +294,9 @@ static void do_init(void) {
         /*
          * Initialize the system information data collecting interface
          */
-        if (SystemInfo_init())
+        if (SystemInfo_init()) {
                 Run.flags |= Run_ProcessEngineEnabled;
+        }
 
         /*
          * Start the Parser and create the service list. This will also set
@@ -328,7 +331,7 @@ static void do_init(void) {
                 Util_printRunList();
                 Util_printServiceList();
         }
-
+        
         /*
          * Reap any stray child processes we may have created
          */
@@ -511,7 +514,7 @@ static void do_action(List_T arguments) {
                         printf("Invalid syntax - usage: procmatch \"<pattern>\"\n");
                         exit(1);
                 }
-                ProcessTree_testMatch(pattern);
+                Proc_match(pattern);
         } else if (IS(action, "quit")) {
                 kill_daemon(SIGTERM);
         } else if (IS(action, "validate")) {

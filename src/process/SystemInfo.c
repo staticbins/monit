@@ -29,7 +29,7 @@
 #endif
 
 #include "monit.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 #include "SystemInfo.h"
 

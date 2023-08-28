@@ -92,7 +92,7 @@
 
 #include "monit.h"
 #include "system/Time.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 /**
@@ -135,12 +135,12 @@ double timestruc_to_tseconds(timestruc_t t) {
 
 /**
  * Read all processes of the proc files system to initialize the process tree
- * @param reference reference of ProcessTree
+ * @param reference reference of ProcessTable
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
-        ASSERT(reference);
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
+        assert(reference);
 
         /* Find all processes in the /proc directory */
         glob_t globbuf;
@@ -153,7 +153,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
         int treesize = globbuf.gl_pathc;
 
         /* Allocate the tree */
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
+        ProcessTable_T *pt = CALLOC(sizeof(ProcessTable_T), treesize);
 
         char buf[4096];
         for (int i = 0; i < treesize; i++) {

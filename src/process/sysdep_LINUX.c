@@ -86,7 +86,7 @@
 #endif
 
 #include "monit.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 // libmonit
@@ -487,12 +487,12 @@ bool init_systeminfo_sysdep(void) {
 
 /**
  * Read all processes of the proc files system to initialize the process tree
- * @param reference reference of ProcessTree
+ * @param reference reference of ProcessTable
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
-        ASSERT(reference);
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
+        assert(reference);
 
         // Find all processes in the /proc directory
         glob_t globbuf;
@@ -501,7 +501,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                 Log_error("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
                 return 0;
         }
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), globbuf.gl_pathc);
+        ProcessTable_T *pt = CALLOC(sizeof(ProcessTable_T), globbuf.gl_pathc);
 
 
         int count = 0;

@@ -22,16 +22,18 @@
  * for all of the code used other than OpenSSL.
  */
 
-#ifndef MONIT_PROCESS_SYSDEP_H
-#define MONIT_PROCESS_SYSDEP_H
 
-bool init_systeminfo_sysdep(void);
-int  init_proc_info_sysdep(void);
-int  getloadavg_sysdep (double *, int);
-bool used_system_memory_sysdep(SystemInfo_T *);
-bool used_system_cpu_sysdep(SystemInfo_T *);
-bool used_system_filedescriptors_sysdep(SystemInfo_T *);
-bool available_statistics(SystemInfo_T *);
-int init_processtree_sysdep(process_t *, ProcessEngine_Flags);
+#ifndef PROC_INCLUDED
+#define PROC_INCLUDED
+
+
+/**
+ * Search the Process Table for entries matching the pattern
+ * and print the result table to stdout
+ * @param pattern The process command to search for
+ * @return true if succeeded otherwise false.
+ */
+void Proc_match(char *pattern);
+
 
 #endif

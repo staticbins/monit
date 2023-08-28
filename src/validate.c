@@ -99,7 +99,8 @@
 #include "device.h"
 #include "net/net.h"
 #include "SystemInfo.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
+#include "Proc.h"
 #include "protocol.h"
 #include "md5.h"
 #include "sha1.h"
@@ -145,8 +146,8 @@ static void _programOutput(InputStream_T I, StringBuffer_T S) {
  * Test the connection and protocol
  */
 static State_Type _checkConnection(Service_T s, Port_T p) {
-        ASSERT(s);
-        ASSERT(p);
+        assert(s);
+        assert(p);
         volatile int retry_count = p->retry;
         volatile State_Type rv = State_Succeeded;
         char buf[STRLEN];
@@ -197,7 +198,7 @@ retry:
  * Test process state (e.g. Zombie)
  */
 static State_Type _checkProcessState(Service_T s) {
-        ASSERT(s);
+        assert(s);
         if (s->inf.process->zombie) {
                 Event_post(s, Event_Data, State_Failed, s->action_DATA, "process with pid %d is a zombie", s->inf.process->pid);
                 return State_Failed;
@@ -211,7 +212,7 @@ static State_Type _checkProcessState(Service_T s) {
  * Test process pid for possible change since last cycle
  */
 static State_Type _checkProcessPid(Service_T s) {
-        ASSERT(s);
+        assert(s);
         if (s->inf.process->_pid < 0 || s->inf.process->pid < 0) // process pid was not initialized yet
                 return State_Init;
         if (s->inf.process->_pid != s->inf.process->pid) {
@@ -229,7 +230,7 @@ static State_Type _checkProcessPid(Service_T s) {
  * Test process ppid for possible change since last cycle
  */
 static State_Type _checkProcessPpid(Service_T s) {
-        ASSERT(s);
+        assert(s);
         if (s->inf.process->_ppid < 0 || s->inf.process->ppid < 0) // process ppid was not initialized yet
                 return State_Init;
         if (s->inf.process->_ppid != s->inf.process->ppid) {
@@ -247,8 +248,8 @@ static State_Type _checkProcessPpid(Service_T s) {
  * Check process resources
  */
 static State_Type _checkProcessResources(Service_T s, Resource_T r) {
-        ASSERT(s);
-        ASSERT(r);
+        assert(s);
+        assert(r);
         State_Type rv = State_Succeeded;
         char report[STRLEN] = {}, buf1[10], buf2[10];
         switch (r->resource_id) {
@@ -458,8 +459,8 @@ static State_Type _checkLoadAverage(Resource_T r, double loadavg, const char *na
 
 
 static State_Type _checkSystemResources(Service_T s, Resource_T r) {
-        ASSERT(s);
-        ASSERT(r);
+        assert(s);
+        assert(r);
         State_Type rv = State_Succeeded;
         char report[STRLEN] = {}, buf1[10], buf2[10];
         switch (r->resource_id) {
@@ -691,8 +692,8 @@ static State_Type _checkSystemResources(Service_T s, Resource_T r) {
  * Test for associated path checksum change
  */
 static State_Type _checkChecksum(Service_T s) {
-        ASSERT(s);
-        ASSERT(s->path);
+        assert(s);
+        assert(s->path);
         State_Type rv = State_Succeeded;
         if (s->checksum) {
                 Checksum_T cs = s->checksum;
@@ -746,7 +747,7 @@ static State_Type _checkChecksum(Service_T s) {
  * Test for associated path permission change
  */
 static State_Type _checkPerm(Service_T s, int mode) {
-        ASSERT(s);
+        assert(s);
         if (s->perm) {
                 if (mode >= 0) {
                         mode_t m = mode & 07777;
@@ -779,7 +780,7 @@ static State_Type _checkPerm(Service_T s, int mode) {
  * Test UID of file or process
  */
 static State_Type _checkUid(Service_T s, int uid) {
-        ASSERT(s);
+        assert(s);
         if (s->uid) {
                 if (uid >= 0) {
                         if ((uid_t)uid != s->uid->uid) {
@@ -800,7 +801,7 @@ static State_Type _checkUid(Service_T s, int uid) {
  * Test effective UID of process
  */
 static State_Type _checkEuid(Service_T s, int euid) {
-        ASSERT(s);
+        assert(s);
         if (s->euid) {
                 if (euid >= 0) {
                         if ((uid_t)euid != s->euid->uid) {
@@ -818,7 +819,7 @@ static State_Type _checkEuid(Service_T s, int euid) {
 
 
 static State_Type _checkSecurityAttribute(Service_T s, char *attribute) {
-        ASSERT(s);
+        assert(s);
         State_Type rv = State_Succeeded;
         const char *attr = NVLSTR(attribute);
         for (SecurityAttribute_T a = s->secattrlist; a; a = a->next) {
@@ -834,7 +835,7 @@ static State_Type _checkSecurityAttribute(Service_T s, char *attribute) {
 
 
 static State_Type _checkSystemFiledescriptors(Service_T s) {
-        ASSERT(s);
+        assert(s);
         State_Type rv = State_Succeeded;
         if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerSystem) {
                 for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
@@ -863,7 +864,7 @@ static State_Type _checkSystemFiledescriptors(Service_T s) {
 
 
 static State_Type _checkProcessFiledescriptors(Service_T s) {
-        ASSERT(s);
+        assert(s);
         State_Type rv = State_Succeeded;
         for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
                 if (o->total) {
@@ -905,7 +906,7 @@ static State_Type _checkProcessFiledescriptors(Service_T s) {
  * Test GID of file or process
  */
 static State_Type _checkGid(Service_T s, int gid) {
-        ASSERT(s);
+        assert(s);
         if (s->gid) {
                 if (gid >= 0) {
                         if ((gid_t)gid != s->gid->gid) {
@@ -954,7 +955,7 @@ static State_Type _checkTimestamp(Service_T s, Timestamp_T t, time_t timestamp) 
  * Validate timestamps of a service s
  */
 static State_Type _checkTimestamps(Service_T s, time_t atime, time_t ctime, time_t mtime) {
-        ASSERT(s);
+        assert(s);
         if (atime > 0 && ctime > 0 && mtime > 0) {
                 State_Type rv;
                 int failed = 0, changed = 0;
@@ -989,7 +990,7 @@ static State_Type _checkTimestamps(Service_T s, time_t atime, time_t ctime, time
  * Test size
  */
 static State_Type _checkSize(Service_T s, off_t size) {
-        ASSERT(s);
+        assert(s);
         if (size >= 0) {
                 State_Type rv = State_Succeeded;
                 if (s->sizelist) {
@@ -1035,7 +1036,7 @@ static State_Type _checkSize(Service_T s, off_t size) {
  * The number of used hard links does not fit to nlink_t, sometimes.
  */
 static State_Type _checkHardlink(Service_T s, long long nlink) {
-        ASSERT(s);
+        assert(s);
         if (nlink >= 0) {
                 State_Type rv = State_Succeeded;
                 if (s->nlinklist) {
@@ -1079,7 +1080,7 @@ static State_Type _checkHardlink(Service_T s, long long nlink) {
  * Test uptime
  */
 static State_Type _checkUptime(Service_T s, long long uptime) {
-        ASSERT(s);
+        assert(s);
         State_Type rv = State_Succeeded;
         if (uptime < 0)
                 return State_Init;
@@ -1111,7 +1112,7 @@ static int _checkPattern(Match_T pattern, const char *line) {
  * We test only Run.limits.fileContentBuffer at maximum - in the case that the line is bigger, we read the rest of the line (till '\n') but ignore the characters past the maximum
  */
 static State_Type _checkMatch(Service_T s) {
-        ASSERT(s);
+        assert(s);
         /* TODO: https://bitbucket.org/tildeslash/monit/issues/401 Refactor and use mmap instead of naive std file io.
          mmap can make code simpler, more efficient and support multi-line matching as there is no line-buffer, but the
          whole file is in the buffer.
@@ -1234,7 +1235,7 @@ final1:
  * Test filesystem flags for possible change since last cycle
  */
 static State_Type _checkFilesystemFlags(Service_T s) {
-        ASSERT(s);
+        assert(s);
         FilesystemFlags_T f = &(s->inf.filesystem->flags);
         if (*(f->current) && *(f->previous)) {
                 if (! IS(f->previous, f->current)) {
@@ -1254,8 +1255,8 @@ static State_Type _checkFilesystemFlags(Service_T s) {
  * Filesystem test
  */
 static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
-        ASSERT(s);
-        ASSERT(td);
+        assert(s);
+        assert(td);
         if ((td->limit_percent < 0) && (td->limit_absolute < 0)) {
                 Log_error("'%s' error: filesystem limit not set\n", s->name);
                 return State_Failed;
@@ -1481,7 +1482,7 @@ static bool _incron(Service_T s, time_t now) {
  * Returns true if validation should be skipped for this service in this cycle, otherwise false. Handle every statement
  */
 static bool _checkSkip(Service_T s) {
-        ASSERT(s);
+        assert(s);
         time_t now = Time_now();
         if (s->every.type == Every_SkipCycles) {
                 s->every.spec.cycle.counter++;
@@ -1532,6 +1533,13 @@ static bool _doScheduledAction(Service_T s) {
 }
 
 
+static inline void _init(void) {
+        if (Process_Table == NULL) {
+                Process_Table = ProcessTable_new();
+        }
+}
+
+
 /* ---------------------------------------------------------------- Public */
 
 
@@ -1541,11 +1549,12 @@ static bool _doScheduledAction(Service_T s) {
  *  they will pass all defined tests.
  */
 int validate(void) {
+        _init();
         Run.handler_flag = Handler_Succeeded;
         Event_queue_process();
 
         SystemInfo_update();
-        ProcessTree_init(ProcessEngine_None);
+        ProcessTable_update(Process_Table);
         gettimeofday(&System_Info.collected, NULL);
 
         /* In the case that at least one action is pending, perform quick loop to handle the actions ASAP */
@@ -1581,10 +1590,10 @@ int validate(void) {
  * its configuration. In case of a fatal event false is returned.
  */
 State_Type check_process(Service_T s) {
-        ASSERT(s);
+        assert(s);
         State_Type rv = State_Succeeded;
         bool checkResources = false;
-        pid_t pid = ProcessTree_findProcess(s);
+        pid_t pid = ProcessTable_findProcess(s);
         if (! pid) {
                 for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                         rv = State_Failed;
@@ -1597,7 +1606,7 @@ State_Type check_process(Service_T s) {
         }
         if (Run.flags & Run_ProcessEngineEnabled) {
                 // Update statistics (event can execute a program and set environment like MONIT_PROCESS_PID)
-                if (! (checkResources = ProcessTree_updateProcess(s, pid))) {
+                if (! (checkResources = ProcessTable_updateProcess(Process_Table, s, pid))) {
                         Log_error("'%s' failed to get process data\n", s->name);
                         rv = State_Failed;
                 }
@@ -1673,7 +1682,7 @@ State_Type check_process(Service_T s) {
  * its configuration. In case of a fatal event false is returned.
  */
 State_Type check_filesystem(Service_T s) {
-        ASSERT(s);
+        assert(s);
         State_Type rv = State_Succeeded;
         if (! filesystem_usage(s)) {
                 for (NonExist_T l = s->nonexistlist; l; l = l->next) {
@@ -1715,7 +1724,7 @@ State_Type check_filesystem(Service_T s) {
  * its configuration. In case of a fatal event false is returned.
  */
 State_Type check_file(Service_T s) {
-        ASSERT(s);
+        assert(s);
         struct stat stat_buf;
         State_Type rv = State_Succeeded;
         if (stat(s->path, &stat_buf) != 0) {
@@ -1788,7 +1797,7 @@ State_Type check_file(Service_T s) {
  * its configuration. In case of a fatal event false is returned.
  */
 State_Type check_directory(Service_T s) {
-        ASSERT(s);
+        assert(s);
         struct stat stat_buf;
         State_Type rv = State_Succeeded;
         if (stat(s->path, &stat_buf) != 0) {
@@ -1844,7 +1853,7 @@ State_Type check_directory(Service_T s) {
  * its configuration. In case of a fatal event false is returned.
  */
 State_Type check_fifo(Service_T s) {
-        ASSERT(s);
+        assert(s);
         struct stat stat_buf;
         State_Type rv = State_Succeeded;
         if (stat(s->path, &stat_buf) != 0) {
@@ -1900,8 +1909,8 @@ State_Type check_fifo(Service_T s) {
  * its configuration. In case of a fatal event false is returned.
  */
 State_Type check_program(Service_T s) {
-        ASSERT(s);
-        ASSERT(s->program);
+        assert(s);
+        assert(s->program);
         State_Type rv = State_Succeeded;
         time_t now = Time_now();
         Process_T P = s->program->P;
@@ -1993,7 +2002,7 @@ State_Type check_program(Service_T s) {
  * @return false if there was an error otherwise true
  */
 State_Type check_remote_host(Service_T s) {
-        ASSERT(s);
+        assert(s);
         State_Type rv = State_Succeeded;
         Icmp_T last_ping = NULL;
         /* Test each icmp type in the service's icmplist */
@@ -2054,7 +2063,7 @@ State_Type check_remote_host(Service_T s) {
  * false is returned.
  */
 State_Type check_system(Service_T s) {
-        ASSERT(s);
+        assert(s);
         State_Type rv = State_Succeeded;
         for (Resource_T r = s->resourcelist; r; r = r->next)
                 if (_checkSystemResources(s, r) == State_Failed)

@@ -182,7 +182,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0.
  */
-int init_processtree_sysdep(ProcessTable_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         int treesize;
         pid_t firstproc = 0;
         if ((treesize = getprocs64(NULL, 0, NULL, 0, &firstproc, PID_MAX)) < 0) {

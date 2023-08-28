@@ -70,7 +70,7 @@
 #endif
 
 #include "monit.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 // libmonit
@@ -135,11 +135,11 @@ bool init_systeminfo_sysdep(void) {
 
 /**
  * Read all processes to initialize the information tree.
- * @param reference  reference of ProcessTree
+ * @param reference  reference of ProcessTable
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0.
  */
-int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         char errbuf[_POSIX2_LINE_MAX];
         kvm_t *kvm_handle = kvm_openfiles(NULL, _PATH_DEVNULL, NULL, O_RDONLY, errbuf);
         if (! kvm_handle) {
@@ -156,7 +156,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
         }
         unsigned long long now = Time_milli();
 
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
+        ProcessTable_T *pt = CALLOC(sizeof(ProcessTable_T), treesize);
 
         StringBuffer_T cmdline = NULL;
         if (pflags & ProcessEngine_CollectCommandLine)

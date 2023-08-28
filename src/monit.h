@@ -433,13 +433,6 @@ Sigfunc *signal(int signo, Sigfunc * func);
 #define NVLSTR(x) (x ? x : "")
 
 
-/** ------------------------------------------ Simple Assert Exception macro */
-
-
-#define ASSERT(e) do { if (!(e)) { Log_critical("AssertException: " #e \
-" at %s:%d\naborting..\n", __FILE__, __LINE__); abort(); } } while (0)
-
-
 /* --------------------------------------------------------- Data structures */
 
 
@@ -1404,6 +1397,8 @@ extern Service_T      Service_List;
 extern Service_T      Service_List_Conf;
 extern ServiceGroup_T Service_Group_List;
 extern SystemInfo_T   System_Info;
+#include "ProcessTable.h"
+extern ProcessTable_T Process_Table;
 
 extern const char *Action_Names[];
 extern const char *Mode_Names[];
@@ -1453,6 +1448,7 @@ void Log_vinfo(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
 void Log_vdebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
 void Log_abort_handler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
 void Log_close(void);
+void validate_init(void);
 int  validate(void);
 void daemonize(void);
 void gc(void);
@@ -1460,7 +1456,7 @@ void gc_mail_list(Mail_T *);
 void gccmd(command_t *);
 void gc_event(Event_T *e);
 bool kill_daemon(int);
-int  exist_daemon(void);
+pid_t exist_daemon(void);
 bool sendmail(Mail_T);
 void init_env(void);
 void monit_http(Httpd_Action);

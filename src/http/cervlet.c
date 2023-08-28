@@ -80,7 +80,7 @@
 #include "base64.h"
 #include "event.h"
 #include "alert.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "device.h"
 #include "protocol.h"
 #include "TextColor.h"
@@ -104,6 +104,8 @@
 #define VIEWLOG     "/_viewlog"
 #define DOACTION    "/_doaction"
 #define FAVICON     "/favicon.ico"
+#define TOP         "/_top"
+
 
 // Limit for the viewlog response
 #define VIEWLOG_LIMIT 1048576
@@ -206,6 +208,7 @@ static void print_service_rules_secattr(HttpResponse, Service_T);
 static void print_service_rules_filedescriptors(HttpResponse, Service_T);
 static void print_status(HttpRequest, HttpResponse, int);
 static void print_summary(HttpRequest, HttpResponse);
+static void print_top(HttpRequest, HttpResponse);
 static void _printReport(HttpRequest req, HttpResponse res);
 static void status_service_txt(Service_T, HttpResponse);
 static char *get_monitoring_status(Output_Type, Service_T s, char *, int);
@@ -743,6 +746,8 @@ static void doGet(HttpRequest req, HttpResponse res) {
                 _printReport(req, res);
         } else if (ACTION(VIEWLOG)) {
                 do_viewlog(req, res);
+        } else if (ACTION(TOP)) {
+                print_top(req, res);
         } else {
                 handle_service(req, res);
         }
@@ -1227,7 +1232,7 @@ static void handle_runtime_action(HttpRequest req, HttpResponse res) {
 
 
 static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
-        ASSERT(s);
+        assert(s);
         char buf[STRLEN] = {};
 
         do_head(res, s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped), Run.polltime);
@@ -2598,7 +2603,7 @@ static void print_status(HttpRequest req, HttpResponse res, int version) {
         } else {
                 set_content_type(res, "text/plain");
 
-                StringBuffer_append(res->outputbuffer, "Monit %s uptime: %s\n\n", VERSION, _getUptime(ProcessTree_getProcessUptime(getpid()), (char[256]){}));
+                StringBuffer_append(res->outputbuffer, "Monit %s uptime: %s\n\n", VERSION, _getUptime(ProcessTable_uptime(Process_Table, getpid()), (char[256]){}));
 
                 struct ServiceMap_T ap = {.found = 0, .data.status.res = res};
                 const char *stringGroup = Util_urlDecode((char *)get_parameter(req, "group"));
@@ -2631,7 +2636,7 @@ static void print_status(HttpRequest req, HttpResponse res, int version) {
 static void print_summary(HttpRequest req, HttpResponse res) {
         set_content_type(res, "text/plain");
 
-        StringBuffer_append(res->outputbuffer, "Monit %s uptime: %s\n", VERSION, _getUptime(ProcessTree_getProcessUptime(getpid()), (char[256]){}));
+        StringBuffer_append(res->outputbuffer, "Monit %s uptime: %s\n", VERSION, _getUptime(ProcessTable_uptime(Process_Table, getpid()), (char[256]){}));
 
         struct ServiceMap_T ap = {.found = 0};
         const char *stringGroup = Util_urlDecode((char *)get_parameter(req, "group"));
@@ -2677,6 +2682,41 @@ static void print_summary(HttpRequest req, HttpResponse res) {
                 else
                         send_error(req, res, SC_BAD_REQUEST, "No service found");
         }
+}
+
+// TODO: This is just a demo - should be serialized or packed
+struct sortmap {ProcessTableSort_Type sort; StringBuffer_T out;};
+static void _top(process_t process, void *ap) {
+        char buf[32];
+        struct sortmap *m = ap;
+        switch (m->sort) {
+                case ProcessTableSort_Mem:
+                        if (process->memory.usage_total <= 0) return;
+                        StringBuffer_append(m->out, "%-5d %-5d %-10s %s\n", process->pid, process->ppid, Convert_bytes2str(process->memory.usage_total, buf), Str_trunc(process->cmdline, 160));
+                        break;
+                case ProcessTableSort_Dsk:
+                        StringBuffer_append(m->out, "%-5d %-5d %-10s %s\n", process->pid, process->ppid, Convert_bytes2str((process->read.bytes + process->write.bytes), buf), Str_trunc(process->cmdline, 160));
+                        break;
+                default: // Print CPU usage
+                        if (process->cpu.usage.self <= 0) return;
+                        StringBuffer_append(m->out, "%-5d %-5d %-10.1f %s\n", process->pid, process->ppid, process->cpu.usage.self, Str_trunc(process->cmdline, 160));
+                        break;
+        }
+}
+static void print_top(HttpRequest req, HttpResponse res) {
+        set_content_type(res, "text/plain");
+        const char *key = get_parameter(req, "key");
+        ProcessTableSort_Type sortType = ProcessTableSort_Cpu;
+        if (Str_isInt(key)) {
+                int t = Str_parseInt(key);
+                if (t < ProcessTableSort_Last && t >= 0) {
+                        sortType = (ProcessTableSort_Type)t;
+                }
+        }
+        const char *titles[] = {"%CPU", "%CPU", "MEM", "DISK"};
+        struct sortmap m = {.sort = sortType, .out = res->outputbuffer};
+        StringBuffer_append(res->outputbuffer, "%-5s %-5s %-10s %s\n", "PID", "PPID", titles[sortType], "COMMAND");
+        ProcessTable_sort(Process_Table, sortType, _top, &m);
 }
 
 
@@ -2761,8 +2801,8 @@ static void status_service_txt(Service_T s, HttpResponse res) {
 
 
 static char *get_monitoring_status(Output_Type type, Service_T s, char *buf, int buflen) {
-        ASSERT(s);
-        ASSERT(buf);
+        assert(s);
+        assert(buf);
         if (s->monitor == Monitor_Not) {
                 if (type == HTML)
                         snprintf(buf, buflen, "<span class='gray-text'>Not monitored</span>");
@@ -2789,8 +2829,8 @@ static char *get_monitoring_status(Output_Type type, Service_T s, char *buf, int
 
 
 static char *get_service_status(Output_Type type, Service_T s, char *buf, int buflen) {
-        ASSERT(s);
-        ASSERT(buf);
+        assert(s);
+        assert(buf);
         if (s->monitor == Monitor_Not || s->monitor & Monitor_Init) {
                 get_monitoring_status(type, s, buf, buflen);
         } else if (s->error == 0) {

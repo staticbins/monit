@@ -25,15 +25,24 @@
 #ifndef MONIT_PROCESSTREE_H
 #define MONIT_PROCESSTREE_H
 
-#include "config.h"
+/**
+ * A <b>ProcessTable</b> holds all running processes on the system.
+ * Each process in the table is of type <b>process_t</b> and holds
+ * information about that process and its resource usage. This table
+ * is thread-safe.
+ *
+ * @author https://www.tildeslash.com/
+ * @see https://www.mmonit.com/
+ * @file
+ */
 
+// MARK: - Definitions
 
-typedef struct ProcessTree_T {
-        bool visited;
+// TODO: Check if we can remove stuff or change stuff
+typedef struct process_t {
         bool zombie;
         pid_t pid;
         pid_t ppid;
-        int parent;
         struct {
                 int uid;
                 int euid;
@@ -53,7 +62,6 @@ typedef struct ProcessTree_T {
         struct {
                 int count;
                 int total;
-                int *list;
         } children;
         struct {
                 unsigned long long usage;
@@ -82,54 +90,38 @@ typedef struct ProcessTree_T {
                         long long hard;
                 } limit;
         } filedescriptors;
-} ProcessTree_T;
+} *process_t;
 
+#define T ProcessTable_T
+typedef struct T {
+        int size;
+        pid_t self_pid;
+        ProcessEngine_Flags options;
+        Mutex_T mutex;
+        process_t table;
+} *T;
 
-/**
- * Initialize the process tree
- * @param pflags Process engine flags
- * @return The process tree size or -1 if failed
- */
-int ProcessTree_init(ProcessEngine_Flags pflags);
+typedef enum {
+        ProcessTableSort_Pid = 0,
+        ProcessTableSort_Cpu,
+        ProcessTableSort_Mem,
+        ProcessTableSort_Dsk,
+        ProcessTableSort_Last
+} ProcessTableSort_Type;
 
+// MARK: - Public methods
+T ProcessTable_new(void);
+void ProcessTable_free(T *P);
+bool ProcessTable_update(T P);
+time_t ProcessTable_uptime(T P, pid_t pid);
+void ProcessTable_map(T P, void (*apply)(process_t process, void *ap), void *ap);
+void ProcessTable_sort(T P, ProcessTableSort_Type sort, void (*apply)(process_t process, void *ap), void *ap);
+// MARK: - Class methods
+bool ProcessTable_exist(pid_t pid);
+// MARK: - Service methods
+pid_t ProcessTable_findProcess(Service_T s);
+bool ProcessTable_updateProcess(T P, Service_T s, pid_t pid);
 
-/**
- * Delete the process tree
- */
-void ProcessTree_delete(void);
-
-
-/**
- * Update the process information.
- * @param s A Service object
- * @param pid Process PID to update
- * @return true if succeeded otherwise false.
- */
-bool ProcessTree_updateProcess(Service_T s, pid_t pid);
-
-
-/**
- * Get process uptime
- * @param pid Process PID
- * @return The PID of the running running process or 0 if the process is not running.
- */
-time_t ProcessTree_getProcessUptime(pid_t pid);
-
-
-/**
- * Find the process in the process tree
- * @param s The service being checked
- * @return The PID of the running running process or 0 if the process is not running.
- */
-pid_t ProcessTree_findProcess(Service_T s);
-
-
-/**
- * Print a table with all processes matching a given pattern
- * @param pattern The process pattern
- */
-void ProcessTree_testMatch(char *pattern);
-
-
+#undef T
 #endif
 

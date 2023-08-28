@@ -110,6 +110,15 @@ void static _setOSInfo(void) {
 }
 
 
+extern int responsibility_get_pid_responsible_for_pid(pid_t);
+static pid_t _responsible(pid_t p, pid_t pp) {
+        pid_t r = responsibility_get_pid_responsible_for_pid(p);
+        if (r < 0)
+                return pp;
+        return (r == p) ? pp : r;
+}
+
+
 /* ------------------------------------------------------------------ Public */
 
 
@@ -153,7 +162,7 @@ bool init_systeminfo_sysdep(void) {
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-size_t init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         size_t pinfo_size = 0;
         int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
         if (sysctl(mib, 4, NULL, &pinfo_size, NULL, 0) < 0) {
@@ -253,13 +262,17 @@ size_t init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags)
                         }
 #endif
                 }
+                if (pt[i].ppid == 1) {
+                        pt[i].ppid = _responsible(pt[i].pid, pt[i].ppid);
+                }
+                
         }
         if (pflags & ProcessEngine_CollectCommandLine) {
                 StringBuffer_free(&cmdline);
                 FREE(args);
         }
         FREE(pinfo);
-
+        
         *reference = pt;
         
         return (int)treesize;
@@ -292,7 +305,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 return false;
         }
         si->memory.usage.bytes = (unsigned long long)(page_info.wire_count + page_info.active_count) * (unsigned long long)pagesize;
-
+        
         /* Swap */
         int mib[2] = {CTL_VM, VM_SWAPUSAGE};
         size_t len = sizeof(struct xsw_usage);
@@ -304,7 +317,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         }
         si->swap.size = (unsigned long long)swap.xsu_total;
         si->swap.usage.bytes = (unsigned long long)swap.xsu_used;
-
+        
         return true;
 }
 
@@ -319,7 +332,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         kern_return_t             kret;
         host_cpu_load_info_data_t cpu_info;
         mach_msg_type_number_t    count;
-
+        
         count = HOST_CPU_LOAD_INFO_COUNT;
         kret  = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&cpu_info, &count);
         if (kret == KERN_SUCCESS) {
@@ -327,15 +340,15 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                         total_new += cpu_info.cpu_ticks[i];
                 total     = total_new - total_old;
                 total_old = total_new;
-
+                
                 si->cpu.usage.user = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_USER] - cpu_user_old) / total) : -1.;
                 si->cpu.usage.nice = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_NICE] - cpu_nice_old) / total) : -1.;
                 si->cpu.usage.system = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_SYSTEM] - cpu_syst_old) / total) : -1.;
-
+                
                 cpu_user_old = cpu_info.cpu_ticks[CPU_STATE_USER];
                 cpu_nice_old = cpu_info.cpu_ticks[CPU_STATE_NICE];
                 cpu_syst_old = cpu_info.cpu_ticks[CPU_STATE_SYSTEM];
-
+                
                 return true;
         }
         return false;

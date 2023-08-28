@@ -74,7 +74,7 @@
 #endif
 
 #include "monit.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 
@@ -136,11 +136,11 @@ bool init_systeminfo_sysdep(void) {
 
 /**
  * Read all processes to initialize the information tree.
- * @param reference  reference of ProcessTree
+ * @param reference  reference of ProcessTable
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0.
  */
-int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         kvm_t *kvm_handle = kvm_open(NULL, _PATH_DEVNULL, NULL, O_RDONLY, prog);
         if (! kvm_handle) {
                 Log_error("system statistic error -- cannot initialize kvm interface\n");
@@ -155,7 +155,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                 return 0;
         }
 
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
+        ProcessTable_T *pt = CALLOC(sizeof(ProcessTable_T), treesize);
 
         unsigned long long now = Time_milli();
         StringBuffer_T cmdline = NULL;
