@@ -242,10 +242,9 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
                                 Log_error("proc_pidinfo for pid %d -- invalid result size\n", pt[i].pid);
                         } else {
                                 pt[i].memory.usage = (unsigned long long)tinfo.pti_resident_size;
-                                pt[i].cpu.time = (double)(tinfo.pti_total_user + tinfo.pti_total_system) / 100000000.; // The time is in nanoseconds, we store it as 1/10s
+                                pt[i].cpu.time = (double)(tinfo.pti_total_user + tinfo.pti_total_system) / 100000000.; // The time is in nanoseconds, we store it as ms
                                 pt[i].threads.self = tinfo.pti_threadnum;
                         }
-#ifdef rusage_info_current
                         // Disk IO
                         rusage_info_current rusage;
                         if (proc_pid_rusage(pt[i].pid, RUSAGE_INFO_CURRENT, (rusage_info_t *)&rusage) < 0) {
@@ -260,7 +259,6 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
                                 pt[i].write.bytesPhysical = rusage.ri_diskio_byteswritten;
                                 pt[i].write.operations = -1;
                         }
-#endif
                 }
                 if (pt[i].ppid == 1) {
                         pt[i].ppid = _responsible(pt[i].pid, pt[i].ppid);

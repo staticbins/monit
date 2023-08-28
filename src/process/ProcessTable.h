@@ -72,12 +72,14 @@ typedef struct process_t {
                 long long bytes;
                 long long bytesPhysical;
                 long long operations;
+                double rbytesps;
         } read;
         struct {
                 unsigned long long time;
                 long long bytes;
                 long long bytesPhysical;
                 long long operations;
+                double wbytesps;
         } write;
         time_t uptime;
         char *cmdline;

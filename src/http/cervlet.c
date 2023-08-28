@@ -2691,15 +2691,13 @@ static void _top(process_t process, void *ap) {
         struct sortmap *m = ap;
         switch (m->sort) {
                 case ProcessTableSort_Mem:
-                        if (process->memory.usage_total <= 0) return;
-                        StringBuffer_append(m->out, "%-5d %-5d %-10s %s\n", process->pid, process->ppid, Convert_bytes2str(process->memory.usage_total, buf), Str_trunc(process->cmdline, 160));
+                        StringBuffer_append(m->out, "%-5d %-5d %-10s %.160s\n", process->pid, process->ppid, Convert_bytes2str(process->memory.usage_total, buf), process->cmdline);
                         break;
                 case ProcessTableSort_Dsk:
-                        StringBuffer_append(m->out, "%-5d %-5d %-10s %s\n", process->pid, process->ppid, Convert_bytes2str((process->read.bytes + process->write.bytes), buf), Str_trunc(process->cmdline, 160));
+                        StringBuffer_append(m->out, "%-5d %-5d %-10.1f %.160s\n", process->pid, process->ppid, (process->read.rbytesps + process->write.wbytesps)/1024, process->cmdline);
                         break;
                 default: // Print CPU usage
-                        if (process->cpu.usage.self <= 0) return;
-                        StringBuffer_append(m->out, "%-5d %-5d %-10.1f %s\n", process->pid, process->ppid, process->cpu.usage.self, Str_trunc(process->cmdline, 160));
+                        StringBuffer_append(m->out, "%-5d %-5d %-10.1f %.160s\n", process->pid, process->ppid, process->cpu.usage.self, process->cmdline);
                         break;
         }
 }
