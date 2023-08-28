@@ -196,23 +196,24 @@ static pid_t _match(T P, regex_t *regex) {
 
 static void _calculateResourceUsage(process_t prev, process_t current, double delta) {
         if (delta > 0) {
-                // TODO: normalize on
+                // TODO: should we not call _cpuUsage() to normalize cpu usage?
                 current->cpu.usage.self = 100. * (current->cpu.time - prev->cpu.time) / delta;
         }
-        // Include ourself in memory usage
+        // Include ourself in memory total_usage
         current->memory.usage_total += current->memory.usage;
         
         // TODO: What about disk i/o and bytes/sec and other stuff?
 }
 
 
-static inline void _aggregateParentUsage(process_t parent, process_t onechild) {
+static inline void _aggregateParentUsage(process_t parent, process_t achild) {
         parent->children.total += 1;
-        parent->threads.self += onechild->threads.self;
-        parent->cpu.usage.self += onechild->cpu.usage.self;
-        parent->cpu.usage.children += onechild->cpu.usage.self;
-        parent->memory.usage_total += onechild->memory.usage + onechild->memory.usage_total;
-        parent->filedescriptors.usage_total += onechild->filedescriptors.usage;
+        parent->threads.self += achild->threads.self;
+        parent->threads.children += achild->threads.self;
+        parent->cpu.usage.self += achild->cpu.usage.self;
+        parent->cpu.usage.children += achild->cpu.usage.self;
+        parent->memory.usage_total += achild->memory.usage + achild->memory.usage_total;
+        parent->filedescriptors.usage_total += achild->filedescriptors.usage;
         // TODO: Verify that we have aggregated properly
 }
 
@@ -262,8 +263,6 @@ static bool _updateProcessTable(T P) {
         process_t prev = P->table;
         // Free node allocations before allocating a new table
         _map(P, _prune, NULL);
-        System_Info.time_prev = System_Info.time;
-        System_Info.time = Time_milli() / 100.;
         if (!_buildProcessTable(P)) {
                 DEBUG("System statistic -- cannot update the process table\n");
                 return false;
