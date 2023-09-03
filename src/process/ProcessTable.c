@@ -145,8 +145,8 @@ static int _sortMemDesc(const void *x, const void *y) {
 
 
 static int _sortDiskDesc(const void *x, const void *y) {
-        double a = ((process_t)x)->write.bytes + ((process_t)x)->read.bytes;
-        double b = ((process_t)y)->write.bytes + ((process_t)y)->read.bytes;
+        double a = ((process_t)x)->write.wbytesps + ((process_t)x)->read.rbytesps;
+        double b = ((process_t)y)->write.wbytesps + ((process_t)y)->read.rbytesps;
         if (b > a) return 1;
         if (b < a) return -1;
         return 0;
@@ -194,52 +194,42 @@ static pid_t _match(T P, regex_t *regex) {
 }
 
 
-static void _calculateResourceUsage(process_t prev, process_t current, double delta) {
-        if (delta > 0) {
-                // TODO: should we not call _cpuUsage() to normalize cpu usage?
-                current->cpu.usage.self = 100. * (current->cpu.time - prev->cpu.time) / delta;
+static void _calculateCpuUsage(process_t prev, process_t current) {
+        double normalizer = current->threads.self > 1
+        ? current->threads.self > System_Info.cpu.count
+        ? System_Info.cpu.count : current->threads.self
+        : 1;
+        double deltaTime = (System_Info.time - System_Info.time_prev);
+        if (deltaTime > 0) {
+                double deltaCpuTime = (current->cpu.time - prev->cpu.time) * 100;
+                //current->cpu.usage.self = (100.0 * (deltaCpuTime / deltaTime)) / normalizer;
+                current->cpu.usage.self = (100.0 * (deltaCpuTime / deltaTime));
         }
-        // Include ourself in memory total_usage
+}
+
+
+static void _calculateDiskIO(process_t prev, process_t current) {
+        uint64_t deltaTime = current->write.time - prev->write.time;
+        if (deltaTime > 0) {
+                current->write.wbytesps = (current->write.bytesPhysical - prev->write.bytesPhysical) * 1000.0 / deltaTime;
+                current->read.rbytesps = (current->read.bytesPhysical - prev->read.bytesPhysical) * 1000.0 / deltaTime;
+        }
+}
+
+
+static void _calculateResourceUsage(process_t prev, process_t current) {
+        _calculateCpuUsage(prev, current);
+        _calculateDiskIO(prev, current);
         current->memory.usage_total += current->memory.usage;
-        
-        // TODO: What about disk i/o and bytes/sec and other stuff?
 }
 
 
 static inline void _aggregateParentUsage(process_t parent, process_t achild) {
         parent->children.total += 1;
-        parent->threads.self += achild->threads.self;
         parent->threads.children += achild->threads.self;
-        parent->cpu.usage.self += achild->cpu.usage.self;
         parent->cpu.usage.children += achild->cpu.usage.self;
-        parent->memory.usage_total += achild->memory.usage + achild->memory.usage_total;
+        parent->memory.usage_total += achild->memory.usage;
         parent->filedescriptors.usage_total += achild->filedescriptors.usage;
-        // TODO: Verify that we have aggregated properly
-}
-
-
-// Adjust CPU usage based on the available system resources: number of CPU cores the application may utilize.
-// Single threaded application may utilized only one CPU core, 4 threaded application 4 cores, etc.. If the
-// application has more threads then the machine has cores, it is limited by number of cores, not threads.
-static float _cpuUsage(float rawUsage, unsigned int threads) {
-        if (System_Info.cpu.count > 0 && rawUsage > 0) {
-                int divisor;
-                if (threads > 1) {
-                        if (threads >= (unsigned)System_Info.cpu.count) {
-                                // Multithreaded application with more threads then CPU cores
-                                divisor = System_Info.cpu.count;
-                        } else {
-                                // Multithreaded application with less threads then CPU cores
-                                divisor = threads;
-                        }
-                } else {
-                        // Single threaded application
-                        divisor = 1;
-                }
-                float usage = rawUsage / divisor;
-                return usage > 100. ? 100. : usage;
-        }
-        return 0.;
 }
 
 
@@ -269,12 +259,11 @@ static bool _updateProcessTable(T P) {
         }
         System_Info.time_prev = System_Info.time;
         System_Info.time = Time_milli() / 100.;
-        double time_delta = System_Info.time - System_Info.time_prev;
         for (int i = 0; i < prevSize; i++) {
                 // Update current processes resource usage
                 process_t current = _find(P, prev[i].pid);
                 if (current) {
-                        _calculateResourceUsage(&prev[i], current, time_delta);
+                        _calculateResourceUsage(&prev[i], current);
                 }
         }
         _delete(prev, &prevSize);
@@ -445,10 +434,10 @@ bool ProcessTable_updateProcess(T P, Service_T s, pid_t pid) {
                 s->inf.process->threads           = process.threads.self;
                 s->inf.process->children          = process.children.total;
                 s->inf.process->zombie            = process.zombie;
+                // TODO: Move this up to _calculateResourceUsage and just get the percent here from process
                 if (process.cpu.usage.self >= 0) {
-                        // compute only if delta between current and previous snapshot is available
-                        s->inf.process->cpu_percent = _cpuUsage(process.cpu.usage.self, process.threads.self);
-                        s->inf.process->total_cpu_percent = s->inf.process->cpu_percent + _cpuUsage(process.cpu.usage.children, process.threads.children);
+                        s->inf.process->cpu_percent = process.cpu.usage.self;
+                        s->inf.process->total_cpu_percent = s->inf.process->cpu_percent + process.cpu.usage.children;
                         if (s->inf.process->total_cpu_percent > 100.) {
                                 s->inf.process->total_cpu_percent = 100.;
                         }
