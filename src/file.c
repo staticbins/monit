@@ -141,7 +141,7 @@ char *file_findControlFile(void) {
 
 
 bool file_createPidFile(const char *pidfile) {
-        ASSERT(pidfile);
+        assert(pidfile);
         unlink(pidfile);
         FILE *F = fopen(pidfile, "w");
         if (! F) {
@@ -155,8 +155,8 @@ bool file_createPidFile(const char *pidfile) {
 
 
 bool file_checkStat(const char *filename, const char *description, mode_t permmask) {
-        ASSERT(filename);
-        ASSERT(description);
+        assert(filename);
+        assert(description);
         errno = 0;
         struct stat buf;
         if (stat(filename, &buf) < 0) {
@@ -213,7 +213,7 @@ bool file_checkQueueLimit(const char *path, int limit) {
 
 
 bool file_writeQueue(FILE *file, const void *data, size_t size) {
-        ASSERT(file);
+        assert(file);
         /* write size */
         size_t rv = fwrite(&size, 1, sizeof(size_t), file);
         if (rv != sizeof(size_t)) {
@@ -238,7 +238,7 @@ bool file_writeQueue(FILE *file, const void *data, size_t size) {
 
 
 void *file_readQueue(FILE *file, size_t *size) {
-        ASSERT(file);
+        assert(file);
         /* read size */
         size_t rv = fread(size, 1, sizeof(size_t), file);
         if (rv != sizeof(size_t)) {
@@ -266,8 +266,8 @@ void *file_readQueue(FILE *file, size_t *size) {
 
 
 bool file_readProc(char *buf, int buf_size, const char *name, int pid, int *bytes_read) {
-        ASSERT(buf);
-        ASSERT(name);
+        assert(buf);
+        assert(name);
 
         char filename[STRLEN];
         if (pid < 0)

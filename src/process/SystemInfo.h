@@ -22,39 +22,23 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
 
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
+#ifndef SystemInfo_h
+#define SystemInfo_h
 
-#include "protocol.h"
-
-// libmonit
-#include "exceptions/IOException.h"
-#include "exceptions/ProtocolException.h"
 
 /**
- *  Send PING and check for PONG.
- *
- *  @file
+ * Initialize the system information
+ * @return true if succeeded otherwise false.
  */
-void check_spamassassin(Socket_T socket) {
-        assert(socket);
+bool SystemInfo_init(void);
 
-        // Send PING
-        if (Socket_print(socket, "PING SPAMC/1.2\r\n") < 0) {
-                THROW(IOException, "SPAMASSASSIN: PING command error -- %s", STRERROR);
-        }
 
-        // Read and check PONG
-        char buf[STRLEN];
-        if (! Socket_readLine(socket, buf, sizeof(buf))) {
-                THROW(IOException, "SPAMASSASSIN: PONG read error -- %s", STRERROR);
-        }
-        Str_chomp(buf);
-        if (! Str_startsWith(buf, "SPAMD/") || ! Str_sub(buf, " PONG")) {
-                THROW(ProtocolException, "SPAMASSASSIN: invalid PONG response -- %s", buf);
-        }
-}
+/**
+ * Update system statistic
+ * @return true if successful, otherwise false
+ */
+bool SystemInfo_update(void);
 
+
+#endif /* SystemInfo_h */

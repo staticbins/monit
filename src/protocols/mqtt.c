@@ -303,7 +303,7 @@ static void _disconnect(mqtt_t *mqtt) {
  *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
  */
 void check_mqtt(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
         mqtt_t mqtt = {.state = MQTT_Init, .socket = socket, .port = Socket_getPort(socket)};
         _connectRequest(&mqtt);
         _connectResponse(&mqtt);

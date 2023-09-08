@@ -22,39 +22,18 @@
  * for all of the code used other than OpenSSL.
  */
 
-#include "config.h"
 
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
+#ifndef PROC_INCLUDED
+#define PROC_INCLUDED
 
-#include "protocol.h"
-
-// libmonit
-#include "exceptions/IOException.h"
-#include "exceptions/ProtocolException.h"
 
 /**
- *  Send PING and check for PONG.
- *
- *  @file
+ * Search the Process Table for entries matching the pattern
+ * and print the result table to stdout
+ * @param pattern The process command to search for
+ * @return true if succeeded otherwise false.
  */
-void check_spamassassin(Socket_T socket) {
-        assert(socket);
+void Proc_match(char *pattern);
 
-        // Send PING
-        if (Socket_print(socket, "PING SPAMC/1.2\r\n") < 0) {
-                THROW(IOException, "SPAMASSASSIN: PING command error -- %s", STRERROR);
-        }
 
-        // Read and check PONG
-        char buf[STRLEN];
-        if (! Socket_readLine(socket, buf, sizeof(buf))) {
-                THROW(IOException, "SPAMASSASSIN: PONG read error -- %s", STRERROR);
-        }
-        Str_chomp(buf);
-        if (! Str_startsWith(buf, "SPAMD/") || ! Str_sub(buf, " PONG")) {
-                THROW(ProtocolException, "SPAMASSASSIN: invalid PONG response -- %s", buf);
-        }
-}
-
+#endif

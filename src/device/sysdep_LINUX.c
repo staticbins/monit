@@ -538,15 +538,15 @@ static void __attribute__ ((destructor)) _destructor(void) {
 
 
 bool Filesystem_getByMountpoint(Info_T inf, const char *path) {
-        ASSERT(inf);
-        ASSERT(path);
+        assert(inf);
+        assert(path);
         return _getDevice(inf, path, _compareMountpoint);
 }
 
 
 bool Filesystem_getByDevice(Info_T inf, const char *path) {
-        ASSERT(inf);
-        ASSERT(path);
+        assert(inf);
+        assert(path);
         return _getDevice(inf, path, _compareDevice);
 }
 

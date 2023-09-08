@@ -70,10 +70,10 @@
 /* -------------------------------------------------------------- Public*/
 
 void check_sip(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
 
         Port_T P = Socket_getPort(socket);
-        ASSERT(P);
+        assert(P);
         const char *target = P->parameters.sip.target ? P->parameters.sip.target : "monit@foo.bar";
 
         int port = Socket_getLocalPort(socket);

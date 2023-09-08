@@ -45,7 +45,7 @@ void check_gps(Socket_T socket) {
         const char *ok_rtcm104_device = "GPSD,G=RTCM104";
         const char *ok_rtcm104v2_device = "GPSD,G=RTCM104v2";
 
-        ASSERT(socket);
+        assert(socket);
 
         if (Socket_print(socket, "G\r\n") < 0)
                 THROW(IOException, "GPS: error sending data -- %s", STRERROR);

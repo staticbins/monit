@@ -115,7 +115,6 @@
 #include "sha1.h"
 #include "base64.h"
 #include "alert.h"
-#include "ProcessTree.h"
 #include "event.h"
 #include "state.h"
 #include "protocol.h"
@@ -407,7 +406,7 @@ static Auth_T PAMcheckUserGroup(const char *uname) {
         struct passwd *pwd = NULL;
         struct group  *grp = NULL;
 
-        ASSERT(uname);
+        assert(uname);
 
         if (! (pwd = getpwnam(uname)))
                 return NULL;
@@ -443,10 +442,10 @@ static Auth_T PAMcheckUserGroup(const char *uname) {
 
 
 char *Util_replaceString(char **src, const char *old, const char *new) {
-        ASSERT(src);
-        ASSERT(*src);
-        ASSERT(old);
-        ASSERT(new);
+        assert(src);
+        assert(*src);
+        assert(old);
+        assert(new);
 
         size_t i = Util_countWords(*src, old);
         if (i) {
@@ -481,7 +480,7 @@ size_t Util_countWords(const char *s, const char *word) {
         size_t i = 0;
         const char *p = s;
 
-        ASSERT(s && word);
+        assert(s && word);
 
         while ((p = strstr(p, word))) { i++;  p++; }
         return i;
@@ -492,7 +491,7 @@ void Util_handleEscapes(char *buf) {
         int editpos;
         int insertpos;
 
-        ASSERT(buf);
+        assert(buf);
 
         for (editpos = insertpos = 0; *(buf + editpos) != '\0'; editpos++, insertpos++) {
                 if (*(buf + editpos) == '\\' ) {
@@ -556,7 +555,7 @@ int Util_handle0Escapes(char *buf) {
         int editpos;
         int insertpos;
 
-        ASSERT(buf);
+        assert(buf);
 
         for (editpos = insertpos = 0; *(buf + editpos) != '\0'; editpos++, insertpos++) {
                 if (*(buf + editpos) == '\\' ) {
@@ -583,8 +582,8 @@ int Util_handle0Escapes(char *buf) {
 
 
 Service_T Util_getService(const char *name) {
-        ASSERT(name);
-        for (Service_T s = servicelist; s; s = s->next)
+        assert(name);
+        for (Service_T s = Service_List; s; s = s->next)
                 if (IS(s->name, name))
                         return s;
         return NULL;
@@ -594,14 +593,14 @@ Service_T Util_getService(const char *name) {
         int Util_getNumberOfServices(void) {
         int i = 0;
         Service_T s;
-        for (s = servicelist; s; s = s->next)
+        for (s = Service_List; s; s = s->next)
                 i += 1;
         return i;
 }
 
 
 bool Util_existService(const char *name) {
-        ASSERT(name);
+        assert(name);
         return Util_getService(name) ? true : false;
 }
 
@@ -630,7 +629,7 @@ bool Util_existService(const char *name) {
         printf(" %-18s =   startTimeout:      %s\n", " ", Convert_time2str(Run.limits.startTimeout, (char[11]){}));
         printf(" %-18s =   restartTimeout:    %s\n", " ", Convert_time2str(Run.limits.restartTimeout, (char[11]){}));
         printf(" %-18s = }\n", " ");
-        printf(" %-18s = %s\n", "On reboot", onrebootnames[Run.onreboot]);
+        printf(" %-18s = %s\n", "On reboot", onReboot_Names[Run.onreboot]);
         printf(" %-18s = %d seconds with start delay %d seconds\n", "Poll time", Run.polltime, Run.startdelay);
 
         if (Run.eventlist_dir) {
@@ -663,7 +662,7 @@ bool Util_existService(const char *name) {
                                 if (options && *options)
                                         printf(" with options {%s}", options);
                                 if (c->ssl.checksum)
-                                        printf(" and certificate checksum %s equal to '%s'", checksumnames[c->ssl.checksumType], c->ssl.checksum);
+                                        printf(" and certificate checksum %s equal to '%s'", Checksum_Names[c->ssl.checksumType], c->ssl.checksum);
                         }
 #endif
                         if (Run.flags & Run_MmonitCredentials && c->url->user)
@@ -686,7 +685,7 @@ bool Util_existService(const char *name) {
                                 if (options && *options)
                                         printf(" with options {%s}", options);
                                 if (mta->ssl.checksum)
-                                        printf(" and certificate checksum %s equal to '%s'", checksumnames[mta->ssl.checksumType], mta->ssl.checksum);
+                                        printf(" and certificate checksum %s equal to '%s'", Checksum_Names[mta->ssl.checksumType], mta->ssl.checksum);
                         }
 #endif
                         if (mta->next)
@@ -753,15 +752,15 @@ bool Util_existService(const char *name) {
 
 
 void Util_printService(Service_T s) {
-        ASSERT(s);
+        assert(s);
 
         bool sgheader = false;
         char buffer[STRLEN];
         StringBuffer_T buf = StringBuffer_create(STRLEN);
 
-        printf("%-21s = %s\n", StringBuffer_toString(StringBuffer_append(buf, "%s Name", servicetypes[s->type])), s->name);
+        printf("%-21s = %s\n", StringBuffer_toString(StringBuffer_append(buf, "%s Name", Servicetype_Names[s->type])), s->name);
 
-        for (ServiceGroup_T o = servicegrouplist; o; o = o->next) {
+        for (ServiceGroup_T o = Service_Group_List; o; o = o->next) {
                 for (list_t m = o->members->head; m; m = m->next) {
                         if (m->e == s) {
                                 if (! sgheader) {
@@ -788,8 +787,8 @@ void Util_printService(Service_T s) {
         } else if (s->type != Service_System) {
                 printf(" %-20s = %s\n", "Path", s->path);
         }
-        printf(" %-20s = %s\n", "Monitoring mode", modenames[s->mode]);
-        printf(" %-20s = %s\n", "On reboot", onrebootnames[s->onreboot]);
+        printf(" %-20s = %s\n", "Monitoring mode", Mode_Names[s->mode]);
+        printf(" %-20s = %s\n", "On reboot", onReboot_Names[s->onreboot]);
         if (s->start) {
                 printf(" %-20s = '%s'", "Start program", Util_commandDescription(s->start, (char[STRLEN]){}));
                 if (s->start->has_uid)
@@ -855,7 +854,7 @@ void Util_printService(Service_T s) {
                         if (o->operator == Operator_Changed)
                                 printf(" %-20s = %s\n", "Status", StringBuffer_toString(Util_printRule(false, buf, o->action, "if exit value changed")));
                         else
-                                printf(" %-20s = %s\n", "Status", StringBuffer_toString(Util_printRule(false, buf, o->action, "if exit value %s %d", operatorshortnames[o->operator], o->return_value)));
+                                printf(" %-20s = %s\n", "Status", StringBuffer_toString(Util_printRule(false, buf, o->action, "if exit value %s %d", OperatorShort_Names[o->operator], o->return_value)));
                 }
         }
 
@@ -864,9 +863,9 @@ void Util_printService(Service_T s) {
                 printf(" %-20s = %s\n", "Checksum",
                        s->checksum->test_changes
                        ?
-                       StringBuffer_toString(Util_printRule(false, buf, s->checksum->action, "if changed %s", checksumnames[s->checksum->type]))
+                       StringBuffer_toString(Util_printRule(false, buf, s->checksum->action, "if changed %s", Checksum_Names[s->checksum->type]))
                        :
-                       StringBuffer_toString(Util_printRule(false, buf, s->checksum->action, "if failed %s(%s)", s->checksum->hash, checksumnames[s->checksum->type]))
+                       StringBuffer_toString(Util_printRule(false, buf, s->checksum->action, "if failed %s(%s)", s->checksum->hash, Checksum_Names[s->checksum->type]))
                        );
         }
 
@@ -899,12 +898,12 @@ void Util_printService(Service_T s) {
         for (Filedescriptors_T o = s->filedescriptorslist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->total) {
-                        printf(" %-20s = %s\n", "Total filedescriptors", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld", operatornames[o->operator], o->limit_absolute)));
+                        printf(" %-20s = %s\n", "Total filedescriptors", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld", Operator_Names[o->operator], o->limit_absolute)));
                 } else {
                         if (o->limit_absolute > -1)
-                                printf(" %-20s = %s\n", "Filedescriptors", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld", operatornames[o->operator], o->limit_absolute)));
+                                printf(" %-20s = %s\n", "Filedescriptors", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld", Operator_Names[o->operator], o->limit_absolute)));
                         else
-                                printf(" %-20s = %s\n", "Filedescriptors", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent)));
+                                printf(" %-20s = %s\n", "Filedescriptors", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", Operator_Names[o->operator], o->limit_percent)));
                 }
         }
 
@@ -918,7 +917,7 @@ void Util_printService(Service_T s) {
                 StringBuffer_T buf2 = StringBuffer_create(64);
                 StringBuffer_append(buf2, "if %s count %d size %d with timeout %s", o->check_invers ? "succeeded" : "failed", o->count, o->size, Convert_time2str(o->timeout, (char[11]){}));
                 if (o->responsetime.limit > -1.)
-                        StringBuffer_append(buf2, " and responsetime %s %s", operatornames[o->responsetime.operator], Convert_time2str(o->responsetime.limit, (char[11]){}));
+                        StringBuffer_append(buf2, " and responsetime %s %s", Operator_Names[o->responsetime.operator], Convert_time2str(o->responsetime.limit, (char[11]){}));
                 if (o->outgoing.ip)
                         StringBuffer_append(buf2, " via address %s",  o->outgoing.ip);
                 switch (o->family) {
@@ -947,7 +946,7 @@ void Util_printService(Service_T s) {
                 if (o->retry > 1)
                         StringBuffer_append(buf2, " and retry %d times", o->retry);
                 if (o->responsetime.limit > -1.)
-                        StringBuffer_append(buf2, " and responsetime %s %s", operatornames[o->responsetime.operator], Convert_time2str(o->responsetime.limit, (char[11]){}));
+                        StringBuffer_append(buf2, " and responsetime %s %s", Operator_Names[o->responsetime.operator], Convert_time2str(o->responsetime.limit, (char[11]){}));
 #ifdef HAVE_OPENSSL
                 if (o->target.net.ssl.options.flags) {
                         StringBuffer_append(buf2, " using TLS");
@@ -957,7 +956,7 @@ void Util_printService(Service_T s) {
                         if (o->target.net.ssl.certificate.minimumDays > 0)
                                 StringBuffer_append(buf2, " and certificate valid for at least %d days", o->target.net.ssl.certificate.minimumDays);
                         if (o->target.net.ssl.options.checksum)
-                                StringBuffer_append(buf2, " and certificate checksum %s equal to '%s'", checksumnames[o->target.net.ssl.options.checksumType], o->target.net.ssl.options.checksum);
+                                StringBuffer_append(buf2, " and certificate checksum %s equal to '%s'", Checksum_Names[o->target.net.ssl.options.checksumType], o->target.net.ssl.options.checksum);
                 }
 #endif
                 printf(" %-20s = %s\n", "Port", StringBuffer_toString(Util_printRule(o->check_invers, buf, o->action, "%s", StringBuffer_toString(buf2))));
@@ -971,19 +970,19 @@ void Util_printService(Service_T s) {
                 if (o->retry > 1)
                         StringBuffer_append(buf2, " and retry %d times", o->retry);
                 if (o->responsetime.limit > -1.)
-                        StringBuffer_append(buf2, " and responsetime %s %s", operatornames[o->responsetime.operator], Convert_time2str(o->responsetime.limit, (char[11]){}));
+                        StringBuffer_append(buf2, " and responsetime %s %s", Operator_Names[o->responsetime.operator], Convert_time2str(o->responsetime.limit, (char[11]){}));
                 printf(" %-20s = %s\n", "Unix Socket", StringBuffer_toString(Util_printRule(o->check_invers, buf, o->action, "%s", StringBuffer_toString(buf2))));
                 StringBuffer_free(&buf2);
         }
 
         for (Timestamp_T o = s->timestamplist; o; o = o->next) {
                 StringBuffer_clear(buf);
-                printf(" %-20s = %s\n", timestampnames[o->type],
+                printf(" %-20s = %s\n", Timestamp_Names[o->type],
                        o->test_changes
                        ?
                        StringBuffer_toString(Util_printRule(false, buf, o->action, "if changed"))
                        :
-                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", operatornames[o->operator], Convert_time2str(o->time * 1000., (char[11]){})))
+                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Convert_time2str(o->time * 1000., (char[11]){})))
                        );
         }
 
@@ -994,7 +993,7 @@ void Util_printService(Service_T s) {
                        ?
                        StringBuffer_toString(Util_printRule(false, buf, o->action, "if changed"))
                        :
-                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %llu byte(s)", operatornames[o->operator], o->size))
+                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %llu byte(s)", Operator_Names[o->operator], o->size))
                        );
         }
 
@@ -1005,7 +1004,7 @@ void Util_printService(Service_T s) {
                        ?
                        StringBuffer_toString(Util_printRule(false, buf, o->action, "if changed"))
                        :
-                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %llu", operatornames[o->operator], o->nlink))
+                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %llu", Operator_Names[o->operator], o->nlink))
                        );
         }
 
@@ -1021,48 +1020,48 @@ void Util_printService(Service_T s) {
 
         for (LinkSaturation_T o = s->linksaturationlist; o; o = o->next) {
                 StringBuffer_clear(buf);
-                printf(" %-20s = %s\n", "Link utilization", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit)));
+                printf(" %-20s = %s\n", "Link utilization", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", Operator_Names[o->operator], o->limit)));
         }
 
         for (Bandwidth_T o = s->uploadbyteslist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->range == Time_Second) {
-                        printf(" %-20s = %s\n", "Upload bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", operatornames[o->operator], Convert_bytes2str(o->limit, buffer))));
+                        printf(" %-20s = %s\n", "Upload bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit, buffer))));
                 } else {
-                        printf(" %-20s = %s\n", "Total upload bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s in last %d %s(s)", operatornames[o->operator], Convert_bytes2str(o->limit, buffer), o->rangecount, Util_timestr(o->range))));
+                        printf(" %-20s = %s\n", "Total upload bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s in last %d %s(s)", Operator_Names[o->operator], Convert_bytes2str(o->limit, buffer), o->rangecount, Util_timestr(o->range))));
                 }
         }
 
         for (Bandwidth_T o = s->uploadpacketslist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->range == Time_Second) {
-                        printf(" %-20s = %s\n", "Upload packets", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld packets/s", operatornames[o->operator], o->limit)));
+                        printf(" %-20s = %s\n", "Upload packets", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld packets/s", Operator_Names[o->operator], o->limit)));
                 } else {
-                        printf(" %-20s = %s\n", "Total upload packets", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld packets in last %d %s(s)", operatornames[o->operator], o->limit, o->rangecount, Util_timestr(o->range))));
+                        printf(" %-20s = %s\n", "Total upload packets", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld packets in last %d %s(s)", Operator_Names[o->operator], o->limit, o->rangecount, Util_timestr(o->range))));
                 }
         }
 
         for (Bandwidth_T o = s->downloadbyteslist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->range == Time_Second) {
-                        printf(" %-20s = %s\n", "Download bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", operatornames[o->operator], Convert_bytes2str(o->limit, buffer))));
+                        printf(" %-20s = %s\n", "Download bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit, buffer))));
                 } else {
-                        printf(" %-20s = %s\n", "Total download bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s in last %d %s(s)", operatornames[o->operator], Convert_bytes2str(o->limit, buffer), o->rangecount, Util_timestr(o->range))));
+                        printf(" %-20s = %s\n", "Total download bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s in last %d %s(s)", Operator_Names[o->operator], Convert_bytes2str(o->limit, buffer), o->rangecount, Util_timestr(o->range))));
                 }
         }
 
         for (Bandwidth_T o = s->downloadpacketslist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->range == Time_Second) {
-                        printf(" %-20s = %s\n", "Download packets", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld packets/s", operatornames[o->operator], o->limit)));
+                        printf(" %-20s = %s\n", "Download packets", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld packets/s", Operator_Names[o->operator], o->limit)));
                 } else {
-                        printf(" %-20s = %s\n", "Total downl. packets", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld packets in last %d %s(s)", operatornames[o->operator], o->limit, o->rangecount, Util_timestr(o->range))));
+                        printf(" %-20s = %s\n", "Total downl. packets", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld packets in last %d %s(s)", Operator_Names[o->operator], o->limit, o->rangecount, Util_timestr(o->range))));
                 }
         }
 
         for (Uptime_T o = s->uptimelist; o; o = o->next) {
                 StringBuffer_clear(buf);
-                printf(" %-20s = %s\n", "Uptime", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %llu second(s)", operatornames[o->operator], o->uptime)));
+                printf(" %-20s = %s\n", "Uptime", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %llu second(s)", Operator_Names[o->operator], o->uptime)));
         }
 
         if (s->type != Service_Process) {
@@ -1082,40 +1081,40 @@ void Util_printService(Service_T s) {
                         printf(" %-20s = %s\n", "Inodes usage limit",
                                o->limit_absolute > -1
                                ?
-                               StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld", operatornames[o->operator], o->limit_absolute))
+                               StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld", Operator_Names[o->operator], o->limit_absolute))
                                :
-                               StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent))
+                               StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", Operator_Names[o->operator], o->limit_percent))
                                );
                 } else if (o->resource == Resource_InodeFree) {
                         printf(" %-20s = %s\n", "Inodes free limit",
                                o->limit_absolute > -1
                                ?
-                               StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld", operatornames[o->operator], o->limit_absolute))
+                               StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %lld", Operator_Names[o->operator], o->limit_absolute))
                                :
-                               StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent))
+                               StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", Operator_Names[o->operator], o->limit_percent))
                                );
                 } else if (o->resource == Resource_Space) {
                         if (o->limit_absolute > -1) {
-                                printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", operatornames[o->operator], Convert_bytes2str(o->limit_absolute, buffer))));
+                                printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Convert_bytes2str(o->limit_absolute, buffer))));
                         } else {
-                               printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent)));
+                               printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", Operator_Names[o->operator], o->limit_percent)));
                         }
                 } else if (o->resource == Resource_SpaceFree) {
                         if (o->limit_absolute > -1) {
-                                printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", operatornames[o->operator], Convert_bytes2str(o->limit_absolute, buffer))));
+                                printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Convert_bytes2str(o->limit_absolute, buffer))));
                         } else {
-                               printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit_percent)));
+                               printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", Operator_Names[o->operator], o->limit_percent)));
                         }
                 } else if (o->resource == Resource_ReadBytes) {
-                        printf(" %-20s = %s\n", "Read limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if read %s %s/s", operatornames[o->operator], Convert_bytes2str(o->limit_absolute, (char[10]){}))));
+                        printf(" %-20s = %s\n", "Read limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if read %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit_absolute, (char[10]){}))));
                 } else if (o->resource == Resource_ReadOperations) {
-                        printf(" %-20s = %s\n", "Read limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if read %s %llu operations/s", operatornames[o->operator], o->limit_absolute)));
+                        printf(" %-20s = %s\n", "Read limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if read %s %llu operations/s", Operator_Names[o->operator], o->limit_absolute)));
                 } else if (o->resource == Resource_WriteBytes) {
-                        printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if write %s %s/s", operatornames[o->operator], Convert_bytes2str(o->limit_absolute, (char[10]){}))));
+                        printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if write %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit_absolute, (char[10]){}))));
                 } else if (o->resource == Resource_WriteOperations) {
-                        printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if write %s %llu operations/s", operatornames[o->operator], o->limit_absolute)));
+                        printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if write %s %llu operations/s", Operator_Names[o->operator], o->limit_absolute)));
                 } else if (o->resource == Resource_ServiceTime) {
-                        printf(" %-20s = %s\n", "Service time limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if service time %s %s/operation", operatornames[o->operator], Convert_time2str(o->limit_absolute, (char[11]){}))));
+                        printf(" %-20s = %s\n", "Service time limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if service time %s %s/operation", Operator_Names[o->operator], Convert_time2str(o->limit_absolute, (char[11]){}))));
                 }
         }
 
@@ -1264,13 +1263,13 @@ void Util_printService(Service_T s) {
                         case Resource_CpuGuestNice:
                         case Resource_MemoryPercent:
                         case Resource_SwapPercent:
-                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", operatornames[o->operator], o->limit)));
+                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", Operator_Names[o->operator], o->limit)));
                                 break;
 
                         case Resource_MemoryKbyte:
                         case Resource_SwapKbyte:
                         case Resource_MemoryKbyteTotal:
-                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", operatornames[o->operator], Convert_bytes2str(o->limit, buffer))));
+                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Convert_bytes2str(o->limit, buffer))));
                                 break;
 
                         case Resource_LoadAverage1m:
@@ -1279,27 +1278,27 @@ void Util_printService(Service_T s) {
                         case Resource_LoadAveragePerCore1m:
                         case Resource_LoadAveragePerCore5m:
                         case Resource_LoadAveragePerCore15m:
-                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f", operatornames[o->operator], o->limit)));
+                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f", Operator_Names[o->operator], o->limit)));
                                 break;
 
                         case Resource_Threads:
                         case Resource_Children:
-                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.0f", operatornames[o->operator], o->limit)));
+                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.0f", Operator_Names[o->operator], o->limit)));
                                 break;
 
                         case Resource_ReadBytes:
                         case Resource_WriteBytes:
-                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", operatornames[o->operator], Convert_bytes2str(o->limit, (char[10]){}))));
+                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit, (char[10]){}))));
                                 break;
 
                         case Resource_ReadBytesPhysical:
                         case Resource_WriteBytesPhysical:
-                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", operatornames[o->operator], Convert_bytes2str(o->limit, (char[10]){}))));
+                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit, (char[10]){}))));
                                 break;
 
                         case Resource_ReadOperations:
                         case Resource_WriteOperations:
-                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.0f operations/s", operatornames[o->operator], o->limit)));
+                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.0f operations/s", Operator_Names[o->operator], o->limit)));
                                 break;
 
                         default:
@@ -1340,7 +1339,7 @@ void Util_printService(Service_T s) {
 
         printf("The service list contains the following entries:\n\n");
 
-        for (s = servicelist_conf; s; s = s->next_conf)
+        for (s = Service_List_Conf; s; s = s->next_conf)
                 Util_printService(s);
 
         memset(ruler, '-', STRLEN);
@@ -1362,7 +1361,7 @@ char *Util_getToken(MD_T token) {
 
 
 char *Util_monitId(char *idfile) {
-        ASSERT(idfile);
+        assert(idfile);
         FILE *file = NULL;
         if (! File_exist(idfile)) {
                 // Generate the unique id
@@ -1397,42 +1396,35 @@ char *Util_monitId(char *idfile) {
 
 
 pid_t Util_getPid(char *pidfile) {
+        assert(pidfile);
+        pid_t pid = -1;
         FILE *file = NULL;
-        int pid = -1;
-
-        ASSERT(pidfile);
-
         if (! File_exist(pidfile)) {
                 DEBUG("pidfile '%s' does not exist\n", pidfile);
-                return 0;
+                return -1;
         }
         if (! File_isFile(pidfile)) {
                 DEBUG("pidfile '%s' is not a regular file\n", pidfile);
-                return 0;
+                return -1;
         }
         if ((file = fopen(pidfile,"r")) == (FILE *)NULL) {
                 DEBUG("Error opening the pidfile '%s' -- %s\n", pidfile, STRERROR);
-                return 0;
+                return -1;
         }
         if (fscanf(file, "%d", &pid) != 1) {
                 DEBUG("Error reading pid from file '%s'\n", pidfile);
                 if (fclose(file))
                         DEBUG("Error closing file '%s' -- %s\n", pidfile, STRERROR);
-                return 0;
+                return -1;
         }
         if (fclose(file))
                 DEBUG("Error closing file '%s' -- %s\n", pidfile, STRERROR);
-
-        if (pid < 0)
-                return(0);
-
-        return (pid_t)pid;
-
+        return pid;
 }
 
 
 bool Util_isurlsafe(const char *url) {
-        ASSERT(url && *url);
+        assert(url && *url);
         for (int i = 0; url[i]; i++)
                 if (urlunsafe[(unsigned char)url[i]])
                         return false;
@@ -1799,7 +1791,7 @@ bool Util_evalDoubleQExpression(Operator_Type operator, double left, double righ
 
 
 void Util_monitorSet(Service_T s) {
-        ASSERT(s);
+        assert(s);
         if (s->monitor == Monitor_Not) {
                 s->monitor = Monitor_Init;
                 DEBUG("'%s' monitoring enabled\n", s->name);
@@ -1809,7 +1801,7 @@ void Util_monitorSet(Service_T s) {
 
 
 void Util_monitorUnset(Service_T s) {
-        ASSERT(s);
+        assert(s);
         if (s->monitor != Monitor_Not) {
                 s->monitor = Monitor_Not;
                 DEBUG("'%s' monitoring disabled\n", s->name);
@@ -1829,10 +1821,10 @@ void Util_monitorUnset(Service_T s) {
 int Util_getAction(const char *action) {
         int i = 1; /* the Action_Ignored has index 0 => we will start on next item */
 
-        ASSERT(action);
+        assert(action);
 
-        while (strlen(actionnames[i])) {
-                if (IS(action, actionnames[i]))
+        while (strlen(Action_Names[i])) {
+                if (IS(action, Action_Names[i]))
                         return i;
                 i++;
         }
@@ -1842,7 +1834,7 @@ int Util_getAction(const char *action) {
 
 
 StringBuffer_T Util_printAction(Action_T A, StringBuffer_T buf) {
-        StringBuffer_append(buf, "%s", actionnames[A->id]);
+        StringBuffer_append(buf, "%s", Action_Names[A->id]);
         if (A->id == Action_Exec) {
                 command_t C = A->exec;
                 for (int i = 0; C->arg[i]; i++)
@@ -1873,9 +1865,9 @@ StringBuffer_T Util_printEventratio(Action_T action, StringBuffer_T buf) {
 
 
 StringBuffer_T Util_printRule(bool inverse, StringBuffer_T buf, EventAction_T action, const char *rule, ...) {
-        ASSERT(buf);
-        ASSERT(action);
-        ASSERT(rule);
+        assert(buf);
+        assert(action);
+        assert(rule);
         // Variable part
         va_list ap;
         va_start(ap, rule);
@@ -1947,8 +1939,8 @@ char *Util_portDescription(Port_T p, char *buf, int bufsize) {
 
 
 char *Util_commandDescription(command_t command, char s[STRLEN]) {
-        ASSERT(s);
-        ASSERT(command);
+        assert(s);
+        assert(command);
         int len = 0;
         for (int i = 0; command->arg[i] && len < STRLEN - 1; i++) {
                 len += snprintf(s + len, STRLEN - len, "%s%s", i ? " " : "", command->arg[i]);

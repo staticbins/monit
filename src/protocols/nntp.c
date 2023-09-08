@@ -45,7 +45,7 @@ void check_nntp(Socket_T socket) {
         int status = 0;
         char buf[STRLEN];
 
-        ASSERT(socket);
+        assert(socket);
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
                 THROW(IOException, "NNTP: error receiving data -- %s", STRERROR);

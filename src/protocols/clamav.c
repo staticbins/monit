@@ -40,7 +40,7 @@
  *  @file
  */
 void check_clamav(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
 
         // Send PING
         if (Socket_print(socket, "PING\r\n") < 0)

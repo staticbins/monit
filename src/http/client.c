@@ -53,7 +53,6 @@
 #endif
 
 #include "monit.h"
-#include "ProcessTree.h"
 #include "device.h"
 #include "TextColor.h"
 #include "TextBox.h"
@@ -210,8 +209,8 @@ static bool _client(const char *request, StringBuffer_T data) {
 
 
 bool HttpClient_action(const char *action, List_T services) {
-        ASSERT(services);
-        ASSERT(action);
+        assert(services);
+        assert(action);
         if (Util_getAction(action) == Action_Ignored) {
                 Log_error("Invalid action %s\n", action);
                 return false;

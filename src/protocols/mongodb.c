@@ -149,7 +149,7 @@ static void _pong(Socket_T socket) {
  * @file
  */
 void check_mongodb(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
         _ping(socket);
         _pong(socket);
 }

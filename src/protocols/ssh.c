@@ -44,7 +44,7 @@ void check_ssh(Socket_T socket) {
 
         char  buf[STRLEN];
 
-        ASSERT(socket);
+        assert(socket);
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
                 THROW(IOException, "SSH: error receiving identification string -- %s", STRERROR);

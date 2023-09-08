@@ -25,7 +25,7 @@
 #include "config.h"
 
 #include "monit.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 
@@ -36,7 +36,7 @@
  */
 
 
-int init_process_info_sysdep(void) {
+int init_systeminfo_sysdep(void) {
         return false;
 }
 
@@ -44,11 +44,11 @@ int init_process_info_sysdep(void) {
 /**
  * THIS IS JUST A DUMMY!!!
  *
- * @param reference reference of ProcessTree
+ * @param reference a process_t reference 
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         return 0;
 }
 

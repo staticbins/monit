@@ -55,7 +55,6 @@
 
 #include "monit.h"
 #include "event.h"
-#include "ProcessTree.h"
 #include "protocol.h"
 
 
@@ -137,13 +136,13 @@ static void document_head(StringBuffer_T B, int V, const char *myip) {
                             "<memory>%llu</memory>"
                             "<swap>%llu</swap>"
                             "</platform>",
-                            systeminfo.uname.sysname,
-                            systeminfo.uname.release,
-                            systeminfo.uname.version,
-                            systeminfo.uname.machine,
-                            systeminfo.cpu.count,
-                            (unsigned long long)((double)systeminfo.memory.size / 1024.),   // Send as kB for backward compatibility
-                            (unsigned long long)((double)systeminfo.swap.size / 1024.)); // Send as kB for backward compatibility
+                            System_Info.uname.sysname,
+                            System_Info.uname.release,
+                            System_Info.uname.version,
+                            System_Info.uname.machine,
+                            System_Info.cpu.count,
+                            (unsigned long long)((double)System_Info.memory.size / 1024.),   // Send as kB for backward compatibility
+                            (unsigned long long)((double)System_Info.swap.size / 1024.)); // Send as kB for backward compatibility
 }
 
 
@@ -235,11 +234,11 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         "<unused>%lld</unused>"
                                         "<maximum>%lld</maximum>"
                                         "</filedescriptors>",
-                                        (long long)(Time_now() - systeminfo.booted),
-                                        (long long)(systeminfo.booted),
-                                        systeminfo.filedescriptors.allocated,
-                                        systeminfo.filedescriptors.unused,
-                                        systeminfo.filedescriptors.maximum);
+                                        (long long)(Time_now() - System_Info.booted),
+                                        (long long)(System_Info.booted),
+                                        System_Info.filedescriptors.allocated,
+                                        System_Info.filedescriptors.unused,
+                                        System_Info.filedescriptors.maximum);
                                 break;
 
                         case Service_File:
@@ -263,7 +262,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                         (long long)S->inf.file->size,
                                         (long long)S->inf.file->nlink);
                                 if (S->checksum)
-                                        StringBuffer_append(B, "<checksum type=\"%s\">%s</checksum>", checksumnames[S->checksum->type], S->inf.file->cs_sum);
+                                        StringBuffer_append(B, "<checksum type=\"%s\">%s</checksum>", Checksum_Names[S->checksum->type], S->inf.file->cs_sum);
                                 break;
 
                         case Service_Directory:
@@ -471,7 +470,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             "<type>%s</type>"
                                             "<responsetime>%.6f</responsetime>"
                                             "</icmp>",
-                                            icmpnames[i->type],
+                                            Icmp_Names[i->type],
                                             i->is_available == Connection_Ok ? i->responsetime.current / 1000. : -1.); // We send the response time in [s] for backward compatibility (with microseconds precision)
                 }
                 for (Port_T p = S->portlist; p; p = p->next) {
@@ -518,27 +517,27 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             "<avg15>%.2f</avg15>"
                                             "</load>"
                                             "<cpu>",
-                                            systeminfo.loadavg[0],
-                                            systeminfo.loadavg[1],
-                                            systeminfo.loadavg[2]);
-                        if (systeminfo.statisticsAvailable & Statistics_CpuUser)
-                                StringBuffer_append(B, "<user>%.1f</user>", systeminfo.cpu.usage.user > 0. ? systeminfo.cpu.usage.user : 0.);
-                        if (systeminfo.statisticsAvailable & Statistics_CpuSystem)
-                                StringBuffer_append(B, "<system>%.1f</system>", systeminfo.cpu.usage.system > 0. ? systeminfo.cpu.usage.system : 0.);
-                        if (systeminfo.statisticsAvailable & Statistics_CpuNice)
-                                StringBuffer_append(B, "<nice>%.1f</nice>", systeminfo.cpu.usage.nice > 0. ? systeminfo.cpu.usage.nice : 0.);
-                        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait)
-                                StringBuffer_append(B, "<wait>%.1f</wait>", systeminfo.cpu.usage.iowait > 0. ? systeminfo.cpu.usage.iowait : 0.);
-                        if (systeminfo.statisticsAvailable & Statistics_CpuHardIRQ)
-                                StringBuffer_append(B, "<hardirq>%.1f</hardirq>", systeminfo.cpu.usage.hardirq > 0. ? systeminfo.cpu.usage.hardirq : 0.);
-                        if (systeminfo.statisticsAvailable & Statistics_CpuSoftIRQ)
-                                StringBuffer_append(B, "<softirq>%.1f</softirq>", systeminfo.cpu.usage.softirq > 0. ? systeminfo.cpu.usage.softirq : 0.);
-                        if (systeminfo.statisticsAvailable & Statistics_CpuSteal)
-                                StringBuffer_append(B, "<steal>%.1f</steal>", systeminfo.cpu.usage.steal > 0. ? systeminfo.cpu.usage.steal : 0.);
-                        if (systeminfo.statisticsAvailable & Statistics_CpuGuest)
-                                StringBuffer_append(B, "<guest>%.1f</guest>", systeminfo.cpu.usage.guest > 0. ? systeminfo.cpu.usage.guest : 0.);
-                        if (systeminfo.statisticsAvailable & Statistics_CpuGuestNice)
-                                StringBuffer_append(B, "<guestnice>%.1f</guestnice>", systeminfo.cpu.usage.guest_nice > 0. ? systeminfo.cpu.usage.guest_nice : 0.);
+                                            System_Info.loadavg[0],
+                                            System_Info.loadavg[1],
+                                            System_Info.loadavg[2]);
+                        if (System_Info.statisticsAvailable & Statistics_CpuUser)
+                                StringBuffer_append(B, "<user>%.1f</user>", System_Info.cpu.usage.user > 0. ? System_Info.cpu.usage.user : 0.);
+                        if (System_Info.statisticsAvailable & Statistics_CpuSystem)
+                                StringBuffer_append(B, "<system>%.1f</system>", System_Info.cpu.usage.system > 0. ? System_Info.cpu.usage.system : 0.);
+                        if (System_Info.statisticsAvailable & Statistics_CpuNice)
+                                StringBuffer_append(B, "<nice>%.1f</nice>", System_Info.cpu.usage.nice > 0. ? System_Info.cpu.usage.nice : 0.);
+                        if (System_Info.statisticsAvailable & Statistics_CpuIOWait)
+                                StringBuffer_append(B, "<wait>%.1f</wait>", System_Info.cpu.usage.iowait > 0. ? System_Info.cpu.usage.iowait : 0.);
+                        if (System_Info.statisticsAvailable & Statistics_CpuHardIRQ)
+                                StringBuffer_append(B, "<hardirq>%.1f</hardirq>", System_Info.cpu.usage.hardirq > 0. ? System_Info.cpu.usage.hardirq : 0.);
+                        if (System_Info.statisticsAvailable & Statistics_CpuSoftIRQ)
+                                StringBuffer_append(B, "<softirq>%.1f</softirq>", System_Info.cpu.usage.softirq > 0. ? System_Info.cpu.usage.softirq : 0.);
+                        if (System_Info.statisticsAvailable & Statistics_CpuSteal)
+                                StringBuffer_append(B, "<steal>%.1f</steal>", System_Info.cpu.usage.steal > 0. ? System_Info.cpu.usage.steal : 0.);
+                        if (System_Info.statisticsAvailable & Statistics_CpuGuest)
+                                StringBuffer_append(B, "<guest>%.1f</guest>", System_Info.cpu.usage.guest > 0. ? System_Info.cpu.usage.guest : 0.);
+                        if (System_Info.statisticsAvailable & Statistics_CpuGuestNice)
+                                StringBuffer_append(B, "<guestnice>%.1f</guestnice>", System_Info.cpu.usage.guest_nice > 0. ? System_Info.cpu.usage.guest_nice : 0.);
                         StringBuffer_append(B,
                                             "</cpu>"
                                             "<memory>"
@@ -550,10 +549,10 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
                                             "<kilobyte>%llu</kilobyte>"
                                             "</swap>"
                                             "</system>",
-                                            systeminfo.memory.usage.percent,
-                                            (unsigned long long)((double)systeminfo.memory.usage.bytes / 1024.),               // Send as kB for backward compatibility
-                                            systeminfo.swap.usage.percent,
-                                            (unsigned long long)((double)systeminfo.swap.usage.bytes / 1024.));             // Send as kB for backward compatibility
+                                            System_Info.memory.usage.percent,
+                                            (unsigned long long)((double)System_Info.memory.usage.bytes / 1024.),               // Send as kB for backward compatibility
+                                            System_Info.swap.usage.percent,
+                                            (unsigned long long)((double)System_Info.swap.usage.bytes / 1024.));             // Send as kB for backward compatibility
                 }
                 if (S->type == Service_Program && S->program->started) {
                         StringBuffer_append(B,
@@ -635,11 +634,11 @@ void status_xml(StringBuffer_T B, Event_T E, int V, const char *myip) {
         document_head(B, V, myip);
         if (V == 2)
                 StringBuffer_append(B, "<services>");
-        for (S = servicelist_conf; S; S = S->next_conf)
+        for (S = Service_List_Conf; S; S = S->next_conf)
                 status_service(S, B, V);
         if (V == 2) {
                 StringBuffer_append(B, "</services><servicegroups>");
-                for (SG = servicegrouplist; SG; SG = SG->next)
+                for (SG = Service_Group_List; SG; SG = SG->next)
                         status_servicegroup(SG, B);
                 StringBuffer_append(B, "</servicegroups>");
         }

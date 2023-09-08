@@ -63,7 +63,7 @@ void check_ntp3(Socket_T socket) {
         unsigned char ntpRequest[NTPLEN] = {};
         char ntpResponse[NTPLEN] = {};
 
-        ASSERT(socket);
+        assert(socket);
 
         /*
          Prepare NTP request. The first octet consists of:

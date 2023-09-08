@@ -116,6 +116,14 @@ char *Str_toUpper(char *s);
 
 
 /**
+ * Returns true if the string argument is a decimal integer.
+ * @param s A string
+ * @return True if <code>s</code> is a number otherwise false
+ */
+bool Str_isInt(const char *s);
+
+
+/**
  * Parses the string argument as a signed decimal integer.
  * @param s A string
  * @return The integer represented by the string argument

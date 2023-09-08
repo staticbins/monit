@@ -48,7 +48,7 @@ void check_imap(Socket_T socket) {
         int sequence = 1;
         Port_T port = Socket_getPort(socket);
 
-        ASSERT(socket);
+        assert(socket);
 
         // Read and check IMAP greeting
         if (! Socket_readLine(socket, buf, sizeof(buf)))

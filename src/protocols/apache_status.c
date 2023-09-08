@@ -131,10 +131,10 @@ static void _parseResponseHeaders(Socket_T socket) {
 
 
 void check_apache_status(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
         char buf[4096];
         Port_T p = Socket_getPort(socket);
-        ASSERT(p);
+        assert(p);
         char *auth = Util_getBasicAuthHeader(p->parameters.apachestatus.username, p->parameters.apachestatus.password);
         int rv = Socket_print(socket,
                 "GET %s?auto HTTP/1.1\r\n"

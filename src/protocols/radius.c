@@ -117,10 +117,10 @@ void check_radius(Socket_T socket) {
                 0x00
         };
 
-        ASSERT(socket);
+        assert(socket);
 
         P = Socket_getPort(socket);
-        ASSERT(P);
+        assert(P);
 
         secret = P->parameters.radius.secret ? P->parameters.radius.secret : "testing123";
         secret_len = (int)strlen(secret);

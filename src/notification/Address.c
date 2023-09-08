@@ -52,7 +52,7 @@ T Address_new(void) {
 
 
 void Address_free(T *A) {
-        ASSERT(A && *A);
+        assert(A && *A);
         FREE((*A)->name);
         FREE((*A)->address);
         FREE(*A);
@@ -60,7 +60,7 @@ void Address_free(T *A) {
 
 
 T Address_copy(T A) {
-        ASSERT(A);
+        assert(A);
         Address_T C = Address_new();
         C->name = A->name ? Str_dup(A->name) : NULL;
         C->address = A->address ? Str_dup(A->address) : NULL;
