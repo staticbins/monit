@@ -227,7 +227,7 @@ static bool _doConnect(int s, const struct sockaddr *addr, socklen_t addrlen, in
 
 
 static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_t addrlen, const struct sockaddr *localaddr, socklen_t localaddrlen, int family, int type, int protocol, int timeout) {
-        ASSERT(host);
+        assert(host);
         char error[STRLEN];
         int s = socket(family, type, protocol);
         if (s >= 0) {
@@ -268,7 +268,7 @@ error:
 
 
 static struct addrinfo *_resolve(const char *hostname, int port, Socket_Type type, Socket_Family family) {
-        ASSERT(hostname);
+        assert(hostname);
         struct addrinfo *result, hints = {
                 .ai_socktype = type,
                 .ai_protocol = type == Socket_Udp ? IPPROTO_UDP : IPPROTO_TCP
@@ -313,8 +313,8 @@ T Socket_new(const char *host, int port, Socket_Type type, Socket_Family family,
 
 
 T Socket_create(const char *host, int port, Socket_Type type, Socket_Family family, SslOptions_T options, int timeout) {
-        ASSERT(host);
-        ASSERT(timeout > 0);
+        assert(host);
+        assert(timeout > 0);
         volatile T S = NULL;
         struct addrinfo *result = _resolve(host, port, type, family);
         if (result) {
@@ -345,8 +345,8 @@ T Socket_create(const char *host, int port, Socket_Type type, Socket_Family fami
 
 
 T Socket_createUnix(const char *path, Socket_Type type, int timeout) {
-        ASSERT(path);
-        ASSERT(timeout > 0);
+        assert(path);
+        assert(timeout > 0);
         int s = socket(PF_UNIX, type, 0);
         if (s >= 0) {
                 struct sockaddr_un unixsocket_client = {};
@@ -390,8 +390,8 @@ error:
 
 
 T Socket_createAccepted(int socket, struct sockaddr *addr, void *sslserver) {
-        ASSERT(socket >= 0);
-        ASSERT(addr);
+        assert(socket >= 0);
+        assert(addr);
         T S;
         NEW(S);
         S->socket = socket;
@@ -429,7 +429,7 @@ T Socket_createAccepted(int socket, struct sockaddr *addr, void *sslserver) {
 
 
 void Socket_free(T *S) {
-        ASSERT(S && *S);
+        assert(S && *S);
 #ifdef HAVE_OPENSSL
         if ((*S)->ssl)
         {
@@ -470,19 +470,19 @@ void Socket_free(T *S) {
 
 
 void Socket_setTimeout(T S, int timeout) {
-        ASSERT(S);
+        assert(S);
         S->timeout = timeout;
 }
 
 
 int Socket_getTimeout(T S) {
-        ASSERT(S);
+        assert(S);
         return S->timeout;
 }
 
 
 bool Socket_isSecure(T S) {
-        ASSERT(S);
+        assert(S);
 #ifdef HAVE_OPENSSL
         return (S->ssl != NULL);
 #else
@@ -492,42 +492,42 @@ bool Socket_isSecure(T S) {
 
 
 int Socket_getSocket(T S) {
-        ASSERT(S);
+        assert(S);
         return S->socket;
 }
 
 
 Socket_Type Socket_getType(T S) {
-        ASSERT(S);
+        assert(S);
         return S->type;
 }
 
 Socket_Family Socket_getFamily(T S) {
-        ASSERT(S);
+        assert(S);
         return S->family;
 }
 
 
 void *Socket_getPort(T S) {
-        ASSERT(S);
+        assert(S);
         return S->Port;
 }
 
 
 int Socket_getRemotePort(T S) {
-        ASSERT(S);
+        assert(S);
         return S->port;
 }
 
 
 const char *Socket_getRemoteHost(T S) {
-        ASSERT(S);
+        assert(S);
         return S->host;
 }
 
 
 int Socket_getLocalPort(T S) {
-        ASSERT(S);
+        assert(S);
         struct sockaddr_storage addr;
         socklen_t addrlen = sizeof(addr);
         if (getsockname(S->socket, (struct sockaddr *)&addr, &addrlen) == 0)
@@ -537,9 +537,9 @@ int Socket_getLocalPort(T S) {
 
 
 const char *Socket_getLocalHost(T S, char *host, int hostlen) {
-        ASSERT(S);
-        ASSERT(host);
-        ASSERT(hostlen);
+        assert(S);
+        assert(host);
+        assert(hostlen);
         struct sockaddr_storage addr;
         socklen_t addrlen = sizeof(addr);
         if (! getsockname(S->socket, (struct sockaddr *)&addr, &addrlen)) {
@@ -635,7 +635,7 @@ static void _testIp(Port_T p) {
 
 
 void Socket_test(void *P) {
-        ASSERT(P);
+        assert(P);
         Port_T p = P;
         TRY
         {
@@ -679,8 +679,8 @@ int Socket_print(T S, const char *m, ...) {
         int n;
         va_list ap;
         char *buf = NULL;
-        ASSERT(S);
-        ASSERT(m);
+        assert(S);
+        assert(m);
         va_start(ap, m);
         buf = Str_vcat(m, ap);
         va_end(ap);
@@ -693,7 +693,7 @@ int Socket_print(T S, const char *m, ...) {
 int Socket_write(T S, const void *b, size_t size) {
         ssize_t n = 0;
         const void *p = b;
-        ASSERT(S);
+        assert(S);
         while (size > 0) {
 #ifdef HAVE_OPENSSL
                 if (S->ssl) {
@@ -719,7 +719,7 @@ int Socket_write(T S, const void *b, size_t size) {
 
 
 int Socket_readByte(T S) {
-        ASSERT(S);
+        assert(S);
         if (S->offset >= S->length)
                 if (_fill(S, S->timeout) <= 0)
                         return -1;
@@ -730,7 +730,7 @@ int Socket_readByte(T S) {
 int Socket_read(T S, void *b, int size) {
         int c;
         unsigned char *p = b;
-        ASSERT(S);
+        assert(S);
         while ((size-- > 0) && ((c = Socket_readByte(S)) >= 0))
                 *p++ = c;
         return (int)((long)p - (long)b);
@@ -740,7 +740,7 @@ int Socket_read(T S, void *b, int size) {
 char *Socket_readLine(T S, char *s, int size) {
         int c;
         unsigned char *p = (unsigned char *)s;
-        ASSERT(S);
+        assert(S);
         while (--size && ((c = Socket_readByte(S)) > 0)) { // Stop when \0 is read
                 *p++ = c;
                 if (c == '\n')

@@ -115,7 +115,7 @@ void check_ldap3(Socket_T socket) {
 
         };
 
-        ASSERT(socket);
+        assert(socket);
 
 
         if (Socket_write(socket, (unsigned char *)request, sizeof(request)) < 0)

@@ -46,7 +46,7 @@
  * @file
  */
 void check_sieve(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
 
         char buf[STRLEN];
         do {

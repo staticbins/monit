@@ -64,7 +64,7 @@
 
 
 bool filesystem_usage(Service_T s) {
-        ASSERT(s);
+        assert(s);
         struct stat sb;
         bool rv = false;
         int st = lstat(s->path, &sb);

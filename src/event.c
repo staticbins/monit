@@ -61,7 +61,6 @@
 #include "alert.h"
 #include "event.h"
 #include "state.h"
-#include "ProcessTree.h"
 #include "MMonit.h"
 
 // libmonit
@@ -138,7 +137,7 @@ static void _saveState(long id, State_Type state) {
  * @return The event state
  */
 static bool _checkState(Event_T E, State_Type S) {
-        ASSERT(E);
+        assert(E);
         int count = 0;
         State_Type state = (S == State_Succeeded || S == State_ChangedNot) ? State_Succeeded : State_Failed; /* translate to 0/1 class */
 
@@ -173,8 +172,8 @@ static bool _checkState(Event_T E, State_Type S) {
  * @param E An event object
  */
 static void _queueAdd(Event_T E) {
-        ASSERT(E);
-        ASSERT(E->flag != Handler_Succeeded);
+        assert(E);
+        assert(E->flag != Handler_Succeeded);
 
         if (! file_checkQueueDirectory(Run.eventlist_dir)) {
                 Log_error("Aborting event - cannot access the event queue directory %s\n", Run.eventlist_dir);
@@ -247,8 +246,8 @@ static void _queueUpdate(Event_T E, const char *file_name) {
         Action_Type action = Event_get_action(E);
         bool rv;
 
-        ASSERT(E);
-        ASSERT(E->flag != Handler_Succeeded);
+        assert(E);
+        assert(E->flag != Handler_Succeeded);
 
         if (! file_checkQueueDirectory(Run.eventlist_dir)) {
                 Log_error("Aborting event - cannot access the event queue directory %s\n", Run.eventlist_dir);
@@ -294,8 +293,8 @@ error:
 
 
 static void _handleAction(Event_T E, Action_T A) {
-        ASSERT(E);
-        ASSERT(A);
+        assert(E);
+        assert(A);
 
         E->flag = Handler_Succeeded;
 
@@ -333,10 +332,10 @@ static void _handleAction(Event_T E, Action_T A) {
 
 
 static void _handleEvent(Service_T S, Event_T E) {
-        ASSERT(E);
-        ASSERT(E->action);
-        ASSERT(E->action->failed);
-        ASSERT(E->action->succeeded);
+        assert(E);
+        assert(E->action);
+        assert(E->action->failed);
+        assert(E->action->succeeded);
 
         /* We will handle only first succeeded event, recurrent succeeded events
          * or insufficient succeeded events during failed service state are
@@ -408,10 +407,10 @@ static unsigned long long left_shift(unsigned long long v) {
  * @param s Optional message describing the event
  */
 void Event_post(Service_T service, long id, State_Type state, EventAction_T action, const char *s, ...) {
-        ASSERT(service);
-        ASSERT(action);
-        ASSERT(s);
-        ASSERT(state == State_Failed || state == State_Succeeded || state == State_Changed || state == State_ChangedNot);
+        assert(service);
+        assert(action);
+        assert(s);
+        assert(state == State_Failed || state == State_Succeeded || state == State_Changed || state == State_ChangedNot);
 
         _saveState(id, state);
 
@@ -477,7 +476,7 @@ void Event_post(Service_T service, long id, State_Type state, EventAction_T acti
  * event type is not found NULL is returned.
  */
 const char *Event_get_description(Event_T E) {
-        ASSERT(E);
+        assert(E);
         EventTable_T *et = Event_Table;
         while ((*et).id) {
                 if (E->id == (*et).id) {
@@ -508,7 +507,7 @@ const char *Event_get_description(Event_T E) {
  * @return An action id
  */
 Action_Type Event_get_action(Event_T E) {
-        ASSERT(E);
+        assert(E);
         Action_T A = NULL;
         switch (E->state) {
                 case State_Succeeded:
@@ -542,8 +541,8 @@ Action_Type Event_get_action(Event_T E) {
  * event type is not found NULL is returned.
  */
 const char *Event_get_action_description(Event_T E) {
-        ASSERT(E);
-        return actionnames[Event_get_action(E)];
+        assert(E);
+        return Action_Names[Event_get_action(E)];
 }
 
 

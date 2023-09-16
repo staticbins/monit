@@ -208,9 +208,9 @@ static void _resetRow(T t) {
 
 
 T TextBox_new(StringBuffer_T b, int columnsCount, TextBoxColumn_T *columns, bool printHeader) {
-        ASSERT(b);
-        ASSERT(columns);
-        ASSERT(columnsCount > 0);
+        assert(b);
+        assert(columns);
+        assert(columnsCount > 0);
         T t;
         NEW(t);
         t->b = b;
@@ -225,7 +225,7 @@ T TextBox_new(StringBuffer_T b, int columnsCount, TextBoxColumn_T *columns, bool
 
 
 void TextBox_free(T *t) {
-        ASSERT(t && *t);
+        assert(t && *t);
         if ((*t)->index.row > 0)
                 _printBorderBottom(*t);
         for (unsigned int i = 0; i < (*t)->columnsCount; i++)
@@ -235,9 +235,9 @@ void TextBox_free(T *t) {
 
 
 void TextBox_setColumn(T t, unsigned int index, const char *format, ...) {
-        ASSERT(t);
-        ASSERT(index > 0);
-        ASSERT(index <= t->columnsCount);
+        assert(t);
+        assert(index > 0);
+        assert(index <= t->columnsCount);
         int _index = index - 1;
         _resetColumn(&(t->columns[_index]));
         if (format) {
@@ -255,7 +255,7 @@ void TextBox_setColumn(T t, unsigned int index, const char *format, ...) {
 
 
 void TextBox_printRow(T t) {
-        ASSERT(t);
+        assert(t);
         if (t->index.row == 0) {
                 _printBorderTop(t);
                 if (t->options.header.enabled) {

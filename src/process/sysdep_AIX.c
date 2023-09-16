@@ -103,7 +103,7 @@
 #include <utmpx.h>
 #endif
 
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 /**
@@ -123,7 +123,7 @@ static unsigned long long cpu_syst_old  = 0ULL;
 static unsigned long long cpu_iowait_old  = 0ULL;
 
 
-bool init_process_info_sysdep(void) {
+bool init_systeminfo_sysdep(void) {
         perfstat_memory_total_t mem;
 
         if (perfstat_memory_total(NULL, &mem, sizeof(perfstat_memory_total_t), 1) < 1) {
@@ -132,14 +132,14 @@ bool init_process_info_sysdep(void) {
         }
 
         page_size = getpagesize();
-        systeminfo.memory.size = (unsigned long long)mem.real_total * (unsigned long long)page_size;
-        systeminfo.cpu.count = sysconf(_SC_NPROCESSORS_ONLN);
+        System_Info.memory.size = (unsigned long long)mem.real_total * (unsigned long long)page_size;
+        System_Info.cpu.count = sysconf(_SC_NPROCESSORS_ONLN);
 
         setutxent();
         struct utmpx _booted = {.ut_type = BOOT_TIME};
         struct utmpx *booted = getutxid(&_booted);
         if (booted)
-                systeminfo.booted = booted->ut_tv.tv_sec;
+                System_Info.booted = booted->ut_tv.tv_sec;
         endutxent();
 
         return true;
@@ -178,11 +178,11 @@ int getloadavg_sysdep (double *loadv, int nelem) {
 
 /**
  * Read all processes to initialize the process tree
- * @param reference  reference of ProcessTree
+ * @param reference  a process_t reference 
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0.
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         int treesize;
         pid_t firstproc = 0;
         if ((treesize = getprocs64(NULL, 0, NULL, 0, &firstproc, PID_MAX)) < 0) {
@@ -200,14 +200,14 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         }
 
         unsigned long long now = Time_milli();
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
+        process_t pt = CALLOC(sizeof(struct process_t), treesize);
 
         for (int i = 0; i < treesize; i++) {
                 pt[i].pid                 = procs[i].pi_pid;
                 pt[i].ppid                = procs[i].pi_ppid;
                 pt[i].cred.euid           = procs[i].pi_uid;
                 pt[i].threads.self        = procs[i].pi_thcount;
-                pt[i].uptime              = systeminfo.time / 10. - procs[i].pi_start;
+                pt[i].uptime              = System_Info.time / 10. - procs[i].pi_start;
                 pt[i].memory.usage        = (unsigned long long)(procs[i].pi_drss + procs[i].pi_trss) * (unsigned long long)page_size;
                 pt[i].cpu.time            = procs[i].pi_ru.ru_utime.tv_sec * 10 + (double)procs[i].pi_ru.ru_utime.tv_usec / 100000. + procs[i].pi_ru.ru_stime.tv_sec * 10 + (double)procs[i].pi_ru.ru_stime.tv_usec / 100000.;
                 pt[i].read.bytes          = -1;

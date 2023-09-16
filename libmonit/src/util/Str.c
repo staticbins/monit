@@ -132,6 +132,18 @@ char *Str_toUpper(char *s) {
 }
 
 
+bool Str_isInt(const char *s) {
+        char *e;
+        if (STR_UNDEF(s))
+                return false;
+        errno = 0;
+        strtol(s, &e, 10);
+        if (errno || (e == s))
+                return false;
+        return true;
+}
+
+
 int Str_parseInt(const char *s) {
         int i;
         char *e;

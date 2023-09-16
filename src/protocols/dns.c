@@ -88,7 +88,7 @@ void check_dns(Socket_T socket) {
                 0x01
         };
 
-        ASSERT(socket);
+        assert(socket);
 
         switch (Socket_getType(socket)) {
                 case Socket_Udp:

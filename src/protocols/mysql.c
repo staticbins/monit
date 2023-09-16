@@ -41,6 +41,7 @@
 #endif
 
 #ifdef HAVE_OPENSSL
+// We don't silence deprecation warnings as this will remind us to update for version >= 3
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #endif
@@ -688,7 +689,7 @@ static void _checkRSAKey(mysql_t *mysql) {
 
 // COM_QUERY packet (see http://dev.mysql.com/doc/internals/en/com-query.html)
 static void _requestQuery(mysql_t *mysql, const unsigned char *query) {
-        ASSERT(mysql->state == MySQL_Ok);
+        assert(mysql->state == MySQL_Ok);
         _initRequest(mysql);
         _setUInt1(&mysql->request, COM_QUERY);
         _setData(&mysql->request, query, strlen(query));
@@ -706,7 +707,7 @@ static void _requestQuery(mysql_t *mysql, const unsigned char *query) {
  *  @see http://dev.mysql.com/doc/internals/en/client-server-protocol.html
  */
 void check_mysql(Socket_T S) {
-        ASSERT(S);
+        assert(S);
         mysql_t mysql = {
                 .state = MySQL_Init,
                 .sequence = 1,

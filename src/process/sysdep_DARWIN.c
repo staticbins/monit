@@ -49,8 +49,12 @@
 #include <libproc.h>
 #endif
 
+#ifdef HAVE_COREFOUNDATION_COREFOUNDATION_H
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 #include "monit.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 // libmonit
@@ -77,54 +81,88 @@ static long cpu_nice_old = 0;
 static long cpu_syst_old = 0;
 
 
+void static _setOSInfo(void) {
+#ifdef HAVE_COREFOUNDATION_COREFOUNDATION_H
+        CFURLRef url = CFURLCreateWithFileSystemPath(NULL, CFSTR("/System/Library/CoreServices/SystemVersion.plist"), kCFURLPOSIXPathStyle, false);
+        if (url) {
+                CFReadStreamRef stream = CFReadStreamCreateWithFile(NULL, url);
+                if (stream) {
+                        if (CFReadStreamOpen(stream)) {
+                                CFPropertyListRef propertyList = CFPropertyListCreateWithStream(NULL, stream, 0, kCFPropertyListImmutable, NULL, NULL);
+                                if (propertyList) {
+                                        CFStringRef value = CFDictionaryGetValue(propertyList, CFSTR("ProductName"));
+                                        if (value) {
+                                                CFStringGetCString(value, System_Info.uname.sysname, sizeof(System_Info.uname.sysname), CFStringGetSystemEncoding());
+                                        }
+                                        value = CFDictionaryGetValue(propertyList, CFSTR("ProductVersion"));
+                                        if (value) {
+                                                CFStringGetCString(value, System_Info.uname.release, sizeof(System_Info.uname.release), CFStringGetSystemEncoding());
+                                        }
+                                        CFRelease(propertyList);
+                                }
+                                CFReadStreamClose(stream);
+                        }
+                        CFRelease(stream);
+                }
+                CFRelease(url);
+        }
+#endif
+}
+
+
+extern int responsibility_get_pid_responsible_for_pid(pid_t);
+static pid_t _responsible(pid_t p, pid_t pp) {
+        pid_t r = responsibility_get_pid_responsible_for_pid(p);
+        if (r < 0)
+                return pp;
+        return (r == p) ? pp : r;
+}
+
+
 /* ------------------------------------------------------------------ Public */
 
 
-bool init_process_info_sysdep(void) {
-        size_t size = sizeof(systeminfo.cpu.count);
-        if (sysctlbyname("hw.logicalcpu", &systeminfo.cpu.count, &size, NULL, 0) == -1) {
+bool init_systeminfo_sysdep(void) {
+        _setOSInfo();
+        size_t size = sizeof(System_Info.cpu.count);
+        if (sysctlbyname("hw.logicalcpu", &System_Info.cpu.count, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.logicalcpu failed: %s\n", STRERROR);
                 return false;
         }
-
-        size = sizeof(systeminfo.memory.size);
-        if (sysctlbyname("hw.memsize", &systeminfo.memory.size, &size, NULL, 0) == -1) {
+        size = sizeof(System_Info.memory.size);
+        if (sysctlbyname("hw.memsize", &System_Info.memory.size, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.memsize failed: %s\n", STRERROR);
                 return false;
         }
-
         size = sizeof(pagesize);
         if (sysctlbyname("hw.pagesize", &pagesize, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl hw.pagesize failed: %s\n", STRERROR);
                 return false;
         }
-
-        size = sizeof(systeminfo.argmax);
-        if (sysctlbyname("kern.argmax", &systeminfo.argmax, &size, NULL, 0) == -1) {
+        size = sizeof(System_Info.argmax);
+        if (sysctlbyname("kern.argmax", &System_Info.argmax, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl kern.argmax failed: %s\n", STRERROR);
                 return false;
         }
-
         struct timeval booted;
         size = sizeof(booted);
         if (sysctlbyname("kern.boottime", &booted, &size, NULL, 0) == -1) {
                 DEBUG("system statistics error -- sysctl kern.boottime failed: %s\n", STRERROR);
                 return false;
         } else {
-                systeminfo.booted = booted.tv_sec;
+                System_Info.booted = booted.tv_sec;
         }
-
         return true;
 }
 
 
 /**
  * Read all processes to initialize the information tree.
- * @param reference reference of ProcessTree
+ * @param reference a process_t reference 
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         size_t pinfo_size = 0;
         int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
         if (sysctl(mib, 4, NULL, &pinfo_size, NULL, 0) < 0) {
@@ -138,16 +176,15 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 return 0;
         }
         size_t treesize = pinfo_size / sizeof(struct kinfo_proc);
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
-
+        process_t pt = CALLOC(sizeof(struct process_t), treesize);
         char *args = NULL;
         StringBuffer_T cmdline = NULL;
         if (pflags & ProcessEngine_CollectCommandLine) {
                 cmdline = StringBuffer_create(64);
-                args = CALLOC(1, systeminfo.argmax + 1);
+                args = CALLOC(1, System_Info.argmax + 1);
         }
         for (size_t i = 0; i < treesize; i++) {
-                pt[i].uptime    = systeminfo.time / 10. - pinfo[i].kp_proc.p_starttime.tv_sec;
+                pt[i].uptime    = System_Info.time / 10. - pinfo[i].kp_proc.p_starttime.tv_sec;
                 pt[i].zombie    = pinfo[i].kp_proc.p_stat == SZOMB ? true : false;
                 pt[i].pid       = pinfo[i].kp_proc.p_pid;
                 pt[i].ppid      = pinfo[i].kp_eproc.e_ppid;
@@ -155,7 +192,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].cred.euid = pinfo[i].kp_eproc.e_ucred.cr_uid;
                 pt[i].cred.gid  = pinfo[i].kp_eproc.e_pcred.p_rgid;
                 if (pflags & ProcessEngine_CollectCommandLine) {
-                        size_t size = systeminfo.argmax;
+                        size_t size = System_Info.argmax;
                         mib[0] = CTL_KERN;
                         mib[1] = KERN_PROCARGS2;
                         mib[2] = pt[i].pid;
@@ -173,7 +210,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                 char *p = args + sizeof(int); // arguments beginning
                                 StringBuffer_clear(cmdline);
                                 p += strlen(p); // skip exename
-                                while (argc && p < args + systeminfo.argmax) {
+                                while (argc > 0 && p < args + System_Info.argmax) {
                                         if (*p == 0) { // skip terminating 0 and variable length 0 padding
                                                 p++;
                                                 continue;
@@ -205,10 +242,9 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                 Log_error("proc_pidinfo for pid %d -- invalid result size\n", pt[i].pid);
                         } else {
                                 pt[i].memory.usage = (unsigned long long)tinfo.pti_resident_size;
-                                pt[i].cpu.time = (double)(tinfo.pti_total_user + tinfo.pti_total_system) / 100000000.; // The time is in nanoseconds, we store it as 1/10s
+                                pt[i].cpu.time = (double)(tinfo.pti_total_user + tinfo.pti_total_system) / 100000000.; // The time is in nanoseconds, we store it as ms
                                 pt[i].threads.self = tinfo.pti_threadnum;
                         }
-#ifdef rusage_info_current
                         // Disk IO
                         rusage_info_current rusage;
                         if (proc_pid_rusage(pt[i].pid, RUSAGE_INFO_CURRENT, (rusage_info_t *)&rusage) < 0) {
@@ -223,15 +259,18 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                                 pt[i].write.bytesPhysical = rusage.ri_diskio_byteswritten;
                                 pt[i].write.operations = -1;
                         }
-#endif
                 }
+                if (pt[i].ppid == 1) {
+                        pt[i].ppid = _responsible(pt[i].pid, pt[i].ppid);
+                }
+                
         }
         if (pflags & ProcessEngine_CollectCommandLine) {
                 StringBuffer_free(&cmdline);
                 FREE(args);
         }
         FREE(pinfo);
-
+        
         *reference = pt;
         
         return (int)treesize;
@@ -264,7 +303,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                 return false;
         }
         si->memory.usage.bytes = (unsigned long long)(page_info.wire_count + page_info.active_count) * (unsigned long long)pagesize;
-
+        
         /* Swap */
         int mib[2] = {CTL_VM, VM_SWAPUSAGE};
         size_t len = sizeof(struct xsw_usage);
@@ -276,7 +315,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         }
         si->swap.size = (unsigned long long)swap.xsu_total;
         si->swap.usage.bytes = (unsigned long long)swap.xsu_used;
-
+        
         return true;
 }
 
@@ -291,7 +330,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
         kern_return_t             kret;
         host_cpu_load_info_data_t cpu_info;
         mach_msg_type_number_t    count;
-
+        
         count = HOST_CPU_LOAD_INFO_COUNT;
         kret  = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&cpu_info, &count);
         if (kret == KERN_SUCCESS) {
@@ -299,15 +338,15 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                         total_new += cpu_info.cpu_ticks[i];
                 total     = total_new - total_old;
                 total_old = total_new;
-
+                
                 si->cpu.usage.user = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_USER] - cpu_user_old) / total) : -1.;
                 si->cpu.usage.nice = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_NICE] - cpu_nice_old) / total) : -1.;
                 si->cpu.usage.system = (total > 0) ? (100. * (double)(cpu_info.cpu_ticks[CPU_STATE_SYSTEM] - cpu_syst_old) / total) : -1.;
-
+                
                 cpu_user_old = cpu_info.cpu_ticks[CPU_STATE_USER];
                 cpu_nice_old = cpu_info.cpu_ticks[CPU_STATE_NICE];
                 cpu_syst_old = cpu_info.cpu_ticks[CPU_STATE_SYSTEM];
-
+                
                 return true;
         }
         return false;

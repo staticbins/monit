@@ -537,7 +537,7 @@ void Engine_cleanup(void) {
 
 
 bool Engine_addAllow(char *pattern) {
-        ASSERT(pattern);
+        assert(pattern);
         if (_parseNetwork(pattern) || _parseHost(pattern))
                 return true;
         return false;

@@ -38,16 +38,16 @@
 
 
 bool Filesystem_getByMountpoint(Info_T inf, const char *path) {
-        ASSERT(inf);
-        ASSERT(path);
+        assert(inf);
+        assert(path);
         Log_error("Unsupported filesystem data collection method\n");
         return false;
 }
 
 
 bool Filesystem_getByDevice(Info_T inf, const char *path) {
-        ASSERT(inf);
-        ASSERT(path);
+        assert(inf);
+        assert(path);
         Log_error("Unsupported filesystem data collection method\n");
         return false;
 }

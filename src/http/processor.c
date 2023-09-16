@@ -171,7 +171,7 @@ void Processor_setHttpPostLimit(void) {
         // Base buffer size (space for e.g. "action=<name>")
         _httpPostLimit = STRLEN;
         // Add space for each service
-        for (Service_T s = servicelist; s; s = s->next)
+        for (Service_T s = Service_List; s; s = s->next)
                 _httpPostLimit += strlen("&service=") + strlen(s->name);
 }
 
@@ -198,7 +198,7 @@ StringBuffer_T escapeHTML(StringBuffer_T sb, const char *s) {
  * @param msg Optional error message (may be NULL)
  */
 void send_error(HttpRequest req, HttpResponse res, int code, const char *msg, ...) {
-        ASSERT(msg);
+        assert(msg);
 
         const char *err = get_status_string(code);
         reset_response(res);
@@ -245,8 +245,8 @@ void send_error(HttpRequest req, HttpResponse res, int code, const char *msg, ..
 void set_header(HttpResponse res, const char *name, const char *value, ...) {
         HttpHeader h = NULL;
 
-        ASSERT(res);
-        ASSERT(name);
+        assert(res);
+        assert(name);
 
         NEW(h);
         h->name = Str_dup(name);
@@ -289,7 +289,7 @@ void set_status(HttpResponse res, int code) {
  * @param mime Mime content type, e.g. text/html
  */
 void set_content_type(HttpResponse res, const char *mime) {
-        ASSERT(mime);
+        assert(mime);
         set_header(res, "Content-Type", "%s", mime);
 }
 

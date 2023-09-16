@@ -41,7 +41,7 @@
  *  @file
  */
 void check_pop(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
 
         char buf[STRLEN];
         const char *ok = "+OK";

@@ -67,7 +67,7 @@ static void expect(Socket_T socket, int expect) {
  * @file
  */
 void check_lmtp(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
         expect(socket, 220);
         say(socket, "LHLO localhost\r\n");
         expect(socket, 250);

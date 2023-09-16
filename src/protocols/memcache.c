@@ -74,7 +74,7 @@ void check_memcache(Socket_T socket) {
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00    /** CAS */
         };
 
-        ASSERT(socket);
+        assert(socket);
 
         if (Socket_write(socket, (unsigned char *)request, sizeof(request)) <= 0)
                 THROW(IOException, "MEMCACHE: error sending data -- %s", STRERROR);

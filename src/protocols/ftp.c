@@ -43,7 +43,7 @@ void check_ftp(Socket_T socket) {
         int status;
         char buf[STRLEN];
 
-        ASSERT(socket);
+        assert(socket);
 
         do {
                 if (! Socket_readLine(socket, buf, STRLEN))

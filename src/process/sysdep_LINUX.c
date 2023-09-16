@@ -86,7 +86,7 @@
 #endif
 
 #include "monit.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 // libmonit
@@ -443,7 +443,7 @@ static double _usagePercent(unsigned long long previous, unsigned long long curr
 /* ------------------------------------------------------------------ Public */
 
 
-bool init_process_info_sysdep(void) {
+bool init_systeminfo_sysdep(void) {
         if ((hz = sysconf(_SC_CLK_TCK)) <= 0.) {
                 DEBUG("system statistic error -- cannot get hz: %s\n", STRERROR);
                 return false;
@@ -454,32 +454,32 @@ bool init_process_info_sysdep(void) {
                 return false;
         }
 
-        if ((systeminfo.cpu.count = sysconf(_SC_NPROCESSORS_ONLN)) < 0) {
+        if ((System_Info.cpu.count = sysconf(_SC_NPROCESSORS_ONLN)) < 0) {
                 DEBUG("system statistic error -- cannot get cpu count: %s\n", STRERROR);
                 return false;
-        } else if (systeminfo.cpu.count == 0) {
+        } else if (System_Info.cpu.count == 0) {
                 DEBUG("system reports cpu count 0, setting dummy cpu count 1\n");
-                systeminfo.cpu.count = 1;
+                System_Info.cpu.count = 1;
         }
 
         FILE *f = fopen("/proc/meminfo", "r");
         if (f) {
                 char line[STRLEN];
-                systeminfo.memory.size = 0L;
+                System_Info.memory.size = 0L;
                 while (fgets(line, sizeof(line), f)) {
-                        if (sscanf(line, "MemTotal: %llu", &systeminfo.memory.size) == 1) {
-                                systeminfo.memory.size *= 1024;
+                        if (sscanf(line, "MemTotal: %llu", &System_Info.memory.size) == 1) {
+                                System_Info.memory.size *= 1024;
                                 break;
                         }
                 }
                 fclose(f);
-                if (! systeminfo.memory.size)
+                if (! System_Info.memory.size)
                         DEBUG("system statistic error -- cannot get real memory amount\n");
         } else {
                 DEBUG("system statistic error -- cannot open /proc/meminfo\n");
         }
 
-        systeminfo.booted = (long long)_getStartTime();
+        System_Info.booted = (long long)_getStartTime();
 
         return true;
 }
@@ -487,12 +487,12 @@ bool init_process_info_sysdep(void) {
 
 /**
  * Read all processes of the proc files system to initialize the process tree
- * @param reference reference of ProcessTree
+ * @param reference a process_t reference 
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
-        ASSERT(reference);
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
+        assert(reference);
 
         // Find all processes in the /proc directory
         glob_t globbuf;
@@ -501,8 +501,8 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 Log_error("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
                 return 0;
         }
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), globbuf.gl_pathc);
 
+        process_t pt = CALLOC(sizeof(struct process_t), globbuf.gl_pathc);
 
         int count = 0;
         struct Proc_T proc = {
@@ -522,7 +522,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[count].cred.euid = proc.data.euid;
                         pt[count].cred.gid = proc.data.gid;
                         pt[count].threads.self = proc.data.item_threads;
-                        pt[count].uptime = starttime > 0 ? (systeminfo.time / 10. - (starttime + (time_t)(proc.data.item_starttime / hz))) : 0;
+                        pt[count].uptime = starttime > 0 ? (System_Info.time / 10. - (starttime + (time_t)(proc.data.item_starttime / hz))) : 0;
                         pt[count].cpu.time = (double)(proc.data.item_utime + proc.data.item_stime) / hz * 10.; // jiffies -> seconds = 1/hz
                         pt[count].memory.usage = (unsigned long long)proc.data.item_rss * (unsigned long long)page_size;
                         pt[count].read.bytes = proc.data.read.bytes;
@@ -603,12 +603,12 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
 
         // Update memory total (physical memory can be added to the online system on some machines, also LXC/KVM containers MemTotal is dynamic and changes frequently
         if ((ptr = strstr(buf, "MemTotal:")) && sscanf(ptr + 9, "%llu", &mem_total) == 1) {
-                systeminfo.memory.size = mem_total * 1024;
+                System_Info.memory.size = mem_total * 1024;
         }
 
         // Check if the "MemAvailable" value is available on this system. If it is, we will use it. Otherwise we will attempt to calculate the amount of available memory ourself
         if ((ptr = strstr(buf, "MemAvailable:")) && sscanf(ptr + 13, "%llu", &mem_available) == 1) {
-                si->memory.usage.bytes = systeminfo.memory.size - mem_available * 1024;
+                si->memory.usage.bytes = System_Info.memory.size - mem_available * 1024;
         } else {
                 DEBUG("'MemAvailable' value not available on this system. Attempting to calculate available memory manually...\n");
                 if (! (ptr = strstr(buf, "MemFree:")) || sscanf(ptr + 8, "%llu", &mem_free) != 1) {
@@ -631,7 +631,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                         }
                         fclose(f);
                 }
-                si->memory.usage.bytes = systeminfo.memory.size - zfsarcsize - (unsigned long long)(mem_free + buffers + cached + slabreclaimable) * 1024;
+                si->memory.usage.bytes = System_Info.memory.size - zfsarcsize - (unsigned long long)(mem_free + buffers + cached + slabreclaimable) * 1024;
         }
 
         // Swap
