@@ -77,7 +77,7 @@ static void init_once(void) { ThreadData_create(Exception_Stack); }
 /* ---------------------------------------------------------------- Public */
 
 
-void Exception_init() { pthread_once(&once_control, init_once); }
+void Exception_init(void) { pthread_once(&once_control, init_once); }
 
 
 void Exception_throw(const T *e, const char *func, const char *file, int line, const char *cause, ...) {

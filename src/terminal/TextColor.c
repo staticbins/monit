@@ -52,14 +52,22 @@
 /* -------------------------------------------------------- Public Methods */
 
 
-bool TextColor_support() {
+bool TextColor_support(void) {
         if (! (Run.flags & Run_Batch) && isatty(STDOUT_FILENO)) {
                 if (getenv("COLORTERM")) {
                         return true;
                 } else {
                         char *term = getenv("TERM");
-                        if (term && (Str_startsWith(term, "screen") || Str_startsWith(term, "xterm") || Str_startsWith(term, "vt100") || Str_startsWith(term, "ansi") || Str_startsWith(term, "linux") || Str_startsWith(term, "rxvt") || Str_sub(term, "color")))
-                                return true;
+                        if (term) {
+                                if (Str_startsWith(term, "screen")
+                                    || Str_startsWith(term, "xterm")
+                                    || Str_startsWith(term, "vt100")
+                                    || Str_startsWith(term, "ansi")
+                                    || Str_startsWith(term, "linux")
+                                    || Str_startsWith(term, "rxvt")
+                                    || Str_sub(term, "color"))
+                                        return true;
+                        }
                 }
         }
         return false;

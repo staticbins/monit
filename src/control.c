@@ -53,7 +53,7 @@
 #endif
 
 #include "monit.h"
-#include "ProcessTree.h"
+#include "Proc.h"
 #include "event.h"
 #include "util.h"
 #include "system/Time.h"
@@ -92,9 +92,9 @@ static int _getOutput(InputStream_T in, char *buf, int buflen) {
 
 
 static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long long *timeout) {
-        ASSERT(S);
-        ASSERT(c);
-        ASSERT(msg);
+        assert(S);
+        assert(c);
+        assert(msg);
         msg[0] = 0;
         int status = -1;
         Command_T C = NULL;
@@ -168,14 +168,14 @@ static Process_Status _waitProcessStart(Service_T s, long long *timeout) {
         long wait = RETRY_INTERVAL;
         do {
                 Time_usleep(wait);
-                pid_t pid = ProcessTree_findProcess(s);
+                pid_t pid = ProcessTable_findProcess(s);
                 if (pid) {
-                        ProcessTree_init(ProcessEngine_None);
-                        ProcessTree_updateProcess(s, pid);
+                        ProcessTable_update(Process_Table);
+                        ProcessTable_updateProcess(Process_Table, s, pid);
                         return Process_Started;
                 }
                 *timeout -= wait;
-                wait = wait < 1000000 ? wait * 2 : 1000000; // double the wait during each cycle until 1s is reached (ProcessTree_findProcess can be heavy and we don't want to drain power every 100ms on mobile devices)
+                wait = wait < 1000000 ? wait * 2 : 1000000; // double the wait during each cycle until 1s is reached (ProcessTable_findProcess() can be heavy and we don't want to drain power every 100ms on mobile devices)
         } while (*timeout > 0 && ! (Run.flags & Run_Stopped));
         return Process_Stopped;
 }
@@ -184,7 +184,7 @@ static Process_Status _waitProcessStart(Service_T s, long long *timeout) {
 static Process_Status _waitProcessStop(int pid, long long *timeout) {
         do {
                 Time_usleep(RETRY_INTERVAL);
-                if (! pid || (getpgid(pid) == -1 && errno != EPERM))
+                if (!ProcessTable_exist(pid))
                         return Process_Stopped;
                 *timeout -= RETRY_INTERVAL;
         } while (*timeout > 0 && ! (Run.flags & Run_Stopped));
@@ -193,7 +193,7 @@ static Process_Status _waitProcessStop(int pid, long long *timeout) {
 
 
 static State_Type _check(Service_T s) {
-        ASSERT(s);
+        assert(s);
         State_Type rv = State_Succeeded;
         // The check is performed in passive mode - we want to just check, nested start/stop/restart action is unwanted (alerts are allowed so the user will get feedback what's wrong)
         Monitor_Mode original = s->mode;
@@ -220,12 +220,12 @@ static State_Type _check(Service_T s) {
  * @return true if the service was started otherwise false
  */
 static bool _doStart(Service_T s) {
-        ASSERT(s);
+        assert(s);
         bool rv = true;
         StringBuffer_T sb = StringBuffer_create(64);
         for (Dependant_T d = s->dependantlist; d; d = d->next ) {
                 Service_T parent = Util_getService(d->dependant);
-                ASSERT(parent);
+                assert(parent);
                 if (parent->monitor != Monitor_Yes || parent->error) {
                         if (_doStart(parent)) {
                                 State_Type state = _check(parent);
@@ -238,7 +238,7 @@ static bool _doStart(Service_T s) {
         }
         if (rv) {
                 if (s->start) {
-                        if (s->type != Service_Process || ! ProcessTree_findProcess(s)) {
+                        if (s->type != Service_Process || ! ProcessTable_findProcess(s)) {
                                 Log_info("'%s' start: '%s'\n", s->name, Util_commandDescription(s->start, (char[STRLEN]){}));
                                 char msg[1024];
                                 long long timeout = s->start->timeout * USEC_PER_MSEC;
@@ -285,7 +285,7 @@ static void _evaluateStop(Service_T s, bool succeeded, int exitStatus, char *msg
  * @return true if the service was stopped otherwise false
  */
 static bool _doStop(Service_T s, bool unmonitor) {
-        ASSERT(s);
+        assert(s);
         bool rv = true;
         if (s->stop) {
                 if (s->monitor != Monitor_Not) {
@@ -293,7 +293,7 @@ static bool _doStop(Service_T s, bool unmonitor) {
                         char msg[1024];
                         long long timeout = s->stop->timeout * USEC_PER_MSEC;
                         if (s->type == Service_Process) {
-                                int pid = ProcessTree_findProcess(s);
+                                int pid = ProcessTable_findProcess(s);
                                 if (pid) {
                                         exitStatus = _executeStop(s, msg, sizeof(msg), &timeout);
                                         rv = _waitProcessStop(pid, &timeout) == Process_Stopped ? true : false;
@@ -323,7 +323,7 @@ static bool _doStop(Service_T s, bool unmonitor) {
  * @param s A Service_T object
  */
 static bool _doRestart(Service_T s) {
-        ASSERT(s);
+        assert(s);
         bool rv = true;
         if (s->restart) {
                 Log_info("'%s' restart: '%s'\n", s->name, Util_commandDescription(s->restart, (char[STRLEN]){}));
@@ -351,10 +351,10 @@ static bool _doRestart(Service_T s) {
  * @param s A Service_T object
  */
 static void _doMonitor(Service_T s) {
-        ASSERT(s);
+        assert(s);
         for (Dependant_T d = s->dependantlist; d; d = d->next ) {
                 Service_T parent = Util_getService(d->dependant);
-                ASSERT(parent);
+                assert(parent);
                 _doMonitor(parent);
         }
         Util_monitorSet(s);
@@ -366,7 +366,7 @@ static void _doMonitor(Service_T s) {
  * @param s A Service_T object
  */
 static void _doUnmonitor(Service_T s) {
-        ASSERT(s);
+        assert(s);
         Util_monitorUnset(s);
 }
 
@@ -379,9 +379,9 @@ static void _doUnmonitor(Service_T s) {
  * @return true if all depending services were started/stopped otherwise false
  */
 static bool _doDepend(Service_T s, Action_Type action, bool unmonitor) {
-        ASSERT(s);
+        assert(s);
         bool rv = true;
-        for (Service_T child = servicelist; child; child = child->next) {
+        for (Service_T child = Service_List; child; child = child->next) {
                 for (Dependant_T d = child->dependantlist; d; d = d->next) {
                         if (IS(d->dependant, s->name)) {
                                 if (action == Action_Start) {
@@ -428,8 +428,8 @@ static bool _doDepend(Service_T s, Action_Type action, bool unmonitor) {
  * @return number of errors
  */
 bool control_service_string(List_T services, const char *action) {
-        ASSERT(services);
-        ASSERT(action);
+        assert(services);
+        assert(action);
         Action_Type a = Util_getAction(action);
         if (a == Action_Ignored) {
                 Log_error("invalid action %s\n", action);
@@ -452,7 +452,7 @@ bool control_service_string(List_T services, const char *action) {
 bool control_service(const char *S, Action_Type A) {
         Service_T s = NULL;
         bool rv = true;
-        ASSERT(S);
+        assert(S);
         if (! (s = Util_getService(S))) {
                 Log_error("Service '%s' -- doesn't exist\n", S);
                 return false;

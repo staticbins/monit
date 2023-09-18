@@ -44,6 +44,7 @@
  */
 
 #include "md5.h"
+#include <stdint.h>
 #include <string.h>
 
 #undef BYTE_ORDER        /* 1 = big-endian, -1 = little-endian, 0 = unknown */
@@ -120,7 +121,9 @@
 #define T64 /* 0xeb86d391 */ (T_MASK ^ 0x14792c6e)
 
 
-#if defined(__clang__) && defined(__clang_major__) && __clang_major__ >= 4
+#if defined(__clang__) && defined(__clang_major__) && __clang_major__ >= 12
+__attribute__((no_sanitize("unsigned-integer-overflow", "unsigned-shift-base")))
+#elif defined(__clang__) && defined(__clang_major__) && __clang_major__ >= 4
 __attribute__((no_sanitize("unsigned-integer-overflow")))
 #endif
 static void md5_process(md5_context_t *pms, const md5_byte_t *data /*[64]*/) {
@@ -154,7 +157,7 @@ static void md5_process(md5_context_t *pms, const md5_byte_t *data /*[64]*/) {
                          * On little-endian machines, we can process properly aligned
                          * data without copying it.
                          */
-                        if (! ((data - (const md5_byte_t *)0) & 3)) {
+                        if (! ((uintptr_t)data & 3)) {
                                 /* data are properly aligned */
                                 X = (const md5_word_t *)data;
                         } else {
@@ -346,7 +349,9 @@ void md5_append(md5_context_t *pms, const md5_byte_t *data, int nbytes) {
                 memcpy(pms->buf, p, left);
 }
 
-#if defined(__clang__) && defined(__clang_major__) && __clang_major__ >= 4
+#if defined(__clang__) && defined(__clang_major__) && __clang_major__ >= 12
+__attribute__((no_sanitize("unsigned-integer-overflow", "unsigned-shift-base")))
+#elif defined(__clang__) && defined(__clang_major__) && __clang_major__ >= 4
 __attribute__((no_sanitize("unsigned-integer-overflow")))
 #endif
 void md5_finish(md5_context_t *pms, md5_byte_t digest[16]) {

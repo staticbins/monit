@@ -125,7 +125,6 @@
 #include "protocol.h"
 #include "engine.h"
 #include "alert.h"
-#include "ProcessTree.h"
 #include "device.h"
 #include "processor.h"
 #include "md5.h"
@@ -146,6 +145,8 @@ struct precedence_t {
         bool daemon;
         bool logfile;
         bool pidfile;
+        bool idfile;
+        bool statefile;
 };
 
 struct rate_t {
@@ -189,6 +190,7 @@ static struct Exist_T existset = {};
 static struct Status_T statusset = {};
 static struct Perm_T permset = {};
 static struct Size_T sizeset = {};
+static struct NLink_T nlinkset = {};
 static struct Uptime_T uptimeset = {};
 static struct ResponseTime_T responsetimeset = {};
 static struct LinkStatus_T linkstatusset = {};
@@ -207,7 +209,7 @@ static struct Resource_T resourceset = {};
 static struct Checksum_T checksumset = {};
 static struct Timestamp_T timestampset = {};
 static struct ActionRate_T actionrateset = {};
-static struct precedence_t ihp = {false, false, false};
+static struct precedence_t ihp = {false, false, false, false, false};
 static struct rate_t rate = {1, 1};
 static struct rate_t rate1 = {1, 1};
 static struct rate_t rate2 = {1, 1};
@@ -237,6 +239,7 @@ static void  addresource(Resource_T);
 static void  addtimestamp(Timestamp_T);
 static void  addactionrate(ActionRate_T);
 static void  addsize(Size_T);
+static void  addnlink(NLink_T);
 static void  adduptime(Uptime_T);
 static void  addpid(Pid_T);
 static void  addppid(Pid_T);
@@ -275,6 +278,8 @@ static void  prepare_urlrequest(URL_T U);
 static void  seturlrequest(int, char *);
 static void  setlogfile(char *);
 static void  setpidfile(char *);
+static void  setidfile(char *);
+static void  setstatefile(char *);
 static void  reset_sslset(void);
 static void  reset_mailset(void);
 static void  reset_mailserverset(void);
@@ -284,6 +289,7 @@ static void  reset_resourceset(void);
 static void  reset_timestampset(void);
 static void  reset_actionrateset(void);
 static void  reset_sizeset(void);
+static void  reset_nlinkset(void);
 static void  reset_uptimeset(void);
 static void  reset_responsetimeset(void);
 static void  reset_pidset(void);
@@ -372,6 +378,7 @@ static void _sanityCheckEveryStatement(Service_T s);
 %token FIPS
 %token SECURITY ATTRIBUTE
 %token FILEDESCRIPTORS
+%token HARDLINK
 
 %left GREATER GREATEROREQUAL LESS LESSOREQUAL EQUAL NOTEQUAL
 
@@ -461,6 +468,7 @@ optfile         : start
                 | gid
                 | checksum
                 | size
+                | hardlink
                 | match
                 | mode
                 | onreboot
@@ -509,6 +517,7 @@ optdir          : start
                 | permission
                 | uid
                 | gid
+                | hardlink
                 | mode
                 | onreboot
                 | group
@@ -589,6 +598,7 @@ optfifo         : start
                 | permission
                 | uid
                 | gid
+                | hardlink
                 | mode
                 | onreboot
                 | group
@@ -739,6 +749,8 @@ setlog          : SET LOGFILE PATH   {
                                 setlogfile($3);
                                 Run.flags &= ~Run_UseSyslog;
                                 Run.flags |= Run_Log;
+                        } else {
+                                FREE($3);
                         }
                   }
                 | SET LOGFILE SYSLOG {
@@ -763,12 +775,22 @@ seteventqueue   : SET EVENTQUEUE BASEDIR PATH {
                 ;
 
 setidfile       : SET IDFILE PATH {
-                        Run.files.id = $3;
+                        if (! Run.files.id || ihp.idfile) {
+                                ihp.idfile = true;
+                                setidfile($3);
+                        } else {
+                                FREE($3);
+                        }
                   }
                 ;
 
 setstatefile    : SET STATEFILE PATH {
-                        Run.files.state = $3;
+                        if (! Run.files.state || ihp.statefile) {
+                                ihp.statefile = true;
+                                setstatefile($3);
+                        } else {
+                                FREE($3);
+                        }
                   }
                 ;
 
@@ -776,6 +798,8 @@ setpid          : SET PIDFILE PATH {
                         if (! Run.files.pid || ihp.pidfile) {
                                 ihp.pidfile = true;
                                 setpidfile($3);
+                        } else {
+                                FREE($3);
                         }
                   }
                 ;
@@ -1554,18 +1578,24 @@ icmp            : IF FAILED ICMP icmptype icmpoptlist rate1 THEN action1 recover
                 | IF FAILED PING icmpoptlist rate1 THEN action1 recovery_success {
                         icmpset.family = Socket_Ip;
                         icmpset.check_invers = false;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
                 | IF FAILED PING4 icmpoptlist rate1 THEN action1 recovery_success {
                         icmpset.family = Socket_Ip4;
                         icmpset.check_invers = false;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
                 | IF FAILED PING6 icmpoptlist rate1 THEN action1 recovery_success {
                         icmpset.family = Socket_Ip6;
                         icmpset.check_invers = false;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
@@ -1581,18 +1611,24 @@ icmp            : IF FAILED ICMP icmptype icmpoptlist rate1 THEN action1 recover
                 | IF SUCCEEDED PING icmpoptlist rate1 THEN action1 recovery_failure {
                         icmpset.family = Socket_Ip;
                         icmpset.check_invers = true;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
                 | IF SUCCEEDED PING4 icmpoptlist rate1 THEN action1 recovery_failure {
                         icmpset.family = Socket_Ip4;
                         icmpset.check_invers = true;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
                 | IF SUCCEEDED PING6 icmpoptlist rate1 THEN action1 recovery_failure {
                         icmpset.family = Socket_Ip6;
                         icmpset.check_invers = true;
+                        icmpset.responsetime.operator = responsetimeset.operator;
+                        icmpset.responsetime.limit = responsetimeset.limit;
                         addeventaction(&(icmpset).action, $<number>7, $<number>8);
                         addicmp(&icmpset);
                  }
@@ -1606,6 +1642,7 @@ icmpopt         : icmpcount
                 | icmpsize
                 | icmptimeout
                 | icmpoutgoing
+                | responsetime
                 ;
 
 host            : /* EMPTY */ {
@@ -2396,55 +2433,55 @@ resourcecpu     : resourcecpuid operator value PERCENT {
                 ;
 
 resourcecpuid   : CPUUSER {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuUser)
+                        if (System_Info.statisticsAvailable & Statistics_CpuUser)
                                 $<number>$ = Resource_CpuUser;
                         else
                                 yywarning2("The CPU user usage statistics is not available on this system\n");
                   }
                 | CPUSYSTEM {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuSystem)
+                        if (System_Info.statisticsAvailable & Statistics_CpuSystem)
                                 $<number>$ = Resource_CpuSystem;
                         else
                                 yywarning2("The CPU system usage statistics is not available on this system\n");
                   }
                 | CPUWAIT {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuIOWait)
+                        if (System_Info.statisticsAvailable & Statistics_CpuIOWait)
                                 $<number>$ = Resource_CpuWait;
                         else
                                 yywarning2("The CPU I/O wait usage statistics is not available on this system\n");
                   }
                 | CPUNICE {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuNice)
+                        if (System_Info.statisticsAvailable & Statistics_CpuNice)
                                 $<number>$ = Resource_CpuNice;
                         else
                                 yywarning2("The CPU nice usage statistics is not available on this system\n");
                   }
                 | CPUHARDIRQ {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuHardIRQ)
+                        if (System_Info.statisticsAvailable & Statistics_CpuHardIRQ)
                                 $<number>$ = Resource_CpuHardIRQ;
                         else
                                 yywarning2("The CPU hardware IRQ usage statistics is not available on this system\n");
                   }
                 | CPUSOFTIRQ {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuSoftIRQ)
+                        if (System_Info.statisticsAvailable & Statistics_CpuSoftIRQ)
                                 $<number>$ = Resource_CpuSoftIRQ;
                         else
                                 yywarning2("The CPU software IRQ usage statistics is not available on this system\n");
                   }
                 | CPUSTEAL {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuSteal)
+                        if (System_Info.statisticsAvailable & Statistics_CpuSteal)
                                 $<number>$ = Resource_CpuSteal;
                         else
                                 yywarning2("The CPU steal usage statistics is not available on this system\n");
                   }
                 | CPUGUEST {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuGuest)
+                        if (System_Info.statisticsAvailable & Statistics_CpuGuest)
                                 $<number>$ = Resource_CpuGuest;
                         else
                                 yywarning2("The CPU guest usage statistics is not available on this system\n");
                   }
                 | CPUGUESTNICE {
-                        if (systeminfo.statisticsAvailable & Statistics_CpuGuestNice)
+                        if (System_Info.statisticsAvailable & Statistics_CpuGuestNice)
                                 $<number>$ = Resource_CpuGuestNice;
                         else
                                 yywarning2("The CPU guest nice usage statistics is not available on this system\n");
@@ -2540,7 +2577,7 @@ resourceloadavg : LOADAVG1  { $<number>$ = Resource_LoadAverage1m; }
                 ;
 
 coremultiplier  : /* EMPTY */ { $<number>$ = 1; }
-                | CORE        { $<number>$ = systeminfo.cpu.count; }
+                | CORE        { $<number>$ = System_Info.cpu.count; }
                 ;
 
 
@@ -3025,6 +3062,20 @@ size            : IF SIZE operator NUMBER unit rate1 THEN action1 recovery_succe
                   }
                 ;
 
+hardlink        : IF HARDLINK operator NUMBER rate1 THEN action1 recovery_success {
+                        nlinkset.operator = $<number>3;
+                        nlinkset.nlink = ((unsigned long long)$4);
+                        addeventaction(&(nlinkset).action, $<number>7, $<number>8);
+                        addnlink(&nlinkset);
+                  }
+                | IF CHANGED HARDLINK rate1 THEN action1 {
+                        nlinkset.test_changes = true;
+                        addeventaction(&(nlinkset).action, $<number>6, Action_Ignored);
+                        addnlink(&nlinkset);
+                  }
+                ;
+
+
 uid             : IF FAILED UID STRING rate1 THEN action1 recovery_success {
                         uidset.uid = get_uid($4, 0);
                         addeventaction(&(uidset).action, $<number>7, $<number>8);
@@ -3060,13 +3111,13 @@ secattr         : IF FAILED SECURITY ATTRIBUTE STRING rate1 THEN action1 recover
                 ;
 
 filedescriptorssystem : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery_success {
-                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
+                        if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
                                 addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
                         else
                                 yywarning("The per-system filedescriptors statistics is not available on this system\n");
                   }
                 | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery_success {
-                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
+                        if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerSystem)
                                 addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
                         else
                                 yywarning("The per-system filedescriptors statistics is not available on this system\n");
@@ -3074,13 +3125,13 @@ filedescriptorssystem : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 re
                 ;
 
 filedescriptorsprocess : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery_success {
-                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
+                        if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
                                 addfiledescriptors($<number>3, false, (long long)$4, -1., $<number>7, $<number>8);
                         else
                                 yywarning("The per-process filedescriptors statistics is not available on this system\n");
                   }
                 | IF FILEDESCRIPTORS operator value PERCENT rate1 THEN action1 recovery_success {
-                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcessMax)
+                        if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerProcessMax)
                                 addfiledescriptors($<number>3, false, -1LL, $<real>4, $<number>8, $<number>9);
                         else
                                 yywarning("The per-process filedescriptors maximum is not exposed on this system, so we cannot compute usage %%, please use the test with absolute value\n");
@@ -3088,7 +3139,7 @@ filedescriptorsprocess : IF FILEDESCRIPTORS operator NUMBER rate1 THEN action1 r
                 ;
 
 filedescriptorsprocesstotal : IF TOTAL FILEDESCRIPTORS operator NUMBER rate1 THEN action1 recovery_success {
-                        if (systeminfo.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
+                        if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerProcess)
                                 addfiledescriptors($<number>4, true, (long long)$5, -1., $<number>8, $<number>9);
                         else
                                 yywarning("The per-process filedescriptors statistics is not available on this system\n");
@@ -3257,7 +3308,7 @@ reminder        : /* EMPTY */           { mailset.reminder = 0; }
  * This routine is automatically called by the lexer!
  */
 void yyerror(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         char *msg = NULL;
         va_list ap;
         va_start(ap, s);
@@ -3273,7 +3324,7 @@ void yyerror(const char *s, ...) {
  * Syntactical warning routine
  */
 void yywarning(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         char *msg = NULL;
         va_list ap;
         va_start(ap, s);
@@ -3288,7 +3339,7 @@ void yywarning(const char *s, ...) {
  * Argument error routine
  */
 void yyerror2(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         char *msg = NULL;
         va_list ap;
         va_start(ap, s);
@@ -3304,7 +3355,7 @@ void yyerror2(const char *s, ...) {
  * Argument warning routine
  */
 void yywarning2(const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         char *msg = NULL;
         va_list ap;
         va_start(ap, s);
@@ -3320,7 +3371,7 @@ void yywarning2(const char *s, ...) {
  * Returns true if parsing succeeded, otherwise false
  */
 bool parse(char *controlfile) {
-        ASSERT(controlfile);
+        assert(controlfile);
 
         if ((yyin = fopen(controlfile,"r")) == (FILE *)NULL) {
                 Log_error("Cannot open the control file '%s' -- %s\n", controlfile, STRERROR);
@@ -3329,7 +3380,7 @@ bool parse(char *controlfile) {
 
         currentfile = Str_dup(controlfile);
 
-        available_statistics(&systeminfo);
+        available_statistics(&System_Info);
 
         /*
          * Creation of the global service list is synchronized
@@ -3366,8 +3417,8 @@ bool parse(char *controlfile) {
 /**
  * Initialize objects used by the parser.
  */
-static void preparse() {
-        servicelist = tail = current = NULL;
+static void preparse(void) {
+        Service_List = tail = current = NULL;
         /* Set instance incarnation ID */
         time(&Run.incarnation);
         /* Reset lexer */
@@ -3415,6 +3466,7 @@ static void preparse() {
         reset_gidset();
         reset_statusset();
         reset_sizeset();
+        reset_nlinkset();
         reset_mailset();
         reset_sslset();
         reset_mailserverset();
@@ -3441,7 +3493,7 @@ static void preparse() {
 /*
  * Check that values are reasonable after parsing
  */
-static void postparse() {
+static void postparse(void) {
         if (cfg_errflag)
                 return;
 
@@ -3529,7 +3581,7 @@ static bool _parseOutgoingAddress(char *ip, Outgoing_T *outgoing) {
  * service list.
  */
 static Service_T createservice(Service_Type type, char *name, char *value, State_Type (*check)(Service_T s)) {
-        ASSERT(name);
+        assert(name);
 
         check_name(name);
 
@@ -3595,10 +3647,10 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
 
 
 /*
- * Add a service object to the servicelist
+ * Add a service object to the Service_List
  */
 static void addservice(Service_T s) {
-        ASSERT(s);
+        assert(s);
 
         // Test sanity check
         switch (s->type) {
@@ -3678,8 +3730,8 @@ static void addservice(Service_T s) {
                 tail->next = s;
                 tail->next_conf = s;
         } else {
-                servicelist = s;
-                servicelist_conf = s;
+                Service_List = s;
+                Service_List_Conf = s;
         }
         tail = s;
 }
@@ -3691,10 +3743,10 @@ static void addservice(Service_T s) {
 static void addservicegroup(char *name) {
         ServiceGroup_T g;
 
-        ASSERT(name);
+        assert(name);
 
         /* Check if service group with the same name is defined already */
-        for (g = servicegrouplist; g; g = g->next)
+        for (g = Service_Group_List; g; g = g->next)
                 if (IS(g->name, name))
                         break;
 
@@ -3702,8 +3754,8 @@ static void addservicegroup(char *name) {
                 NEW(g);
                 g->name = Str_dup(name);
                 g->members = List_new();
-                g->next = servicegrouplist;
-                servicegrouplist = g;
+                g->next = Service_Group_List;
+                Service_Group_List = g;
         }
 
         List_append(g->members, current);
@@ -3716,7 +3768,7 @@ static void addservicegroup(char *name) {
 static void adddependant(char *dependant) {
         Dependant_T d;
 
-        ASSERT(dependant);
+        assert(dependant);
 
         NEW(d);
 
@@ -3738,7 +3790,7 @@ static void adddependant(char *dependant) {
 static void addmail(char *mailto, Mail_T f, Mail_T *l) {
         Mail_T m;
 
-        ASSERT(mailto);
+        assert(mailto);
 
         NEW(m);
         m->to       = mailto;
@@ -3760,7 +3812,7 @@ static void addmail(char *mailto, Mail_T f, Mail_T *l) {
  * Add the given portset to the current service's portlist
  */
 static void addport(Port_T *list, Port_T port) {
-        ASSERT(port);
+        assert(port);
 
         if (port->protocol->check == check_radius && port->type != Socket_Udp)
                 yyerror("Radius protocol test supports UDP only");
@@ -3855,7 +3907,7 @@ static void addhttpheader(Port_T port, char *header) {
  * Add a new resource object to the current service resource list
  */
 static void addresource(Resource_T rr) {
-        ASSERT(rr);
+        assert(rr);
         if (Run.flags & Run_ProcessEngineEnabled) {
                 Resource_T r;
                 NEW(r);
@@ -3876,7 +3928,7 @@ static void addresource(Resource_T rr) {
  * Add a new file object to the current service timestamp list
  */
 static void addtimestamp(Timestamp_T ts) {
-        ASSERT(ts);
+        assert(ts);
 
         Timestamp_T t;
         NEW(t);
@@ -3899,7 +3951,7 @@ static void addtimestamp(Timestamp_T ts) {
 static void addactionrate(ActionRate_T ar) {
         ActionRate_T a;
 
-        ASSERT(ar);
+        assert(ar);
 
         if (ar->count > ar->cycle)
                 yyerror2("The number of restarts must be less than poll cycles");
@@ -3926,7 +3978,7 @@ static void addsize(Size_T ss) {
         Size_T s;
         struct stat buf;
 
-        ASSERT(ss);
+        assert(ss);
 
         NEW(s);
         s->operator     = ss->operator;
@@ -3948,12 +4000,40 @@ static void addsize(Size_T ss) {
 
 
 /*
+ * Add a new NLink object to the current service nlink list
+ */
+static void addnlink(NLink_T ss) {
+        NLink_T s;
+        struct stat buf;
+    
+        assert(ss);
+    
+        NEW(s);
+        s->operator     = ss->operator;
+        s->nlink        = ss->nlink;
+        s->action       = ss->action;
+        s->test_changes = ss->test_changes;
+        /* Get the initial size for future comparison */
+        if (s->test_changes) {
+                s->initialized = ! stat(current->path, &buf);
+                if (s->initialized)
+                        s->nlink = (unsigned long long)buf.st_nlink;
+        }
+    
+        s->next = current->nlinklist;
+        current->nlinklist = s;
+    
+        reset_nlinkset();
+}
+
+
+/*
  * Add a new Uptime object to the current service uptime list
  */
 static void adduptime(Uptime_T uu) {
         Uptime_T u;
 
-        ASSERT(uu);
+        assert(uu);
 
         NEW(u);
         u->operator = uu->operator;
@@ -3971,7 +4051,7 @@ static void adduptime(Uptime_T uu) {
  * Add a new Pid object to the current service pid list
  */
 static void addpid(Pid_T pp) {
-        ASSERT(pp);
+        assert(pp);
 
         Pid_T p;
         NEW(p);
@@ -3988,7 +4068,7 @@ static void addpid(Pid_T pp) {
  * Add a new PPid object to the current service ppid list
  */
 static void addppid(Pid_T pp) {
-        ASSERT(pp);
+        assert(pp);
 
         Pid_T p;
         NEW(p);
@@ -4005,7 +4085,7 @@ static void addppid(Pid_T pp) {
  * Add a new Fsflag object to the current service fsflag list
  */
 static void addfsflag(FsFlag_T ff) {
-        ASSERT(ff);
+        assert(ff);
 
         FsFlag_T f;
         NEW(f);
@@ -4022,7 +4102,7 @@ static void addfsflag(FsFlag_T ff) {
  * Add a new Nonexist object to the current service list
  */
 static void addnonexist(NonExist_T ff) {
-        ASSERT(ff);
+        assert(ff);
 
         NonExist_T f;
         NEW(f);
@@ -4036,7 +4116,7 @@ static void addnonexist(NonExist_T ff) {
 
 
 static void addexist(Exist_T rule) {
-        ASSERT(rule);
+        assert(rule);
         Exist_T r;
         NEW(r);
         r->action = rule->action;
@@ -4050,7 +4130,7 @@ static void addexist(Exist_T rule) {
  * Set Checksum object in the current service
  */
 static void addchecksum(Checksum_T cs) {
-        ASSERT(cs);
+        assert(cs);
 
         cs->initialized = true;
 
@@ -4101,7 +4181,7 @@ static void addchecksum(Checksum_T cs) {
  * Set Perm object in the current service
  */
 static void addperm(Perm_T ps) {
-        ASSERT(ps);
+        assert(ps);
 
         Perm_T p;
         NEW(p);
@@ -4123,7 +4203,7 @@ static void addperm(Perm_T ps) {
 
 
 static void addlinkstatus(Service_T s, LinkStatus_T L) {
-        ASSERT(L);
+        assert(L);
 
         LinkStatus_T l;
 
@@ -4148,7 +4228,7 @@ static void addlinkstatus(Service_T s, LinkStatus_T L) {
 
 
 static void addlinkspeed(Service_T s, LinkSpeed_T L) {
-        ASSERT(L);
+        assert(L);
 
         LinkSpeed_T l;
         NEW(l);
@@ -4162,7 +4242,7 @@ static void addlinkspeed(Service_T s, LinkSpeed_T L) {
 
 
 static void addlinksaturation(Service_T s, LinkSaturation_T L) {
-        ASSERT(L);
+        assert(L);
 
         LinkSaturation_T l;
         NEW(l);
@@ -4181,8 +4261,8 @@ static void addlinksaturation(Service_T s, LinkSaturation_T L) {
  * Return Bandwidth object
  */
 static void addbandwidth(Bandwidth_T *list, Bandwidth_T b) {
-        ASSERT(list);
-        ASSERT(b);
+        assert(list);
+        assert(b);
 
         if (b->rangecount * b->range > 24 * Time_Hour) {
                 yyerror2("Maximum range for total test is 24 hours");
@@ -4231,7 +4311,7 @@ static void appendmatch(Match_T *list, Match_T item) {
 static void addmatch(Match_T ms, int actionnumber, int linenumber) {
         Match_T m;
 
-        ASSERT(ms);
+        assert(ms);
 
         NEW(m);
         NEW(m->regex_comp);
@@ -4260,7 +4340,7 @@ static void addmatch(Match_T ms, int actionnumber, int linenumber) {
 
 
 static void addmatchpath(Match_T ms, Action_Type actionnumber) {
-        ASSERT(ms->match_path);
+        assert(ms->match_path);
 
         FILE *handle = fopen(ms->match_path, "r");
         if (handle == NULL) {
@@ -4288,7 +4368,7 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
 
                 if (actionnumber == Action_Exec) {
                         if (command1 == NULL) {
-                                ASSERT(savecommand);
+                                assert(savecommand);
                                 command1 = copycommand(savecommand);
                         }
                 }
@@ -4307,7 +4387,7 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
  */
 static void addstatus(Status_T status) {
         Status_T s;
-        ASSERT(status);
+        assert(status);
         NEW(s);
         s->initialized = status->initialized;
         s->return_value = status->return_value;
@@ -4324,7 +4404,7 @@ static void addstatus(Status_T status) {
  * Set Uid object in the current service
  */
 static Uid_T adduid(Uid_T u) {
-        ASSERT(u);
+        assert(u);
 
         Uid_T uid;
         NEW(uid);
@@ -4339,7 +4419,7 @@ static Uid_T adduid(Uid_T u) {
  * Set Gid object in the current service
  */
 static Gid_T addgid(Gid_T g) {
-        ASSERT(g);
+        assert(g);
 
         Gid_T gid;
         NEW(gid);
@@ -4356,7 +4436,7 @@ static Gid_T addgid(Gid_T g) {
 static void addfilesystem(FileSystem_T ds) {
         FileSystem_T dev;
 
-        ASSERT(ds);
+        assert(ds);
 
         NEW(dev);
         dev->resource           = ds->resource;
@@ -4379,7 +4459,7 @@ static void addfilesystem(FileSystem_T ds) {
 static void addicmp(Icmp_T is) {
         Icmp_T icmp;
 
-        ASSERT(is);
+        assert(is);
 
         NEW(icmp);
         icmp->family        = is->family;
@@ -4410,7 +4490,7 @@ static void addicmp(Icmp_T is) {
 static void addeventaction(EventAction_T *_ea, Action_Type failed, Action_Type succeeded) {
         EventAction_T ea;
 
-        ASSERT(_ea);
+        assert(_ea);
 
         NEW(ea);
         NEW(ea->failed);
@@ -4421,7 +4501,7 @@ static void addeventaction(EventAction_T *_ea, Action_Type failed, Action_Type s
         ea->failed->count = rate1.count;
         ea->failed->cycles = rate1.cycles;
         if (failed == Action_Exec) {
-                ASSERT(command1);
+                assert(command1);
                 ea->failed->exec = command1;
                 command1 = NULL;
         }
@@ -4431,7 +4511,7 @@ static void addeventaction(EventAction_T *_ea, Action_Type failed, Action_Type s
         ea->succeeded->count = rate2.count;
         ea->succeeded->cycles = rate2.cycles;
         if (succeeded == Action_Exec) {
-                ASSERT(command2);
+                assert(command2);
                 ea->succeeded->exec = command2;
                 command2 = NULL;
         }
@@ -4499,7 +4579,7 @@ static void addcommand(int what, unsigned int timeout) {
  */
 static void addargument(char *argument) {
 
-        ASSERT(argument);
+        assert(argument);
 
         if (! command) {
                 check_exec(argument);
@@ -4520,7 +4600,7 @@ static void addargument(char *argument) {
  */
 static void prepare_urlrequest(URL_T U) {
 
-        ASSERT(U);
+        assert(U);
 
         /* Only the HTTP protocol is supported for URLs currently. See also the lexer if this is to be changed in the future */
         portset.protocol = Protocol_get(Protocol_HTTP);
@@ -4543,7 +4623,7 @@ static void prepare_urlrequest(URL_T U) {
  */
 static void  seturlrequest(int operator, char *regex) {
 
-        ASSERT(regex);
+        assert(regex);
 
         if (! urlrequest)
                 NEW(urlrequest);
@@ -4563,7 +4643,7 @@ static void  seturlrequest(int operator, char *regex) {
  * Add a new data recipient server to the mmonit server list
  */
 static void addmmonit(Mmonit_T mmonit) {
-        ASSERT(mmonit->url);
+        assert(mmonit->url);
 
         Mmonit_T c;
         NEW(c);
@@ -4600,7 +4680,7 @@ static void addmailserver(MailServer_T mailserver) {
 
         MailServer_T s;
 
-        ASSERT(mailserver->host);
+        assert(mailserver->host);
 
         NEW(s);
         s->host        = mailserver->host;
@@ -4738,6 +4818,38 @@ static void setpidfile(char *pidfile) {
 
 
 /*
+ * Reset the idfile if changed
+ */
+static void setidfile(char *idfile) {
+        if (Run.files.id) {
+                if (IS(Run.files.id, idfile)) {
+                        FREE(idfile);
+                        return;
+                } else {
+                        FREE(Run.files.id);
+                }
+        }
+        Run.files.id = idfile;
+}
+
+
+/*
+ * Reset the statefile if changed
+ */
+static void setstatefile(char *statefile) {
+        if (Run.files.state) {
+                if (IS(Run.files.state, statefile)) {
+                        FREE(statefile);
+                        return;
+                } else {
+                        FREE(Run.files.state);
+                }
+        }
+        Run.files.state = statefile;
+}
+
+
+/*
  * Read a apache htpasswd file and add credentials found for username
  */
 static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) {
@@ -4747,7 +4859,7 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
         FILE *handle = NULL;
         int credentials_added = 0;
 
-        ASSERT(filename);
+        assert(filename);
 
         handle = fopen(filename, "r");
 
@@ -4809,7 +4921,7 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
 static void addpamauth(char* groupname, int readonly) {
         Auth_T prev = NULL;
 
-        ASSERT(groupname);
+        assert(groupname);
 
         if (! Run.httpd.credentials)
                 NEW(Run.httpd.credentials);
@@ -4848,8 +4960,8 @@ static void addpamauth(char* groupname, int readonly) {
 static bool addcredentials(char *uname, char *passwd, Digest_Type dtype, bool readonly) {
         Auth_T c;
 
-        ASSERT(uname);
-        ASSERT(passwd);
+        assert(uname);
+        assert(passwd);
 
         if (strlen(passwd) > Str_compareConstantTimeStringLength) {
                 yyerror2("Password for user %s is too long, maximum %d allowed", uname, Str_compareConstantTimeStringLength);
@@ -4932,7 +5044,7 @@ static void setsyslog(char *facility) {
 /*
  * Reset the current sslset for reuse
  */
-static void reset_sslset() {
+static void reset_sslset(void) {
         memset(&sslset, 0, sizeof(struct SslOptions_T));
         sslset.version = sslset.verify = sslset.allowSelfSigned = -1;
 }
@@ -4941,7 +5053,7 @@ static void reset_sslset() {
 /*
  * Reset the current mailset for reuse
  */
-static void reset_mailset() {
+static void reset_mailset(void) {
         memset(&mailset, 0, sizeof(struct Mail_T));
 }
 
@@ -4949,7 +5061,7 @@ static void reset_mailset() {
 /*
  * Reset the mailserver set to default values
  */
-static void reset_mailserverset() {
+static void reset_mailserverset(void) {
         memset(&mailserverset, 0, sizeof(struct MailServer_T));
         mailserverset.port = PORT_SMTP;
 }
@@ -4958,7 +5070,7 @@ static void reset_mailserverset() {
 /*
  * Reset the mmonit set to default values
  */
-static void reset_mmonitset() {
+static void reset_mmonitset(void) {
         memset(&mmonitset, 0, sizeof(struct Mmonit_T));
         mmonitset.timeout = Run.limits.networkTimeout;
 }
@@ -4967,7 +5079,7 @@ static void reset_mmonitset() {
 /*
  * Reset the Port set to default values
  */
-static void reset_portset() {
+static void reset_portset(void) {
         memset(&portset, 0, sizeof(struct Port_T));
         portset.check_invers = false;
         portset.socket = -1;
@@ -4983,7 +5095,7 @@ static void reset_portset() {
 /*
  * Reset the Proc set to default values
  */
-static void reset_resourceset() {
+static void reset_resourceset(void) {
         resourceset.resource_id = 0;
         resourceset.limit = 0;
         resourceset.action = NULL;
@@ -4994,7 +5106,7 @@ static void reset_resourceset() {
 /*
  * Reset the Timestamp set to default values
  */
-static void reset_timestampset() {
+static void reset_timestampset(void) {
         timestampset.type = Timestamp_Default;
         timestampset.operator = Operator_Equal;
         timestampset.time = 0;
@@ -5007,7 +5119,7 @@ static void reset_timestampset() {
 /*
  * Reset the ActionRate set to default values
  */
-static void reset_actionrateset() {
+static void reset_actionrateset(void) {
         actionrateset.count = 0;
         actionrateset.cycle = 0;
         actionrateset.action = NULL;
@@ -5017,7 +5129,7 @@ static void reset_actionrateset() {
 /*
  * Reset the Size set to default values
  */
-static void reset_sizeset() {
+static void reset_sizeset(void) {
         sizeset.operator = Operator_Equal;
         sizeset.size = 0;
         sizeset.test_changes = false;
@@ -5026,34 +5138,45 @@ static void reset_sizeset() {
 
 
 /*
+ * Reset the NLink set to default values
+ */
+static void reset_nlinkset(void) {
+        nlinkset.operator = Operator_Equal;
+        nlinkset.nlink = 0;
+        nlinkset.test_changes = false;
+        nlinkset.action = NULL;
+}
+
+
+/*
  * Reset the Uptime set to default values
  */
-static void reset_uptimeset() {
+static void reset_uptimeset(void) {
         uptimeset.operator = Operator_Equal;
         uptimeset.uptime = 0;
         uptimeset.action = NULL;
 }
 
 
-static void reset_responsetimeset() {
+static void reset_responsetimeset(void) {
         responsetimeset.operator = Operator_Less;
         responsetimeset.current = 0.;
         responsetimeset.limit = -1.;
 }
 
 
-static void reset_linkstatusset() {
+static void reset_linkstatusset(void) {
         linkstatusset.check_invers = false;
         linkstatusset.action = NULL;
 }
 
 
-static void reset_linkspeedset() {
+static void reset_linkspeedset(void) {
         linkspeedset.action = NULL;
 }
 
 
-static void reset_linksaturationset() {
+static void reset_linksaturationset(void) {
         linksaturationset.limit = 0.;
         linksaturationset.operator = Operator_Equal;
         linksaturationset.action = NULL;
@@ -5063,7 +5186,7 @@ static void reset_linksaturationset() {
 /*
  * Reset the Bandwidth set to default values
  */
-static void reset_bandwidthset() {
+static void reset_bandwidthset(void) {
         bandwidthset.operator = Operator_Equal;
         bandwidthset.limit = 0ULL;
         bandwidthset.action = NULL;
@@ -5073,7 +5196,7 @@ static void reset_bandwidthset() {
 /*
  * Reset the Pid set to default values
  */
-static void reset_pidset() {
+static void reset_pidset(void) {
         pidset.action = NULL;
 }
 
@@ -5081,7 +5204,7 @@ static void reset_pidset() {
 /*
  * Reset the PPid set to default values
  */
-static void reset_ppidset() {
+static void reset_ppidset(void) {
         ppidset.action = NULL;
 }
 
@@ -5089,7 +5212,7 @@ static void reset_ppidset() {
 /*
  * Reset the Fsflag set to default values
  */
-static void reset_fsflagset() {
+static void reset_fsflagset(void) {
         fsflagset.action = NULL;
 }
 
@@ -5097,12 +5220,12 @@ static void reset_fsflagset() {
 /*
  * Reset the Nonexist set to default values
  */
-static void reset_nonexistset() {
+static void reset_nonexistset(void) {
         nonexistset.action = NULL;
 }
 
 
-static void reset_existset() {
+static void reset_existset(void) {
         existset.action = NULL;
 }
 
@@ -5110,7 +5233,7 @@ static void reset_existset() {
 /*
  * Reset the Checksum set to default values
  */
-static void reset_checksumset() {
+static void reset_checksumset(void) {
         checksumset.type         = Hash_Unknown;
         checksumset.test_changes = false;
         checksumset.action       = NULL;
@@ -5121,7 +5244,7 @@ static void reset_checksumset() {
 /*
  * Reset the Perm set to default values
  */
-static void reset_permset() {
+static void reset_permset(void) {
         permset.test_changes = false;
         permset.perm = 0;
         permset.action = NULL;
@@ -5131,7 +5254,7 @@ static void reset_permset() {
 /*
  * Reset the Status set to default values
  */
-static void reset_statusset() {
+static void reset_statusset(void) {
         statusset.initialized = false;
         statusset.return_value = 0;
         statusset.operator = Operator_Equal;
@@ -5142,7 +5265,7 @@ static void reset_statusset() {
 /*
  * Reset the Uid set to default values
  */
-static void reset_uidset() {
+static void reset_uidset(void) {
         uidset.uid = 0;
         uidset.action = NULL;
 }
@@ -5151,7 +5274,7 @@ static void reset_uidset() {
 /*
  * Reset the Gid set to default values
  */
-static void reset_gidset() {
+static void reset_gidset(void) {
         gidset.gid = 0;
         gidset.action = NULL;
 }
@@ -5160,7 +5283,7 @@ static void reset_gidset() {
 /*
  * Reset the Filesystem set to default values
  */
-static void reset_filesystemset() {
+static void reset_filesystemset(void) {
         filesystemset.resource = 0;
         filesystemset.operator = Operator_Equal;
         filesystemset.limit_absolute = -1;
@@ -5172,7 +5295,7 @@ static void reset_filesystemset() {
 /*
  * Reset the ICMP set to default values
  */
-static void reset_icmpset() {
+static void reset_icmpset(void) {
         icmpset.type = ICMP_ECHO;
         icmpset.size = ICMP_SIZE;
         icmpset.count = ICMP_ATTEMPT_COUNT;
@@ -5198,7 +5321,7 @@ static void reset_rateset(struct rate_t *r) {
  * Check for unique service name
  */
 static void check_name(char *name) {
-        ASSERT(name);
+        assert(name);
 
         if (Util_existService(name) || (current && IS(name, current->name)))
                 yyerror2("Service name conflict, %s already defined", name);
@@ -5231,17 +5354,17 @@ static int check_perm(int perm) {
  * by doing a topological sort, thereby finding any cycles.
  * Assures that graph is a Directed Acyclic Graph (DAG).
  */
-static void check_depend() {
+static void check_depend(void) {
         Service_T depends_on = NULL;
         Service_T* dlt = &depend_list; /* the current tail of it                                 */
         bool done;                /* no unvisited nodes left?                               */
         bool found_some;          /* last iteration found anything new ?                    */
-        depend_list = NULL;            /* depend_list will be the topological sorted servicelist */
+        depend_list = NULL;            /* depend_list will be the topological sorted Service_List */
 
         do {
                 done = true;
                 found_some = false;
-                for (Service_T s = servicelist; s; s = s->next) {
+                for (Service_T s = Service_List; s; s = s->next) {
                         Dependant_T d;
                         if (s->visited)
                                 continue;
@@ -5268,13 +5391,13 @@ static void check_depend() {
         } while (found_some && ! done);
 
         if (! done) {
-                ASSERT(depends_on);
+                assert(depends_on);
                 Log_error("Found a depend loop in the control file involving the service '%s'\n", depends_on->name);
                 exit(1);
         }
 
-        ASSERT(depend_list);
-        servicelist = depend_list;
+        assert(depend_list);
+        Service_List = depend_list;
 
         for (Service_T s = depend_list; s; s = s->next_depend)
                 s->next = s->next_depend;
@@ -5311,7 +5434,7 @@ static int verifyMaxForward(int mf) {
 static int cleanup_hash_string(char *hashstring) {
         int i = 0, j = 0;
 
-        ASSERT(hashstring);
+        assert(hashstring);
 
         while (hashstring[i]) {
                 if (isxdigit((int)hashstring[i])) {

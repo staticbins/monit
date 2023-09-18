@@ -179,7 +179,7 @@ static unsigned short _checksum(unsigned char *_addr, int count) {
 
 
 __attribute__((format (printf, 3, 4))) static void _log_warningOrError(int attempt, int maxAttempts, const char *s, ...) {
-        ASSERT(s);
+        assert(s);
         va_list ap;
         va_start(ap, s);
         if (attempt < maxAttempts) {
@@ -220,7 +220,7 @@ int create_server_socket_tcp(const char *address, int port, Socket_Family family
         snprintf(_port, sizeof(_port), "%d", port);
         int status = getaddrinfo(address, _port, &hints, &result);
         if (status) {
-                snprintf(error, STRLEN, "Cannot translate %s socket [%s]:%d -- %s", socketnames[family], NVLSTR(address), port, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                snprintf(error, STRLEN, "Cannot translate %s socket [%s]:%d -- %s", Socket_Names[family], NVLSTR(address), port, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
                 return -1;
         }
         int flag = 1;
@@ -466,8 +466,8 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
 
 
 double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoing, int size, int timeout, int maxretries) {
-        ASSERT(hostname);
-        ASSERT(size > 0);
+        assert(hostname);
+        assert(size > 0);
         double response = -1.;
         struct addrinfo *result, hints = {
                 /* filter for only one sockettype to not get back one address multiple times for each protocol and sockettype */
@@ -487,12 +487,12 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
 #endif
                 default:
                         Log_error("Invalid socket family %d\n", family);
-                        return response;
+                        return -1.;
         }
         int status = getaddrinfo(hostname, NULL, &hints, &result);
         if (status) {
                 Log_error("Ping for %s -- getaddrinfo failed: %s\n", hostname, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
-                return response;
+                return -1.;
         }
         int s = -1;
         for (struct addrinfo *addr = result; addr && response < 0.; addr = addr->ai_next) {

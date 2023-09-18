@@ -75,7 +75,9 @@
 #endif
 
 #include "monit.h"
-#include "ProcessTree.h"
+#include "SystemInfo.h"
+#include "Proc.h"
+#include "ProcessTable.h"
 #include "state.h"
 #include "event.h"
 #include "engine.h"
@@ -127,30 +129,31 @@ static void waitforchildren(void); /* Wait for any child process not running */
 /* ------------------------------------------------------------------ Global */
 
 
-const char *prog;                              /**< The Name of this Program */
-struct Run_T Run;                      /**< Struct holding runtime constants */
-Service_T servicelist;                /**< The service list (created in p.y) */
-Service_T servicelist_conf;   /**< The service list in conf file (c. in p.y) */
-ServiceGroup_T servicegrouplist;/**< The service group list (created in p.y) */
-SystemInfo_T systeminfo;                             /**< System information */
+const char *Prog;                                /**< The Name of this Program */
+struct Run_T Run;                        /**< Struct holding runtime constants */
+Service_T Service_List;                 /**< The service list (created in p.y) */
+Service_T Service_List_Conf;    /**< The service list in conf file (c. in p.y) */
+ServiceGroup_T Service_Group_List;/**< The service group list (created in p.y) */
+SystemInfo_T System_Info;                              /**< System information */
+ProcessTable_T Process_Table;                        /**< Shared Process Table */
 
-Thread_T heartbeatThread;
-Sem_T    heartbeatCond;
-Mutex_T  heartbeatMutex;
-static volatile bool heartbeatRunning = false;
+Thread_T Heartbeat_Thread;
+Sem_T    Heartbeat_Cond;
+Mutex_T  Heartbeat_Mutex;
+static volatile bool isHeartbeatRunning = false;
 
-const char *actionnames[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
-const char *modenames[] = {"active", "passive"};
-const char *onrebootnames[] = {"start", "nostart", "laststate"};
-const char *checksumnames[] = {"UNKNOWN", "MD5", "SHA1"};
-const char *operatornames[] = {"less than", "less than or equal to", "greater than", "greater than or equal to", "equal to", "not equal to", "changed"};
-const char *operatorshortnames[] = {"<", "<=", ">", ">=", "=", "!=", "<>"};
-const char *servicetypes[] = {"Filesystem", "Directory", "File", "Process", "Remote Host", "System", "Fifo", "Program", "Network"};
-const char *pathnames[] = {"Path", "Path", "Path", "Pid file", "Path", "", "Path"};
-const char *icmpnames[] = {"Reply", "", "", "Destination Unreachable", "Source Quench", "Redirect", "", "", "Ping", "", "", "Time Exceeded", "Parameter Problem", "Timestamp Request", "Timestamp Reply", "Information Request", "Information Reply", "Address Mask Request", "Address Mask Reply"};
-const char *socketnames[] = {"unix", "IP", "IPv4", "IPv6"};
-const char *timestampnames[] = {"modify/change time", "access time", "change time", "modify time"};
-const char *httpmethod[] = {"", "HEAD", "GET"};
+const char *Action_Names[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
+const char *Mode_Names[] = {"active", "passive"};
+const char *onReboot_Names[] = {"start", "nostart", "laststate"};
+const char *Checksum_Names[] = {"UNKNOWN", "MD5", "SHA1"};
+const char *Operator_Names[] = {"less than", "less than or equal to", "greater than", "greater than or equal to", "equal to", "not equal to", "changed"};
+const char *OperatorShort_Names[] = {"<", "<=", ">", ">=", "=", "!=", "<>"};
+const char *Servicetype_Names[] = {"Filesystem", "Directory", "File", "Process", "Remote Host", "System", "Fifo", "Program", "Network"};
+const char *Path_Names[] = {"Path", "Path", "Path", "Pid file", "Path", "", "Path"};
+const char *Icmp_Names[] = {"Reply", "", "", "Destination Unreachable", "Source Quench", "Redirect", "", "", "Ping", "", "", "Time Exceeded", "Parameter Problem", "Timestamp Request", "Timestamp Reply", "Information Request", "Information Reply", "Address Mask Request", "Address Mask Reply"};
+const char *Socket_Names[] = {"unix", "IP", "IPv4", "IPv6"};
+const char *Timestamp_Names[] = {"modify/change time", "access time", "change time", "modify time"};
+const char *Httpmethod_Names[] = {"", "HEAD", "GET"};
 
 
 /* ------------------------------------------------------------------ Public */
@@ -164,7 +167,7 @@ int main(int argc, char **argv) {
         Bootstrap_setAbortHandler(Log_abort_handler);  // Abort Monit on exceptions thrown by libmonit
         Bootstrap_setErrorHandler(Log_verror);
         setlocale(LC_ALL, "C");
-        prog = File_basename(argv[0]);
+        Prog = File_basename(argv[0]);
 #ifdef HAVE_OPENSSL
         Ssl_start();
 #endif
@@ -192,7 +195,7 @@ int main(int argc, char **argv) {
  * Wakeup a sleeping monit daemon.
  * Returns true on success otherwise false
  */
-bool do_wakeupcall() {
+bool do_wakeupcall(void) {
         pid_t pid;
 
         if ((pid = exist_daemon()) > 0) {
@@ -206,7 +209,7 @@ bool do_wakeupcall() {
 }
 
 
-bool interrupt() {
+bool interrupt(void) {
         return Run.flags & Run_Stopped || Run.flags & Run_DoReload;
 }
 
@@ -229,7 +232,7 @@ static void _validateOnce(void) {
  * Parse the control file and initialize the program's
  * datastructures and the log system.
  */
-static void do_init() {
+static void do_init(void) {
         /*
          * Register interest for the SIGTERM signal,
          * in case we run in daemon mode this signal
@@ -279,8 +282,8 @@ static void do_init() {
         /*
          * Initialize heartbeat mutex and condition
          */
-        Mutex_init(heartbeatMutex);
-        Sem_init(heartbeatCond);
+        Mutex_init(Heartbeat_Mutex);
+        Sem_init(Heartbeat_Cond);
 
         /*
          * Get the position of the control file
@@ -291,8 +294,9 @@ static void do_init() {
         /*
          * Initialize the system information data collecting interface
          */
-        if (init_system_info())
+        if (SystemInfo_init()) {
                 Run.flags |= Run_ProcessEngineEnabled;
+        }
 
         /*
          * Start the Parser and create the service list. This will also set
@@ -310,7 +314,7 @@ static void do_init() {
         /*
          * Did we find any service ?
          */
-        if (! servicelist) {
+        if (! Service_List) {
                 Log_error("No service has been specified\n");
                 exit(0);
         }
@@ -327,7 +331,7 @@ static void do_init() {
                 Util_printRunList();
                 Util_printServiceList();
         }
-
+        
         /*
          * Reap any stray child processes we may have created
          */
@@ -350,10 +354,10 @@ static void do_reinit(bool full) {
          globale process table which a sigchld handler can check */
         waitforchildren();
 
-        if (Run.mmonits && heartbeatRunning) {
-                Sem_signal(heartbeatCond);
-                Thread_join(heartbeatThread);
-                heartbeatRunning = false;
+        if (Run.mmonits && isHeartbeatRunning) {
+                Sem_signal(Heartbeat_Cond);
+                Thread_join(Heartbeat_Thread);
+                isHeartbeatRunning = false;
         }
 
         Run.flags &= ~Run_DoReload;
@@ -371,7 +375,7 @@ static void do_reinit(bool full) {
         gc();
 
         if (! parse(Run.files.control)) {
-                Log_error("%s stopped -- error parsing configuration file\n", prog);
+                Log_error("%s stopped -- error parsing configuration file\n", Prog);
                 exit(1);
         }
 
@@ -383,7 +387,7 @@ static void do_reinit(bool full) {
                 exit(1);
 
         /* Did we find any services ?  */
-        if (! servicelist) {
+        if (! Service_List) {
                 Log_error("No service has been specified\n");
                 exit(0);
         }
@@ -392,7 +396,7 @@ static void do_reinit(bool full) {
         file_init();
 
         if (! file_createPidFile(Run.files.pid)) {
-                Log_error("%s stopped -- cannot create a pid file\n", prog);
+                Log_error("%s stopped -- cannot create a pid file\n", Prog);
                 exit(1);
         }
 
@@ -410,8 +414,8 @@ static void do_reinit(bool full) {
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit reloaded");
 
                 if (Run.mmonits) {
-                        Thread_create(heartbeatThread, heartbeat, NULL);
-                        heartbeatRunning = true;
+                        Thread_create(Heartbeat_Thread, heartbeat, NULL);
+                        isHeartbeatRunning = true;
                 }
         }
 }
@@ -457,7 +461,7 @@ static void do_action(List_T arguments) {
                         int errors = 0;
                         List_T services = List_new();
                         if (Run.mygroup) {
-                                for (ServiceGroup_T sg = servicegrouplist; sg; sg = sg->next) {
+                                for (ServiceGroup_T sg = Service_Group_List; sg; sg = sg->next) {
                                         if (IS(Run.mygroup, sg->name)) {
                                                 for (list_t m = sg->members->head; m; m = m->next) {
                                                         Service_T s = m->e;
@@ -476,7 +480,7 @@ static void do_action(List_T arguments) {
                                         exit(1);
                                 }
                         } else if (IS(service, "all")) {
-                                for (Service_T s = servicelist; s; s = s->next)
+                                for (Service_T s = Service_List; s; s = s->next)
                                         List_append(services, s->name);
                         } else {
                                 List_append(services, service);
@@ -490,7 +494,7 @@ static void do_action(List_T arguments) {
                         exit(1);
                 }
         } else if (IS(action, "reload")) {
-                Log_info("Reinitializing %s daemon\n", prog);
+                Log_info("Reinitializing %s daemon\n", Prog);
                 kill_daemon(SIGHUP);
         } else if (IS(action, "status")) {
                 char *service = List_pop(arguments);
@@ -510,7 +514,7 @@ static void do_action(List_T arguments) {
                         printf("Invalid syntax - usage: procmatch \"<pattern>\"\n");
                         exit(1);
                 }
-                ProcessTree_testMatch(pattern);
+                Proc_match(pattern);
         } else if (IS(action, "quit")) {
                 kill_daemon(SIGTERM);
         } else if (IS(action, "validate")) {
@@ -538,10 +542,10 @@ static void do_exit(bool saveState) {
                 if (can_http())
                         monit_http(Httpd_Stop);
 
-                if (Run.mmonits && heartbeatRunning) {
-                        Sem_signal(heartbeatCond);
-                        Thread_join(heartbeatThread);
-                        heartbeatRunning = false;
+                if (Run.mmonits && isHeartbeatRunning) {
+                        Sem_signal(Heartbeat_Cond);
+                        Thread_join(Heartbeat_Thread);
+                        isHeartbeatRunning = false;
                 }
 
                 Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
@@ -565,7 +569,7 @@ static void do_exit(bool saveState) {
  * run validate() between sleeps. If not, just run validate() once.
  * Also, if specified, start the monit http server if in daemon mode.
  */
-static void do_default() {
+static void do_default(void) {
         if (Run.flags & Run_Daemon) {
                 if (do_wakeupcall())
                         exit(0);
@@ -625,8 +629,8 @@ reload:
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
 
                 if (Run.mmonits) {
-                        Thread_create(heartbeatThread, heartbeat, NULL);
-                        heartbeatRunning = true;
+                        Thread_create(Heartbeat_Thread, heartbeat, NULL);
+                        isHeartbeatRunning = true;
                 }
 
                 while (true) {
@@ -875,7 +879,7 @@ static void handle_options(int argc, char **argv, List_T arguments) {
 /**
  * Print the program's help message
  */
-static void help() {
+static void help(void) {
         printf(
                "Usage: %s [options]+ [command]\n"
                "Options are as follows:\n"
@@ -914,13 +918,13 @@ static void help() {
                " quit                  - Kill the monit daemon process\n"
                " validate              - Check all services and start if not running\n"
                " procmatch <pattern>   - Test process matching pattern\n",
-               prog);
+               Prog);
 }
 
 /**
  * Print version information
  */
-static void version() {
+static void version(void) {
         printf("This is Monit version %s\n", VERSION);
         printf("Built with");
 #ifndef HAVE_OPENSSL
@@ -943,7 +947,7 @@ static void version() {
         printf("out");
 #endif
         printf(" large files\n");
-        printf("Copyright (C) 2001-2022 Tildeslash Ltd. All Rights Reserved.\n");
+        printf("Copyright (C) 2001-2023 Tildeslash Ltd. All Rights Reserved.\n");
 }
 
 
@@ -953,12 +957,12 @@ static void version() {
 static void *heartbeat(__attribute__ ((unused)) void *args) {
         set_signal_block();
         Log_info("M/Monit heartbeat started\n");
-        LOCK(heartbeatMutex)
+        LOCK(Heartbeat_Mutex)
         {
                 while (! interrupt()) {
                         MMonit_send(NULL);
-                        struct timespec wait = {.tv_sec = Time_now() + Run.polltime, .tv_nsec = 0};
-                        Sem_timeWait(heartbeatCond, heartbeatMutex, wait);
+                        struct timespec wait = {.tv_sec = Time_now() + Run.polltime};
+                        Sem_timeWait(Heartbeat_Cond, Heartbeat_Mutex, wait);
                 }
         }
         END_LOCK;

@@ -54,7 +54,7 @@ void check_dwp(Socket_T socket) {
         char buf[STRLEN];
         char proto[STRLEN];
 
-        ASSERT(socket);
+        assert(socket);
 
         if (Socket_print(socket, "HEAD / HTTP/1.1\r\nConnection: close\r\n\r\n") < 0)
                 THROW(IOException, "DWP: error sending data -- %s", STRERROR);

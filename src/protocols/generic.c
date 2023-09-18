@@ -46,7 +46,7 @@
  *  @file
  */
 void check_generic(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
 
         Generic_T g = NULL;
         if (Socket_getPort(socket))

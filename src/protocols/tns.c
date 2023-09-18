@@ -82,7 +82,7 @@ void check_tns(Socket_T socket) {
                 0x29
         };
 
-        ASSERT(socket);
+        assert(socket);
 
         if (Socket_write(socket, (unsigned char *)requestPing, sizeof(requestPing)) < 0)
                 THROW(IOException, "TNS: error sending ping -- %s", STRERROR);

@@ -45,7 +45,7 @@
  *  @file
  */
 void check_fail2ban(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
 
         const unsigned char ping[] = "(lp0\nS'ping'\np1\na.<F2B_END_COMMAND>"; // pickle protocol version 0
 

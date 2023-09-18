@@ -325,7 +325,8 @@ typedef enum {
         Resource_ServiceTime,
         Resource_LoadAveragePerCore1m,
         Resource_LoadAveragePerCore5m,
-        Resource_LoadAveragePerCore15m
+        Resource_LoadAveragePerCore15m,
+        Resource_HardLink                   // Used by check file, fifo and directory
 } __attribute__((__packed__)) Resource_Type;
 
 
@@ -431,13 +432,6 @@ Sigfunc *signal(int signo, Sigfunc * func);
 #define DEBUG Log_debug
 #define FLAG(x, y) (x & y) == y
 #define NVLSTR(x) (x ? x : "")
-
-
-/** ------------------------------------------ Simple Assert Exception macro */
-
-
-#define ASSERT(e) do { if (!(e)) { Log_critical("AssertException: " #e \
-" at %s:%d\naborting..\n", __FILE__, __LINE__); abort(); } } while (0)
 
 
 /* --------------------------------------------------------- Data structures */
@@ -877,6 +871,19 @@ typedef struct Size_T {
 } *Size_T;
 
 
+/** Defines nlink object */
+typedef struct NLink_T {
+        bool initialized;                   /**< true if size was initialized */
+        bool test_changes;       /**< true if we only should test for changes */
+        Operator_Type operator;                           /**< Comparison operator */
+        unsigned long long nlink;                        /**< Hard links watermark */
+        EventAction_T action; /**< Description of the action upon event occurrence */
+
+        /** For internal use */
+        struct NLink_T *next;                             /**< next nlink in chain */
+} *NLink_T;
+
+
 /** Defines uptime object */
 typedef struct Uptime_T {
         Operator_Type operator;                           /**< Comparison operator */
@@ -1116,6 +1123,7 @@ typedef struct FileInfo_T {
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
         off_t size;                                                  /**< Size */
+        long long nlink;                             /**< Number of hard links */
         off_t readpos;                        /**< Position for regex matching */
         ino_t inode;                                                /**< Inode */
         ino_t inode_prev;               /**< Previous inode for regex matching */
@@ -1128,6 +1136,7 @@ typedef struct DirectoryInfo_T {
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
+        long long nlink;                             /**< Number of hard links */
 } *DirectoryInfo_T;
 
 
@@ -1136,6 +1145,7 @@ typedef struct FifoInfo_T {
         int mode;                                              /**< Permission */
         int uid;                                              /**< Owner's uid */
         int gid;                                              /**< Owner's gid */
+        long long nlink;                             /**< Number of hard links */
 } *FifoInfo_T;
 
 
@@ -1226,6 +1236,7 @@ typedef struct Service_T {
         Port_T      socketlist;                         /**< Unix sockets to check */
         Resource_T  resourcelist;                         /**< Resource check list */
         Size_T      sizelist;                                 /**< Size check list */
+        NLink_T     nlinklist;                /**< Number of hard links check list */
         Uptime_T    uptimelist;                             /**< Uptime check list */
         Match_T     matchlist;                             /**< Content Match list */
         Match_T     matchignorelist;                /**< Content Match ignore list */
@@ -1276,7 +1287,7 @@ typedef struct Service_T {
                 State_Type        state;                                 /**< Test state */
                 bool         state_changed;              /**< true if state changed */
                 Handler_Type      flag;                     /**< The handlers state flag */
-                long long         state_map;           /**< Event bitmap for last cycles */
+                unsigned long long state_map;          /**< Event bitmap for last cycles */
                 unsigned int      count;                             /**< The event rate */
                 char             *message;    /**< Optional message describing the event */
                 EventAction_T     action;           /**< Description of the event action */
@@ -1382,25 +1393,27 @@ struct Run_T {
 /* -------------------------------------------------------- Global variables */
 
 
-extern const char    *prog;
+extern const char    *Prog;
 extern struct Run_T   Run;
-extern Service_T      servicelist;
-extern Service_T      servicelist_conf;
-extern ServiceGroup_T servicegrouplist;
-extern SystemInfo_T   systeminfo;
+extern Service_T      Service_List;
+extern Service_T      Service_List_Conf;
+extern ServiceGroup_T Service_Group_List;
+extern SystemInfo_T   System_Info;
+#include "ProcessTable.h"
+extern ProcessTable_T Process_Table;
 
-extern const char *actionnames[];
-extern const char *modenames[];
-extern const char *onrebootnames[];
-extern const char *checksumnames[];
-extern const char *operatornames[];
-extern const char *operatorshortnames[];
-extern const char *servicetypes[];
-extern const char *pathnames[];
-extern const char *icmpnames[];
-extern const char *socketnames[];
-extern const char *timestampnames[];
-extern const char *httpmethod[];
+extern const char *Action_Names[];
+extern const char *Mode_Names[];
+extern const char *onReboot_Names[];
+extern const char *Checksum_Names[];
+extern const char *Operator_Names[];
+extern const char *OperatorShort_Names[];
+extern const char *Servicetype_Names[];
+extern const char *Path_Names[];
+extern const char *Icmp_Names[];
+extern const char *Socket_Names[];
+extern const char *Timestamp_Names[];
+extern const char *Httpmethod_Names[];
 
 
 /* ------------------------------------------------------- Public prototypes */
@@ -1437,17 +1450,18 @@ void Log_vinfo(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
 void Log_vdebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
 void Log_abort_handler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
 void Log_close(void);
-int   validate(void);
-void  daemonize(void);
-void  gc(void);
-void  gc_mail_list(Mail_T *);
-void  gccmd(command_t *);
-void  gc_event(Event_T *e);
+void validate_init(void);
+int  validate(void);
+void daemonize(void);
+void gc(void);
+void gc_mail_list(Mail_T *);
+void gccmd(command_t *);
+void gc_event(Event_T *e);
 bool kill_daemon(int);
-int   exist_daemon(void);
+pid_t exist_daemon(void);
 bool sendmail(Mail_T);
-void  init_env(void);
-void  monit_http(Httpd_Action);
+void init_env(void);
+void monit_http(Httpd_Action);
 bool can_http(void);
 void set_signal_block(void);
 State_Type check_process(Service_T);

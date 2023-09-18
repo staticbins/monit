@@ -56,7 +56,7 @@
  *  @file
  */
 void check_rdate(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
         time_t time;
         if (Socket_read(socket, (char *)&time, sizeof(time)) <= 0)
                 THROW(IOException, "RDATE: error receiving data -- %s", STRERROR);

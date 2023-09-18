@@ -37,7 +37,7 @@
  * @file
  */
 void check_smtp(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
         SMTP_T smtp = SMTP_new(socket);
         TRY
         {

@@ -163,8 +163,8 @@ void spawn(Service_T S, command_t C, Event_T E) {
         int exit_status;
         char date[42];
 
-        ASSERT(S);
-        ASSERT(C);
+        assert(S);
+        assert(C);
 
         if (access(C->arg[0], X_OK) != 0) {
                 Log_error("Error: Could not execute %s\n", C->arg[0]);

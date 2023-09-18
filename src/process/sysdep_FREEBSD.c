@@ -70,7 +70,7 @@
 #endif
 
 #include "monit.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 // libmonit
@@ -98,17 +98,17 @@ static long cpu_intr_old = 0;
 /* ------------------------------------------------------------------ Public */
 
 
-bool init_process_info_sysdep(void) {
+bool init_systeminfo_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
-        size_t len = sizeof(systeminfo.cpu.count);
-        if (sysctl(mib, 2, &systeminfo.cpu.count, &len, NULL, 0) == -1) {
+        size_t len = sizeof(System_Info.cpu.count);
+        if (sysctl(mib, 2, &System_Info.cpu.count, &len, NULL, 0) == -1) {
                 DEBUG("system statistics error -- cannot get cpu count: %s\n", STRERROR);
                 return false;
         }
 
         mib[1] = HW_PHYSMEM;
-        len    = sizeof(systeminfo.memory.size);
-        if (sysctl(mib, 2, &systeminfo.memory.size, &len, NULL, 0) == -1) {
+        len    = sizeof(System_Info.memory.size);
+        if (sysctl(mib, 2, &System_Info.memory.size, &len, NULL, 0) == -1) {
                 DEBUG("system statistics error -- cannot get real memory amount: %s\n", STRERROR);
                 return false;
         }
@@ -126,7 +126,7 @@ bool init_process_info_sysdep(void) {
                 DEBUG("system statistics error -- sysctl kern.boottime failed: %s\n", STRERROR);
                 return false;
         } else {
-                systeminfo.booted = booted.tv_sec;
+                System_Info.booted = booted.tv_sec;
         }
 
         return true;
@@ -135,11 +135,11 @@ bool init_process_info_sysdep(void) {
 
 /**
  * Read all processes to initialize the information tree.
- * @param reference  reference of ProcessTree
+ * @param reference  a process_t reference 
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0.
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         char errbuf[_POSIX2_LINE_MAX];
         kvm_t *kvm_handle = kvm_openfiles(NULL, _PATH_DEVNULL, NULL, O_RDONLY, errbuf);
         if (! kvm_handle) {
@@ -156,7 +156,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         }
         unsigned long long now = Time_milli();
 
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
+        process_t pt = CALLOC(sizeof(struct process_t), treesize);
 
         StringBuffer_T cmdline = NULL;
         if (pflags & ProcessEngine_CollectCommandLine)
@@ -168,7 +168,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                 pt[i].cred.euid             = pinfo[i].ki_uid;
                 pt[i].cred.gid              = pinfo[i].ki_rgid;
                 pt[i].threads.self          = pinfo[i].ki_numthreads;
-                pt[i].uptime                = systeminfo.time / 10. - pinfo[i].ki_start.tv_sec;
+                pt[i].uptime                = System_Info.time / 10. - pinfo[i].ki_start.tv_sec;
                 pt[i].cpu.time              = (double)pinfo[i].ki_runtime / 100000.;
                 pt[i].memory.usage          = (uint64_t)pinfo[i].ki_rssize * (uint64_t)pagesize;
                 pt[i].read.bytes            = -1;

@@ -79,7 +79,7 @@
  * Transform a program into a daemon. Inspired by code from Stephen
  * A. Rago's book, Unix System V Network Programming.
  */
-void daemonize() {
+void daemonize(void) {
         pid_t pid;
         /*
          * Become a session leader to lose our controlling terminal
@@ -137,13 +137,13 @@ bool kill_daemon(int sig) {
 
 /**
  * @return true (i.e. the daemons pid) if a daemon process is running,
- * otherwise false
+ * otherwise false (0)
  */
-int exist_daemon() {
+pid_t exist_daemon(void) {
         errno = 0;
-        pid_t pid;
-        if ((pid = Util_getPid(Run.files.pid)) && (getpgid(pid) > -1 || errno == EPERM))
-                return (int)pid;
+        pid_t pid = Util_getPid(Run.files.pid);
+        if (ProcessTable_exist(pid))
+                return pid;
         return 0;
 }
 

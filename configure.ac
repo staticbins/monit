@@ -6,7 +6,7 @@ AC_PREREQ([2.53])
 # Note: in  case of beta subversion, use underscore "_" rather then dash "-"
 # since RPM doesn't allow dash in Version
 # Example: 5.0_beta2
-AC_INIT([monit], [5.32.0], [monit-general@nongnu.org])
+AC_INIT([monit], [5.34.0], [monit-general@nongnu.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
@@ -78,10 +78,8 @@ AC_CHECK_LIB([pthread], [pthread_create], [], [AC_MSG_ERROR([POSIX thread librar
 # Header files
 # ------------------------------------------------------------------------
 
-AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_STAT
-AC_HEADER_TIME
 
 AC_CHECK_HEADERS([ \
         alloca.h \
@@ -404,16 +402,8 @@ AC_C_BIGENDIAN
 # -std=cXX compiler switch which only include a minimum of C headers
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
-# Compiler; tune warnings and make the char type unsigned
-CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
-# does this compiler support -Wno-pointer-sign ?
-svd_CFLAGS="$CFLAGS"
-CFLAGS="-Wno-pointer-sign $CFLAGS"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
-# does this compiler support -Wno-address ?
-svd_CFLAGS="$CFLAGS"
-CFLAGS="-Wno-address $CFLAGS"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+# Compiler; tune warnings
+CFLAGS="$CFLAGS -Wall -Wunused ";
 
 # Require at least C99 and use C11 if available
 AC_COMPUTE_INT([STDC_VERSION],[__STDC_VERSION__],,[STDC_VERSION=0])
@@ -446,9 +436,10 @@ AC_ARG_WITH(ipv6,
                 #include <sys/types.h>
                 #include <sys/socket.h>
                 #include <netinet/in.h>
+                #include <stdlib.h>
                 /* Make sure the definitions for AF_INET6 and struct sockaddr_in6
                  * are defined, and that we can actually create an IPv6 TCP socket.*/
-                main()
+                int main(void)
                 {
                         int fd;
                         struct sockaddr_in6 foo;
@@ -1074,7 +1065,7 @@ AH_BOTTOM([
 #endif
 ])
 
-AC_CONFIG_HEADER([src/config.h])
+AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([system/startup/monit.upstart])
 AC_CONFIG_FILES([system/startup/monit.service])

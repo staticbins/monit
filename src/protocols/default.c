@@ -37,7 +37,7 @@
  *  @file
  */
 void check_default(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
         if (Socket_getType(socket) == Socket_Udp) {
                 char token[1] = {};
                 int s = Socket_getSocket(socket);

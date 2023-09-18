@@ -88,10 +88,10 @@ static volatile bool running = false;
  * controlfile to start, otherwise return false. Print an error
  * message if monit httpd _should_ start but can't.
  */
-bool can_http() {
+bool can_http(void) {
         if ((Run.httpd.flags & Httpd_Net || Run.httpd.flags & Httpd_Unix) && (Run.flags & Run_Daemon)) {
                 if (! Engine_hasAllow() && ! Run.httpd.credentials && ! ((Run.httpd.socket.net.ssl.flags & SSL_Enabled) && (Run.httpd.flags & Httpd_Net) && Run.httpd.socket.net.ssl.clientpemfile)) {
-                        Log_error("%s: monit httpd not started since no connections are allowed\n", prog);
+                        Log_error("%s: monit httpd not started since no connections are allowed\n", Prog);
                         return false;
 
                 }

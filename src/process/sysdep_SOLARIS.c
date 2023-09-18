@@ -92,7 +92,7 @@
 
 #include "monit.h"
 #include "system/Time.h"
-#include "ProcessTree.h"
+#include "ProcessTable.h"
 #include "process_sysdep.h"
 
 /**
@@ -109,10 +109,10 @@ static long   old_total = 0;
 
 #define MAXSTRSIZE 80
 
-bool init_process_info_sysdep(void) {
-        systeminfo.cpu.count = sysconf( _SC_NPROCESSORS_ONLN);
+bool init_systeminfo_sysdep(void) {
+        System_Info.cpu.count = sysconf( _SC_NPROCESSORS_ONLN);
         page_size = getpagesize();
-        systeminfo.memory.size = (unsigned long long)sysconf(_SC_PHYS_PAGES) * (unsigned long long)page_size;
+        System_Info.memory.size = (unsigned long long)sysconf(_SC_PHYS_PAGES) * (unsigned long long)page_size;
         kstat_ctl_t *kctl = kstat_open();
         if (kctl) {
                 kstat_t *kstat = kstat_lookup(kctl, "unix", 0, "system_misc");
@@ -120,7 +120,7 @@ bool init_process_info_sysdep(void) {
                         if (kstat_read(kctl, kstat, 0) != -1) {
                                 kstat_named_t *knamed = kstat_data_lookup(kstat, "boot_time");
                                 if (knamed)
-                                        systeminfo.booted = (unsigned long long)knamed->value.ul;
+                                        System_Info.booted = (unsigned long long)knamed->value.ul;
                         }
                 }
                 kstat_close(kctl);
@@ -135,12 +135,12 @@ double timestruc_to_tseconds(timestruc_t t) {
 
 /**
  * Read all processes of the proc files system to initialize the process tree
- * @param reference reference of ProcessTree
+ * @param reference a process_t reference
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */
-int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
-        ASSERT(reference);
+int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
+        assert(reference);
 
         /* Find all processes in the /proc directory */
         glob_t globbuf;
@@ -153,7 +153,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
         int treesize = globbuf.gl_pathc;
 
         /* Allocate the tree */
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), treesize);
+        process_t pt = CALLOC(sizeof(struct process_t), treesize);
 
         char buf[4096];
         for (int i = 0; i < treesize; i++) {
@@ -164,7 +164,7 @@ int initprocesstree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags
                         pt[i].cred.uid     = psinfo->pr_uid;
                         pt[i].cred.euid    = psinfo->pr_euid;
                         pt[i].cred.gid     = psinfo->pr_gid;
-                        pt[i].uptime       = systeminfo.time / 10. - psinfo->pr_start.tv_sec;
+                        pt[i].uptime       = System_Info.time / 10. - psinfo->pr_start.tv_sec;
                         pt[i].zombie       = psinfo->pr_nlwp == 0 ? true : false; // If we don't have any light-weight processes (LWP) then we are definitely a zombie
                         pt[i].memory.usage = (unsigned long long)psinfo->pr_rssize * 1024;
                         if (pflags & ProcessEngine_CollectCommandLine) {
@@ -267,7 +267,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
                                 knamed = kstat_data_lookup(kstat, "size");
                                 arcsize = (unsigned long long)knamed->value.ul;
                         }
-                        si->memory.usage.bytes = systeminfo.memory.size - freemem - arcsize;
+                        si->memory.usage.bytes = System_Info.memory.size - freemem - arcsize;
                 }
         }
         kstat_close(kctl);

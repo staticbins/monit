@@ -414,7 +414,7 @@ static void _restoreV3(void) {
 
 static void _restoreV2(void) {
         // System header
-        booted = systeminfo.booted; // No boot time available => for backward compatibility, act as if the system was not rebooted, as we don't know if monit was only restarted or machine rebooted
+        booted = System_Info.booted; // No boot time available => for backward compatibility, act as if the system was not rebooted, as we don't know if monit was only restarted or machine rebooted
         // Services state
         State2_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
@@ -456,7 +456,7 @@ static void _restoreV2(void) {
 
 static void _restoreV1(void) {
         // System header
-        booted = systeminfo.booted; // No boot time available => for backward compatibility, act as if the system was not rebooted, as we don't know if monit was only restarted or machine rebooted
+        booted = System_Info.booted; // No boot time available => for backward compatibility, act as if the system was not rebooted, as we don't know if monit was only restarted or machine rebooted
         // Services state
         State1_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
@@ -473,7 +473,7 @@ static void _restoreV1(void) {
 
 static void _restoreV0(int services) {
         // System header
-        booted = systeminfo.booted; // No boot time available => for backward compatibility, act as if the system was not rebooted, as we don't know if monit was only restarted or machine rebooted
+        booted = System_Info.booted; // No boot time available => for backward compatibility, act as if the system was not rebooted, as we don't know if monit was only restarted or machine rebooted
         // Services state
         for (int i = 0; i < services; i++) {
                 State0_T state;
@@ -491,7 +491,7 @@ static void _restoreV0(int services) {
 /* ------------------------------------------------------------------ Public */
 
 
-bool State_open() {
+bool State_open(void) {
         State_close();
         if ((file = open(Run.files.state, O_RDWR | O_CREAT, 0600)) == -1) {
                 Log_error("State file '%s': cannot open for write -- %s\n", Run.files.state, STRERROR);
@@ -502,7 +502,7 @@ bool State_open() {
 }
 
 
-void State_close() {
+void State_close(void) {
         if (file != -1) {
                 if (close(file) == -1)
                         Log_error("State file '%s': close error -- %s\n", Run.files.state, STRERROR);
@@ -512,7 +512,7 @@ void State_close() {
 }
 
 
-void State_save() {
+void State_save(void) {
         TRY
         {
                 if (ftruncate(file, 0L) == -1) {
@@ -530,10 +530,10 @@ void State_save() {
                 if (write(file, &version, sizeof(version)) != sizeof(version)) {
                         THROW(IOException, "Unable to write format version");
                 }
-                if (write(file, &systeminfo.booted, sizeof(systeminfo.booted)) != sizeof(systeminfo.booted)) {
+                if (write(file, &System_Info.booted, sizeof(System_Info.booted)) != sizeof(System_Info.booted)) {
                         THROW(IOException, "Unable to write system boot time");
                 }
-                for (Service_T service = servicelist; service; service = service->next) {
+                for (Service_T service = Service_List; service; service = service->next) {
                         State4_T state;
                         memset(&state, 0, sizeof(state));
                         snprintf(state.name, sizeof(state.name), "%s", service->name);
@@ -598,19 +598,19 @@ void State_save() {
 }
 
 
-void State_dirty() {
+void State_dirty(void) {
         _stateDirty = true;
 }
 
 
-void State_saveIfDirty() {
+void State_saveIfDirty(void) {
         if (_stateDirty) {
                 State_save();
         }
 }
 
 
-void State_restore() {
+void State_restore(void) {
         /* Ignore empty state file */
         if ((lseek(file, 0L, SEEK_END) == 0)) {
                 return;
@@ -662,7 +662,7 @@ void State_restore() {
         END_TRY;
 
         // If the service state was not restored (e.g. new service or state file is missing), handle the onreboot flag
-        for (Service_T s = servicelist; s; s = s->next) {
+        for (Service_T s = Service_List; s; s = s->next) {
                 if (! s->onrebootRestored) {
                         if (s->onreboot == Onreboot_Nostart)
                                 s->monitor = Monitor_Not;
@@ -672,7 +672,7 @@ void State_restore() {
 }
 
 
-bool State_reboot() {
-        return systeminfo.booted == booted ? false : true;
+bool State_reboot(void) {
+        return System_Info.booted == booted ? false : true;
 }
 

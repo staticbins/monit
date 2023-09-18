@@ -55,7 +55,7 @@ void check_postfix_policy(Socket_T socket) {
 
         char buf[STRLEN];
 
-        ASSERT(socket);
+        assert(socket);
 
         if (Socket_print(socket,
                          "request=smtpd_access_policy\n"

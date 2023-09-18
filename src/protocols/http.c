@@ -235,12 +235,14 @@ static void _processStatus(Socket_T socket, Port_T P) {
 
 
 static void _processHeaders(Socket_T socket, void (**processBody)(Socket_T socket, Port_T P, char **data, int *contentLength, ChecksumContext_T context), int *contentLength) {
-        char buf[512] = {};
+        char buf[8193] = {};
         *processBody = _processBodyUntilEOF;
 
         while (Socket_readLine(socket, buf, sizeof(buf))) {
                 if ((buf[0] == '\r' && buf[1] == '\n') || (buf[0] == '\n'))
                         break;
+                if (strlen(buf) == (sizeof(buf) - 1) && buf[sizeof(buf) - 2] != '\n')
+                        THROW(ProtocolException, "HTTP error: response header exceeded maximum size %d", sizeof(buf) - 1);
                 Str_chomp(buf);
                 if (Str_startsWith(buf, "Content-Length")) {
                         if (! sscanf(buf, "%*s%*[: ]%d", contentLength))
@@ -311,7 +313,7 @@ static void _sendRequest(Socket_T socket, Port_T P) {
         StringBuffer_append(sb,
                             "%s %s HTTP/1.1\r\n"
                             "%s",
-                            httpmethod[P->parameters.http.method],
+                            Httpmethod_Names[P->parameters.http.method],
                             P->parameters.http.request ? P->parameters.http.request : "/",
                             auth ? auth : "");
         FREE(auth);
@@ -345,10 +347,10 @@ static void _sendRequest(Socket_T socket, Port_T P) {
 
 
 void check_http(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
 
         Port_T P = Socket_getPort(socket);
-        ASSERT(P);
+        assert(P);
 
         _sendRequest(socket, P);
         _checkResponse(socket, P);

@@ -429,7 +429,7 @@ static int _verifyClientCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
                                 return 0;
                 }
         }
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
         X509_OBJECT found_cert;
         if (X509_STORE_CTX_get_error_depth(ctx) == 0 && X509_STORE_get_by_subject(ctx, X509_LU_X509, X509_get_subject_name(X509_STORE_CTX_get_current_cert(ctx)), &found_cert) != 1) {
 #else
@@ -438,12 +438,12 @@ static int _verifyClientCertificates(int preverify_ok, X509_STORE_CTX *ctx) {
 #endif
                 Log_error("SSL: no matching certificate found -- %s\n", SSLERROR);
                 X509_STORE_CTX_set_error(ctx, X509_V_ERR_CERT_REJECTED);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L && ! defined(LIBRESSL_VERSION_NUMBER)
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
                 X509_OBJECT_free(found_cert);
 #endif
                 return 0;
         }
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L && ! defined(LIBRESSL_VERSION_NUMBER)
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
         X509_OBJECT_free(found_cert);
 #endif
         return 1;
@@ -487,7 +487,7 @@ static bool _setClientCertificate(T C, const char *file) {
 /* ------------------------------------------------------------------ Public */
 
 
-void Ssl_start() {
+void Ssl_start(void) {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         SSL_library_init();
         SSL_load_error_strings();
@@ -507,7 +507,7 @@ void Ssl_start() {
 }
 
 
-void Ssl_stop() {
+void Ssl_stop(void) {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         CRYPTO_THREADID_set_callback(NULL);
         CRYPTO_set_locking_callback(NULL);
@@ -521,7 +521,7 @@ void Ssl_stop() {
 }
 
 
-void Ssl_threadCleanup() {
+void Ssl_threadCleanup(void) {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         ERR_remove_thread_state(NULL);
 #endif
@@ -539,7 +539,7 @@ void Ssl_setFipsMode(bool enabled) {
 
 
 T Ssl_new(SslOptions_T options) {
-        ASSERT(options);
+        assert(options);
         T C;
         NEW(C);
         C->options = options;
@@ -594,7 +594,7 @@ sslerror:
 
 
 void Ssl_free(T *C) {
-        ASSERT(C && *C);
+        assert(C && *C);
         if ((*C)->handler)
                 SSL_free((*C)->handler);
         if ((*C)->ctx && ! (*C)->accepted)
@@ -604,7 +604,7 @@ void Ssl_free(T *C) {
 
 
 void Ssl_close(T C) {
-        ASSERT(C);
+        assert(C);
         bool retry = false;
         int timeout = Run.limits.networkTimeout;
         do {
@@ -636,8 +636,8 @@ void Ssl_close(T C) {
 
 
 void Ssl_connect(T C, int socket, int timeout, const char *name) {
-        ASSERT(C);
-        ASSERT(socket >= 0);
+        assert(C);
+        assert(socket >= 0);
         C->socket = socket;
         SSL_set_connect_state(C->handler);
         SSL_set_fd(C->handler, C->socket);
@@ -671,7 +671,7 @@ void Ssl_connect(T C, int socket, int timeout, const char *name) {
 
 
 int Ssl_write(T C, const void *b, int size, int timeout) {
-        ASSERT(C);
+        assert(C);
         int n = 0;
         if (size > 0) {
                 bool retry = false;
@@ -712,7 +712,7 @@ int Ssl_write(T C, const void *b, int size, int timeout) {
 
 
 int Ssl_read(T C, void *b, int size, int timeout) {
-        ASSERT(C);
+        assert(C);
         int n = 0;
         if (size > 0) {
                 bool retry = false;
@@ -796,8 +796,8 @@ int Ssl_getCertificateValidDays(T C) {
 
 
 char *Ssl_printOptions(SslOptions_T options, char *b, int size) {
-        ASSERT(b);
-        ASSERT(size > 0);
+        assert(b);
+        assert(size > 0);
         *b = 0;
         if (options->flags) {
                 int count = 0;
@@ -845,8 +845,8 @@ char *Ssl_printOptions(SslOptions_T options, char *b, int size) {
 
 
 SslServer_T SslServer_new(int socket, SslOptions_T options) {
-        ASSERT(socket >= 0);
-        ASSERT(options);
+        assert(socket >= 0);
+        assert(options);
         SslServer_T S;
         NEW(S);
         S->socket = socket;
@@ -882,6 +882,9 @@ SslServer_T SslServer_new(int socket, SslOptions_T options) {
 #endif
 #ifdef SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION
         SSL_CTX_set_options(S->ctx, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+#endif
+#ifdef SSL_OP_NO_RENEGOTIATION
+        SSL_CTX_set_options(S->ctx, SSL_OP_NO_RENEGOTIATION);
 #endif
 #ifdef SSL_CTRL_SET_ECDH_AUTO
         SSL_CTX_set_options(S->ctx, SSL_OP_SINGLE_ECDH_USE);
@@ -946,7 +949,7 @@ sslerror:
 
 
 void SslServer_free(SslServer_T *S) {
-        ASSERT(S && *S);
+        assert(S && *S);
         if ((*S)->ctx)
                 SSL_CTX_free((*S)->ctx);
         FREE(*S);
@@ -954,7 +957,7 @@ void SslServer_free(SslServer_T *S) {
 
 
 T SslServer_newConnection(SslServer_T S) {
-        ASSERT(S);
+        assert(S);
         T C;
         NEW(C);
         C->accepted = true;
@@ -971,16 +974,16 @@ T SslServer_newConnection(SslServer_T S) {
 
 
 void SslServer_freeConnection(SslServer_T S, T *C) {
-        ASSERT(S);
-        ASSERT(C && *C);
+        assert(S);
+        assert(C && *C);
         Ssl_close(*C);
         Ssl_free(C);
 }
 
 
 bool SslServer_accept(T C, int socket, int timeout) {
-        ASSERT(C);
-        ASSERT(socket >= 0);
+        assert(C);
+        assert(socket >= 0);
         C->socket = socket;
         SSL_set_accept_state(C->handler);
         SSL_set_fd(C->handler, C->socket);

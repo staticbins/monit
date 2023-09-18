@@ -44,7 +44,9 @@
  * @return true if s is defined, otherwise false
  * @hideinitializer
  */
-#define STR_DEF(s) ((s) && *(s))
+static inline bool STR_DEF(const char *s) {
+	return s && *s;
+}
 
 
 /**
@@ -111,6 +113,14 @@ char *Str_toLower(char *s);
  * @return s converted to upper case letters
  */
 char *Str_toUpper(char *s);
+
+
+/**
+ * Returns true if the string argument is a decimal integer.
+ * @param s A string
+ * @return True if <code>s</code> is a number otherwise false
+ */
+bool Str_isInt(const char *s);
 
 
 /**

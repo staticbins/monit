@@ -135,9 +135,9 @@ cpusoftirq     cpu[ ]*(usage)*[ ]*\([ ]*softirq[ ]*\)
 cpusteal       cpu[ ]*(usage)*[ ]*\([ ]*steal[ ]*\)
 cpuguest       cpu[ ]*(usage)*[ ]*\([ ]*guest[ ]*\)
 cpuguestnice   cpu[ ]*(usage)*[ ]*\([ ]*guestnice[ ]*\)
-startarg       start{ws}?(program)?{ws}?([=]{ws})?["]
-stoparg        stop{ws}?(program)?{ws}?([=]{ws})?["]
-restartarg     restart{ws}?(program)?{ws}?([=]{ws})?["]
+startarg       start{ws}?(program)?{ws}?([=]{ws}?)?["]
+stoparg        stop{ws}?(program)?{ws}?([=]{ws}?)?["]
+restartarg     restart{ws}?(program)?{ws}?([=]{ws}?)?["]
 execarg        exec(ute)?{ws}?["]
 pathtokarg     path{ws}?["]
 percent        ("percent"|"%")
@@ -285,7 +285,7 @@ noalert           { return NOALERT; }
 mail-format       { return MAILFORMAT; }
 resource          { return RESOURCE; }
 restart(s)?       { return RESTART; }
-cycle(s)?         { return CYCLE;}
+cycle(s)?         { return CYCLE; }
 timeout           { return TIMEOUT; }
 retry             { return RETRY; }
 checksum          { return CHECKSUM; }
@@ -393,6 +393,7 @@ free              { return TFREE; }
 perm(ission)?     { return PERMISSION; }
 exec(ute)?        { return EXEC; }
 size              { return SIZE; }
+hardlink(s)?      { return HARDLINK; }
 uptime            { return UPTIME; }
 responsetime      { return RESPONSETIME; }
 basedir           { return BASEDIR; }
@@ -939,6 +940,11 @@ group[ \t]+       {
                     return TIMESPEC;
                   }
 
+  cycle(s)?       {
+                    BEGIN(INITIAL);
+                    return CYCLE;
+                  }
+
   .               {
                       BEGIN(INITIAL);
                       yyerror("invalid every format");
@@ -1139,7 +1145,7 @@ static void save_arg(void) {
 
 static URL_T create_URL(char *proto) {
         URL_T url;
-        ASSERT(proto);
+        assert(proto);
         NEW(url);
         url->protocol = proto;
         if (IS(url->protocol, "https")) {

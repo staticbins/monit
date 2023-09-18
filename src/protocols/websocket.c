@@ -85,10 +85,10 @@ static void read_response(Socket_T socket, int opcode) {
 
 
 void check_websocket(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
 
         Port_T P = Socket_getPort(socket);
-        ASSERT(P);
+        assert(P);
 
         // Establish websocket connection
         char buf[STRLEN];

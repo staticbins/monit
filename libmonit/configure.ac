@@ -152,7 +152,6 @@ AC_CHECK_LIB([m], [round], [], [AC_MSG_ERROR([Math library is required])])
 # Header files 
 # ---------------------------------------------------------------------------
 
-AC_HEADER_STDC
 AC_CHECK_HEADERS([ctype.h \
                   errno.h \
                   execinfo.h \
@@ -300,28 +299,13 @@ AC_C_BIGENDIAN
 # -std=cXX compiler switch which only include a minimum of C headers
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
-# Compiler; tune warnings and make the char type unsigned
-CFLAGS="$CFLAGS -Wall -Wunused -Wno-unused-label -funsigned-char";
-# does this compiler support -Wno-pointer-sign ?
-svd_CFLAGS="$CFLAGS"
-CFLAGS="-Wno-pointer-sign $CFLAGS"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
-# does this compiler support -Wno-address ?
-svd_CFLAGS="$CFLAGS"
-CFLAGS="-Wno-address $CFLAGS"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [return 0;])], [], [CFLAGS="$svd_CFLAGS"])
+# Compiler; tune warnings
+CFLAGS="$CFLAGS -Wall -Wunused ";
 
 # Require at least C99 and use C11 if available
 AC_COMPUTE_INT([STDC_VERSION],[__STDC_VERSION__],,[STDC_VERSION=0])
 AS_IF([test "$STDC_VERSION" -ge 201112],[CFLAGS="$CFLAGS -std=c11"],[CFLAGS="$CFLAGS -std=c99"])
 AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
-
-AC_ARG_ENABLE([werror],
-        [AS_HELP_STRING([--enable-werror],
-                [Treat warnings as errors (default: warnings are not errors)])],
-                [enable_werror="$enableval"],
-                [enable_werror=no])
-AS_IF([test "x$enable_werror" = "xyes"], [CFLAGS="$CFLAGS -Werror"])
 
 # ------------------------------------------------------------------------
 # IPv6 Support
@@ -347,9 +331,10 @@ AC_ARG_WITH(ipv6,
                 #include <sys/types.h>
                 #include <sys/socket.h>
                 #include <netinet/in.h>
+                #include <stdlib.h>
                 /* Make sure the definitions for AF_INET6 and struct sockaddr_in6
                  * are defined, and that we can actually create an IPv6 TCP socket.*/
-                main()
+                int main(void)
                 {
                         int fd;
                         struct sockaddr_in6 foo;

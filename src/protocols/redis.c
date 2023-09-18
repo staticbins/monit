@@ -46,7 +46,7 @@
  * @file
  */
 void check_redis(Socket_T socket) {
-        ASSERT(socket);
+        assert(socket);
         char buf[STRLEN];
 
         if (Socket_print(socket, "*1\r\n$4\r\nPING\r\n") < 0)
