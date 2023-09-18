@@ -145,6 +145,8 @@ struct precedence_t {
         bool daemon;
         bool logfile;
         bool pidfile;
+        bool idfile;
+        bool statefile;
 };
 
 struct rate_t {
@@ -207,7 +209,7 @@ static struct Resource_T resourceset = {};
 static struct Checksum_T checksumset = {};
 static struct Timestamp_T timestampset = {};
 static struct ActionRate_T actionrateset = {};
-static struct precedence_t ihp = {false, false, false};
+static struct precedence_t ihp = {false, false, false, false, false};
 static struct rate_t rate = {1, 1};
 static struct rate_t rate1 = {1, 1};
 static struct rate_t rate2 = {1, 1};
@@ -275,6 +277,8 @@ static void  prepare_urlrequest(URL_T U);
 static void  seturlrequest(int, char *);
 static void  setlogfile(char *);
 static void  setpidfile(char *);
+static void  setidfile(char *);
+static void  setstatefile(char *);
 static void  reset_sslset(void);
 static void  reset_mailset(void);
 static void  reset_mailserverset(void);
@@ -738,6 +742,8 @@ setlog          : SET LOGFILE PATH   {
                                 setlogfile($3);
                                 Run.flags &= ~Run_UseSyslog;
                                 Run.flags |= Run_Log;
+                        } else {
+                                FREE($3);
                         }
                   }
                 | SET LOGFILE SYSLOG {
@@ -762,12 +768,22 @@ seteventqueue   : SET EVENTQUEUE BASEDIR PATH {
                 ;
 
 setidfile       : SET IDFILE PATH {
-                        Run.files.id = $3;
+                        if (! Run.files.id || ihp.idfile) {
+                                ihp.idfile = true;
+                                setidfile($3);
+                        } else {
+                                FREE($3);
+                        }
                   }
                 ;
 
 setstatefile    : SET STATEFILE PATH {
-                        Run.files.state = $3;
+                        if (! Run.files.state || ihp.statefile) {
+                                ihp.statefile = true;
+                                setstatefile($3);
+                        } else {
+                                FREE($3);
+                        }
                   }
                 ;
 
@@ -775,6 +791,8 @@ setpid          : SET PIDFILE PATH {
                         if (! Run.files.pid || ihp.pidfile) {
                                 ihp.pidfile = true;
                                 setpidfile($3);
+                        } else {
+                                FREE($3);
                         }
                   }
                 ;
@@ -4772,6 +4790,38 @@ static void setpidfile(char *pidfile) {
                 }
         }
         Run.files.pid = pidfile;
+}
+
+
+/*
+ * Reset the idfile if changed
+ */
+static void setidfile(char *idfile) {
+        if (Run.files.id) {
+                if (IS(Run.files.id, idfile)) {
+                        FREE(idfile);
+                        return;
+                } else {
+                        FREE(Run.files.id);
+                }
+        }
+        Run.files.id = idfile;
+}
+
+
+/*
+ * Reset the statefile if changed
+ */
+static void setstatefile(char *statefile) {
+        if (Run.files.state) {
+                if (IS(Run.files.state, statefile)) {
+                        FREE(statefile);
+                        return;
+                } else {
+                        FREE(Run.files.state);
+                }
+        }
+        Run.files.state = statefile;
 }
 
 
