@@ -628,6 +628,7 @@ bool Util_existService(const char *name) {
         printf(" %-18s =   stopTimeout:       %s\n", " ", Convert_time2str(Run.limits.stopTimeout, (char[11]){}));
         printf(" %-18s =   startTimeout:      %s\n", " ", Convert_time2str(Run.limits.startTimeout, (char[11]){}));
         printf(" %-18s =   restartTimeout:    %s\n", " ", Convert_time2str(Run.limits.restartTimeout, (char[11]){}));
+        printf(" %-18s =   execTimeout:       %s\n", " ", Convert_time2str(Run.limits.execTimeout, (char[11]){}));
         printf(" %-18s = }\n", " ");
         printf(" %-18s = %s\n", "On reboot", onReboot_Names[Run.onreboot]);
         printf(" %-18s = %d seconds with start delay %d seconds\n", "Poll time", Run.polltime, Run.startdelay);

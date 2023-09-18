@@ -84,6 +84,7 @@
 // libmonit
 #include "util/Str.h"
 #include "system/Time.h"
+#include "util/Convert.h"
 
 
 /**
@@ -107,6 +108,9 @@ enum ExitStatus_E {
         fork_ERROR       = 0x10,
         getpwuid_ERROR   = 0x20
 } __attribute__((__packed__));
+
+
+#define RETRY_INTERVAL 100000 // 100ms
 
 
 /* ----------------------------------------------------------------- Private */
@@ -237,6 +241,31 @@ void spawn(Service_T S, command_t C, Event_T E) {
 
                         (void) execv(C->arg[0], C->arg);
                         _exit(errno);
+                }
+
+                if (C->timeout > 0) {
+                    int r;
+                    long long timeout = C->timeout * USEC_PER_MSEC;
+                    /* Wait for a given time for the child, to exit */
+                    do {
+                        Time_usleep(RETRY_INTERVAL);
+                        timeout -= RETRY_INTERVAL;
+                        r = waitpid(pid, &stat_loc, WNOHANG);
+                    } while (r >= 0 && timeout > 0LL);
+                    
+                    /* Kill the child, if the timeout reached */
+                    if (timeout <= 0LL) {
+                        Log_error("'%s' program timed out after %s. Killing program with pid %ld\n", S->name, Convert_time2str(C->timeout - (timeout / USEC_PER_MSEC), (char[11]){}), (long)pid);
+                        kill(pid, SIGKILL);
+                    } else {
+                        if (WIFEXITED(stat_loc)) {
+                            Log_debug("'%s' program ended with %d\n", S->name, WEXITSTATUS(stat_loc));
+                        } else if (WIFSIGNALED(stat_loc)) {
+                            Log_debug("'%s' program terminateded with %d\n", S->name, WTERMSIG(stat_loc));
+                        } else if (WIFSTOPPED(stat_loc)) {
+                            Log_debug("'%s' program stopped with %d\n", S->name, WSTOPSIG(stat_loc));
+                        }
+                    }
                 }
 
                 /* Exit first child and return errors to parent */

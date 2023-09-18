@@ -1032,6 +1032,7 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
         _displayTableRow(res, false, NULL, "Limit for service stop timeout",    "%s", Convert_time2str(Run.limits.stopTimeout, (char[11]){}));
         _displayTableRow(res, false, NULL, "Limit for service start timeout",   "%s", Convert_time2str(Run.limits.startTimeout, (char[11]){}));
         _displayTableRow(res, false, NULL, "Limit for service restart timeout", "%s", Convert_time2str(Run.limits.restartTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "Limit for test action exec timeout","%s", Convert_time2str(Run.limits.execTimeout, (char[11]){}));
         _displayTableRow(res, false, NULL, "On reboot",                         "%s", onReboot_Names[Run.onreboot]);
         _displayTableRow(res, false, NULL, "Poll time",                         "%d seconds with start delay %d seconds", Run.polltime, Run.startdelay);
         if (Run.httpd.flags & Httpd_Net) {
