@@ -405,6 +405,7 @@ typedef enum {
 #define LIMIT_STOPTIMEOUT       30000
 #define LIMIT_STARTTIMEOUT      30000
 #define LIMIT_RESTARTTIMEOUT    30000
+#define LIMIT_EXECTIMEOUT       0           /* Unlimited timeout */
 
 
 
@@ -451,6 +452,7 @@ typedef struct Limits_T {
         uint32_t stopTimeout;                     /**< Default stop timeout [ms] */
         uint32_t startTimeout;                   /**< Default start timeout [ms] */
         uint32_t restartTimeout;               /**< Default restart timeout [ms] */
+        uint32_t execTimeout;         /**< Default test action exec timeout [ms] */
 } Limits_T;
 
 
