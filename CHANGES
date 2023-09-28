@@ -4,6 +4,10 @@
 
 Version 5.34.0
 
+New: Added the "timeout" option to the exec action. It can be set either globally (in the "set limit" statement
+using the "execTimeout" option) or locally (using the "timeout <number> seconds" in the exec action). The default
+timeout is 0 (no limit), to keep the original behaviour. Thanks to Lutz Mader.
+
 New: Issue #1074: Added a hardlink test to file, directory and fifo checks. Thanks to Lutz Mader. Example:
     check directory upload with path /data/upload
        if hardlink > 32000 then alert
