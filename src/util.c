@@ -1389,6 +1389,8 @@ char *Util_monitId(char *idfile) {
                         return NULL;
                 }
         }
+        fflush(file);
+        fsync(fileno(file));
         if (fclose(file))
                 Log_error("Error closing file '%s' -- %s\n", idfile, STRERROR);
 
