@@ -28,6 +28,10 @@ if the HTTP response contained header with more then 511 bytes. We have increase
 to 8192 bytes per header and will report "response header exceeded maximum size" error if
 the HTTP response contains longer header.
 
+Fixed: When the monit ID is generated in first start and the system is shut down before the
+file was stored to the filesystem, an empty monitid file may be created. Thanks to Alexander Dahl
+for fix.
+
 
 Version 5.33.0
 
