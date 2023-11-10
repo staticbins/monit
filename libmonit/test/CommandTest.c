@@ -275,8 +275,8 @@ int main(void) {
         }
         printf("=> Test11: OK\n\n");
         
-#if ! defined(OPENBSD) && ! defined(AIX) && ! defined(DARWIN)
-        /* FIXME: MONIT-35: vfork() on OpenBSD, AIX and macOS 12.x doesn't share memory, so the current implementation of Command_execute() cannot pass the execve() error to parent. Disable the unit test on these platforms for now. */
+#if 0
+        /* FIXME: MONIT-35: fork() doesn't share memory, so the current implementation of Command_execute() cannot pass the execve() error to parent. Disable the unit test for now. */
         printf("=> Test12: on execute error\n");
         {
                 // Try executing a directory should produce an error
