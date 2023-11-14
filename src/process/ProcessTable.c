@@ -195,10 +195,10 @@ static pid_t _match(T P, regex_t *regex) {
 
 
 static void _calculateCpuUsage(process_t prev, process_t current) {
-        double normalizer = current->threads.self > 1
-        ? current->threads.self > System_Info.cpu.count
-        ? System_Info.cpu.count : current->threads.self
-        : 1;
+        //double normalizer = current->threads.self > 1
+        //? current->threads.self > System_Info.cpu.count
+        //? System_Info.cpu.count : current->threads.self
+        //: 1;
         double deltaTime = (System_Info.time - System_Info.time_prev);
         if (deltaTime > 0) {
                 double deltaCpuTime = (current->cpu.time - prev->cpu.time) * 100;
