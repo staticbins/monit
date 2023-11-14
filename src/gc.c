@@ -63,6 +63,7 @@ static void _gclinkspeed(LinkSpeed_T *);
 static void _gclinksaturation(LinkSaturation_T *);
 static void _gcbandwidth(Bandwidth_T *);
 static void _gcmatch(Match_T *);
+static void _gcoutputchange(OutputChange_T *);
 static void _gcchecksum(Checksum_T *);
 static void _gcperm(Perm_T *);
 static void _gcstatus(Status_T *);
@@ -234,6 +235,8 @@ static void _gc_service(Service_T *s) {
                 _gcmatch(&(*s)->matchlist);
         if ((*s)->matchignorelist)
                 _gcmatch(&(*s)->matchignorelist);
+        if ((*s)->outputchangelist)
+                _gcoutputchange(&(*s)->outputchangelist);
         if ((*s)->checksum)
                 _gcchecksum(&(*s)->checksum);
         if ((*s)->perm)
@@ -558,6 +561,7 @@ static void _gcbandwidth(Bandwidth_T *b) {
         FREE(*b);
 }
 
+
 static void _gcmatch(Match_T *s) {
         assert(s);
         if ((*s)->next)
@@ -570,6 +574,17 @@ static void _gcmatch(Match_T *s) {
                 regfree((*s)->regex_comp);
                 FREE((*s)->regex_comp);
         }
+        FREE(*s);
+}
+
+
+static void _gcoutputchange(OutputChange_T *s) {
+        assert(s);
+        if ((*s)->next)
+                _gcoutputchange(&(*s)->next);
+        if ((*s)->action)
+                _gc_eventaction(&(*s)->action);
+        FREE((*s)->previous);
         FREE(*s);
 }
 

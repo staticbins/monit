@@ -2343,6 +2343,11 @@ static void print_service_rules_content(HttpResponse res, Service_T s) {
                         _displayTableRow(res, true, "rule", "Content match", "%s", StringBuffer_toString(Util_printRule(false, sb, ml->action, "If content %s \"%s\"", ml->not ? "!=" : "=", ml->match_string)));
                         StringBuffer_free(&sb);
                 }
+                for (OutputChange_T oc = s->outputchangelist; oc; oc = oc->next) {
+                        StringBuffer_T sb = StringBuffer_create(256);
+                        _displayTableRow(res, true, "rule", "Content change", "%s", StringBuffer_toString(Util_printRule(false, sb, oc->action, "If content %schanged", oc->check_invers ? "not " : "")));
+                        StringBuffer_free(&sb);
+                }
         }
 }
 

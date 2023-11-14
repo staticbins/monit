@@ -1074,6 +1074,10 @@ void Util_printService(Service_T s) {
                         StringBuffer_clear(buf);
                         printf(" %-20s = %s\n", "Content", StringBuffer_toString(Util_printRule(false, buf, o->action, "if content %s \"%s\"", o->not ? "!=" : "=", o->match_string)));
                 }
+                for (OutputChange_T oc = s->outputchangelist; oc; oc = oc->next) {
+                        StringBuffer_clear(buf);
+                        printf(" %-20s = %s\n", "Content change", StringBuffer_toString(Util_printRule(false, buf, oc->action, "if content %schanged", oc->check_invers ? "not " : "")));
+                }
         }
 
         for (FileSystem_T o = s->filesystemlist; o; o = o->next) {
