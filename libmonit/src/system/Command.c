@@ -74,7 +74,6 @@ struct T {
         List_T args;
         char **_env;
         char **_args;
-        char *working_directory;
 };
 
 
@@ -89,7 +88,6 @@ struct Process_T {
         InputStream_T in;
         InputStream_T err;
         OutputStream_T out;
-        char *working_directory;
 };
 
 
@@ -313,7 +311,6 @@ static Process_T _Process_new(void) {
 
 void Process_free(Process_T *P) {
         assert(P && *P);
-        FREE((*P)->working_directory);
         if (Process_isRunning(*P)) {
                 Process_kill(*P);
                 Process_waitFor(*P);
@@ -333,16 +330,6 @@ uid_t Process_getUid(Process_T P) {
 gid_t Process_getGid(Process_T P) {
         assert(P);
         return P->gid;
-}
-
-
-const char *Process_getDir(Process_T P) {
-        assert(P);
-        if (! P->working_directory) {
-                char t[STRLEN];
-                P->working_directory = Str_dup(Dir_cwd(t, STRLEN));
-        }
-        return P->working_directory;
 }
 
 
@@ -374,7 +361,7 @@ int Process_exitStatus(Process_T P) {
                 int r;
                 do
                         r = waitpid(P->pid, &P->status, WNOHANG); // Wait non-blocking
-                while (r == -1 && errno == EINTR);
+                while (r < 0 && errno == EINTR);
                 if (r == 0) // Process is still running
                         P->status = -1;
                 else
@@ -458,7 +445,6 @@ void Command_free(T *C) {
         List_free(&(*C)->args);
         _freeStringsInList((*C)->env);
         List_free(&(*C)->env);
-        FREE((*C)->working_directory);
         FREE(*C);
 }
 
@@ -492,26 +478,6 @@ void Command_setGid(T C, gid_t gid) {
 gid_t Command_getGid(T C) {
         assert(C);
         return C->gid;
-}
-
-
-void Command_setDir(T C, const char *dir) {
-        assert(C);
-        if (dir) { // Allow to set a NULL directory, meaning the calling process's current directory
-                if (! File_isDirectory(dir))
-                        THROW(AssertException, "The new working directory '%s' is not a directory", dir);
-                if (! File_isExecutable(dir))
-                        THROW(AssertException, "The new working directory '%s' is not accessible", dir);
-        }
-        FREE(C->working_directory);
-        C->working_directory = Str_dup(dir);
-        File_removeTrailingSeparator(C->working_directory);
-}
-
-
-const char *Command_getDir(T C) {
-        assert(C);
-        return C->working_directory;
 }
 
 
@@ -602,12 +568,6 @@ Process_T Command_execute(T C) {
                 return NULL;
         } else if (P->pid == 0) {
                 // Child
-                if (C->working_directory) {
-                        if (! Dir_chdir(C->working_directory)) {
-                                exec_error = errno;
-                                _exit(errno);
-                        }
-                }
                 setsid(); // Loose controlling terminal
                 _setupChildPipes(P);
                 // Close all descriptors except stdio, _before_ any uid/gid switching

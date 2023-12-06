@@ -136,27 +136,6 @@ gid_t Command_getGid(T C);
 
 
 /**
- * Set the working directory for the sub-process. If directory cannot be changed
- * the sub-process will exit
- * @param C A Command object
- * @param dir The working directory for the sub-process
- * @exception AssertException if the directory does not exist or is not accessible
- */
-void Command_setDir(T C, const char *dir);
-
-
-/**
- * Returns the working directory for the sub-process. Unless previously
- * set, the returned value is NULL, meaning the calling process's current
- * directory
- * @param C A Command object
- * @return The working directory for the sub-process or NULL meaning the calling
- * process's current directory
- */
-const char *Command_getDir(T C);
-
-
-/**
  * Set or replace the environment variable identified by <code>name</code>.
  * The sub-process initially inherits the environment from the calling process.
  * Environment variables set with this method does not affect the parent
