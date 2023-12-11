@@ -1832,7 +1832,8 @@ the new value and will trigger event if the value change again.
 
 Each test can have associated I<alert>, I<start>, I<stop>, I<restart>,
 I<unmonitor> or I<exec> methods which Monit can use to execute actions or
-programs on the service.
+programs on the service. The success action also supports the I<ignore>
+method.
 
 Syntax:
 
@@ -1901,6 +1902,11 @@ an alert. The service will not be checked by Monit anymore nor
 restarted again later.  To reactivate monitoring of the service
 you must explicitly enable monitoring from the web interface or
 from the console.
+
+=item *
+
+B<IGNORE> can be used in the success action to not generate an alert
+once the check reenters the success state.
 
 =back
 
