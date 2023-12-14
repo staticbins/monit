@@ -67,10 +67,14 @@ extern const char *PATH_SEPARATOR;
 /**
  * Open <code>file</code> and return its file descriptor. The file is 
  * opened in non-blocking mode, meaning that read and write operations
- * will not block. Clients can pass the descriptor to an Input- and/or 
- * an OutputStream for reading/writing to the file. The mode parameter
- * is used to specify the access requested for the file. The mode may 
- * be one of
+ * will usually not block. The file is also opened with the close on
+ * exec attribute set. This means that if exec is called by the process
+ * or particularly in a sub-process, the file descriptor will
+ * automatically close and not carry over to the new sub-process.
+ *
+ * Clients can pass the descriptor to an Input- and/or an OutputStream
+ * for reading/writing to the file. The mode parameter is used to
+ * specify the access requested for the file. The mode may be one of
  * <ol>
  * <li>"r" Open for reading. The stream is positioned at the beginning 
  * of the file</li>
@@ -88,12 +92,26 @@ extern const char *PATH_SEPARATOR;
  * <li>"a+" Open for reading and writing. If the file does not exist it 
  * will be created. The stream is positioned at the end of the file</li>
  *</ol>
- * @param file An absolute  file path
+ * @param file An absolute file path
  * @param mode the file access mode
  * @return A file descriptor or -1 if the file cannot be opened. Use 
  * System_getLastError() to get a description of the error that occurred
  */
 int File_open(const char *file, const char *mode);
+
+
+/**
+ * Open <code>file</code> and return a FILE stream object. The FILE is
+ * opened in standard blocking mode. This method is similar to File_open
+ * above, except it returns a FILE pointer instead. Both this method and
+ * File_open() above ensures that the underlying file descriptor is
+ * closed on exec. Use fclose(3) to close and release the returned FILE
+ * @param file An absolute  file path
+ * @param mode the file access mode
+ * @return A pointer to a FILE object or NULL if the file cannot be opened.
+ * Use System_getLastError() to get a description of the error that occurred
+ */
+FILE *File_fopen(const char *file, const char *mode);
 
 
 /**

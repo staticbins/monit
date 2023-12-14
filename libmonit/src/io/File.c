@@ -60,32 +60,49 @@ const char PATH_SEPARATOR_CHAR = ':';
 const char *PATH_SEPARATOR = ":";
 
 
-/* ---------------------------------------------------------------- Public */
+/* --------------------------------------------------------------- Private */
 
 
-
-int File_open(const char *file, const char *mode) {
+static int _open(const char *file, const char *mode, bool nonblocking) {
         if (file && mode) {
+                int options = O_CLOEXEC;
+                if (nonblocking) options |= O_NONBLOCK;
                 switch (mode[0]) {
                         case 'r':
                                 switch (mode[1]) {
-                                        case '+': return open(file, O_RDWR|O_NONBLOCK);
-                                        default:  return open(file, O_RDONLY|O_NONBLOCK);
+                                        case '+': return open(file, O_RDWR|options);
+                                        default:  return open(file, O_RDONLY|options);
                                 }
-                        case 'w':  
+                        case 'w':
                                 switch (mode[1]) {
-                                        case '+': return open(file, O_CREAT|O_RDWR|O_TRUNC|O_NONBLOCK, DEFAULT_PERM);
-                                        default:  return open(file, O_CREAT|O_WRONLY|O_TRUNC|O_NONBLOCK, DEFAULT_PERM);
+                                        case '+': return open(file, O_CREAT|O_RDWR|O_TRUNC|options, DEFAULT_PERM);
+                                        default:  return open(file, O_CREAT|O_WRONLY|O_TRUNC|options, DEFAULT_PERM);
                                 }
-                        case 'a':  
+                        case 'a':
                                 switch (mode[1]) {
-                                        case '+': return open(file, O_CREAT|O_RDWR|O_APPEND|O_NONBLOCK, DEFAULT_PERM);
-                                        default:  return open(file, O_CREAT|O_WRONLY|O_APPEND|O_NONBLOCK, DEFAULT_PERM);
+                                        case '+': return open(file, O_CREAT|O_RDWR|O_APPEND|options, DEFAULT_PERM);
+                                        default:  return open(file, O_CREAT|O_WRONLY|O_APPEND|options, DEFAULT_PERM);
                                 }
                 }
         }
         errno = EINVAL;
         return -1;
+}
+
+
+/* ---------------------------------------------------------------- Public */
+
+
+int File_open(const char *file, const char *mode) {
+        return _open(file, mode, true);
+}
+
+
+FILE *File_fopen(const char *file, const char *mode) {
+        int fd = _open(file, mode, false);
+        if (fd < 0)
+                return NULL;
+        return fdopen(fd, mode);
 }
 
 

@@ -45,6 +45,23 @@ int main(void) {
                 assert(write(fd, "something", sizeof("something") - 1) > 0);
                 assert(File_close(fd) == true);
                 assert((fd = File_open(NULL, NULL)) == -1);
+                
+                FILE *file;
+                assert((file = File_open(path, "w")));
+                assert(fclose(file) == 0);
+                assert((file = File_open(path, "w+")));
+                assert(fclose(file) == 0);
+                assert((file = File_open("/a/b/c/d", "r")) == NULL);
+                assert((file = File_open(path, "r")));
+                assert(fclose(file) == 0);
+                assert((file = File_open(path, "r+")));
+                assert(fclose(file) == 0);
+                assert((file = File_open(path, "a")));
+                assert(fclose(file) == 0);
+                assert((file = File_open(path, "a+")));
+                assert(fwrite("something", sizeof("something") - 1, 1, file) > 0);
+                assert(fclose(file) == 0);
+                assert((file = File_open(NULL, NULL)) == NULL);
         }
         printf("=> Test1: OK\n\n");
 
