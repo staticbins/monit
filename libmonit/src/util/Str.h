@@ -38,15 +38,12 @@
 
 
 /**
- * Test if the given string is defined. That is; not NULL nor the 
- * empty ("") string
+ * Test if the given string is defined. That is; not NULL nor the empty ("") string
  * @param s The string to test
  * @return true if s is defined, otherwise false
  * @hideinitializer
  */
-static inline bool STR_DEF(const char *s) {
-	return s && *s;
-}
+#define STR_DEF(s) ((s) && *(s))
 
 
 /**
@@ -56,6 +53,19 @@ static inline bool STR_DEF(const char *s) {
  * @hideinitializer
  */
 #define STR_UNDEF(s) (! STR_DEF(s))
+
+
+/**
+ * Set <code>a</code> to <code>b</code> if and only if a != b. Deallocate the
+ * previous value of a and copy b as the new value of a. If a == b, this function
+ * leaves a as it was. The string <code>a</code> <b>must</b> be of a
+ * <code>char *</code> type, while <code>b</code> can be any string type.
+ * @param a The (char *) string to replace with b if b != a
+ * @param b The string to copy as the new value of a if a != b
+ * @hideinitializer
+ */
+#define STR_SET(a, b) do { if (!Str_isByteEqual(a, b)) \
+        { FREE((a)); a = Str_dup((b));} } while(0)
 
 
 /**
@@ -321,8 +331,8 @@ char *Str_ndup(const char *s, long n);
  * @hideinitializer 
  */
 #define Str_join(dest, n, ...) _Str_join((dest), (n), ##__VA_ARGS__, 0)
-/** Copy n bytes from a variable number of strings. @see Str_join() */
-char *_Str_join(char *dest, int n, ...);
+/** Internal function. Use the Str_join() macro */
+char *_Str_join(char *dest, int n, ...) __attribute__((sentinel));
 
 
 /**
@@ -436,32 +446,21 @@ int Str_cmp(const void *x, const void *y);
 
 
 /**
- * The maximum length of input for the Str_compareConstantTime()
- * method. We support up to 64 characters, which is enough for
- * SHA256 digests.
-*/
-#define Str_compareConstantTimeStringLength 64
-
-
-/**
- * Compare case sensitive two strings in constant time. This function
- * can be used for timing-attack resistant comparison of credentials.
- * Only the first Str_compareConstantTimeStringLength bytes are compared
- * if the strings are longer.
- * @param x A String
- * @param y A String
- * @return 0 if x and y are equal otherwise a non-zero integer
+ * Compare two buffers case sensitively in constant time. This function
+ * is designed to mitigate side-channel attacks, such as those that might
+ * occur when comparing sensitive data like credentials. It compares the first
+ * 'length' bytes of each buffer. The buffers are considered equal if they are
+ * identical byte for byte up to the specified length.
+ * If either 'x' or 'y' is NULL, or both are NULL, the function returns false.
+ * The 'length' parameter should not exceed the length of the shortest buffer
+ * to avoid reading beyond the buffer's allocated memory.
+ *
+ * @param x A buffer to compare for equality with 'y'
+ * @param y A buffer to compare for equality with 'x'
+ * @param length The number of bytes to compare in each buffer.
+ * @return true if 'x' and 'y' are equal for the given length; otherwise, false
  */
-int Str_compareConstantTime(const void *x, const void *y);
-
-
-/**
- * Escape zero i.e. '\0' in the buffer with "\0". If there are no '\0' in
- * the buffer it is returned as it is. In the case that the buffer is not
- * large enough for escaping, the data will be truncated. The buffer will
- * be always nul-terminated.
- */
-char *Str_escapeZero(char *buf, int bufferLength, int contentLength);
+bool Str_authcmp(const void *x, const void *y, size_t length);
 
 
 #endif
