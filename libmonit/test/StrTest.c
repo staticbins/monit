@@ -15,13 +15,6 @@
  */
 
 
-static void testEscaping(char *buf, int buflen, int n, const char *expect) {
-        Str_escapeZero(buf, buflen, n);
-        printf("\tExpect: \"%s\", got: \"%s\"\n", expect, buf);
-        assert(Str_isByteEqual(buf, expect) == true);
-}
-
-
 int main(void) {
 
         Bootstrap(); // Need to initialize library
