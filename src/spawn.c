@@ -84,7 +84,7 @@
 // libmonit
 #include "util/Str.h"
 #include "system/Time.h"
-#include "util/Convert.h"
+#include "util/Fmt.h"
 
 
 /**
@@ -255,7 +255,7 @@ void spawn(Service_T S, command_t C, Event_T E) {
                     
                     /* Kill the child, if the timeout reached */
                     if (timeout <= 0LL) {
-                        Log_error("'%s' program timed out after %s. Killing program with pid %ld\n", S->name, Convert_time2str(C->timeout - (timeout / USEC_PER_MSEC), (char[11]){}), (long)pid);
+                        Log_error("'%s' program timed out after %s. Killing program with pid %ld\n", S->name, Fmt_time2str(C->timeout - (timeout / USEC_PER_MSEC), (char[11]){}), (long)pid);
                         kill(pid, SIGKILL);
                     } else {
                         if (WIFEXITED(stat_loc)) {

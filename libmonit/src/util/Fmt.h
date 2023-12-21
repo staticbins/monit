@@ -27,7 +27,7 @@
 #define CONVERT_INCLUDED
 
 /**
- * General purpose value units string <b>Convert</b> <b>class methods</b>.
+ * General purpose value units string <b>Format</b> <b>class methods</b>.
  *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
@@ -36,22 +36,22 @@
 
 
 /**
- * Convert the numeric bytes value to a string representation scaled to
+ * Format the numeric bytes value to a string representation scaled to
  * human friendly storage unit [B, kB, MB, etc.].
  * @param bytes Byte value to convert
  * @param s A result buffer, must be large enough to hold 10 chars
  * @return A pointer to s
  */
-char *Convert_bytes2str(double bytes, char s[static 10]);
+char *Fmt_bytes2str(double bytes, char s[static 10]);
 
 
 /**
- * Convert the time in milliseconds to human friendlier unit (ms/s/m/h/d/y).
+ * Format the time in milliseconds to human friendlier unit (ms/s/m/h/d/y).
  * @param milli The time value in milliseconds to present
  * @param s A result buffer, must be large enough to hold 11 chars
  * @return A pointer to s
  */
-char *Convert_time2str(double milli, char s[static 11]);
+char *Fmt_time2str(double milli, char s[static 11]);
 
 
 #endif
