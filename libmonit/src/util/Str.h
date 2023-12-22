@@ -56,16 +56,17 @@
 
 
 /**
- * Set <code>a</code> to <code>b</code> if and only if a != b. Deallocate the
- * previous value of a and copy b as the new value of a. If a == b, this function
- * leaves a as it was. The string <code>a</code> <b>must</b> be of a
- * <code>char *</code> type, while <code>b</code> can be any string type.
+ * Set <code>a</code> to <code>b</code> if and only if a != b. 
+ * Deallocate the previous value of a and copy b as the new value
+ * of a. If a == b, this function leaves a as it was. The string
+ * <code>a</code> <b>must</b> be of a heap allocated <code>char *
+ * </code> type, while <code>b</code> can be any string type.
  * @param a The (char *) string to replace with b if b != a
  * @param b The string to copy as the new value of a if a != b
  * @hideinitializer
  */
-#define STR_SET(a, b) do { if (!Str_isByteEqual(a, b)) \
-        { FREE((a)); a = Str_dup((b));} } while(0)
+#define STR_SET(a, b) do { if (!Str_isByteEqual((a), (b))) \
+        { FREE((a)); (a) = Str_dup((b));} } while(0)
 
 
 /**
@@ -330,7 +331,7 @@ char *Str_ndup(const char *s, long n);
  * @exception AssertException if <code>dest</code> is null
  * @hideinitializer 
  */
-#define Str_join(dest, n, ...) _Str_join((dest), (n), ##__VA_ARGS__, 0)
+#define Str_join(dest, n, ...) _Str_join((dest), (n), ##__VA_ARGS__, NULL)
 /** Internal function. Use the Str_join() macro */
 char *_Str_join(char *dest, int n, ...) __attribute__((sentinel));
 
