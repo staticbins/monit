@@ -41,7 +41,6 @@
 #endif
 
 #ifdef HAVE_OPENSSL
-// We don't silence deprecation warnings as this will remind us to update for version >= 3
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #endif
@@ -397,12 +396,12 @@ static unsigned char *_getCachingSha2Password(unsigned char result[static SHA256
 
         // SHA256(SHA256(SHA256(password)), Nonce)
         uint8_t stage3[SHA256_DIGEST_LENGTH];
-        SHA256_CTX ctx;
-        SHA256_Init(&ctx);
-        SHA256_Update(&ctx, stage2, SHA256_DIGEST_LENGTH);
-        SHA256_Update(&ctx, salt, strlen(salt));
-        SHA256_Final(stage3, &ctx);
-
+        EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+        EVP_DigestInit_ex(ctx, EVP_sha256(), NULL);
+        EVP_DigestUpdate(ctx, stage2, SHA256_DIGEST_LENGTH);
+        EVP_DigestUpdate(ctx, salt, strlen(salt));
+        EVP_DigestFinal_ex(ctx, stage3, NULL);
+        EVP_MD_CTX_free(ctx);
         // XOR(SHA256(password), SHA256(SHA256(SHA256(password)), Nonce))
         for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
                 result[i] = stage1[i] ^ stage3[i];
