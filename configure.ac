@@ -469,14 +469,21 @@ AC_ARG_WITH(ipv6,
 
 # Find the right directory to put the root-mode PID file in
 AC_MSG_CHECKING([pid file location])
-if test -d "/run"
-then
-	piddir="/run"
-elif test -d "/var/run"; then
-        piddir="/var/run"
-elif test -d "/etc"; then
-        piddir="/etc"
-fi
+AC_ARG_WITH([piddir],
+	[AS_HELP_STRING([--with-piddir=DIR], [Define a pid directory (default: autodetection)])],
+	[
+		piddir="$withval"
+	],
+	[
+		if test -d "/run"
+                then
+			piddir="/run"
+		elif test -d "/var/run"; then
+		        piddir="/var/run"
+		elif test -d "/etc"; then
+		        piddir="/etc"
+		fi
+	])
 
 AC_DEFINE_UNQUOTED([PIDDIR], "$piddir",
 	  [Define to the pid storage directory.])
