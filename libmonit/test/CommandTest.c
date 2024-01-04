@@ -95,6 +95,7 @@ static void onDetach(Process_T P) {
         assert(Process_isRunning(P));
         // Close pipes and streams, this will cause read in the script to return with eof
         Process_detach(P);
+        assert(Process_isdetached(P));
         // Streams should be closed and not available after a detach
         assert(Process_getInputStream(P) == NULL);
         // Assert that the script exited cleanly

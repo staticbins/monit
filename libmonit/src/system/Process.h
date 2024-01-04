@@ -93,6 +93,15 @@ void Process_detach(T P);
 
 
 /**
+ * Returns true if we have detached from the sub-process. I.e. if
+ * Process_detach() has been called.
+ * @param P A Process object
+ * @return True if Process_detach() has been called, otherwise false
+ */
+bool Process_isdetached(T P);
+
+
+/**
  * Returns the user id of the sub-process
  * @param P A Process object
  * @return The user id of the sub-process

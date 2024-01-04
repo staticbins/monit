@@ -457,6 +457,12 @@ void Process_detach(Process_T P) {
 }
 
 
+bool Process_isdetached(Process_T P) {
+        assert(P);
+        return P->isdetached;
+}
+
+
 uid_t Process_getUid(Process_T P) {
         assert(P);
         return P->uid;
