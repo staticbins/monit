@@ -46,6 +46,7 @@
 
 void(*_AbortHandler)(const char *error, va_list ap) = NULL;
 void(*_ErrorHandler)(const char *error, va_list ap) = NULL;
+void(*_DebugHandler)(const char *info, va_list ap) = NULL;
 
 
 /* ---------------------------------------------------------------- Public */
@@ -64,4 +65,9 @@ void Bootstrap_setAbortHandler(void(*abortHandler)(const char *error, va_list ap
 
 void Bootstrap_setErrorHandler(void(*errorHandler)(const char *error, va_list ap)) {
         _ErrorHandler = errorHandler;
+}
+
+
+void Bootstrap_setDebugHandler(void(*debugHandler)(const char *info, va_list ap)) {
+        _DebugHandler = debugHandler;
 }

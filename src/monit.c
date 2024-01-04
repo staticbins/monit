@@ -785,6 +785,7 @@ static void handle_options(int argc, char **argv, List_T arguments) {
                                 case 'v':
                                 {
                                         Run.debug++;
+                                        Bootstrap_setDebugHandler(Log_vdebug);
                                         break;
                                 }
                                 case 'H':
