@@ -748,7 +748,7 @@ Process_T Command_execute(T C) {
                 if (!_setupChildPipes(P))
                         goto fail;
                 int descriptors = open("/dev/null", O_RDWR);
-                if (descriptors < 5)
+                if (descriptors < 4)
                         descriptors = System_getDescriptorsGuarded(256);
                 else
                         descriptors += 1;
