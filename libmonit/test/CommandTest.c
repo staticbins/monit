@@ -281,12 +281,14 @@ int main(void) {
 
         printf("=> Test13: chdir\n");
         {
-                Command_T c = Command_new("/bin/sh", "-c 'sleep 5;'");
+                Command_T c = Command_new("/bin/sh", "-c", "echo $$ > chdirtest;");
                 assert(c);
                 Command_setDir(c, "/tmp/");
                 Process_T p = Command_execute(c);
                 assert(p);
+                assert(Process_waitFor(p) == 0);
                 Process_free(&p);
+                assert(File_delete("/tmp/chdirtest"));
                 TRY
                 {
                         Command_setDir(c, "/tmp/somenonexistingdir");
