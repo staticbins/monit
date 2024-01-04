@@ -11,6 +11,7 @@
 #include "Bootstrap.h"
 #include "Str.h"
 #include "List.h"
+#include "File.h"
 #include "system/System.h"
 #include "system/Command.h"
 #include "system/Time.h"
@@ -21,7 +22,6 @@
 
 
 bool timeout_called = false;
-
 
 static void onExec(Process_T P) {
         assert(P);
@@ -44,6 +44,7 @@ static void onExec(Process_T P) {
                 assert(line);
                 printf("\t%s", line);
         }
+        printf("Process exited with status: %d\n", Process_waitFor(P));
         Process_free(&P);
         assert(! P);
 }
@@ -87,6 +88,23 @@ static void onEnv(Process_T P) {
         assert(! P);
 }
 
+static void onDetach(Process_T P) {
+        assert(P);
+        File_delete("/tmp/ondetach");
+        // Assert the process is running, blocking on read
+        assert(Process_isRunning(P));
+        // Close pipes and streams, this will cause read in the script to return with eof
+        Process_detach(P);
+        // Streams should be closed and not available after a detach
+        assert(Process_getInputStream(P) == NULL);
+        // Assert that the script exited cleanly
+        assert(Process_waitFor(P) == 0);
+        Process_free(&P);
+        // Finally assert that the script did continue and wrote this file
+        assert(File_delete("/tmp/ondetach"));
+        assert(! P);
+}
+
 
 int main(void) {
 
@@ -97,7 +115,7 @@ int main(void) {
 
         printf("=> Test1: create/destroy\n");
         {
-                Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit", NULL);
+                Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit");
                 assert(c);
                 Command_free(&c);
                 assert(!c);
@@ -106,7 +124,7 @@ int main(void) {
 
         printf("=> Test2: set and get uid/gid/umask\n");
         {
-                Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit", NULL);
+                Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit");
                 assert(c);
                 // Check that default is 0
                 assert(Command_getUid(c) == 0);
@@ -121,37 +139,9 @@ int main(void) {
         }
         printf("=> Test2: OK\n\n");
 
-        printf("=> Test3: set and get working directory\n");
-        {
-                Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit", NULL);
-                assert(c);
-                // Check that a default working directory is NULL. I.e. current directory
-                assert(! Command_getDir(c));
-                // Check that a NULL working directory is allowed, meaning the calling process's current directory
-                Command_setDir(c, NULL);
-                // Set and get
-                Command_setDir(c, "/tmp/");
-                assert(Str_isEqual(Command_getDir(c), "/tmp")); // trailing separator is removed upon set
-                // Check invalid value
-                TRY
-                {
-                        Command_setDir(c, "/hubba/bubba");
-                        printf("Test failed\n");
-                        exit(1);
-                }
-                ELSE
-                {
-                        assert(Str_isEqual(Command_getDir(c), "/tmp"));
-                }
-                END_TRY;
-                Command_free(&c);
-                assert(!c);
-        }
-        printf("=> Test3: OK\n\n");
-
         printf("=> Test4: set and get env\n");
         {
-                Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit", NULL);
+                Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit");
                 assert(c);
                 // Set and get env string
                 Command_setEnv(c, "PATH", "/usr/bin");
@@ -179,7 +169,7 @@ int main(void) {
 
         printf("=> Test5: set and get Command\n");
         {
-                Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit", NULL);
+                Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit");
                 assert(c);
                 List_T l = Command_getCommand(c);
                 assert(Str_isEqual(l->head->e, "/bin/sh"));
@@ -192,7 +182,7 @@ int main(void) {
         
         printf("=> Test6: Append arguments\n");
         {
-                Command_T c = Command_new("/bin/ls", NULL);
+                Command_T c = Command_new("/bin/ls");
                 assert(c);
                 Command_appendArgument(c, "-l");
                 Command_appendArgument(c, "-t");
@@ -211,7 +201,7 @@ int main(void) {
         printf("=> Test7: execute invalid program\n");
         {
                 // Program producing error
-                Command_T c = Command_new("/bin/sh", "-c", "baluba;", NULL);
+                Command_T c = Command_new("/bin/sh", "-c", "not_a_program;");
                 assert(c);
                 Command_setDir(c, "/");
                 printf("\tThis should produce an error:\n");
@@ -221,7 +211,7 @@ int main(void) {
                 // Nonexistent program
                 TRY
                 {
-                        Command_new("/bla/bla/123", NULL);
+                        Command_new("/bla/bla/123");
                         exit(1);
                 }
                 CATCH (AssertException)
@@ -231,7 +221,7 @@ int main(void) {
 
         printf("=> Test8: execute valid program\n");
         {
-                Command_T c = Command_new("/bin/sh", "-c", "echo \"Please enter your name:\";read name;echo \"Hello $name\";", NULL);
+                Command_T c = Command_new("/bin/sh", "-c", "echo \"Please enter your name:\";read name;echo \"Hello $name\";");
                 assert(c);
                 Process_T p = Command_execute(c);
                 if (p)
@@ -245,7 +235,7 @@ int main(void) {
 
         printf("=> Test9: terminate sub-process\n");
         {
-                Command_T c = Command_new("/bin/sh", "-c", "exec sleep 30;", NULL);
+                Command_T c = Command_new("/bin/sh", "-c", "exec sleep 30;");
                 assert(c);
                 onTerminate(Command_execute(c));
                 Command_free(&c);
@@ -255,7 +245,7 @@ int main(void) {
 
         printf("=> Test10: kill sub-process\n");
         {
-                Command_T c = Command_new("/bin/sh", "-c", "trap 1 2 15; sleep 30; ", NULL);
+                Command_T c = Command_new("/bin/sh", "-c", "trap 1 2 15; sleep 30; ");
                 assert(c);
                 onKill(Command_execute(c));
                 Command_free(&c);
@@ -265,7 +255,7 @@ int main(void) {
         
         printf("=> Test11: environment in sub-process\n");
         {
-                Command_T c = Command_new("/bin/sh", "-c", "echo $SULT", NULL);
+                Command_T c = Command_new("/bin/sh", "-c", "echo $SULT");
                 assert(c);
                 // Set environment in sub-process only
                 Command_setEnv(c, "SULT", "Ylajali");
@@ -275,12 +265,10 @@ int main(void) {
         }
         printf("=> Test11: OK\n\n");
         
-#if 0
-        /* FIXME: MONIT-35: fork() doesn't share memory, so the current implementation of Command_execute() cannot pass the execve() error to parent. Disable the unit test for now. */
         printf("=> Test12: on execute error\n");
         {
-                // Try executing a directory should produce an error
-                Command_T c = Command_new("/tmp", NULL);
+                // Executing a directory should produce an execve error
+                Command_T c = Command_new("/tmp");
                 assert(c);
                 Process_T p = Command_execute(c);
                 assert(! p);
@@ -289,7 +277,58 @@ int main(void) {
                 assert(!c);
         }
         printf("=> Test12: OK\n\n");
-#endif
+
+        printf("=> Test13: chdir\n");
+        {
+                Command_T c = Command_new("/bin/sh", "-c 'sleep 5;'");
+                assert(c);
+                Command_setDir(c, "/tmp/");
+                Process_T p = Command_execute(c);
+                assert(p);
+                Process_free(&p);
+                TRY
+                {
+                        Command_setDir(c, "/tmp/somenonexistingdir");
+                        printf("Setting invalid work dir failed\n");
+                        exit(1);
+                }
+                ELSE
+                END_TRY;
+                Command_free(&c);
+                printf("\tOK, got execute error -- %s\n", System_getLastError());
+                assert(!c);
+        }
+        printf("=> Test13: OK\n\n");
+
+        printf("=> Test14: on execve(2) error\n");
+        {
+                // Executing a directory should produce an exec error
+                Command_T c = Command_new("/tmp");
+                assert(c);
+                Process_T p = Command_execute(c);
+                assert(! p);
+                Command_free(&c);
+                printf("\tOK, got execute error -- %s\n", System_getLastError());
+                assert(!c);
+        }
+        printf("=> Test14: OK\n\n");
+
+        printf("=> Test15: detach\n");
+        {
+                /* Test explained: The script will block on read waiting for input.
+                 Instead we detach (close pipes) in onDetach which will cause read
+                 to return immediately with eof (because of broken pipe). The write
+                 to stdout will fail, but it should not kill the script with SIGPIPE
+                 as Command ensure the process ignore this signal. Instead the script
+                 should exit cleanly with 0 after writing to a file to verify it ran.
+                 */
+                Command_T c = Command_new("/bin/sh", "-c", "read msg; echo \"write will fail but should not exit the script\"; echo \"$$ still alive\" > /tmp/ondetach; exit 0;");
+                assert(c);
+                onDetach(Command_execute(c));
+                Command_free(&c);
+                assert(!c);
+        }
+        printf("=> Test15: OK\n\n");
 
         printf("============> Command Tests: OK\n\n");
 
