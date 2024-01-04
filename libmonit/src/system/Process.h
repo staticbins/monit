@@ -50,8 +50,8 @@
  * or stderr before exiting.
  *
  * The sub-process continues executing until it stops or until it is terminated
- * with either Process_terminate() or Process_kill(). Calling Process_free()
- * will also terminate the sub-process.
+ * with either Process_terminate() or Process_kill(). Unless Process_detach()
+ * has been called, calling Process_free() will also terminate the sub-process.
  *
  * <h4>Environment</h4>
  * The Process inherits the environment from the calling process. Clients can
@@ -73,8 +73,9 @@ typedef struct T *T;
 /**
  * Destroy a Process object and free allocated resources. Clients
  * should call this method when they are done with the Process object.
- * This method will kill the sub-process represented by this Process
- * object if it is still running and close down stdio to the sub-process.
+ * Unless Process_detach() has been called, this method will kill the
+ * sub-process represented by this Process object if it is still running
+ * and close down stdio to the sub-process.
  * @param P a Process object reference
  */
 void Process_free(T *P);
@@ -86,7 +87,9 @@ void Process_free(T *P);
 /**
  * Close stdio streams to the sub-process represented by this Process_T
  * object. Call this method if the sub-process is a daemon process and
- * there is no more need to communicate or read output from the sub-process
+ * there is no more need to communicate or read output from the sub-process.
+ * Calling this method will also ensure that the sub-process will continue
+ * running even when this Process object is released with Process_free()
  * @param P A Process object
  */
 void Process_detach(T P);
@@ -118,9 +121,10 @@ gid_t Process_getGid(T P);
 
 
 /**
- * Returns the working directory of the Process
+ * Returns the working directory of the Process.
  * @param P A Process object
- * @return The Process working directory
+ * @return The Process working directory. NULL if
+ * not set, meaning the Parent's current directory
  */
 const char *Process_getDir(T P);
 

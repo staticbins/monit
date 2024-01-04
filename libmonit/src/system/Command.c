@@ -76,9 +76,8 @@ struct T {
 };
 
 struct Process_T {
+        T parent;
         pid_t pid;
-        uid_t uid;
-        gid_t gid;
         int status;
         bool isdetached;
         int ctrl_pipe[2];
@@ -88,7 +87,6 @@ struct Process_T {
         InputStream_T in;
         InputStream_T err;
         OutputStream_T out;
-        char *working_directory;
 };
 
 struct _usergroups {
@@ -108,8 +106,8 @@ extern char **environ;
 static inline char *_findEnv(T C, const char *name, size_t len) {
         assert(len >= 0);
         for (_list_t p = C->env->head; p; p = p->next) {
-                if ((strncmp(p->e, name, len) == 0))
-                        if (((char*)p->e)[len] == '=') // Ensure that p->e is not just a sub-string
+                if ((memcmp(p->e, name, len) == 0))
+                        if (((char*)p->e)[len] == '=') // Ensure that name is not just a sub-string
                                 return p->e;
         }
         return NULL;
@@ -281,10 +279,9 @@ static void _resetSignals(void) {
 struct _usergroups *_getUserGroups(T C, struct _usergroups *ug) {
         struct passwd pwd = {};
         struct passwd *result = NULL;
-        ssize_t size = sysconf(_SC_GETPW_R_SIZE_MAX);
-        if (size < 0)
-                return NULL;
-        size_t bufsize = (size_t)size;
+        ssize_t bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+        if (bufsize < 0)
+                bufsize = 4096;
         char buf[bufsize];
         int status = getpwuid_r(C->uid, &pwd, buf, bufsize, &result);
         if ((!result) || (status != 0))
@@ -418,10 +415,9 @@ static inline void _setstatus(Process_T P) {
 static Process_T _Process_new(T C) {
         Process_T P;
         NEW(P);
+        P->parent = C;
         P->pid = -1;
         P->status = -1;
-        P->uid = C->uid;
-        P->gid = C->gid;
         P->ctrl_pipe[0] = P->ctrl_pipe[1] = -1;
         P->stdin_pipe[0] = P->stdin_pipe[1] = -1;
         P->stdout_pipe[0] = P->stdout_pipe[1] = -1;
@@ -432,12 +428,13 @@ static Process_T _Process_new(T C) {
 
 void Process_free(Process_T *P) {
         assert(P && *P);
-        if (Process_isRunning(*P)) {
-                Process_kill(*P);
-                Process_waitFor(*P);
+        if (!(*P)->isdetached) {
+                if (Process_isRunning(*P)) {
+                        Process_kill(*P);
+                        Process_waitFor(*P);
+                }
+                Process_detach(*P);
         }
-        Process_detach(*P);
-        FREE((*P)->working_directory);
         FREE(*P);
 }
 
@@ -450,9 +447,9 @@ void Process_free(Process_T *P) {
 void Process_detach(Process_T P) {
         assert(P);
         if (!P->isdetached) {
-                _closePipes(P);
-                _closeStreams(P);
                 P->isdetached = true;
+                _closeStreams(P);
+                _closePipes(P);
         }
 }
 
@@ -465,23 +462,19 @@ bool Process_isdetached(Process_T P) {
 
 uid_t Process_getUid(Process_T P) {
         assert(P);
-        return P->uid;
+        return P->parent->uid;
 }
 
 
 gid_t Process_getGid(Process_T P) {
         assert(P);
-        return P->gid;
+        return P->parent->gid;
 }
 
 
 const char *Process_getDir(Process_T P) {
         assert(P);
-        if (! P->working_directory) {
-                char t[STRLEN];
-                P->working_directory = Str_dup(Dir_cwd(t, STRLEN));
-        }
-        return P->working_directory;
+        return P->parent->working_directory;
 }
 
 
@@ -612,6 +605,8 @@ void Command_appendArgument(T C, const char *argument) {
 
 void Command_setUid(T C, uid_t uid) {
         assert(C);
+        if (getuid() != 0)
+                THROW(AssertException, "Only the super user can switch uid");
         C->uid = uid;
 }
 
@@ -624,6 +619,8 @@ uid_t Command_getUid(T C) {
 
 void Command_setGid(T C, gid_t gid) {
         assert(C);
+        if (getuid() != 0)
+                THROW(AssertException, "Only the super user can switch gid");
         C->gid = gid;
 }
 
@@ -685,12 +682,10 @@ void Command_vSetEnv(T C, const char *name, const char *value, ...) {
 const char *Command_getEnv(T C, const char *name) {
         assert(C);
         assert(name);
-        char *e = _findEnv(C, name, strlen(name));
-        if (e) {
-                char *v = strchr(e, '=');
-                if (v)
-                        return ++v;
-        }
+        size_t len = strlen(name);
+        char *e = _findEnv(C, name, len);
+        if (e)
+                return e + len + 1;
         return NULL;
 }
 
@@ -754,7 +749,7 @@ Process_T Command_execute(T C) {
                         goto fail;
                 int descriptors = open("/dev/null", O_RDWR);
                 if (descriptors < 5)
-                        descriptors = System_getDescriptorsGuarded(1025);
+                        descriptors = System_getDescriptorsGuarded(256);
                 else
                         descriptors += 1;
                 for (int i = 3; i < descriptors; i++) {
@@ -764,6 +759,10 @@ Process_T Command_execute(T C) {
                 if (C->gid) {
                         if (setgid(C->gid) < 0)
                                 goto fail;
+                        if (getgid() != C->gid) {
+                                errno = EPERM;
+                                goto fail;
+                        }
                 }
                 if (C->uid) {
                         struct _usergroups ug = {.groups = {}, .ngroups = NGROUPS_MAX};
@@ -773,6 +772,10 @@ Process_T Command_execute(T C) {
                                 goto fail;
                         if (setuid(C->uid) < 0)
                                 goto fail;
+                        if (getuid() != C->uid) {
+                                errno = EPERM;
+                                goto fail;
+                        }
                 }
                 char **args = _args(C);
                 execve(args[0], args, _env(C));
@@ -795,7 +798,7 @@ Process_T Command_execute(T C) {
 error:
         _closePipe(P->ctrl_pipe);
         if (status != 0) {
-                DEBUG("Command: process initialization failed -- %s\n", System_getError(status));
+                DEBUG("Command: process setup or execve failed -- %s\n", System_getError(status));
                 Process_free(&P);
         } else
                 _setupParentPipes(P);

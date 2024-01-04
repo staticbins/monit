@@ -63,7 +63,7 @@ typedef struct T *T;
  * Command_new("/bin/ls", "-lrt")
  * Command_new("/bin/sh", "-c", "ps -aef|egrep mmonit")
  * </pre>
- * @param path A string containing the path to the program to execute
+ * @param path The program to execute, _without_ any arguments
  * @param ... An optional sequence of arguments to the program given in path
  * @exception AssertException if the program given in path does not exist.
  * @return A Command object
@@ -95,9 +95,13 @@ void Command_appendArgument(T C, const char *argument);
 /**
  * Set the user id the sub-process should switch to on exec. If not set, the
  * uid of the calling process is used. Note that this process must run with
- * super-user privileges for the sub-process to be able to switch uid
+ * super-user privileges for the sub-process to be able to switch uid. In fact
+ * it is a checked runtime error to call this method if this process does not
+ * run with super-user privileges
  * @param C A Command object
  * @param uid The user id the sub-process should switch to when executed
+ * @exception AssertException If this process is not run by the super-user or
+ * with super-user privileges.
  */
 void Command_setUid(T C, uid_t uid);
 
@@ -118,6 +122,8 @@ uid_t Command_getUid(T C);
  * with super-user privileges for the sub-process to be able to switch gid
  * @param C A Command object
  * @param gid The group id the sub-process should switch to when executed
+ * @exception AssertException If this process is not run by the super-user or
+ * with super-user privileges.
  */
 void Command_setGid(T C, gid_t gid);
 
