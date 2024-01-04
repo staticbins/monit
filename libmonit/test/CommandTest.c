@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pwd.h>
 
 #include "Bootstrap.h"
 #include "Str.h"
@@ -102,7 +103,6 @@ static void onDetach(Process_T P) {
         Process_free(&P);
         // Finally assert that the script did continue and wrote this file
         assert(File_delete("/tmp/ondetach"));
-        assert(! P);
 }
 
 
@@ -128,12 +128,25 @@ int main(void) {
                 // Check that default is 0
                 assert(Command_getUid(c) == 0);
                 assert(Command_getGid(c) == 0);
-                // set and test uid and gid
-                Command_setUid(c,42);
-                assert(Command_getUid(c) == 42);
-                Command_setGid(c,148);
-                assert(Command_getGid(c) == 148);
-                Command_free(&c);
+                if (getuid() == 0) {
+                        // set and test uid and gid only if we are root
+                        Command_setUid(c,42);
+                        assert(Command_getUid(c) == 42);
+                        Command_setGid(c,148);
+                        assert(Command_getGid(c) == 148);
+                        Command_free(&c);
+                } else {
+                        TRY
+                        {
+                                printf("\tNot running as root. Checking exception: ");
+                                Command_setUid(c,42);
+                                printf("\tAssertException not thrown\n");
+                                exit(1);
+                        }
+                        ELSE
+                                printf("ok\n");
+                        END_TRY;
+                }
         }
         printf("=> Test2: OK\n\n");
 
@@ -287,6 +300,32 @@ int main(void) {
                 Command_free(&c);
         }
         printf("=> Test14: OK\n\n");
+
+        printf("=> Test15: setuid and setgid in sub-process\n");
+        {
+                if (getuid() != 0) {
+                        printf("\tCannot run test: not running as root\n");
+                        goto skip;
+                }
+#ifdef DARWIN
+                char *uname = "www";
+#else
+                char *uname = "www-data";
+#endif
+                struct passwd *pwd = getpwnam(uname);
+                assert(pwd);
+                char *script = Str_cat("if test $(id -u) -eq %d -a $(id -g) -eq %d; then exit 0; fi; exit 1;", pwd->pw_uid, pwd->pw_gid);
+                Command_T c = Command_new("/bin/sh", "-c", script);
+                Command_setUid(c, pwd->pw_uid);
+                Command_setGid(c, pwd->pw_gid);
+                Process_T p = Command_execute(c);
+                assert(p);
+                assert(Process_waitFor(p) == 0);
+                Command_free(&c);
+                FREE(script);
+        }
+skip:
+        printf("=> Test15: OK\n\n");
 
         printf("============> Command Tests: OK\n\n");
 
