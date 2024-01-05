@@ -277,17 +277,13 @@ static void _resetSignals(void) {
 
 
 struct _usergroups *_getUserGroups(T C, struct _usergroups *ug) {
-        struct passwd pwd = {};
-        struct passwd *result = NULL;
-        ssize_t bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
-        if (bufsize < 0)
-                bufsize = 4096;
-        char buf[bufsize];
-        int status = getpwuid_r(C->uid, &pwd, buf, bufsize, &result);
-        if ((!result) || (status != 0))
+        // There are no threads in the child so we can use
+        // the simpler getpwuid() instead of getpwuid_r()
+        struct passwd *result = getpwuid(C->uid);
+        if (!result)
                 return NULL;
-        Command_setEnv(C, "HOME", pwd.pw_dir);
-        if (getgrouplist(pwd.pw_name, C->gid,
+        Command_setEnv(C, "HOME", result->pw_dir);
+        if (getgrouplist(result->pw_name, C->gid,
 #ifdef __APPLE__
                          (int *)ug->groups,
 #else
@@ -696,8 +692,64 @@ List_T Command_getCommand(T C) {
 }
 
 
+// MARK: - Execute
+
+
+// child process setup and exec
+static void _child(Command_T C, Process_T P) {
+        int status = 0;
+        close(P->ctrl_pipe[0]);
+        _resetSignals();
+        errno = 0;
+        if (C->working_directory) {
+                if (! Dir_chdir(C->working_directory))
+                        goto fail;
+        }
+        if (setsid() < 0)
+                goto fail;
+        if (!_setupChildPipes(P))
+                goto fail;
+        int descriptors = open("/dev/null", O_RDWR);
+        if (descriptors < 4)
+                descriptors = System_getDescriptorsGuarded(256);
+        else
+                descriptors += 1;
+        for (int i = 3; i < descriptors; i++) {
+                if (i != P->ctrl_pipe[1])
+                        close(i);
+        }
+        if (C->gid) {
+                if (setgid(C->gid) < 0)
+                        goto fail;
+                if (getgid() != C->gid) {
+                        errno = EPERM;
+                        goto fail;
+                }
+        }
+        if (C->uid) {
+                struct _usergroups ug = {.groups = {}, .ngroups = NGROUPS_MAX};
+                if (!_getUserGroups(C, &ug))
+                        goto fail;
+                if (setgroups(ug.ngroups, ug.groups) < 0)
+                        goto fail;
+                if (setuid(C->uid) < 0)
+                        goto fail;
+                if (getuid() != C->uid) {
+                        errno = EPERM;
+                        goto fail;
+                }
+        }
+        char **args = _args(C);
+        execve(args[0], args, _env(C));
+fail:
+        status = errno;
+        if (status != 0)
+                while (write(P->ctrl_pipe[1], &status, sizeof status) < 0);
+        _exit(127);
+}
+
+
 /*
- 
  The Execute function.
  
  We do not use posix_spawn(2) because it's not well suited for creating
@@ -722,7 +774,6 @@ List_T Command_getCommand(T C) {
  supporting Copy-On-Write (COW), the issue of unnecessary memory address space
  duplication in the child before calling exec becomes less significant, albeit
  still an annoyance.
- 
  */
 Process_T Command_execute(T C) {
         assert(C);
@@ -731,74 +782,23 @@ Process_T Command_execute(T C) {
         int status = _createPipes(P);
         if(status < 0) {
                 status = -status;
-                goto error;
+                goto fail;
         }
         P->pid = fork();
-        // Child
         if (P->pid == 0) {
-                close(P->ctrl_pipe[0]);
-                _resetSignals();
-                errno = 0;
-                if (C->working_directory) {
-                        if (! Dir_chdir(C->working_directory))
-                                goto fail;
-                }
-                if (setsid() < 0)
-                        goto fail;
-                if (!_setupChildPipes(P))
-                        goto fail;
-                int descriptors = open("/dev/null", O_RDWR);
-                if (descriptors < 4)
-                        descriptors = System_getDescriptorsGuarded(256);
-                else
-                        descriptors += 1;
-                for (int i = 3; i < descriptors; i++) {
-                        if (i != P->ctrl_pipe[1])
-                                close(i);
-                }
-                if (C->gid) {
-                        if (setgid(C->gid) < 0)
-                                goto fail;
-                        if (getgid() != C->gid) {
-                                errno = EPERM;
-                                goto fail;
-                        }
-                }
-                if (C->uid) {
-                        struct _usergroups ug = {.groups = {}, .ngroups = NGROUPS_MAX};
-                        if (!_getUserGroups(C, &ug))
-                                goto fail;
-                        if (setgroups(ug.ngroups, ug.groups) < 0)
-                                goto fail;
-                        if (setuid(C->uid) < 0)
-                                goto fail;
-                        if (getuid() != C->uid) {
-                                errno = EPERM;
-                                goto fail;
-                        }
-                }
-                char **args = _args(C);
-                execve(args[0], args, _env(C));
-        fail:
-                status = errno;
-                if (status != 0)
-                        while (write(P->ctrl_pipe[1], &status, sizeof status) < 0);
-                _exit(127);
-        }
-        // Parent
-        else if (P->pid > 0) {
+                _child(C, P);
+        } else if (P->pid > 0) {
                 close(P->ctrl_pipe[1]);
                 if (read(P->ctrl_pipe[0], &status, sizeof status) != sizeof status)
                         status = 0;
                 else waitpid(P->pid, &(int){0}, 0);
         } else {
-                DEBUG("Command: fork(2) failed -- %s\n", System_getLastError());
-                status = -P->pid;
+                status = errno;
         }
-error:
+fail:
         _closePipe(P->ctrl_pipe);
         if (status != 0) {
-                DEBUG("Command: process setup or execve failed -- %s\n", System_getError(status));
+                DEBUG("Command: failed -- %s\n", System_getError(status));
                 Process_free(&P);
         } else
                 _setupParentPipes(P);
