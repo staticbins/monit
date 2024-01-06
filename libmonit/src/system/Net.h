@@ -111,6 +111,23 @@ ssize_t Net_write(int socket, const void *buffer, size_t size, time_t timeout);
 
 
 /**
+ * Returns true if the <code>fd</code> parameter is a socket (of any type)
+ * @param fd The descriptor to test
+ * @return true if the fd parameter is a socket
+ */
+bool Net_isSocket(int fd);
+
+
+/**
+ * Returns true if the <code>socket</code> parameter is an IP version 6
+ * socket otherwise false
+ * @param socket The socket to test
+ * @return true if the socket parameter is an IPv6 socket
+ */
+bool Net_isIPv6(int socket);
+
+
+/**
  * Aborts a TCP a connection. That is, TCP discards any data still remaining
  * in the socket send buffer and sends an RST to the peer, not the normal 
  * four-packet connection termination sequence. See "UNIX Network Programming" 
@@ -119,7 +136,6 @@ ssize_t Net_write(int socket, const void *buffer, size_t size, time_t timeout);
  * @return true if success otherwise false
  */
 bool Net_abort(int socket);
-
 
 
 /**
