@@ -798,6 +798,8 @@ static void Process_ctrl(Process_T P, int *status) {
  - There is no support for changing the working directory (chdir) in the child
    process before exec is called. This limitation can be significant, especially
    in daemon processes where changing to a specific directory is often required.
+ - Inability to Change umask: posix_spawn lacks support for changing the file
+   mode creation mask (umask) in the child process.
 
  Traditional fork/exec offers a bit more control and flexibility. With modern OSs
  supporting Copy-On-Write (COW), the issue of unnecessary memory address space
