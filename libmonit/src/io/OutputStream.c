@@ -346,10 +346,9 @@ T OutputStream_new(int descriptor) {
         S->fd = descriptor;
         S->timeout = NET_WRITE_TIMEOUT;
         S->length = S->buffer;
+        S->limit = S->buffer + BUFFER_SIZE;
         if (Net_isIPv6(descriptor))
-                S->limit = S->buffer + BUFFER_SIZE - 20;
-        else
-                S->limit = S->buffer + BUFFER_SIZE;
+                S->limit -= 20;
         return S;
 }
 
