@@ -72,6 +72,7 @@ struct T {
         gid_t gid;
         List_T env;
         List_T args;
+        mode_t umask;
         char *working_directory;
 };
 
@@ -96,6 +97,9 @@ struct _usergroups {
 
 // Some POSIX systems does not define environ explicit
 extern char **environ;
+
+// Default umask for the sub-process
+#define DEFAULT_UMASK 022
 
 
 // MARK: - Private methods
@@ -240,19 +244,19 @@ error4:
 
 
 // Block all signals and make the current thread not cancellable
-static struct _block {sigset_t mask; int threadstate;} _block(void) {
+static struct _block {sigset_t sigmask; int threadstate;} _block(void) {
         sigset_t b;
         sigfillset(&b);
         struct _block block = {};
         pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &block.threadstate);
-        pthread_sigmask(SIG_BLOCK, &b, &block.mask);
+        pthread_sigmask(SIG_BLOCK, &b, &block.sigmask);
         return block;
 }
 
 
 // Un-Block signals and make the current thread cancellable again
 static void _unblock(struct _block *block) {
-        pthread_sigmask(SIG_SETMASK, &block->mask, NULL);
+        pthread_sigmask(SIG_SETMASK, &block->sigmask, NULL);
         pthread_setcancelstate(block->threadstate, 0);
 }
 
@@ -295,9 +299,7 @@ struct _usergroups *_getUserGroups(T C, struct _usergroups *ug) {
 }
 
 
-// MARK: - Plumbing
-
-
+// Close both ends of the given pipe if not already closed
 static void _closePipe(int pipe[static 2]) {
     for (int i = 0; i < 2; i++) {
         if (pipe[i] >= 0) {
@@ -308,9 +310,17 @@ static void _closePipe(int pipe[static 2]) {
 }
 
 
+// MARK: - Process_T Private methods
+
+
+static void Process_closeCtrlPipe(Process_T P) {
+        _closePipe(P->ctrl_pipe);
+}
+
+
 // Close pipes in process, except ctrl_pipe which are used during
 // child setup before calling exec
-static void _closePipes(Process_T P) {
+static void Process_closePipes(Process_T P) {
         _closePipe(P->stdin_pipe);
         _closePipe(P->stdout_pipe);
         _closePipe(P->stderr_pipe);
@@ -319,7 +329,7 @@ static void _closePipes(Process_T P) {
 
 // Setup a controller pipe to be used between parent and child to
 // report any errors during the setup phase or if execve fails
-static int _setupCtrlPipe(Process_T P) {
+static int Process_createCtrlPipe(Process_T P) {
         int status = 0;
         // Not all POSIX systems have pipe2(), like macOS,
         if (pipe(P->ctrl_pipe) < 0) {
@@ -340,14 +350,14 @@ static int _setupCtrlPipe(Process_T P) {
 
 
 // Create pipes for communication between parent and child process
-static int _createPipes(Process_T P) {
-        int status = _setupCtrlPipe(P);
+static int Process_createPipes(Process_T P) {
+        int status = Process_createCtrlPipe(P);
         if (status < 0)
                 return status;
         if (pipe(P->stdin_pipe) < 0 || pipe(P->stdout_pipe) < 0 || pipe(P->stderr_pipe) < 0) {
                 status = -errno;
                 DEBUG("Command: pipe(2) failed -- %s\n", System_getLastError());
-                _closePipes(P);
+                Process_closePipes(P);
                 return status;
         }
         return 0;
@@ -356,7 +366,7 @@ static int _createPipes(Process_T P) {
 
 // Setup stdio pipes in subprocess. We need not close pipes as the child
 // process will exit if this fails
-static bool _setupChildPipes(Process_T P) {
+static bool Process_setupChildPipes(Process_T P) {
         close(P->stdin_pipe[1]);   // close write end
         if (P->stdin_pipe[0] != STDIN_FILENO) {
                 if (dup2(P->stdin_pipe[0],  STDIN_FILENO) != STDIN_FILENO)
@@ -377,7 +387,7 @@ static bool _setupChildPipes(Process_T P) {
 
 
 // Setup stdio pipes in parent process for communication with the subprocess
-static void _setupParentPipes(Process_T P) {
+static void Process_setupParentPipes(Process_T P) {
         close(P->stdin_pipe[0]);  // close read end
         close(P->stdout_pipe[1]); // close write end
         close(P->stderr_pipe[1]); // close write end
@@ -388,14 +398,11 @@ static void _setupParentPipes(Process_T P) {
 
 
 // Release stdio streams
-static void _closeStreams(Process_T P) {
+static void Process_closeStreams(Process_T P) {
         if (P->in) InputStream_free(&P->in);
         if (P->err) InputStream_free(&P->err);
         if (P->out) OutputStream_free(&P->out);
 }
-
-
-// MARK: - Process_T
 
 
 static inline void _setstatus(Process_T P) {
@@ -408,18 +415,17 @@ static inline void _setstatus(Process_T P) {
 }
 
 
-static Process_T _Process_new(T C) {
+static Process_T Process_new(T C) {
         Process_T P;
         NEW(P);
         P->parent = C;
         P->pid = -1;
         P->status = -1;
-        P->ctrl_pipe[0] = P->ctrl_pipe[1] = -1;
-        P->stdin_pipe[0] = P->stdin_pipe[1] = -1;
-        P->stdout_pipe[0] = P->stdout_pipe[1] = -1;
-        P->stderr_pipe[0] = P->stderr_pipe[1] = -1;
         return P;
 }
+
+
+// MARK: - Process_T Public methods
 
 
 void Process_free(Process_T *P) {
@@ -444,8 +450,8 @@ void Process_detach(Process_T P) {
         assert(P);
         if (!P->isdetached) {
                 P->isdetached = true;
-                _closeStreams(P);
-                _closePipes(P);
+                Process_closeStreams(P);
+                Process_closePipes(P);
         }
 }
 
@@ -573,6 +579,7 @@ T _Command_new(const char *path, ...) {
         NEW(C);
         C->env = List_new();
         C->args = List_new();
+        C->umask = DEFAULT_UMASK;
         va_list ap;
         va_start(ap, path);
         _buildArgs(C, path, ap);
@@ -624,6 +631,18 @@ void Command_setGid(T C, gid_t gid) {
 gid_t Command_getGid(T C) {
         assert(C);
         return C->gid;
+}
+
+
+void Command_setUmask(T C, mode_t umask) {
+        assert(C);
+        C->umask = umask;
+}
+
+
+mode_t Command_getUmask(T C) {
+        assert(C);
+        return C->umask;
 }
 
 
@@ -695,10 +714,10 @@ List_T Command_getCommand(T C) {
 // MARK: - Execute
 
 
-// child process setup and exec
-static void _child(Command_T C, Process_T P) {
+// Setup and exec the child process
+static void Process_exec(Process_T P) {
         int status = 0;
-        close(P->ctrl_pipe[0]);
+        T C = P->parent;
         _resetSignals();
         errno = 0;
         if (C->working_directory) {
@@ -707,7 +726,7 @@ static void _child(Command_T C, Process_T P) {
         }
         if (setsid() < 0)
                 goto fail;
-        if (!_setupChildPipes(P))
+        if (!Process_setupChildPipes(P))
                 goto fail;
         int descriptors = open("/dev/null", O_RDWR);
         if (descriptors < 4)
@@ -739,6 +758,7 @@ static void _child(Command_T C, Process_T P) {
                         goto fail;
                 }
         }
+        umask(C->umask);
         char **args = _args(C);
         execve(args[0], args, _env(C));
 fail:
@@ -746,6 +766,15 @@ fail:
         if (status != 0)
                 while (write(P->ctrl_pipe[1], &status, sizeof status) < 0);
         _exit(127);
+}
+
+
+// If the child process succeeded in calling execve, status is 0
+static void Process_ctrl(Process_T P, int *status) {
+        close(P->ctrl_pipe[1]);
+        if (read(P->ctrl_pipe[0], status, sizeof *status) != sizeof *status)
+                *status = 0;
+        else waitpid(P->pid, &(int){0}, 0);
 }
 
 
@@ -777,33 +806,28 @@ fail:
  */
 Process_T Command_execute(T C) {
         assert(C);
-        Process_T P = _Process_new(C);
         struct _block block = _block();
-        int status = _createPipes(P);
-        if(status < 0) {
+        Process_T P = Process_new(C);
+        int status = Process_createPipes(P);
+        if (status < 0) {
                 status = -status;
                 goto fail;
         }
-        P->pid = fork();
-        if (P->pid == 0) {
-                _child(C, P);
-        } else if (P->pid > 0) {
-                close(P->ctrl_pipe[1]);
-                if (read(P->ctrl_pipe[0], &status, sizeof status) != sizeof status)
-                        status = 0;
-                else waitpid(P->pid, &(int){0}, 0);
-        } else {
+        if ((P->pid = fork()) < 0) {
                 status = errno;
+        } else if (P->pid == 0) {
+                Process_exec(P);
+        } else {
+                Process_ctrl(P, &status);
         }
 fail:
-        _closePipe(P->ctrl_pipe);
+        Process_closeCtrlPipe(P);
         if (status != 0) {
                 DEBUG("Command: failed -- %s\n", System_getError(status));
                 Process_free(&P);
         } else
-                _setupParentPipes(P);
+                Process_setupParentPipes(P);
         _unblock(&block);
         errno = status;
         return P;
 }
-

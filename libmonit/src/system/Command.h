@@ -139,6 +139,24 @@ gid_t Command_getGid(T C);
 
 
 /**
+ * Set the umask value for the sub-process. The default value if not set
+ * is 022. See also http://en.wikipedia.org/wiki/Umask and man umask(2)
+ * @param C A Command object
+ * @param mask The new umask value, as a 3 digit octal number, e.g. 002
+ */
+void Command_setUmask(T C, mode_t mask);
+
+
+/**
+ * Returns the umask value for the sub-process. The default value is 022
+ * unless changed with Command_setUmask().
+ * @param C A Command object
+ * @return The umask value for the sub-process
+ */
+mode_t Command_getUmask(T C);
+
+
+/**
  * Set the working directory for the sub-process. If the directory cannot
  * be changed to, the sub-process will exit with an error
  * @param C A Command object

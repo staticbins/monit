@@ -133,8 +133,8 @@
 		521ECE3821D85CFE00F8045E /* Fmt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Fmt.c; sourceTree = "<group>"; };
 		521ECE3B21D85EC100F8045E /* FmtTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FmtTest.c; sourceTree = "<group>"; };
 		522539AC18B91092003EB002 /* THIRDPARTY */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = THIRDPARTY; sourceTree = "<group>"; };
-		523FD53C2B46204A00D6F92B /* StringBufferTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = StringBufferTest; path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/StringBufferTest"; sourceTree = "<absolute>"; };
-		523FD53D2B46205400D6F92B /* InputstreamTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = InputstreamTest; path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/InputstreamTest"; sourceTree = "<absolute>"; };
+		52626A602B486F5400408494 /* StringBufferTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = StringBufferTest; path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/StringBufferTest"; sourceTree = "<absolute>"; };
+		52626A612B486F5400408494 /* InputstreamTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = InputstreamTest; path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/InputstreamTest"; sourceTree = "<absolute>"; };
 		5274580B13A1009C00C422FE /* bootstrap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = bootstrap; sourceTree = "<group>"; };
 		5274580C13A1009C00C422FE /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; lineEnding = 0; path = configure.ac; sourceTree = "<group>"; };
 		5274580D13A1009C00C422FE /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
@@ -441,7 +441,7 @@
 			);
 			name = InputstreamTest;
 			productName = CommandTest;
-			productReference = 523FD53D2B46205400D6F92B /* InputstreamTest */;
+			productReference = 52626A612B486F5400408494 /* InputstreamTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		522FF2F0192E700200C62A13 /* TimeTest */ = {
@@ -512,7 +512,7 @@
 			);
 			name = StringBufferTest;
 			productName = CommandTest;
-			productReference = 523FD53C2B46204A00D6F92B /* StringBufferTest */;
+			productReference = 52626A602B486F5400408494 /* StringBufferTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		52FDD6A7189C2036008E3D5E /* CommandTest */ = {

@@ -22,8 +22,6 @@
  */
 
 
-bool timeout_called = false;
-
 static void onExec(Process_T P) {
         assert(P);
         char buf[STRLEN];
@@ -36,7 +34,7 @@ static void onExec(Process_T P) {
         printf("\tCommunication with child:\n");
         if (! InputStream_readLine(in, buf, STRLEN)) {
                 InputStream_readLine(err, buf, STRLEN);
-                printf("\tError in script: %s\n", buf);
+                printf("\tError in script: %s\n", Str_chomp(buf));
         } else {
                 printf("\t%s", buf);
                 OutputStream_print(out, "Elessar Telcontar\n");
@@ -45,7 +43,7 @@ static void onExec(Process_T P) {
                 assert(line);
                 printf("\t%s", line);
         }
-        printf("Process exited with status: %d\n", Process_waitFor(P));
+        printf("\tProcess exited with status: %d\n", Process_waitFor(P));
         Process_free(&P);
 }
 
@@ -55,9 +53,7 @@ static void onTerminate(Process_T P) {
         printf("\tTest terminate subprocess ((pid=%d)\n", Process_getPid(P));
         assert(Process_isRunning(P));
         Process_terminate(P);
-        printf("\tWaiting on process to terminate.. ");
-        fflush(stdout);
-        printf("Process exited with status: %d\n", Process_waitFor(P));
+        printf("\tProcess exited with status: %d\n", Process_waitFor(P));
         assert(Process_exitStatus(P) == SIGTERM);
         Process_free(&P);
 }
@@ -68,8 +64,7 @@ static void onKill(Process_T P) {
         printf("\tTest kill subprocess ((pid=%d)\n", Process_getPid(P));
         assert(Process_isRunning(P));
         Process_kill(P);
-        printf("\tWaiting on process to exit.. ");
-        printf("Process exited with status: %d\n", Process_waitFor(P));
+        printf("\tProcess exited with status: %d\n", Process_waitFor(P));
         assert(Process_exitStatus(P) == SIGKILL);
         Process_free(&P);
 }
@@ -122,14 +117,13 @@ int main(void) {
         }
         printf("=> Test1: OK\n\n");
 
-        printf("=> Test2: set and get uid/gid/umask\n");
+        printf("=> Test2: set and get uid/gid\n");
         {
                 Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit");
                 // Check that default is 0
                 assert(Command_getUid(c) == 0);
                 assert(Command_getGid(c) == 0);
                 if (getuid() == 0) {
-                        // set and test uid and gid only if we are root
                         Command_setUid(c,42);
                         assert(Command_getUid(c) == 42);
                         Command_setGid(c,148);
@@ -138,12 +132,12 @@ int main(void) {
                 } else {
                         TRY
                         {
-                                printf("\tNot running as root. Checking exception: ");
+                                printf("\tNot running as root. Checking exception instead: ");
                                 Command_setUid(c,42);
-                                printf("\tAssertException not thrown\n");
+                                printf("AssertException not thrown\n");
                                 exit(1);
                         }
-                        ELSE
+                        CATCH (AssertException)
                                 printf("ok\n");
                         END_TRY;
                 }
@@ -280,7 +274,7 @@ int main(void) {
                         Command_setDir(c, "/tmp/somenonexistingdir");
                         exit(1);
                 }
-                ELSE
+                CATCH (AssertException)
                 END_TRY;
                 Command_free(&c);
         }
@@ -288,13 +282,6 @@ int main(void) {
 
         printf("=> Test14: detach\n");
         {
-                /* Test explained: The script will block on read waiting for input.
-                 Instead we detach (close pipes) in onDetach which will cause read
-                 to return immediately with eof (because of broken pipe). The write
-                 to stdout will fail, but it should not kill the script with SIGPIPE
-                 as Command ensure the process ignore this signal. Instead the script
-                 should exit cleanly with 0 after writing to a file to verify it ran.
-                 */
                 Command_T c = Command_new("/bin/sh", "-c", "read msg; echo \"write will fail but should not exit the script\"; echo \"$$ still alive\" > /tmp/ondetach; exit 0;");
                 onDetach(Command_execute(c));
                 Command_free(&c);
@@ -321,14 +308,34 @@ int main(void) {
                 Process_T p = Command_execute(c);
                 assert(p);
                 assert(Process_waitFor(p) == 0);
+                Process_free(&p);
                 Command_free(&c);
                 FREE(script);
         }
 skip:
         printf("=> Test15: OK\n\n");
 
+        printf("=> Test16: set umask\n");
+        {
+                char *script = "tmp=\"/tmp/$$.tst\";touch $tmp;permissions="
+#ifdef LINUX
+                "$(stat -c '%a' $tmp);"
+#else
+                "$(stat -f '%A' $tmp);"
+#endif
+                "rm -f $tmp; if test $permissions -eq 642; then exit 0; fi; exit 1;";
+                Command_T c = Command_new("/bin/sh", "-c", script);
+                Command_setUmask(c, 025);
+                Process_T p = Command_execute(c);
+                assert(p);
+                assert(Process_waitFor(p) == 0);
+                Process_free(&p);
+                Command_free(&c);
+        }
+        printf("=> Test16: OK\n\n");
+
+
         printf("============> Command Tests: OK\n\n");
 
-        return 0;
 }
 
