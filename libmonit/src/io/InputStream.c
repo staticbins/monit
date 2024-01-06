@@ -50,8 +50,11 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-// One TCP frame data size
-#define BUFFER_SIZE 1500
+// One standard IPv6 Ethernet frame (MTU) data size (MSS)
+// We read what we get and the buffer size is mostly important
+// for buffering. This is different to OutputStream where we try
+// to do our bit to minimize fragmentation
+#define BUFFER_SIZE 1440
 
 #define T InputStream_T
 struct T {

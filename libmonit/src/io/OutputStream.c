@@ -53,8 +53,8 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-// One TCP frame data size
-#define BUFFER_SIZE 1500
+// One standard IPv4 Ethernet frame (MTU) data size (MSS)
+#define BUFFER_SIZE 1460
 
 #define T OutputStream_T
 struct T {
@@ -65,7 +65,7 @@ struct T {
         bool isclosed;
         int sessionWritten;
         long long bytesWritten;
-        uchar_t buffer[BUFFER_SIZE + 1];
+        uchar_t buffer[BUFFER_SIZE];
 };
 
 
@@ -346,7 +346,10 @@ T OutputStream_new(int descriptor) {
         S->fd = descriptor;
         S->timeout = NET_WRITE_TIMEOUT;
         S->length = S->buffer;
-        S->limit = S->buffer + BUFFER_SIZE;
+        if (Net_isIPv6(descriptor))
+                S->limit = S->buffer + BUFFER_SIZE - 20;
+        else
+                S->limit = S->buffer + BUFFER_SIZE;
         return S;
 }
 
