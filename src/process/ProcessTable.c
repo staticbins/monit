@@ -266,7 +266,7 @@ static bool _updateProcessTable(T P) {
                         _calculateResourceUsage(&prev[i], current);
                 }
         }
-        _delete(prev, &prevSize);
+        FREE(prev);
         // Aggregate child resource usage into parent. The table is already sorted
         // ascending on pid. Start with leafs and work backwards towards the root.
         for (int i = (int)(P->size - 1); i >= 0 ; i--) {
