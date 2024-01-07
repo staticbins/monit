@@ -50,9 +50,8 @@
  * using sigaction. From W. Richard Stevens' "Advanced Programming
  * in the UNIX Environment"
  */
-Sigfunc *signal(int signo, Sigfunc *func) {
+sig_t signal(int signo, sig_t func) {
         struct sigaction act, oact;
-
         act.sa_handler = func;
         sigemptyset(&act.sa_mask);
         act.sa_flags = 0;
@@ -67,19 +66,19 @@ Sigfunc *signal(int signo, Sigfunc *func) {
         }
         if (sigaction(signo, &act, &oact) < 0)
                 return(SIG_ERR);
-
         return(oact.sa_handler);
 }
 #endif
 
 
 /**
- * Set a collective thread signal block for signals honored by monit
+ * Set a collective thread signal block for signals honored or not by monit
  */
 void set_signal_block(void) {
         sigset_t mask;
         sigemptyset(&mask);
         sigaddset(&mask, SIGHUP);
+        sigaddset(&mask, SIGPIPE);
         sigaddset(&mask, SIGINT);
         sigaddset(&mask, SIGUSR1);
         sigaddset(&mask, SIGTERM);
