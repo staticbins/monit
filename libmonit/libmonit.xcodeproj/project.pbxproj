@@ -14,6 +14,8 @@
 		521ECE3C21D85EC100F8045E /* FmtTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3B21D85EC100F8045E /* FmtTest.c */; };
 		522FF2FA192E702D00C62A13 /* TimeTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8613A5212700FC4089 /* TimeTest.c */; };
 		523FFE7C19AFE7B30018595D /* StrTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8313A5212700FC4089 /* StrTest.c */; };
+		526778512B4914EC00197266 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
+		526778572B4915C400197266 /* OutputStreamTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8113A5212700FC4089 /* OutputStreamTest.c */; };
 		52A31C841A653235009D3D83 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
 		52A31C851A65323A009D3D83 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
 		52A31C861A653254009D3D83 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
@@ -43,6 +45,13 @@
 
 /* Begin PBXContainerItemProxy section */
 		520568A6249019A00091011E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52A12C2213A0FFAB00C6CEB7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 52A12C2A13A0FFAB00C6CEB7;
+			remoteInfo = libmonit;
+		};
+		5267784D2B4914EC00197266 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 52A12C2213A0FFAB00C6CEB7 /* Project object */;
 			proxyType = 1;
@@ -107,6 +116,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		526778522B4914EC00197266 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		52F8BB3D1ECE55270007DF91 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -133,8 +151,9 @@
 		521ECE3821D85CFE00F8045E /* Fmt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Fmt.c; sourceTree = "<group>"; };
 		521ECE3B21D85EC100F8045E /* FmtTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FmtTest.c; sourceTree = "<group>"; };
 		522539AC18B91092003EB002 /* THIRDPARTY */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = THIRDPARTY; sourceTree = "<group>"; };
-		52626A602B486F5400408494 /* StringBufferTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = StringBufferTest; path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/StringBufferTest"; sourceTree = "<absolute>"; };
-		52626A612B486F5400408494 /* InputstreamTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = InputstreamTest; path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/InputstreamTest"; sourceTree = "<absolute>"; };
+		526778492B4914A500197266 /* StringBufferTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = StringBufferTest; path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/StringBufferTest"; sourceTree = "<absolute>"; };
+		5267784A2B4914A500197266 /* InputstreamTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = InputstreamTest; path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/InputstreamTest"; sourceTree = "<absolute>"; };
+		526778562B4914EC00197266 /* OutputstreamTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = OutputstreamTest; path = "/Users/hauk/src/monit-branches/monit-master/libmonit/build/Debug/OutputstreamTest"; sourceTree = "<absolute>"; };
 		5274580B13A1009C00C422FE /* bootstrap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = bootstrap; sourceTree = "<group>"; };
 		5274580C13A1009C00C422FE /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; lineEnding = 0; path = configure.ac; sourceTree = "<group>"; };
 		5274580D13A1009C00C422FE /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
@@ -224,6 +243,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				52A31C861A653254009D3D83 /* libmonit.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		526778502B4914EC00197266 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				526778512B4914EC00197266 /* libmonit.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -441,7 +468,7 @@
 			);
 			name = InputstreamTest;
 			productName = CommandTest;
-			productReference = 52626A612B486F5400408494 /* InputstreamTest */;
+			productReference = 5267784A2B4914A500197266 /* InputstreamTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		522FF2F0192E700200C62A13 /* TimeTest */ = {
@@ -480,6 +507,24 @@
 			productReference = 529D79B71A59EBFA003C3931 /* StrTest */;
 			productType = "com.apple.product-type.tool";
 		};
+		5267784B2B4914EC00197266 /* OutputstreamTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 526778532B4914EC00197266 /* Build configuration list for PBXNativeTarget "OutputstreamTest" */;
+			buildPhases = (
+				5267784E2B4914EC00197266 /* Sources */,
+				526778502B4914EC00197266 /* Frameworks */,
+				526778522B4914EC00197266 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5267784C2B4914EC00197266 /* PBXTargetDependency */,
+			);
+			name = OutputstreamTest;
+			productName = CommandTest;
+			productReference = 526778562B4914EC00197266 /* OutputstreamTest */;
+			productType = "com.apple.product-type.tool";
+		};
 		52A12C2A13A0FFAB00C6CEB7 /* libmonit */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 52A12C2F13A0FFAB00C6CEB7 /* Build configuration list for PBXNativeTarget "libmonit" */;
@@ -512,7 +557,7 @@
 			);
 			name = StringBufferTest;
 			productName = CommandTest;
-			productReference = 52626A602B486F5400408494 /* StringBufferTest */;
+			productReference = 526778492B4914A500197266 /* StringBufferTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		52FDD6A7189C2036008E3D5E /* CommandTest */ = {
@@ -562,6 +607,7 @@
 				523FFE7219AFE7610018595D /* StrTest */,
 				52F8BB361ECE55270007DF91 /* StringBufferTest */,
 				520568A4249019A00091011E /* InputstreamTest */,
+				5267784B2B4914EC00197266 /* OutputstreamTest */,
 			);
 		};
 /* End PBXProject section */
@@ -588,6 +634,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				523FFE7C19AFE7B30018595D /* StrTest.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5267784E2B4914EC00197266 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				526778572B4915C400197266 /* OutputStreamTest.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -639,6 +693,11 @@
 			isa = PBXTargetDependency;
 			target = 52A12C2A13A0FFAB00C6CEB7 /* libmonit */;
 			targetProxy = 520568A6249019A00091011E /* PBXContainerItemProxy */;
+		};
+		5267784C2B4914EC00197266 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 52A12C2A13A0FFAB00C6CEB7 /* libmonit */;
+			targetProxy = 5267784D2B4914EC00197266 /* PBXContainerItemProxy */;
 		};
 		529D79B91A59EE1D003C3931 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -803,6 +862,54 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = StrTest;
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Release;
+		};
+		526778542B4914EC00197266 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Debug;
+		};
+		526778552B4914EC00197266 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Release;
@@ -1084,6 +1191,15 @@
 			buildConfigurations = (
 				523FFE7919AFE7610018595D /* Debug */,
 				523FFE7A19AFE7610018595D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		526778532B4914EC00197266 /* Build configuration list for PBXNativeTarget "OutputstreamTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				526778542B4914EC00197266 /* Debug */,
+				526778552B4914EC00197266 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
