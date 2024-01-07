@@ -101,7 +101,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
         TRY
         {
                 // May throw exception if the program doesn't exist (was removed while Monit was up)
-                C = Command_new(c->arg[0], NULL);
+                C = Command_new(c->arg[0]);
         }
         ELSE
         {

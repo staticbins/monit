@@ -3671,7 +3671,7 @@ static void addservice(Service_T s) {
                         strncpy(program, s->program->args->arg[0], sizeof(program) - 1);
                         // Require that the program exist before creating the Command object
                         if (File_isExecutable(program)) {
-                                s->program->C = Command_new(program, NULL);
+                                s->program->C = Command_new(program);
                                 for (int i = 1; i < s->program->args->length; i++) {
                                         Command_appendArgument(s->program->C, s->program->args->arg[i]);
                                         snprintf(program + strlen(program), sizeof(program) - strlen(program) - 1, " %s", s->program->args->arg[i]);
