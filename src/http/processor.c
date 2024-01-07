@@ -797,7 +797,7 @@ static bool is_authenticated(HttpRequest req, HttpResponse res) {
                                                 break;
                                         }
                                 }
-                                if (Str_authcmp(cookieValue, token, strlen(cookieValue))) {
+                                if (! Str_authcmp(cookieValue, token, strlen(cookieValue))) {
                                         Log_error("HttpRequest: access denied -- client [%s]: CSRF token mismatch\n", NVLSTR(Socket_getRemoteHost(req->S)));
                                         send_error(req, res, SC_FORBIDDEN, "Invalid CSRF Token");
                                         return false;

@@ -1589,9 +1589,7 @@ bool Util_checkCredentials(char *uname, char *outside) {
                         Log_error("Unknown password digestion method.\n");
                         return false;
         }
-        if (Str_authcmp(outside_crypt, c->passwd, strlen(c->passwd)) == 0)
-                return true;
-        return false;
+        return Str_authcmp(outside_crypt, c->passwd, strlen(c->passwd));
 }
 
 
