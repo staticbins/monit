@@ -439,8 +439,6 @@ int Str_cmp(const void *x, const void *y) {
 bool Str_authcmp(const char *a, const char *b) {
         if (!a || !b)
                 return false;
-        // Caveat: If x and y are fixed size hashes, strlen should not be
-        // a problem, otherwise a timing differences may be introduced
         size_t al = strlen(a);
         size_t bl = strlen(b);
         size_t length = (al > bl) ? al : bl;
@@ -450,5 +448,5 @@ bool Str_authcmp(const char *a, const char *b) {
                 char _b = (i < bl) ? b[i] : 0;
                 rv |= _a ^ _b;
         }
-        return (al == bl) && (rv == 0);
+        return rv == 0;
 }
