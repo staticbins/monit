@@ -455,9 +455,9 @@ int Str_cmp(const void *x, const void *y);
  * identical length, such as fixed size hashes. Otherwise a timing
  * differences may be introduced based on string length.
  *
- * @param x A string to compare for equality with 'y'
- * @param y A string to compare for equality with 'x'
- * @return true if 'x' and 'y' are equal in both content and length;
+ * @param a A string to compare for equality with 'b'
+ * @param b A string to compare for equality with 'a'
+ * @return true if 'a' and 'b' are equal in both content and length;
  * otherwise, false
  */
 bool Str_authcmp(const char *a, const char *b);
