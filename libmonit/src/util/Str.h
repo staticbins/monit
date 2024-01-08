@@ -447,23 +447,20 @@ int Str_cmp(const void *x, const void *y);
 
 
 /**
- * Compare two buffers in constant time. This function is designed to
+ * Compare two strings in constant time. This function is designed to
  * mitigate side-channel attacks, such as those that might occur when
- * comparing sensitive data like credentials. It compares the first
- * 'length' bytes of each buffer. The buffers are considered equal if
- * they are identical byte for byte up to the specified length. If
- * either 'x' or 'y' is NULL, or both are NULL, the function returns
- * false. Both buffers are assumed to be 'length' bytes long. If not,
- * the 'length' parameter should not exceed the length of the shortest
- * buffer to avoid reading beyond allocated memory.
+ * comparing sensitive data like credentials.
  *
- * @param x A buffer to compare for equality with 'y'
- * @param y A buffer to compare for equality with 'x'
- * @param length The number of bytes to compare in each buffer.
- * @return true if 'x' and 'y' are equal for the given length;
+ * Note: For best security, use this function to compare strings of
+ * identical length, such as fixed size hashes. Otherwise a timing
+ * differences may be introduced based on string length.
+ *
+ * @param x A string to compare for equality with 'y'
+ * @param y A string to compare for equality with 'x'
+ * @return true if 'x' and 'y' are equal in both content and length;
  * otherwise, false
  */
-bool Str_authcmp(const void *x, const void *y, size_t length);
+bool Str_authcmp(const char *a, const char *b);
 
 
 #endif

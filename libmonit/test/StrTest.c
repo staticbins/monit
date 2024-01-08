@@ -504,17 +504,17 @@ int main(void) {
 
         printf("=> Test24: Str_authcmp\n");
         {
-                assert(!Str_authcmp(NULL,     NULL, 100));
-                assert(!Str_authcmp("abcdef", NULL, 10));
-                assert(!Str_authcmp(NULL,     "abcdef", 90));
-                assert(Str_authcmp("abcdef", "abcdef", 6));
-                assert(!Str_authcmp("abcdef", "ABCDEF", 6));
-                assert(Str_authcmp("abcdef", "abc", 3));
-                assert(Str_authcmp("abcdef", "abcdefghi", 6));
-                unsigned char ok[] = "1111111111111111111111111111111111111111111111111111111111111111";
-                assert(Str_authcmp(ok, ok, 65));
-                unsigned char ko[] = "1111111111111111111111111111111111111111111111111111111111111110";
-                assert(!Str_authcmp(ko, ok, 65));
+                assert(!Str_authcmp(NULL,     NULL));
+                assert(!Str_authcmp("abcdef", NULL));
+                assert(!Str_authcmp(NULL,     "abcdef"));
+                assert(!Str_authcmp("",     "abcdef"));
+                assert(!Str_authcmp("abcdef",     ""));
+                assert(Str_authcmp("abcdef", "abcdef"));
+                assert(!Str_authcmp("abcdef", "ABCDEF"));
+                char *a = "da091173a92116fc7b86990368647f99228cd0b5d993e93248b501e059674b7e";
+                char *b = "9b594557f02a0084bcd10cbb160406618312ce6612aeb8da86e57b2929fa1465";
+                assert(!Str_authcmp(a, b));
+                assert(Str_authcmp(a, a));
         }
         printf("=> Test24: OK\n\n");
 

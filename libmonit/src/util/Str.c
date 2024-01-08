@@ -191,9 +191,9 @@ char *Str_replaceChar(char *s, char o, char n) {
 
 
 bool Str_startsWith(const char *a, const char *b) {
-	if (a && b) {
-	        do {
-	                if (toupper(*a) != toupper(*b))
+        if (a && b) {
+                do {
+                        if (toupper(*a) != toupper(*b))
                                 return false;
                         if (*a++ == 0 || *b++ == 0)
                                 break;
@@ -287,13 +287,13 @@ bool Str_isByteEqual(const char *a, const char *b) {
 
 
 char *Str_copy(char *dest, const char *src, int n) {
-	if (src && dest && (n > 0)) {
-        	char *t = dest;
-	        while (*src && n--)
-        		*t++ = *src++;
-        	*t = 0;
-	} else if (dest)
-	        *dest = 0;
+        if (src && dest && (n > 0)) {
+                char *t = dest;
+                while (*src && n--)
+                        *t++ = *src++;
+                *t = 0;
+        } else if (dest)
+                *dest = 0;
         return dest;
 }
 
@@ -436,13 +436,19 @@ int Str_cmp(const void *x, const void *y) {
 }
 
 
-bool Str_authcmp(const void *x, const void *y, size_t length) {
-    if (!x || !y)
-        return false;
-    const unsigned char *_x = (const unsigned char *)x;
-    const unsigned char *_y = (const unsigned char *)y;
-    volatile int rv = 0;
-    for (size_t i = 0; i < length; i++)
-        rv |= _x[i] ^ _y[i];
-    return rv == 0;
+bool Str_authcmp(const char *a, const char *b) {
+        if (!a || !b)
+                return false;
+        // Caveat: If x and y are fixed size hashes, strlen should not be
+        // a problem, otherwise a timing differences may be introduced
+        size_t al = strlen(a);
+        size_t bl = strlen(b);
+        size_t length = (al > bl) ? al : bl;
+        volatile int rv = 0;
+        for (size_t i = 0; i < length; i++) {
+                char _a = (i < al) ? a[i] : 0;
+                char _b = (i < bl) ? b[i] : 0;
+                rv |= _a ^ _b;
+        }
+        return (al == bl) && (rv == 0);
 }
