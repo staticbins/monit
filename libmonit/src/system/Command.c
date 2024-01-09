@@ -77,7 +77,6 @@ struct T {
 };
 
 struct Process_T {
-        T parent;
         pid_t pid;
         int status;
         bool isdetached;
@@ -418,7 +417,6 @@ static inline void _setstatus(Process_T P) {
 static Process_T Process_new(T C) {
         Process_T P;
         NEW(P);
-        P->parent = C;
         P->pid = -1;
         P->status = -1;
         return P;
@@ -459,24 +457,6 @@ void Process_detach(Process_T P) {
 bool Process_isdetached(Process_T P) {
         assert(P);
         return P->isdetached;
-}
-
-
-uid_t Process_getUid(Process_T P) {
-        assert(P);
-        return P->parent->uid;
-}
-
-
-gid_t Process_getGid(Process_T P) {
-        assert(P);
-        return P->parent->gid;
-}
-
-
-const char *Process_getDir(Process_T P) {
-        assert(P);
-        return P->parent->working_directory;
 }
 
 
@@ -715,9 +695,8 @@ List_T Command_getCommand(T C) {
 
 
 // Setup and exec the child process
-static void Process_exec(Process_T P) {
+static void Process_exec(Process_T P, T C) {
         int status = 0;
-        T C = P->parent;
         _resetSignals();
         errno = 0;
         if (C->working_directory) {
@@ -818,7 +797,7 @@ Process_T Command_execute(T C) {
         if ((P->pid = fork()) < 0) {
                 status = errno;
         } else if (P->pid == 0) {
-                Process_exec(P);
+                Process_exec(P, C);
         } else {
                 Process_ctrl(P, &status);
         }

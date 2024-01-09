@@ -26,7 +26,7 @@ static void onExec(Process_T P) {
         assert(P);
         char buf[STRLEN];
         // Child process info
-        printf("\tSubprocess ((pid=%d, uid=%d, gid=%d) created with cwd (%s)\n", Process_getPid(P), Process_getUid(P), Process_getGid(P), Process_getDir(P));
+        printf("\tSubprocess ((pid=%d)\n", Process_getPid(P));
         InputStream_T in = Process_getInputStream(P);
         OutputStream_T out = Process_getOutputStream(P);
         InputStream_T err = Process_getErrorStream(P);

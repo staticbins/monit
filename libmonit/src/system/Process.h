@@ -105,31 +105,6 @@ bool Process_isdetached(T P);
 
 
 /**
- * Returns the user id of the sub-process
- * @param P A Process object
- * @return The user id of the sub-process
- */
-uid_t Process_getUid(T P);
-
-
-/**
- * Returns the group id of the sub-process
- * @param P A Process object
- * @return The group id of the sub-process
- */
-gid_t Process_getGid(T P);
-
-
-/**
- * Returns the working directory of the Process.
- * @param P A Process object
- * @return The Process working directory. NULL if
- * not set, meaning the Parent's current directory
- */
-const char *Process_getDir(T P);
-
-
-/**
  * Returns the Process's identification number
  * @param P A Process object
  * @return The process identification number
