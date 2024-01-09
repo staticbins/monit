@@ -762,7 +762,7 @@ void Util_printService(Service_T s) {
         printf("%-21s = %s\n", StringBuffer_toString(StringBuffer_append(buf, "%s Name", Servicetype_Names[s->type])), s->name);
 
         for (ServiceGroup_T o = Service_Group_List; o; o = o->next) {
-                for (_list_t m = o->members->head; m; m = m->next) {
+                for (list_t m = o->members->head; m; m = m->next) {
                         if (m->e == s) {
                                 if (! sgheader) {
                                         printf(" %-20s = %s", "Group", o->name);

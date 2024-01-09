@@ -40,7 +40,7 @@
  * if there are no more nodes. In addition, the two variables <code>head</code>
  * and <code>tail</code> are pointers to respectively the first and last node
  * in the List. The variable <code>freelist</code> is used to retain popped
- * _list_t nodes for reuse. 
+ * list_t nodes for reuse. 
  *
  * This class is reentrant but not thread-safe
  *
@@ -55,15 +55,15 @@ typedef struct T *T;
 
 
 /** @cond hide */
-typedef struct _list_t {
+typedef struct list_t {
         void *e;
-        struct _list_t *next;
-} *_list_t;
+        struct list_t *next;
+} *list_t;
 
 
 struct T {
         int length;
-        _list_t  head, tail, freelist;
+        list_t  head, tail, freelist;
 };
 /** @endcond */
 

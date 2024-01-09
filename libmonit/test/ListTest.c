@@ -56,7 +56,7 @@ int main(void) {
         printf("=> Test2: List_pop()\n");
         {
                 int i = 0;
-                _list_t p;
+                list_t p;
                 while (List_pop(L)) ;
                 assert(List_length(L) == 0);
                 // Ensure that nodes are retained in the freelist
@@ -107,7 +107,7 @@ int main(void) {
 
         printf("=> Test5: List_reverse()\n");
         {
-                _list_t p;
+                list_t p;
                 List_T l = List_new();
                 List_append(l, "a");
                 List_append(l, "b");

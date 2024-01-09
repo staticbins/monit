@@ -108,7 +108,7 @@ extern char **environ;
 // if found, otherwise NULL.
 static inline char *_findEnv(T C, const char *name, size_t len) {
         assert(len >= 0);
-        for (_list_t p = C->env->head; p; p = p->next) {
+        for (list_t p = C->env->head; p; p = p->next) {
                 if ((memcmp(p->e, name, len) == 0))
                         if (((char*)p->e)[len] == '=') // Ensure that name is not just a sub-string
                                 return p->e;
