@@ -414,7 +414,7 @@ static inline void _setstatus(Process_T P) {
 }
 
 
-static Process_T Process_new(T C) {
+static Process_T Process_new(void) {
         Process_T P;
         NEW(P);
         P->pid = -1;
@@ -788,7 +788,7 @@ static void Process_ctrl(Process_T P, int *status) {
 Process_T Command_execute(T C) {
         assert(C);
         struct _block block = _block();
-        Process_T P = Process_new(C);
+        Process_T P = Process_new();
         int status = Process_createPipes(P);
         if (status < 0) {
                 status = -status;
