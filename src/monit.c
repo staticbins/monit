@@ -122,7 +122,8 @@ static void *heartbeat(void *args);              /* M/Monit heartbeat thread */
 static void do_reload(int);             /* Signalhandler for a daemon reload */
 static void do_destroy(int);         /* Signalhandler for monit finalization */
 static void do_wakeup(int);        /* Signalhandler for a daemon wakeup call */
-static void waitforchildren(void); /* Wait for any child process not running */
+static void do_wait(int);     /* Signalhandler for handling sub-process exit */
+
 
 
 
@@ -262,10 +263,18 @@ static void do_init(void) {
         signal(SIGHUP, do_reload);
 
         /*
+         * Register interest for the SIGCHLD signal.
+         * As a monitoring system we very much want
+         * to be notified and handle when a child-
+         * processes exit
+         */
+        signal(SIGCHLD, do_wait);
+
+        /*
          * Register no interest for the SIGPIPE signal,
          */
         signal(SIGPIPE, SIG_IGN);
-
+        
         /*
          * Initialize the random number generator
          */
@@ -330,11 +339,6 @@ static void do_init(void) {
                 Util_printRunList();
                 Util_printServiceList();
         }
-        
-        /*
-         * Reap any stray child processes we may have created
-         */
-        atexit(waitforchildren);
 }
 
 
@@ -344,14 +348,6 @@ static void do_init(void) {
  */
 static void do_reinit(bool full) {
         Log_info("Reinitializing Monit -- control file '%s'\n", Run.files.control);
-
-        /* Wait non-blocking for any children that has exited. Since we
-         reinitialize any information about children we have setup to wait
-         for will be lost. This may create zombie processes until Monit
-         itself exit. However, Monit will wait on all children that has exited
-         before it itself exit. TODO: Later refactored versions will use a
-         globale process table which a sigchld handler can check */
-        waitforchildren();
 
         if (Run.mmonits && isHeartbeatRunning) {
                 Sem_signal(Heartbeat_Cond);
@@ -959,9 +955,7 @@ static void version(void) {
 }
 
 
-/**
- * M/Monit heartbeat thread
- */
+// M/Monit heartbeat thread
 static void *heartbeat(__attribute__ ((unused)) void *args) {
         set_signal_block();
         Log_info("M/Monit heartbeat started\n");
@@ -982,32 +976,33 @@ static void *heartbeat(__attribute__ ((unused)) void *args) {
 }
 
 
-/**
- * Signalhandler for a daemon reload call
- */
+
+// Signal handler for a daemon reload call
 static void do_reload(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoReload;
 }
 
 
-/**
- * Signalhandler for monit finalization
- */
+// Signal handler for monit finalization
 static void do_destroy(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_Stopped;
 }
 
 
-/**
- * Signalhandler for a daemon wakeup call
- */
+// Signal handler for a daemon wakeup call
 static void do_wakeup(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoWakeup;
 }
 
 
-/* A simple non-blocking reaper to ensure that we wait-for and reap all/any stray child processes
- we may have created and not waited on, so we do not create any zombie processes at exit */
-static void waitforchildren(void) {
-        while (waitpid(-1, NULL, WNOHANG) > 0) ;
+// Signal handler for child processes exit
+static void do_wait(__attribute__ ((unused)) int sig) {
+        pid_t pid;
+        int status;
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+                Process_T P = ProcessTable_getProcess(Process_Table, pid);
+                if (P) {
+                        Process_setExitStatus(P, status);
+                }
+        }
 }
