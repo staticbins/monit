@@ -187,7 +187,6 @@ int main(int argc, char **argv) {
         do_action(arguments);
         List_free(&arguments);
         do_exit(false);
-        return 0;
 }
 
 
@@ -556,6 +555,8 @@ static void do_exit(bool saveState) {
         if (saveState) {
                 State_save();
         }
+        if (Process_Table)
+                ProcessTable_free(&Process_Table);
         gc();
 #ifdef HAVE_OPENSSL
         Ssl_stop();
@@ -584,8 +585,14 @@ static void do_default(void) {
                         Log_info("Starting Monit %s daemon\n", VERSION);
                 }
 
-                if (! (Run.flags & Run_Foreground))
-                        daemonize();
+                if (! (Run.flags & Run_Foreground)) {
+                        if (getpid() == 1) {
+                                Log_error("Error: Monit is running as process 1 (init) and cannot daemonize\n"
+                                          "Please start monit with the -I option to avoid seeing this error\n");
+                        } else {
+                                daemonize();
+                        }
+                }
 
                 if (! file_createPidFile(Run.files.pid)) {
                         Log_error("Monit daemon died\n");
