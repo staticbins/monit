@@ -137,6 +137,17 @@ int Process_exitStatus(T P);
 
 
 /**
+ * Set the Process exit status. Normally, Process_exitStatus() collects
+ * its own exit status. However, if the status has already been collected 
+ * elsewhere (e.g., from a signal handler), use this method to set the exit
+ * status for the Process.
+ * @param P A Process object
+ * @param status Process exit status
+ */
+void Process_setExitStatus(Process_T P, int status);
+
+
+/**
  * Returns true if the sub-process is running otherwise false
  * @param P A Process object
  * @return True if Process is running otherwise false

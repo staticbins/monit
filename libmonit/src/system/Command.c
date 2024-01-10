@@ -498,6 +498,13 @@ int Process_exitStatus(Process_T P) {
 }
 
 
+void Process_setExitStatus(Process_T P, int status) {
+        assert(P);
+        P->status = status;
+        _setstatus(P);
+}
+
+
 bool Process_isRunning(Process_T P) {
         assert(P);
         if (P->pid == -1)
