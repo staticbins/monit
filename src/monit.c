@@ -110,21 +110,19 @@
 /* -------------------------------------------------------------- Prototypes */
 
 
-static void  do_init(void);                   /* Initialize this application */
-static void  do_reinit(bool full);  /* Re-initialize the runtime application */
-static void  do_action(List_T);          /* Dispatch to the submitted action */
-static void  do_exit(bool);                           /* Finalize monit */
-static void  do_default(void);                          /* Do default action */
-static void  handle_options(int, char **, List_T); /* Handle program options */
-static void  help(void);             /* Print program help message to stdout */
-static void  version(void);                     /* Print version information */
-static void *heartbeat(void *args);              /* M/Monit heartbeat thread */
-static void do_reload(int);             /* Signalhandler for a daemon reload */
-static void do_destroy(int);         /* Signalhandler for monit finalization */
-static void do_wakeup(int);        /* Signalhandler for a daemon wakeup call */
-static void do_wait(int);     /* Signalhandler for handling sub-process exit */
-
-
+static void do_init(void);                    /* Initialize this application */
+static void do_reinit(bool full);   /* Re-initialize the runtime application */
+static void do_action(List_T);           /* Dispatch to the submitted action */
+static void do_exit(bool);                                 /* Finalize monit */
+static void do_default(void);                           /* Do default action */
+static void do_options(int, char **, List_T);      /* Handle program options */
+static void *do_heartbeat(void *args);           /* M/Monit heartbeat thread */
+static void help(void);              /* Print program help message to stdout */
+static void version(void);                      /* Print version information */
+static void handle_reload(int);         /* Signalhandler for a daemon reload */
+static void handle_stop(int);        /* Signalhandler for monit finalization */
+static void handle_wakeup(int);    /* Signalhandler for a daemon wakeup call */
+static void handle_wait(int); /* Signalhandler for handling sub-process exit */
 
 
 /* ------------------------------------------------------------------ Global */
@@ -176,7 +174,7 @@ int main(int argc, char **argv) {
         List_T arguments = List_new();
         TRY
         {
-                handle_options(argc, argv, arguments);
+                do_options(argc, argv, arguments);
         }
         ELSE
         {
@@ -238,14 +236,14 @@ static void do_init(void) {
          * in case we run in daemon mode this signal
          * will terminate a running daemon.
          */
-        signal(SIGTERM, do_destroy);
+        signal(SIGTERM, handle_stop);
 
         /*
          * Register interest for the SIGUSER1 signal,
          * in case we run in daemon mode this signal
          * will wakeup a sleeping daemon.
          */
-        signal(SIGUSR1, do_wakeup);
+        signal(SIGUSR1, handle_wakeup);
 
         /*
          * Register interest for the SIGINT signal,
@@ -253,14 +251,14 @@ static void do_init(void) {
          * we need to catch this signal if the user pressed
          * CTRL^C in the terminal
          */
-        signal(SIGINT, do_destroy);
+        signal(SIGINT, handle_stop);
 
         /*
          * Register interest for the SIGHUP signal,
          * in case we run in daemon mode this signal
          * will reload the configuration.
          */
-        signal(SIGHUP, do_reload);
+        signal(SIGHUP, handle_reload);
 
         /*
          * Register interest for the SIGCHLD signal.
@@ -268,7 +266,7 @@ static void do_init(void) {
          * to be notified and handle when a child-
          * processes exit
          */
-        signal(SIGCHLD, do_wait);
+        signal(SIGCHLD, handle_wait);
 
         /*
          * Register no interest for the SIGPIPE signal,
@@ -331,6 +329,11 @@ static void do_init(void) {
          * Initialize Runtime file variables
          */
         file_init();
+        
+        /*
+         * Create the global Process_Table
+         */
+        Process_Table = ProcessTable_new();
 
         /*
          * Should we print debug information ?
@@ -409,7 +412,7 @@ static void do_reinit(bool full) {
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit reloaded");
 
                 if (Run.mmonits) {
-                        Thread_create(Heartbeat_Thread, heartbeat, NULL);
+                        Thread_create(Heartbeat_Thread, do_heartbeat, NULL);
                         isHeartbeatRunning = true;
                 }
         }
@@ -583,7 +586,7 @@ static void do_default(void) {
 
                 if (! (Run.flags & Run_Foreground)) {
                         if (getpid() == 1) {
-                                Log_error("Error: Monit is running as process 1 (init) and cannot daemonize\n"
+                                Log_error("Error: Monit is running as process 1 (init) and will not daemonize\n"
                                           "Please start monit with the -I option to avoid seeing this error\n");
                         } else {
                                 daemonize();
@@ -632,7 +635,7 @@ reload:
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
 
                 if (Run.mmonits) {
-                        Thread_create(Heartbeat_Thread, heartbeat, NULL);
+                        Thread_create(Heartbeat_Thread, do_heartbeat, NULL);
                         isHeartbeatRunning = true;
                 }
 
@@ -666,7 +669,7 @@ reload:
  * Handle program options - Options set from the commandline
  * takes precedence over those found in the control file
  */
-static void handle_options(int argc, char **argv, List_T arguments) {
+static void do_options(int argc, char **argv, List_T arguments) {
         int opt;
         int deferred_opt = 0;
         opterr = 0;
@@ -951,12 +954,12 @@ static void version(void) {
         printf("out");
 #endif
         printf(" large files\n");
-        printf("Copyright (C) 2001-2023 Tildeslash Ltd. All Rights Reserved.\n");
+        printf("Copyright (C) 2001-2024 Tildeslash Ltd. All Rights Reserved.\n");
 }
 
 
 // M/Monit heartbeat thread
-static void *heartbeat(__attribute__ ((unused)) void *args) {
+static void *do_heartbeat(__attribute__ ((unused)) void *args) {
         set_signal_block();
         Log_info("M/Monit heartbeat started\n");
         LOCK(Heartbeat_Mutex)
@@ -976,27 +979,26 @@ static void *heartbeat(__attribute__ ((unused)) void *args) {
 }
 
 
-
 // Signal handler for a daemon reload call
-static void do_reload(__attribute__ ((unused)) int sig) {
+static void handle_reload(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoReload;
 }
 
 
 // Signal handler for monit finalization
-static void do_destroy(__attribute__ ((unused)) int sig) {
+static void handle_stop(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_Stopped;
 }
 
 
 // Signal handler for a daemon wakeup call
-static void do_wakeup(__attribute__ ((unused)) int sig) {
+static void handle_wakeup(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoWakeup;
 }
 
 
 // Signal handler for child processes exit
-static void do_wait(__attribute__ ((unused)) int sig) {
+static void handle_wait(__attribute__ ((unused)) int sig) {
         pid_t pid;
         int status;
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
