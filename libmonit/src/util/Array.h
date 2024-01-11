@@ -27,14 +27,14 @@
 
 
 /**
- * A simple <b>Sparse Array</b> implementation keyed on int with values
- * of any type. The array supports integer keys in the full range
- * (including negative values) and stores values of any pointer type.
- * Note that iterating from i = 0 to Array_length does not guarantee a
- * continuous set of values. Use Array_map to visit all values or
- * Array_get to look up a specific value by key. The 'hint' parameter
- * in Array_new is used to estimate the initial array size for efficient
- * storage based on the expected number of elements.
+ * A simple <b>Sparse Array</b> keyed on int with values of any type.
+ * The array supports integer keys in the full range (including negative
+ * values) and stores values of any pointer type. Note that iterating
+ * from i = 0 to Array_length does not guarantee a continuous set of
+ * values. Use Array_map to visit all values or Array_get to look up
+ * a specific value by key. The 'hint' parameter in Array_new is used
+ * to estimate the initial array size for efficient storage based on
+ * the expected number of elements.
  *
  * Performance: Average time complexity for insertion, lookup, and 
  * deletion is generally O(1), assuming a well-distributed key space
