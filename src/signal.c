@@ -45,11 +45,10 @@
 
 
 #if ! defined HAVE_ASAN && ! defined FREEBSD
-/**
- * Replace the standard signal() function, with a more reliable
- * using sigaction. From W. Richard Stevens' "Advanced Programming
- * in the UNIX Environment"
- */
+
+// Replace the standard signal() function, with a more reliable
+// using sigaction. From W. Richard Stevens' "Advanced Programming
+// in the UNIX Environment"
 sig_t signal(int signo, sig_t func) {
         struct sigaction act, oact;
         act.sa_handler = func;
@@ -71,14 +70,13 @@ sig_t signal(int signo, sig_t func) {
 #endif
 
 
-/**
- * Set a collective thread signal block for signals honored or not by monit
- */
+// Set a collective thread signal block for signals relevant for Monit
 void set_signal_block(void) {
         sigset_t mask;
         sigemptyset(&mask);
         sigaddset(&mask, SIGHUP);
         sigaddset(&mask, SIGPIPE);
+        sigaddset(&mask, SIGCHLD);
         sigaddset(&mask, SIGINT);
         sigaddset(&mask, SIGUSR1);
         sigaddset(&mask, SIGTERM);
