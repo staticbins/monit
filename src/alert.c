@@ -112,7 +112,7 @@ static void _substitute(Mail_T m, Event_T e) {
         Util_replaceString(&m->message, "$HOST", Run.system->name);
 
         char timestamp[26];
-        Time_string(e->collected.tv_sec, timestamp);
+        Time_localStr(e->collected.tv_sec, timestamp);
         Util_replaceString(&m->subject, "$DATE", timestamp);
         Util_replaceString(&m->message, "$DATE", timestamp);
 
@@ -219,7 +219,7 @@ static bool _send(List_T list) {
                         if (mta->username && mta->password)
                                 SMTP_auth(smtp, mta->username, mta->password);
                         char now[STRLEN];
-                        Time_gmtstring(Time_now(), now);
+                        Time_str(Time_now(), now);
                         while ((m = List_pop(list))) {
                                 SMTP_from(smtp, m->from->address);
                                 SMTP_to(smtp, m->to);
