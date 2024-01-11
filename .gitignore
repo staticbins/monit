@@ -36,6 +36,7 @@ libmonit/test/ExceptionTest
 libmonit/test/FileTest
 libmonit/test/InputStreamTest
 libmonit/test/LinkTest
+libmonit/test/ArrayTest
 libmonit/test/ListTest
 libmonit/test/NetTest
 libmonit/test/OutputStreamTest

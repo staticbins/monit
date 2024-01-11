@@ -7,6 +7,7 @@ StrTest && \
 FmtTest && \
 TimeTest && \
 SystemTest && \
+ArrayTest && \
 ListTest && \
 StringBufferTest && \
 DirTest && \
