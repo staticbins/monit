@@ -25,6 +25,8 @@
 #ifndef MONIT_PROCESSTREE_H
 #define MONIT_PROCESSTREE_H
 
+#include "util/Array.h"
+
 /**
  * A <b>ProcessTable</b> holds all running processes on the system.
  * Each process in the table is of type <b>process_t</b> and holds
@@ -98,9 +100,10 @@ typedef struct process_t {
 typedef struct T {
         int size;
         pid_t self_pid;
-        ProcessEngine_Flags options;
         Mutex_T mutex;
+        Array_T cache;
         process_t table;
+        ProcessEngine_Flags options;
 } *T;
 
 typedef enum {
@@ -118,6 +121,9 @@ bool ProcessTable_update(T P);
 time_t ProcessTable_uptime(T P, pid_t pid);
 void ProcessTable_map(T P, void (*apply)(process_t process, void *ap), void *ap);
 void ProcessTable_sort(T P, ProcessTableSort_Type sort, void (*apply)(process_t process, void *ap), void *ap);
+// Process_T cache
+void ProcessTable_setProcess(T P, Process_T process);
+Process_T ProcessTable_getProcess(T P, pid_t pid);
 // MARK: - Class methods
 bool ProcessTable_exist(pid_t pid);
 // MARK: - Service methods

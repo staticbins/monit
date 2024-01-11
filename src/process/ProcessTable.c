@@ -80,6 +80,13 @@
 // MARK: - Private methods
 
 
+static void _freeCachedProcesses(int key, void **value, void *ap) {
+        Process_T p = *value;
+        Process_detach(p);
+        Process_free(&p);
+}
+
+
 static inline void _prune(process_t process, __attribute__ ((unused)) void *ap) {
         FREE(process->cmdline);
         FREE(process->secattr);
@@ -294,6 +301,8 @@ T ProcessTable_new(void) {
         P->options = ProcessEngine_CollectCommandLine;
         if (!_buildProcessTable(P)) {
                 ProcessTable_free(&P);
+        } else {
+                P->cache = Array_new(1024);
         }
         return P;
 }
@@ -302,6 +311,8 @@ T ProcessTable_new(void) {
 void ProcessTable_free(T *P) {
         assert(P && *P);
         _delete((*P)->table, &(*P)->size);
+        Array_map((*P)->cache, _freeCachedProcesses, NULL);
+        Array_free(&(*P)->cache);
         Mutex_destroy((*P)->mutex);
         FREE(*P);
 }
@@ -315,6 +326,28 @@ bool ProcessTable_update(T P) {
                 _delete(P->table, &P->size);
         Mutex_unlock(P->mutex);
         return result;
+}
+
+
+void ProcessTable_setProcess(T P, Process_T process) {
+        assert(P);
+        assert(process);
+        Process_T p = Array_put(P->cache, Process_getPid(process), process);
+        if (p) {
+                // In the highly unlikely case that a process already exist 
+                // with the same pid, unless we try to save the same process
+                // again we should detach and free the process
+                if (p != process) {
+                        Process_detach(p);
+                        Process_free(&p);
+                }
+        }
+}
+
+
+Process_T ProcessTable_getProcess(T P, pid_t pid) {
+        assert(P);
+        return Array_get(P->cache, pid);
 }
 
 
