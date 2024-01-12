@@ -87,17 +87,6 @@ void Process_free(T *P);
 //@{
 
 /**
- * Close stdio streams to the sub-process represented by this Process_T
- * object. Call this method if the sub-process is a daemon process and
- * there is no more need to communicate or read output from the sub-process.
- * Calling this method will also ensure that the sub-process will continue
- * running even when this Process object is released with Process_free()
- * @param P A Process object
- */
-void Process_detach(T P);
-
-
-/**
  * Returns true if we have detached from the sub-process. I.e. if
  * Process_detach() has been called.
  * @param P A Process object
@@ -111,7 +100,7 @@ bool Process_isdetached(T P);
  * @param P A Process object
  * @return The process identification number
  */
-pid_t Process_getPid(T P);
+pid_t Process_pid(T P);
 
 
 /**
@@ -164,7 +153,7 @@ bool Process_isRunning(T P);
  * @param P A Process object
  * @return The output stream connected to the normal input of the sub-process.
  */
-OutputStream_T Process_getOutputStream(T P);
+OutputStream_T Process_outputStream(T P);
 
 
 /**
@@ -174,7 +163,7 @@ OutputStream_T Process_getOutputStream(T P);
  * @param P A Process object
  * @return The input stream connected to the normal output of the sub-process.
  */
-InputStream_T Process_getInputStream(T P);
+InputStream_T Process_inputStream(T P);
 
 
 /**
@@ -184,7 +173,7 @@ InputStream_T Process_getInputStream(T P);
  * @param P A Process object
  * @return The input stream connected to the error output of the sub-process.
  */
-InputStream_T Process_getErrorStream(T P);
+InputStream_T Process_errorStream(T P);
 
 
 /**
@@ -212,6 +201,17 @@ const char *Process_name(T P);
 void Process_setName(T P, const char *name);
 
 //@}
+
+
+/**
+ * Close stdio streams to the sub-process represented by this Process_T
+ * object. Call this method if the sub-process is a daemon process and
+ * there is no more need to communicate or read output from the sub-process.
+ * Calling this method will also ensure that the sub-process will continue
+ * running even when this Process object is released with Process_free()
+ * @param P A Process object
+ */
+void Process_detach(T P);
 
 
 /**

@@ -363,7 +363,7 @@ void OutputStream_free(T *S) {
 /* ------------------------------------------------------------ Properties */
 
 
-int OutputStream_getDescriptor(T S) {
+int OutputStream_descriptor(T S) {
         assert(S);
         return S->fd;
 }
@@ -382,7 +382,7 @@ void OutputStream_setTimeout(T S, time_t timeout) {
 }
 
 
-time_t OutputStream_getTimeout(T S) {
+time_t OutputStream_timeout(T S) {
         assert(S);
         return S->timeout;
 }
@@ -394,7 +394,7 @@ bool OutputStream_isClosed(T S) {
 }
 
 
-long long OutputStream_getBytesWritten(T S) {
+long long OutputStream_bytesWritten(T S) {
         assert(S);
         return S->bytesWritten;
 }

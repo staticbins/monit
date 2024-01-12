@@ -129,7 +129,7 @@ void InputStream_free(T *S) {
 /* ------------------------------------------------------------ Properties */
 
 
-int InputStream_getDescriptor(T S) {
+int InputStream_descriptor(T S) {
         assert(S);
         return S->fd;
 }
@@ -142,7 +142,7 @@ void InputStream_setTimeout(T S, time_t timeout) {
 }
 
 
-time_t InputStream_getTimeout(T S) {
+time_t InputStream_timeout(T S) {
         assert(S);
         return S->timeout;
 }

@@ -26,10 +26,10 @@ static void onExec(Process_T P) {
         assert(P);
         char buf[STRLEN];
         // Child process info
-        printf("\tSubprocess ((pid=%d)\n", Process_getPid(P));
-        InputStream_T in = Process_getInputStream(P);
-        OutputStream_T out = Process_getOutputStream(P);
-        InputStream_T err = Process_getErrorStream(P);
+        printf("\tSubprocess ((pid=%d)\n", Process_pid(P));
+        InputStream_T in = Process_inputStream(P);
+        OutputStream_T out = Process_outputStream(P);
+        InputStream_T err = Process_errorStream(P);
         printf("\tSub-Process is %s\n", Process_isRunning(P) ? "running" : "not running");
         printf("\tCommunication with child:\n");
         if (! InputStream_readLine(in, buf, STRLEN)) {
@@ -50,7 +50,7 @@ static void onExec(Process_T P) {
 
 static void onTerminate(Process_T P) {
         assert(P);
-        printf("\tTest terminate subprocess ((pid=%d)\n", Process_getPid(P));
+        printf("\tTest terminate subprocess ((pid=%d)\n", Process_pid(P));
         assert(Process_isRunning(P));
         Process_terminate(P);
         printf("\tProcess exited with status: %d\n", Process_waitFor(P));
@@ -61,7 +61,7 @@ static void onTerminate(Process_T P) {
 
 static void onKill(Process_T P) {
         assert(P);
-        printf("\tTest kill subprocess ((pid=%d)\n", Process_getPid(P));
+        printf("\tTest kill subprocess ((pid=%d)\n", Process_pid(P));
         assert(Process_isRunning(P));
         Process_kill(P);
         printf("\tProcess exited with status: %d\n", Process_waitFor(P));
@@ -73,7 +73,7 @@ static void onKill(Process_T P) {
 static void onEnv(Process_T P) {
         assert(P);
         char buf[STRLEN];
-        InputStream_T in = Process_getInputStream(P);
+        InputStream_T in = Process_inputStream(P);
         assert(InputStream_readLine(in, buf, STRLEN));
         assert(Str_isEqual(Str_chomp(buf), "Ylajali"));
         // Assert that sub-process environment is not set in main process
@@ -92,7 +92,7 @@ static void onDetach(Process_T P) {
         Process_detach(P);
         assert(Process_isdetached(P));
         // Streams should be closed and not available after a detach
-        assert(Process_getInputStream(P) == NULL);
+        assert(Process_inputStream(P) == NULL);
         // Assert that the script exited cleanly
         assert(Process_waitFor(P) == 0);
         Process_free(&P);
@@ -121,13 +121,13 @@ int main(void) {
         {
                 Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit");
                 // Check that default is 0
-                assert(Command_getUid(c) == 0);
-                assert(Command_getGid(c) == 0);
+                assert(Command_uid(c) == 0);
+                assert(Command_gid(c) == 0);
                 if (getuid() == 0) {
                         Command_setUid(c,42);
-                        assert(Command_getUid(c) == 42);
+                        assert(Command_uid(c) == 42);
                         Command_setGid(c,148);
-                        assert(Command_getGid(c) == 148);
+                        assert(Command_gid(c) == 148);
                         Command_free(&c);
                 } else {
                         TRY
@@ -151,21 +151,21 @@ int main(void) {
                 Command_setEnv(c, "PATH", "/usr/bin");
                 Command_setEnv(c, "SHELL", "/bin/bash");
                 Command_setEnv(c, "PAT", "Carroll");
-                assert(Str_isEqual(Command_getEnv(c, "PATH"), "/usr/bin"));
-                assert(Str_isEqual(Command_getEnv(c, "SHELL"), "/bin/bash"));
-                assert(Str_isEqual(Command_getEnv(c, "PAT"), "Carroll"));
+                assert(Str_isEqual(Command_env(c, "PATH"), "/usr/bin"));
+                assert(Str_isEqual(Command_env(c, "SHELL"), "/bin/bash"));
+                assert(Str_isEqual(Command_env(c, "PAT"), "Carroll"));
                 // Empty and NULL value
                 Command_setEnv(c, "PATH", "");
                 Command_setEnv(c, "SHELL", NULL);
-                assert(Str_isEqual(Command_getEnv(c, "PATH"), ""));
-                assert(Str_isEqual(Command_getEnv(c, "SHELL"), ""));
+                assert(Str_isEqual(Command_env(c, "PATH"), ""));
+                assert(Str_isEqual(Command_env(c, "SHELL"), ""));
                 // Unknown variable should result in NULL
-                assert(Command_getEnv(c, "UKNOWNVARIABLE") == NULL);
+                assert(Command_env(c, "UKNOWNVARIABLE") == NULL);
                 // vSetEnv
                 Command_vSetEnv(c, "PID", "%ld", (long)getpid());
-                assert(Str_parseLLong(Command_getEnv(c, "PID")) > 1);
+                assert(Str_parseLLong(Command_env(c, "PID")) > 1);
                 Command_vSetEnv(c, "ZERO", NULL);
-                assert(Str_isEqual(Command_getEnv(c, "ZERO"), ""));
+                assert(Str_isEqual(Command_env(c, "ZERO"), ""));
                 Command_free(&c);
         }
         printf("=> Test4: OK\n\n");
@@ -173,7 +173,7 @@ int main(void) {
         printf("=> Test5: set and get Command\n");
         {
                 Command_T c = Command_new("/bin/sh", "-c", "ps -aef|grep monit");
-                List_T l = Command_getCommand(c);
+                List_T l = Command_command(c);
                 assert(Str_isEqual(l->head->e, "/bin/sh"));
                 assert(Str_isEqual(l->head->next->e, "-c"));
                 assert(Str_isEqual(l->head->next->next->e, "ps -aef|grep monit"));
@@ -187,7 +187,7 @@ int main(void) {
                 Command_appendArgument(c, "-l");
                 Command_appendArgument(c, "-t");
                 Command_appendArgument(c, "-r");
-                List_T l = Command_getCommand(c);
+                List_T l = Command_command(c);
                 assert(Str_isEqual(l->head->e, "/bin/ls"));
                 assert(Str_isEqual(l->head->next->e, "-l"));
                 assert(Str_isEqual(l->head->next->next->e, "-t"));
@@ -257,7 +257,7 @@ int main(void) {
                 Process_T p = Command_execute(c);
                 assert(! p);
                 Command_free(&c);
-                printf("\tOK, got execve error -- %s\n", System_getLastError());
+                printf("\tOK, got execve error -- %s\n", System_lastError());
         }
         printf("=> Test12: OK\n\n");
 

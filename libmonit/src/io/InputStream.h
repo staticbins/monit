@@ -38,6 +38,8 @@
  * Clients can use this stream in a non-blocking manner by setting 
  * InputStream_setTimeout() to 0.
  * 
+ * This class is reentrant but not thread-safe
+ *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
  * @file
@@ -74,7 +76,7 @@ void InputStream_free(T *S);
  * @param S An InputStream object
  * @return The descriptor for this stream 
  */
-int InputStream_getDescriptor(T S);
+int InputStream_descriptor(T S);
 
 
 /**
@@ -93,7 +95,7 @@ void InputStream_setTimeout(T S, time_t timeout);
  * @param S An InputStream object
  * @return The timeout value in milliseconds
  */
-time_t InputStream_getTimeout(T S);
+time_t InputStream_timeout(T S);
 
 
 /**

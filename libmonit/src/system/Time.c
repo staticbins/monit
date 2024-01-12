@@ -1272,7 +1272,7 @@ yyeof:
 time_t Time_now(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
-                THROW(AssertException, "%s", System_getLastError());
+                THROW(AssertException, "%s", System_lastError());
 	return t.tv_sec;
 }
 
@@ -1289,7 +1289,7 @@ time_t Time_monotonic(void) {
         #error "clock_gettime() present but no monotonic clock available"
     #endif
 	if (clock_gettime(clockid, &t) != 0)
-                THROW(AssertException, "%s", System_getLastError());
+                THROW(AssertException, "%s", System_lastError());
 	return t.tv_sec;
 #else
         #warning "no monotonic clock available, fall back to gettimeofday"
@@ -1301,7 +1301,7 @@ time_t Time_monotonic(void) {
 long long Time_milli(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
-                THROW(AssertException, "%s", System_getLastError());
+                THROW(AssertException, "%s", System_lastError());
 	return (long long)t.tv_sec * 1000  +  (long long)t.tv_usec / 1000;
 }
 
@@ -1309,7 +1309,7 @@ long long Time_milli(void) {
 long long Time_micro(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
-                THROW(AssertException, "%s", System_getLastError());
+                THROW(AssertException, "%s", System_lastError());
 	return (long long)t.tv_sec * 1000000  +  (long long)t.tv_usec;
 }
 

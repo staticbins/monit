@@ -30,7 +30,7 @@ int main(void) {
         printf("=> Test0: create/destroy the stream\n");
         {
                 out = OutputStream_new(STDOUT);
-                assert(OutputStream_getDescriptor(out) == STDOUT);
+                assert(OutputStream_descriptor(out) == STDOUT);
                 assert(!OutputStream_isClosed(out));
                 OutputStream_free(&out);
                 assert(out == NULL);
@@ -40,9 +40,9 @@ int main(void) {
         printf("=> Test1: get/set timeout\n");
         {
                 out = OutputStream_new(STDOUT);
-                printf("\tCurrent timeout: %lldms\n", (long long)OutputStream_getTimeout(out));
+                printf("\tCurrent timeout: %lldms\n", (long long)OutputStream_timeout(out));
                 OutputStream_setTimeout(out, TIMEOUT);
-                assert(OutputStream_getTimeout(out) == TIMEOUT);
+                assert(OutputStream_timeout(out) == TIMEOUT);
                 printf("\tTimeout set to:  %dms\n", TIMEOUT);
                 OutputStream_free(&out);
         }
@@ -56,9 +56,9 @@ int main(void) {
                 assert(0 == OutputStream_buffered(out));
                 assert(bytes == OutputStream_write(out, data, (int)strlen(data)));
                 assert(bytes == OutputStream_buffered(out));
-                assert(0 == OutputStream_getBytesWritten(out));
+                assert(0 == OutputStream_bytesWritten(out));
                 OutputStream_flush(out);
-                assert(bytes == OutputStream_getBytesWritten(out));
+                assert(bytes == OutputStream_bytesWritten(out));
                 // Test writing lower bytes
                 OutputStream_clear(out);
                 char b[] = {0,0,0,0};

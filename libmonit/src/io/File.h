@@ -362,7 +362,7 @@ char *File_removeTrailingSeparator(char *path);
  * @param resolved The buffer to write the real path too
  * @return A pointer to the resolved buffer or NULL if an error occurred
  */
-char *File_getRealPath(const char *path, char *resolved);
+char *File_realPath(const char *path, char *resolved);
 
 
 #endif

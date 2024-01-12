@@ -74,7 +74,7 @@ void OutputStream_free(T *S);
  * @param S An OutputStream object
  * @return The descriptor for this stream 
  */
-int OutputStream_getDescriptor(T S);
+int OutputStream_descriptor(T S);
 
 
 /**
@@ -98,11 +98,11 @@ void OutputStream_setTimeout(T S, time_t timeout);
 
 
 /**
- * Get the write timeout in milliseconds. 
+ * Returns the write timeout in milliseconds.
  * @param S An OutputStream object
  * @return The timeout value in milliseconds
  */
-time_t OutputStream_getTimeout(T S);
+time_t OutputStream_timeout(T S);
 
 
 /**
@@ -120,7 +120,7 @@ bool OutputStream_isClosed(T S);
  * @param S An OutputStream object
  * @return The total number of bytes written
  */
-long long OutputStream_getBytesWritten(T S);
+long long OutputStream_bytesWritten(T S);
 
 //@}
 

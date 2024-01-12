@@ -115,7 +115,7 @@ void Command_setUid(T C, uid_t uid);
  * if not set, meaning the sub-process will run with the same
  * uid as this process.
  */
-uid_t Command_getUid(T C);
+uid_t Command_uid(T C);
 
 
 /**
@@ -137,7 +137,7 @@ void Command_setGid(T C, gid_t gid);
  * if not set, meaning the sub-process will run with the same
  * gid as this process.
  */
-gid_t Command_getGid(T C);
+gid_t Command_gid(T C);
 
 
 /**
@@ -155,7 +155,7 @@ void Command_setUmask(T C, mode_t umask);
  * @param C A Command object
  * @return The umask value for the sub-process
  */
-mode_t Command_getUmask(T C);
+mode_t Command_umask(T C);
 
 
 /**
@@ -177,7 +177,7 @@ void Command_setDir(T C, const char *dir);
  * @return The working directory for the sub-process or NULL meaning the 
  * calling process's current directory
  */
-const char *Command_getDir(T C);
+const char *Command_dir(T C);
 
 
 /**
@@ -214,7 +214,7 @@ void Command_vSetEnv(T C, const char *name, const char *value, ...) __attribute_
  * @param name The environment variable to get the value of
  * @return The value for name or NULL if name was not found
  */
-const char *Command_getEnv(T C, const char *name);
+const char *Command_env(T C, const char *name);
 
 
 /**
@@ -226,7 +226,7 @@ const char *Command_getEnv(T C, const char *name);
  * @return A list with the operating system program with arguments to 
  * execute. The first element in the list is the program.
  */
-List_T Command_getCommand(T C);
+List_T Command_command(T C);
 
 //@}
 

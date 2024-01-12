@@ -62,7 +62,7 @@ extern void(*_DebugHandler)(const char *info, va_list ap);
 /* ---------------------------------------------------------------- Public */
 
 
-const char *System_getLastError(void) { 
+const char *System_lastError(void) { 
         return strerror(errno); 
 }
 
@@ -106,7 +106,7 @@ void System_debug(const char *d, ...) {
 }
 
 
-int System_getDescriptorsGuarded(int guard) {
+int System_descriptorsGuarded(int guard) {
         int fileDescriptors = (int)sysconf(_SC_OPEN_MAX);
         if (fileDescriptors < 2)
                 fileDescriptors = getdtablesize();

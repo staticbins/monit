@@ -335,13 +335,13 @@ static int Process_createCtrlPipe(Process_T P) {
         // Not all POSIX systems have pipe2(), like macOS,
         if (pipe(P->ctrl_pipe) < 0) {
                 status = -errno;
-                DEBUG("Command: ctrl pipe(2) failed -- %s\n", System_getLastError());
+                DEBUG("Command: ctrl pipe(2) failed -- %s\n", System_lastError());
                 return status;
         }
         for (int i = 0; i < 2; i++) {
                 if (fcntl(P->ctrl_pipe[i], F_SETFD, FD_CLOEXEC) < 0) {
                         status = -errno;
-                        DEBUG("Command: ctrl fcntl(2) FD_CLOEXEC failed -- %s\n", System_getLastError());
+                        DEBUG("Command: ctrl fcntl(2) FD_CLOEXEC failed -- %s\n", System_lastError());
                         _closePipe(P->ctrl_pipe);
                         return status;
                 }
@@ -357,7 +357,7 @@ static int Process_createPipes(Process_T P) {
                 return status;
         if (pipe(P->stdin_pipe) < 0 || pipe(P->stdout_pipe) < 0 || pipe(P->stderr_pipe) < 0) {
                 status = -errno;
-                DEBUG("Command: pipe(2) failed -- %s\n", System_getLastError());
+                DEBUG("Command: pipe(2) failed -- %s\n", System_lastError());
                 Process_closePipes(P);
                 return status;
         }
@@ -464,7 +464,7 @@ bool Process_isdetached(Process_T P) {
 }
 
 
-pid_t Process_getPid(Process_T P) {
+pid_t Process_pid(Process_T P) {
         assert(P);
         return P->pid;
 }
@@ -517,7 +517,7 @@ bool Process_isRunning(Process_T P) {
 }
 
 
-OutputStream_T Process_getOutputStream(Process_T P) {
+OutputStream_T Process_outputStream(Process_T P) {
         assert(P);
         if (P->isdetached)
                 return NULL;
@@ -527,7 +527,7 @@ OutputStream_T Process_getOutputStream(Process_T P) {
 }
 
 
-InputStream_T Process_getInputStream(Process_T P) {
+InputStream_T Process_inputStream(Process_T P) {
         assert(P);
         if (P->isdetached)
                 return NULL;
@@ -537,7 +537,7 @@ InputStream_T Process_getInputStream(Process_T P) {
 }
 
 
-InputStream_T Process_getErrorStream(Process_T P) {
+InputStream_T Process_errorStream(Process_T P) {
         assert(P);
         if (P->isdetached)
                 return NULL;
@@ -624,7 +624,7 @@ void Command_setUid(T C, uid_t uid) {
 }
 
 
-uid_t Command_getUid(T C) {
+uid_t Command_uid(T C) {
         assert(C);
         return C->uid;
 }
@@ -638,7 +638,7 @@ void Command_setGid(T C, gid_t gid) {
 }
 
 
-gid_t Command_getGid(T C) {
+gid_t Command_gid(T C) {
         assert(C);
         return C->gid;
 }
@@ -650,7 +650,7 @@ void Command_setUmask(T C, mode_t umask) {
 }
 
 
-mode_t Command_getUmask(T C) {
+mode_t Command_umask(T C) {
         assert(C);
         return C->umask;
 }
@@ -671,7 +671,7 @@ void Command_setDir(T C, const char *dir) {
 }
 
 
-const char *Command_getDir(T C) {
+const char *Command_dir(T C) {
         assert(C);
         return C->working_directory;
 }
@@ -704,7 +704,7 @@ void Command_vSetEnv(T C, const char *name, const char *value, ...) {
 
 
 // Returns the value part from a "name=value" environment string
-const char *Command_getEnv(T C, const char *name) {
+const char *Command_env(T C, const char *name) {
         assert(C);
         assert(name);
         size_t len = strlen(name);
@@ -715,7 +715,7 @@ const char *Command_getEnv(T C, const char *name) {
 }
 
 
-List_T Command_getCommand(T C) {
+List_T Command_command(T C) {
         assert(C);
         return C->args;
 }
@@ -739,7 +739,7 @@ static void Process_exec(Process_T P, T C) {
                 goto fail;
         int descriptors = open("/dev/null", O_RDWR);
         if (descriptors < 4)
-                descriptors = System_getDescriptorsGuarded(256);
+                descriptors = System_descriptorsGuarded(256);
         else
                 descriptors += 1;
         for (int i = 3; i < descriptors; i++) {
