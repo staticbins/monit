@@ -80,14 +80,14 @@
 // MARK: - Private methods
 
 
-static void _freeCachedProcesses(int key, void **value, void *ap) {
+static void _freeCachedProcesses(__attribute__ ((unused))int key, void **value, __attribute__ ((unused))void *ap) {
         Process_T p = *value;
         Process_detach(p);
         Process_free(&p);
 }
 
 
-static inline void _prune(process_t process, __attribute__ ((unused)) void *ap) {
+static inline void _prune(process_t process, __attribute__ ((unused))void *ap) {
         FREE(process->cmdline);
         FREE(process->secattr);
 }
@@ -332,14 +332,21 @@ bool ProcessTable_update(T P) {
 void ProcessTable_setProcess(T P, Process_T process) {
         assert(P);
         assert(process);
-        Process_T p = Array_put(P->cache, Process_getPid(process), process);
+        Process_T p = NULL;
+        LOCK(P->mutex) 
+        {
+                p = Array_put(P->cache, Process_pid(process), process);
+        }
+        END_LOCK;
         if (p) {
-                // In the highly unlikely case that a process already exist 
-                // with the same pid, unless we try to save the same process
-                // again we should detach and free the process
+                // In the very unlikely case that a process already exist with
+                // the same pid, we detach and free the process, unless it's
+                // the same process, in witch case we just write a debug msg
                 if (p != process) {
                         Process_detach(p);
                         Process_free(&p);
+                } else {
+                        DEBUG("ProcessTable_setProcess: Trying to store the same process again\n");
                 }
         }
 }
@@ -347,7 +354,13 @@ void ProcessTable_setProcess(T P, Process_T process) {
 
 Process_T ProcessTable_getProcess(T P, pid_t pid) {
         assert(P);
-        return Array_get(P->cache, pid);
+        Process_T p = NULL;
+        LOCK(P->mutex)
+        {
+                p = Array_get(P->cache, pid);
+        }
+        END_LOCK;
+        return p;
 }
 
 
