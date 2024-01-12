@@ -1508,7 +1508,7 @@ void Util_redirectStdFds(void) {
 
 
 void Util_closeFds(void) {
-        for (int i = 3, descriptors = System_getDescriptorsGuarded(1024); i < descriptors; i++) {
+        for (int i = 3, descriptors = System_descriptorsGuarded(1024); i < descriptors; i++) {
                 close(i);
         }
         errno = 0;
