@@ -109,6 +109,14 @@ void *Array_remove(T S, int key);
 
 
 /**
+ * Returns the number of key-value pairs in Array
+ * @param S A Sparse Array object
+ * @return The number of entries in the Array
+ */
+int Array_length(T S);
+
+
+/**
  * Apply the visitor function, <code>apply</code> for each key-value pair in
  * Array. Clients can pass an application specific pointer, <code>ap</code>,
  * to Array_map() and this pointer is passed along to the <code>apply</code>
@@ -125,11 +133,21 @@ void Array_map(T S, void apply(int key, void **value, void *ap), void *ap);
 
 
 /**
- * Returns the number of key-value pairs in Array
+ * Search the Array for a particular value using a <code>predicate</code>
+ * function and a needle. If the predicate function returns true for a 
+ * value, that value is returned. If no matching value is found, the
+ * function returns NULL. The average time complexity is O(n), assuming
+ * uniform key distribution.
  * @param S A Sparse Array object
- * @return The number of entries in the Array
+ * @param predicate The predicate function used for comparison. It should 
+ * return true if a value in the array matches the needle, otherwise false.
+ * @param needle A pointer to a search term used by the predicate function
+ * to compare with a value in the array.
+ * @return A pointer to the value in the Sparse Array that satisfies the 
+ * predicate, or NULL if no such value is found.
+ * @exception AssertException if <code>predicate</code> changes the Array
  */
-int Array_length(T S);
+void *Array_find(T S, bool predicate(void *value, void *needle), void *needle);
 
 
 #undef T

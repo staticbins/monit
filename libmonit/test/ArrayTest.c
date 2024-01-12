@@ -27,6 +27,12 @@ static void _apply(int key, void **value, void *ap) {
         assert(Str_parseInt(v->value) == key);
 }
 
+static bool _predicate(void *value, void *needle) {
+        value_t v = value;
+        int term = *(int*)needle;
+        return v->key == term;
+}
+
 static void _release(__attribute__ ((unused))int key, void **value, void *ap) {
         *(int *)ap -= 1;
         FREE(*value);
@@ -90,7 +96,19 @@ int main(void) {
         }
         printf("=> Test4: OK\n\n");
 
-        printf("=> Test5: Array_free\n");
+        printf("=> Test5: Array_find()\n");
+        {
+                int needle = 12;
+                value_t v = Array_find(T, _predicate, &needle);
+                assert(v);
+                assert(v->key == needle);
+                needle = 123;
+                v = Array_find(T, _predicate, &needle);
+                assert(v == NULL);
+        }
+        printf("=> Test5: OK\n\n");
+
+       printf("=> Test6: Array_free\n");
         {
                 int i = Array_length(T);
                 assert(i == 20);
@@ -100,9 +118,9 @@ int main(void) {
                 Array_free(&T);
                 assert(T == NULL);
         }
-        printf("=> Test5: OK\n\n");
+        printf("=> Test6: OK\n\n");
         
-        printf("=> Test6: sparseness()\n");
+        printf("=> Test7: sparseness()\n");
         {
                 T = Array_new(4);
                 int numbers[] = {0, 509, 1021, 2053, 4093, 8191, 16381, 32771, 65521, -INT_MAX, INT_MAX};
@@ -116,7 +134,7 @@ int main(void) {
                 }
                 Array_free(&T);
         }
-        printf("=> Test6: OK\n\n");
+        printf("=> Test7: OK\n\n");
 
         printf("============> Array Tests: OK\n\n");
 }

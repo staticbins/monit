@@ -162,3 +162,18 @@ void Array_map(T S, void apply(int key, void **value, void *ap), void *ap) {
                         assert(S->timestamp == stamp);
                 }
 }
+
+
+void *Array_find(T S, bool predicate(void *value, void *needle), void *needle) {
+        assert(S);
+        assert(predicate);
+        assert(needle);
+        unsigned int stamp = S->timestamp;
+        for (int i = 0; i < S->size; i++)
+                for (struct binding *p = S->buckets[i]; p; p = p->link) {
+                        if (predicate(p->value, needle))
+                            return p->value;
+                        assert(S->timestamp == stamp);
+                }
+        return NULL;
+}
