@@ -40,6 +40,8 @@
  * but will not affect previously created processes nor the calling process
  * itself.
  *
+ * This class is reentrant but not thread-safe
+ *
  * @see Process.h
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/

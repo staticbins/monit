@@ -79,6 +79,8 @@ struct T {
 struct Process_T {
         pid_t pid;
         int status;
+        char *name;
+        char *arg0;
         bool isdetached;
         int ctrl_pipe[2];
         int stdin_pipe[2];
@@ -435,6 +437,8 @@ void Process_free(Process_T *P) {
                 }
                 Process_detach(*P);
         }
+        FREE((*P)->arg0);
+        FREE((*P)->name);
         FREE(*P);
 }
 
@@ -540,6 +544,25 @@ InputStream_T Process_getErrorStream(Process_T P) {
         if (! P->err)
                 P->err = InputStream_new(P->stderr_pipe[0]);
         return P->err;
+}
+
+
+const char *Process_arg0(Process_T P) {
+        assert(P);
+        return P->arg0;
+}
+
+
+const char *Process_name(Process_T P) {
+        assert(P);
+        return P->name;
+
+}
+
+
+void Process_setName(Process_T P, const char *name) {
+        assert(P);
+        STR_SET(P->name, name);
 }
 
 
@@ -813,8 +836,10 @@ fail:
         if (status != 0) {
                 DEBUG("Command: failed -- %s\n", System_getError(status));
                 Process_free(&P);
-        } else
+        } else {
                 Process_setupParentPipes(P);
+                P->arg0 = Str_dup(C->args->head->e);
+        }
         _unblock(&block);
         errno = status;
         return P;

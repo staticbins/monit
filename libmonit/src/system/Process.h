@@ -59,6 +59,8 @@
  * <em>before</em> calling Command_execute(). Environment variables set this way
  * will be added to the sub-process at execution time.
  *
+ * This class is reentrant but not thread-safe
+ *
  * @see Command.h
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
@@ -183,6 +185,31 @@ InputStream_T Process_getInputStream(T P);
  * @return The input stream connected to the error output of the sub-process.
  */
 InputStream_T Process_getErrorStream(T P);
+
+
+/**
+ * Returns the path to the executable that created this Process
+ * @param P A Process object
+ * @return The path to this Process's executable
+ */
+const char *Process_arg0(T P);
+
+
+/**
+ * Returns the Process's (unique) name identifier.
+ * @param P A Process object
+ * @return The Process name or NULL if not set
+ */
+const char *Process_name(T P);
+
+
+/**
+ * Optionally set the Process's name identifier. The name might be a unique
+ * string identifying this Process in the system.
+ * @param P A Process object
+ * @param name A (preferably) unique name for the Process
+ */
+void Process_setName(T P, const char *name);
 
 //@}
 

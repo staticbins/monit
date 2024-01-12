@@ -334,6 +334,19 @@ skip:
         }
         printf("=> Test16: OK\n\n");
 
+        printf("=> Test17: get arg0 and set and get name\n");
+        {
+                Command_T c = Command_new("/bin/sh", "-c", "ls -l");
+                Process_T p = Command_execute(c);
+                assert(p);
+                assert(Str_isEqual(Process_arg0(p), "/bin/sh"));
+                Process_setName(p, "list_dir");
+                assert(Str_isEqual(Process_name(p), "list_dir"));
+                Command_free(&c);
+                Process_free(&p);
+        }
+        printf("=> Test17: OK\n\n");
+
 
         printf("============> Command Tests: OK\n\n");
 
