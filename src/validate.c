@@ -1908,14 +1908,14 @@ State_Type check_program(Service_T s) {
         Process_T P = s->program->P;
         if (P) {
                 // Process program output
-                _programOutput(Process_getErrorStream(P), s->program->inprogressOutput);
-                _programOutput(Process_getInputStream(P), s->program->inprogressOutput);
+                _programOutput(Process_errorStream(P), s->program->inprogressOutput);
+                _programOutput(Process_inputStream(P), s->program->inprogressOutput);
                 // Is the program still running?
                 if (Process_exitStatus(P) < 0) {
                         long long execution_time = (now - s->program->started) * 1000;
                         if (execution_time > s->program->timeout) { // Program timed out
                                 rv = State_Failed;
-                                Log_error("'%s' program timed out after %s. Killing program with pid %ld\n", s->name, Fmt_time2str(execution_time, (char[11]){}), (long)Process_getPid(P));
+                                Log_error("'%s' program timed out after %s. Killing program with pid %ld\n", s->name, Fmt_time2str(execution_time, (char[11]){}), (long)Process_pid(P));
                                 Process_kill(P);
                                 Process_waitFor(P); // Wait for child to exit to get correct exit value
                                 // Fall-through with P and evaluate exit value below.
