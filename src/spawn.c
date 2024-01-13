@@ -81,225 +81,77 @@
 #include "monit.h"
 #include "engine.h"
 
+#include "spawn.h"
+
 // libmonit
+#include "io/File.h"
 #include "util/Str.h"
-#include "system/Time.h"
 #include "util/Fmt.h"
+#include "system/Time.h"
+#include "system/Command.h"
+#include "exceptions/AssertException.h"
 
 
-/**
- *  Function for spawning of a process. This function fork's twice to
- *  avoid creating any zombie processes. Inspired by code from
- *  W. Richard Stevens book, APUE.
- *
- *  @file
- */
-
-
-/* ------------------------------------------------------------- Definitions */
-
-
-/* Do not exceed 8 bits here */
-enum ExitStatus_E {
-        setgid_ERROR     = 0x1,
-        setuid_ERROR     = 0x2,
-        initgroups_ERROR = 0x4,
-        redirect_ERROR   = 0x8,
-        fork_ERROR       = 0x10,
-        getpwuid_ERROR   = 0x20
-} __attribute__((__packed__));
-
-
-#define RETRY_INTERVAL 100000 // 100ms
-
-
-/* ----------------------------------------------------------------- Private */
-
-
-/*
- * Setup the environment with special MONIT_xxx variables. The program
- * executed may use such variable for various purposes.
- */
-static void _setMonitEnvironment(Service_T S, command_t C, Event_T E, const char *date) {
-        setenv("MONIT_DATE", date, 1);
-        setenv("MONIT_SERVICE", S->name, 1);
-        setenv("MONIT_HOST", Run.system->name, 1);
-        setenv("MONIT_EVENT", E ? Event_get_description(E) : C == S->start ? "Started" : C == S->stop ? "Stopped" : "No Event", 1);
-        setenv("MONIT_DESCRIPTION", E ? E->message : C == S->start ? "Started" : C == S->stop ? "Stopped" : "No Event", 1);
+pid_t spawn(spawn_args_t args) {
+        assert(args);
+        assert(args->S);
+        assert(args->cmd);
+        pid_t status = -1;
+        // Required
+        Service_T S = args->S;
+        command_t cmd = args->cmd;
+        // Optional
+        char *err = args->err;
+        int errlen = args->errlen;
+        Event_T E = args->E;
+        // Check first if the program still exist (could have been removed while Monit was up)
+        if (! File_exist(cmd->arg[0])) {
+                if (err)
+                        snprintf(err, errlen, "File to execute '%s' no longer exist\n",  cmd->arg[0]);
+                else
+                        Log_error("Error: File to execute '%s' no longer exist\n", cmd->arg[0]);
+                return -1;
+        }
+        Command_T C = Command_new(cmd->arg[0]);
+        assert(C);
+        for (int i = 1; i < cmd->length; i++)
+                Command_appendArgument(C, cmd->arg[i]);
+        if (cmd->has_uid)
+                Command_setUid(C, cmd->uid);
+        if (cmd->has_gid)
+                Command_setGid(C, cmd->gid);
+        // Setup the environment with special MONIT_xxx variables. The program
+        // executed may use such variable for various purposes.
+        Command_setEnv(C, "MONIT_DATE", Time_localStr(Time_now(), (char[26]){}));
+        Command_setEnv(C, "MONIT_SERVICE", S->name);
+        Command_setEnv(C, "MONIT_HOST", Run.system->name);
+        Command_setEnv(C, "MONIT_EVENT", E ? Event_get_description(E) : cmd == S->start ? "Started" : cmd == S->stop ? "Stopped" : "No Event");
+        Command_setEnv(C, "MONIT_DESCRIPTION", E ? E->message : cmd == S->start ? "Started" : cmd == S->stop ? "Stopped" : "No Event");
         switch (S->type) {
                 case Service_Process:
-                        if (S->inf.process->pid > -1)
-                                putenv(Str_cat("MONIT_PROCESS_PID=%d", S->inf.process->pid));
-                        if (S->inf.process->children > -1)
-                                putenv(Str_cat("MONIT_PROCESS_CHILDREN=%d", S->inf.process->children));
-                        if (S->inf.process->cpu_percent > -1)
-                                putenv(Str_cat("MONIT_PROCESS_CPU_PERCENT=%.1f", S->inf.process->cpu_percent));
-                        putenv(Str_cat("MONIT_PROCESS_MEMORY=%llu", (unsigned long long)((double)S->inf.process->mem / 1024.)));
+                        Command_vSetEnv(C, "MONIT_PROCESS_PID", "%d", S->inf.process->pid);
+                        Command_vSetEnv(C, "MONIT_PROCESS_MEMORY", "%llu", (unsigned long long)((double)S->inf.process->mem / 1024.));
+                        Command_vSetEnv(C, "MONIT_PROCESS_CHILDREN", "%d", S->inf.process->children);
+                        Command_vSetEnv(C, "MONIT_PROCESS_CPU_PERCENT", "%.1f", S->inf.process->cpu_percent);
                         break;
                 case Service_Program:
-                        putenv(Str_cat("MONIT_PROGRAM_STATUS=%d", S->program->exitStatus));
+                        Command_vSetEnv(C, "MONIT_PROGRAM_STATUS", "%d", S->program->exitStatus);
                         break;
                 default:
                         break;
         }
-}
-
-
-/* ------------------------------------------------------------------ Public */
-
-
-/**
- * Execute the given command. If the execution fails, the wait_start()
- * thread in control.c should notice this and send an alert message.
- * @param S A Service object
- * @param C A Command object
- * @param E An optional event object. May be NULL.
- */
-void spawn(Service_T S, command_t C, Event_T E) {
-        pid_t pid;
-        sigset_t mask;
-        sigset_t save;
-        int stat_loc = 0;
-        int exit_status;
-        char date[42];
-
-        assert(S);
-        assert(C);
-
-        if (access(C->arg[0], X_OK) != 0) {
-                Log_error("Error: Could not execute %s\n", C->arg[0]);
-                return;
+        Process_T P = Command_execute(C);
+        if (P) {
+                status = Process_pid(P);
+                Process_setName(P, S->name);
+                ProcessTable_setProcess(Process_Table, P);
+        } else {
+                if (err)
+                        snprintf(err, errlen, "Failed to execute '%s'  -- %s", cmd->arg[0], System_lastError());
+                else
+                        Log_error("Error: Failed to execute '%s' -- %s\n", cmd->arg[0], System_lastError());
         }
-
-        /*
-         * Block SIGCHLD
-         */
-        sigemptyset(&mask);
-        sigaddset(&mask, SIGCHLD);
-        pthread_sigmask(SIG_BLOCK, &mask, &save);
-
-        Time_string(Time_now(), date);
-        pid = fork();
-        if (pid < 0) {
-                Log_error("Cannot fork a new process -- %s\n", STRERROR);
-                pthread_sigmask(SIG_SETMASK, &save, NULL);
-                return;
-        }
-
-        if (pid == 0) {
-                if (C->has_gid) {
-                        if (setgid(C->gid) != 0) {
-                                stat_loc |= setgid_ERROR;
-                        }
-                }
-                if (C->has_uid) {
-                        struct passwd *user = getpwuid(C->uid);
-                        if (user) {
-                                setenv("HOME", user->pw_dir, 1);
-                                if (initgroups(user->pw_name, getgid()) == 0) {
-                                        if (setuid(C->uid) != 0) {
-                                                stat_loc |= setuid_ERROR;
-                                        }
-                                } else {
-                                        stat_loc |= initgroups_ERROR;
-                                }
-                        } else {
-                                stat_loc |= getpwuid_ERROR;
-                        }
-                }
-
-                _setMonitEnvironment(S, C, E, date);
-
-                if (! (Run.flags & Run_Daemon)) {
-                        for (int i = 0; i < 3; i++)
-                                if (close(i) == -1 || open("/dev/null", O_RDWR) != i)
-                                        stat_loc |= redirect_ERROR;
-                }
-
-                Util_closeFds();
-
-                setsid();
-
-                pid = fork();
-                if (pid < 0) {
-                        stat_loc |= fork_ERROR;
-                        _exit(stat_loc);
-                }
-
-                if (pid == 0) {
-                        /*
-                         * Reset all signals, so the spawned process is *not* created
-                         * with any inherited SIG_BLOCKs
-                         */
-                        sigemptyset(&mask);
-                        pthread_sigmask(SIG_SETMASK, &mask, NULL);
-                        signal(SIGINT, SIG_DFL);
-                        signal(SIGHUP, SIG_DFL);
-                        signal(SIGTERM, SIG_DFL);
-                        signal(SIGUSR1, SIG_DFL);
-                        signal(SIGPIPE, SIG_DFL);
-
-                        (void) execv(C->arg[0], C->arg);
-                        _exit(errno);
-                }
-
-                if (C->timeout > 0) {
-                    int r;
-                    long long timeout = C->timeout * USEC_PER_MSEC;
-                    /* Wait for a given time for the child, to exit */
-                    do {
-                        Time_usleep(RETRY_INTERVAL);
-                        timeout -= RETRY_INTERVAL;
-                        r = waitpid(pid, &stat_loc, WNOHANG);
-                    } while (r >= 0 && timeout > 0LL);
-                    
-                    /* Kill the child, if the timeout reached */
-                    if (timeout <= 0LL) {
-                        Log_error("'%s' program timed out after %s. Killing program with pid %ld\n", S->name, Fmt_time2str(C->timeout - (timeout / USEC_PER_MSEC), (char[11]){}), (long)pid);
-                        kill(pid, SIGKILL);
-                    } else {
-                        if (WIFEXITED(stat_loc)) {
-                            Log_debug("'%s' program ended with %d\n", S->name, WEXITSTATUS(stat_loc));
-                        } else if (WIFSIGNALED(stat_loc)) {
-                            Log_debug("'%s' program terminateded with %d\n", S->name, WTERMSIG(stat_loc));
-                        } else if (WIFSTOPPED(stat_loc)) {
-                            Log_debug("'%s' program stopped with %d\n", S->name, WSTOPSIG(stat_loc));
-                        }
-                    }
-                }
-
-                /* Exit first child and return errors to parent */
-                _exit(stat_loc);
-        }
-
-        /* Wait for first child - aka second parent, to exit */
-        if (waitpid(pid, &stat_loc, 0) != pid) {
-                Log_error("Waitpid error\n");
-        }
-
-        exit_status = WEXITSTATUS(stat_loc);
-        if (exit_status & setgid_ERROR)
-                Log_error("Failed to change gid to '%d' for '%s'\n", C->gid, C->arg[0]);
-        if (exit_status & setuid_ERROR)
-                Log_error("Failed to change uid to '%d' for '%s'\n", C->uid, C->arg[0]);
-        if (exit_status & initgroups_ERROR)
-                Log_error("initgroups for UID %d failed when executing '%s'\n", C->uid, C->arg[0]);
-        if (exit_status & fork_ERROR)
-                Log_error("Cannot fork a new process for '%s'\n", C->arg[0]);
-        if (exit_status & redirect_ERROR)
-                Log_error("Cannot redirect IO to /dev/null for '%s'\n", C->arg[0]);
-        if (exit_status & getpwuid_ERROR)
-                Log_error("UID %d not found on the system when executing '%s'\n", C->uid, C->arg[0]);
-
-        /*
-         * Restore the signal mask
-         */
-        pthread_sigmask(SIG_SETMASK, &save, NULL);
-
-        /*
-         * We do not need to wait for the second child since we forked twice,
-         * the init system-process will wait for it. So we just return
-         */
-
+        Command_free(&C);
+        return status;
 }
 
