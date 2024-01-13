@@ -1585,7 +1585,7 @@ State_Type check_process(Service_T s) {
         assert(s);
         State_Type rv = State_Succeeded;
         bool checkResources = false;
-        pid_t pid = ProcessTable_findProcess(s);
+        pid_t pid = ProcessTable_findServiceProcess(s);
         if (! pid) {
                 for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                         rv = State_Failed;
@@ -1598,7 +1598,7 @@ State_Type check_process(Service_T s) {
         }
         if (Run.flags & Run_ProcessEngineEnabled) {
                 // Update statistics (event can execute a program and set environment like MONIT_PROCESS_PID)
-                if (! (checkResources = ProcessTable_updateProcess(Process_Table, s, pid))) {
+                if (! (checkResources = ProcessTable_updateServiceProcess(Process_Table, s, pid))) {
                         Log_error("'%s' failed to get process data\n", s->name);
                         rv = State_Failed;
                 }
@@ -1964,7 +1964,7 @@ State_Type check_program(Service_T s) {
                         else
                                 Event_post(s, Event_Content, State_ChangedNot, ml->action,  "content doesn't match on program output:\n%s", lastOutput);
                 }
-
+                
                 Process_free(&s->program->P);
         } else {
                 rv = State_Init;
