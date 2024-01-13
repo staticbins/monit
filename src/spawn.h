@@ -26,18 +26,31 @@
 #define SPAWN_INCLUDED
 
 typedef struct spawn_args_t {
-        Service_T S;    // Required
-        command_t cmd;  // Required
-        Event_T E;      // Optional -
-        char *err;      // Optional - Write any error to err instead of Log
-        int errlen;     // Required if err
+        /// Required: The Service_T object that request the process
+        Service_T S;
+        /// Required: The command_t object containing the command to execute
+        command_t cmd;
+        /// Optional: Set to true if spawn should detach, i.e. fire-and-forget
+        /// once the program has called exec. Otherwise if false (the default)
+        /// spawn will cache the Process_T object so the Process can be 
+        /// maintained and investigated later
+        bool detach;
+        /// Optional: The event associated with the call to spawn. For setting
+        /// envirnoment description
+        Event_T E;
+        /// Optional: Write any error to this buffer instead of to Log_error
+        char *err;
+        // Optional: Required: if err is non-null
+        int errlen;
 } *spawn_args_t;
 
 
 /// Create a new process from the command given in args.
-/// The Process_T object created is cached in the global
-/// ProcessTable and can be obtained using the returned pid
-/// @param args Arguments given to spawn to create the process
+/// If the detach property is false (the default) the Process_T
+/// object created is cached in the global ProcessTable and can be
+/// obtained using the returned pid
+/// @param args Arguments given to spawn with information on how
+/// to create the process
 /// @return If creating the process failed, -1 is returned
 /// and errno set to indicate the error that occured. On success
 /// the process identification number (pid) of the new process

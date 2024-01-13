@@ -143,8 +143,13 @@ pid_t spawn(spawn_args_t args) {
         Process_T P = Command_execute(C);
         if (P) {
                 status = Process_pid(P);
-                Process_setName(P, S->name);
-                ProcessTable_setProcess(Process_Table, P);
+                if (args->detach) { // Fire-and-forget
+                        Process_detach(P);
+                        Process_free(&P);
+                } else { // Cache Process_T object for later use
+                        Process_setName(P, S->name);
+                        ProcessTable_setProcess(Process_Table, P);
+                }
         } else {
                 if (err)
                         snprintf(err, errlen, "Failed to execute '%s'  -- %s", cmd->arg[0], System_lastError());

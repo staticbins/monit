@@ -316,12 +316,13 @@ static void _handleAction(Event_T E, Action_T A) {
                 } else if (A->id == Action_Exec) {
                         if (E->state_changed || (E->state && A->repeat && E->count % A->repeat == 0)) {
                                 Log_info("'%s' exec: '%s'\n", E->source->name, Util_commandDescription(A->exec, (char[STRLEN]){}));
-                                // TODO: Is this used in practice?
-                                spawn(&(struct spawn_args_t){
+                                if (spawn(&(struct spawn_args_t){
+                                        .detach = true, // fire-and-forget
                                         .S = E->source,
                                         .cmd = A->exec,
                                         .E = E
-                                });
+                                }) < 0)
+                                        Log_info("'%s' exec failed -- '%s'\n", E->source->name, System_lastError());
                                 return;
                         }
                 } else {
