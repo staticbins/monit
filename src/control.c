@@ -53,12 +53,14 @@
 #endif
 
 #include "monit.h"
+#include "spawn.h"
 #include "Proc.h"
 #include "event.h"
 #include "util.h"
 #include "system/Time.h"
 
 // libmonit
+#include "io/File.h"
 #include "util/Fmt.h"
 #include "exceptions/AssertException.h"
 
@@ -85,95 +87,15 @@ typedef enum {
 /* ----------------------------------------------------------------- Private */
 
 
-static int _getOutput(InputStream_T in, char *buf, int buflen) {
-        InputStream_setTimeout(in, 0);
-        return InputStream_readBytes(in, buf, buflen - 1);
-}
-
-
-static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long long *timeout) {
-        assert(S);
-        assert(c);
-        assert(msg);
-        msg[0] = 0;
-        int status = -1;
-        Command_T C = NULL;
-        TRY
-        {
-                // May throw exception if the program doesn't exist (was removed while Monit was up)
-                C = Command_new(c->arg[0]);
-        }
-        ELSE
-        {
-                snprintf(msg, msglen, "Program %s failed: %s", c->arg[0], Exception_frame.message);
-        }
-        END_TRY;
-        if (C) {
-                long long _timeoutMilli = *timeout / 1000.;
-                for (int i = 1; i < c->length; i++)
-                        Command_appendArgument(C, c->arg[i]);
-                if (c->has_uid)
-                        Command_setUid(C, c->uid);
-                if (c->has_gid)
-                        Command_setGid(C, c->gid);
-                Command_setEnv(C, "MONIT_DATE", Time_string(Time_now(), (char[26]){}));
-                Command_setEnv(C, "MONIT_SERVICE", S->name);
-                Command_setEnv(C, "MONIT_HOST", Run.system->name);
-                Command_setEnv(C, "MONIT_EVENT", c == S->start ? "Started" : c == S->stop ? "Stopped" : "Restarted");
-                Command_setEnv(C, "MONIT_DESCRIPTION", c == S->start ? "Started" : c == S->stop ? "Stopped" : "Restarted");
-                switch (S->type) {
-                        case Service_Process:
-                                Command_vSetEnv(C, "MONIT_PROCESS_PID", "%d", S->inf.process->pid);
-                                Command_vSetEnv(C, "MONIT_PROCESS_MEMORY", "%llu", (unsigned long long)((double)S->inf.process->mem / 1024.));
-                                Command_vSetEnv(C, "MONIT_PROCESS_CHILDREN", "%d", S->inf.process->children);
-                                Command_vSetEnv(C, "MONIT_PROCESS_CPU_PERCENT", "%.1f", S->inf.process->cpu_percent);
-                                break;
-                        case Service_Program:
-                                Command_vSetEnv(C, "MONIT_PROGRAM_STATUS", "%d", S->program->exitStatus);
-                                break;
-                        default:
-                                break;
-                }
-                Process_T P = Command_execute(C);
-                if (P) {
-                        do {
-                                Time_usleep(RETRY_INTERVAL);
-                                *timeout -= RETRY_INTERVAL;
-                        } while ((status = Process_exitStatus(P)) < 0 && *timeout > 0 && ! (Run.flags & Run_Stopped));
-                        if (*timeout <= 0)
-                                snprintf(msg, msglen, "Program '%s' timed out after %s", Util_commandDescription(c, (char[STRLEN]){}), Fmt_time2str(_timeoutMilli, (char[11]){}));
-                        int n, total = 0;
-                        char buf[STRLEN];
-                        do {
-                                if ((n = _getOutput(Process_getErrorStream(P), buf, sizeof(buf))) <= 0)
-                                        n = _getOutput(Process_getInputStream(P), buf, sizeof(buf));
-                                if (n > 0) {
-                                        buf[n] = 0;
-                                        DEBUG("%s", buf);
-                                        // Report the first message (override existing plain timeout message if some program output is available)
-                                        if (! total)
-                                                snprintf(msg, msglen, "'%s': %s%s", Util_commandDescription(c, (char[STRLEN]){}), *timeout <= 0 ? "Program timed out -- " : "", buf);
-                                        total += n;
-                                }
-                        } while (n > 0 && Run.debug && total < 2048); // Limit the debug output (if the program will have endless output, such as 'yes' utility, we have to stop at some point to not spin here forever)
-                        Process_free(&P); // Will kill the program if still running
-                } else {
-                        snprintf(msg, msglen, "Program %s failed: %s", c->arg[0], System_getLastError());
-                }
-                Command_free(&C);
-        }
-        return status;
-}
-
-
+// TODO: Remove If Command_execute returns a process it did start
 static Process_Status _waitProcessStart(Service_T s, long long *timeout) {
         long wait = RETRY_INTERVAL;
         do {
                 Time_usleep(wait);
-                pid_t pid = ProcessTable_findProcess(s);
+                pid_t pid = ProcessTable_findServiceProcess(s);
                 if (pid) {
                         ProcessTable_update(Process_Table);
-                        ProcessTable_updateProcess(Process_Table, s, pid);
+                        ProcessTable_updateServiceProcess(Process_Table, s, pid);
                         return Process_Started;
                 }
                 *timeout -= wait;
@@ -240,11 +162,16 @@ static bool _doStart(Service_T s) {
         }
         if (rv) {
                 if (s->start) {
-                        if (s->type != Service_Process || ! ProcessTable_findProcess(s)) {
+                        if (s->type != Service_Process || ! ProcessTable_findServiceProcess(s)) {
                                 Log_info("'%s' start: '%s'\n", s->name, Util_commandDescription(s->start, (char[STRLEN]){}));
                                 char msg[1024];
                                 long long timeout = s->start->timeout * USEC_PER_MSEC;
-                                int status = _commandExecute(s, s->start, msg, sizeof(msg), &timeout);
+                                int status = spawn(&(struct spawn_args_t){
+                                        .S = s,
+                                        .cmd = s->start,
+                                        .err = msg,
+                                        .errlen = sizeof(msg)
+                                });
                                 if (status < 0 || (s->type == Service_Process && _waitProcessStart(s, &timeout) != Process_Started)) {
                                         Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to start (exit status %d) -- %s", status, *msg ? msg : "no output");
                                         rv = false;
@@ -268,7 +195,12 @@ static bool _doStart(Service_T s) {
 
 static int _executeStop(Service_T s, char *msg, int msglen, long long *timeout) {
         Log_info("'%s' stop: '%s'\n", s->name, Util_commandDescription(s->stop, (char[STRLEN]){}));
-        return _commandExecute(s, s->stop, msg, msglen, timeout);
+        return spawn(&(struct spawn_args_t){
+                .S = s,
+                .cmd = s->stop,
+                .err = msg,
+                .errlen = msglen
+        });
 }
 
 
@@ -295,7 +227,7 @@ static bool _doStop(Service_T s, bool unmonitor) {
                         char msg[1024];
                         long long timeout = s->stop->timeout * USEC_PER_MSEC;
                         if (s->type == Service_Process) {
-                                int pid = ProcessTable_findProcess(s);
+                                int pid = ProcessTable_findServiceProcess(s);
                                 if (pid) {
                                         exitStatus = _executeStop(s, msg, sizeof(msg), &timeout);
                                         rv = _waitProcessStop(pid, &timeout) == Process_Stopped ? true : false;
@@ -332,7 +264,12 @@ static bool _doRestart(Service_T s) {
                 Util_resetInfo(s);
                 char msg[1024];
                 long long timeout = s->restart->timeout * USEC_PER_MSEC;
-                int status = _commandExecute(s, s->restart, msg, sizeof(msg), &timeout);
+                int status = spawn(&(struct spawn_args_t){
+                        .S = s,
+                        .cmd = s->restart,
+                        .err = msg,
+                        .errlen = sizeof(msg)
+                });
                 if (status < 0 || (s->type == Service_Process && _waitProcessStart(s, &timeout) != Process_Started)) {
                         rv = false;
                         Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to restart (exit status %d) -- %s", status, msg);
