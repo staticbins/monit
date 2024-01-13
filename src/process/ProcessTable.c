@@ -87,6 +87,13 @@ static void _freeCachedProcesses(__attribute__ ((unused))int key, void **value, 
 }
 
 
+// Predicator function for looking up a Process_T given a Service name
+static bool _compareName(void *value, void *name) {
+        Process_T p = value;
+        return Str_isEqual(Process_name(p), name);
+}
+
+
 static inline void _prune(process_t process, __attribute__ ((unused))void *ap) {
         FREE(process->cmdline);
         FREE(process->secattr);
@@ -329,41 +336,6 @@ bool ProcessTable_update(T P) {
 }
 
 
-void ProcessTable_setProcess(T P, Process_T process) {
-        assert(P);
-        assert(process);
-        Process_T p = NULL;
-        LOCK(P->mutex) 
-        {
-                p = Array_put(P->cache, Process_pid(process), process);
-        }
-        END_LOCK;
-        if (p) {
-                // In the very unlikely case that a process already exist with
-                // the same pid, we detach and free the process, unless it's
-                // the same process, in witch case we just write a debug msg
-                if (p != process) {
-                        Process_detach(p);
-                        Process_free(&p);
-                } else {
-                        DEBUG("ProcessTable_setProcess: Trying to store the same process again\n");
-                }
-        }
-}
-
-
-Process_T ProcessTable_getProcess(T P, pid_t pid) {
-        assert(P);
-        Process_T p = NULL;
-        LOCK(P->mutex)
-        {
-                p = Array_get(P->cache, pid);
-        }
-        END_LOCK;
-        return p;
-}
-
-
 // The apply function is called under a table lock and must be fast.
 // It should not do any i/o or stuff that might block
 void ProcessTable_map(T P, void (*apply)(process_t process, void *ap), void *ap) {
@@ -407,6 +379,70 @@ void ProcessTable_sort(T P, ProcessTableSort_Type func, void (*apply)(process_t 
 }
 
 
+// MARK: - Process_T cache
+
+
+void ProcessTable_setProcess(T P, Process_T process) {
+        assert(P);
+        assert(process);
+        Process_T p = NULL;
+        LOCK(P->mutex)
+        {
+                p = Array_put(P->cache, Process_pid(process), process);
+        }
+        END_LOCK;
+        if (p) {
+                // In the very unlikely case that a process already exist with
+                // the same pid, we detach and free the process, unless it's
+                // the same process, in witch case we just write a debug msg
+                if (p != process) {
+                        Process_detach(p);
+                        Process_free(&p);
+                } else {
+                        DEBUG("ProcessTable_setProcess: Trying to store the same process again\n");
+                }
+        }
+}
+
+
+Process_T ProcessTable_getProcess(T P, pid_t pid) {
+        assert(P);
+        Process_T p = NULL;
+        LOCK(P->mutex)
+        {
+                p = Array_get(P->cache, pid);
+        }
+        END_LOCK;
+        return p;
+}
+
+
+// Find a cached Process_T given a service name
+Process_T ProcessTable_findProcess(T P, const char *name) {
+        assert(P);
+        assert(name);
+        Process_T p = NULL;
+        LOCK(P->mutex)
+        {
+                p = Array_find(P->cache, _compareName, (void*)name);
+        }
+        END_LOCK;
+        return p;
+}
+
+
+Process_T ProcessTable_removeProcess(T P, pid_t pid) {
+        assert(P);
+        Process_T p = NULL;
+        LOCK(P->mutex)
+        {
+                p = Array_remove(P->cache, pid);
+        }
+        END_LOCK;
+        return p;
+}
+
+
 // MARK: - Class methods
 
 
@@ -419,7 +455,7 @@ bool ProcessTable_exist(pid_t pid) {
 // MARK: - Service methods
 
 
-pid_t ProcessTable_findProcess(Service_T s) {
+pid_t ProcessTable_findServiceProcess(Service_T s) {
         assert(s);
         // Test the cached PID first
         if (s->inf.process->pid > 0) {
@@ -451,7 +487,7 @@ pid_t ProcessTable_findProcess(Service_T s) {
 }
 
 
-bool ProcessTable_updateProcess(T P, Service_T s, pid_t pid) {
+bool ProcessTable_updateServiceProcess(T P, Service_T s, pid_t pid) {
         assert(P);
         assert(s);
         /* save the previous pid and set actual one */
