@@ -586,7 +586,7 @@ static void do_default(void) {
 
                 if (! (Run.flags & Run_Foreground)) {
                         if (getpid() == 1) {
-                                Log_error("Error: Monit is running as process 1 (init) and will not daemonize\n"
+                                Log_error("Error: Monit is running as process 1 (init) and cannot daemonize\n"
                                           "Please start monit with the -I option to avoid seeing this error\n");
                         } else {
                                 daemonize();
