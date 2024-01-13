@@ -572,7 +572,7 @@ then
    CFLAGS="$CFLAGS -DREENTRANT -no-cpp-precomp -DNEED_SOCKLEN_T_DEFINED"
    LDFLAGS="$LDFLAGS -Wl,-search_paths_first"
    AC_CHECK_LIB([kvm], [kvm_open])
-   LIBS="$LIBS -framework System -framework CoreFoundation -framework DiskArbitration -framework IOKit -multiply_defined suppress"
+   LIBS="$LIBS -framework System -framework CoreFoundation -framework DiskArbitration -framework IOKit"
 elif test "$architecture" = "AIX"
 then
    ARCH="AIX"
