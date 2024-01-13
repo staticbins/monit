@@ -77,7 +77,9 @@
 
 /**
  * Transform a program into a daemon. Inspired by code from Stephen
- * A. Rago's book, Unix System V Network Programming.
+ * A. Rago's book, Unix System V Network Programming. Note: This is
+ * fine as long as we run on a system with a seperate init process.
+ * If we are init (pid==1) this method must not and is not called.
  */
 void daemonize(void) {
         pid_t pid;
