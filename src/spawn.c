@@ -108,8 +108,6 @@ pid_t spawn(spawn_args_t args) {
         if (! File_exist(cmd->arg[0])) {
                 if (err)
                         snprintf(err, errlen, "File to execute '%s' no longer exist\n",  cmd->arg[0]);
-                else
-                        Log_error("Error: File to execute '%s' no longer exist\n", cmd->arg[0]);
                 return -1;
         }
         Command_T C = Command_new(cmd->arg[0]);
@@ -150,11 +148,8 @@ pid_t spawn(spawn_args_t args) {
                         Process_setName(P, S->name);
                         ProcessTable_setProcess(Process_Table, P);
                 }
-        } else {
-                if (err)
-                        snprintf(err, errlen, "Failed to execute '%s'  -- %s", cmd->arg[0], System_lastError());
-                else
-                        Log_error("Error: Failed to execute '%s' -- %s\n", cmd->arg[0], System_lastError());
+        } else if (err) {
+                snprintf(err, errlen, "Failed to execute '%s'  -- %s", cmd->arg[0], System_lastError());
         }
         Command_free(&C);
         return status;
