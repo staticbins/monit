@@ -317,7 +317,6 @@ static void _handleAction(Event_T E, Action_T A) {
                         if (E->state_changed || (E->state && A->repeat && E->count % A->repeat == 0)) {
                                 Log_info("'%s' exec: '%s'\n", E->source->name, Util_commandDescription(A->exec, (char[STRLEN]){}));
                                 if (spawn(&(struct spawn_args_t){
-                                        .detach = true, // fire-and-forget
                                         .S = E->source,
                                         .cmd = A->exec,
                                         .E = E
