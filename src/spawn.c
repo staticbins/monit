@@ -119,7 +119,7 @@ pid_t spawn(spawn_args_t args) {
         if (cmd->has_gid)
                 Command_setGid(C, cmd->gid);
         // Setup the environment with special MONIT_xxx variables. The program
-        // executed may use such variable for various purposes.
+        // executed may use such variables for various purposes.
         Command_setEnv(C, "MONIT_DATE", Time_localStr(Time_now(), (char[26]){}));
         Command_setEnv(C, "MONIT_SERVICE", S->name);
         Command_setEnv(C, "MONIT_HOST", Run.system->name);
@@ -141,12 +141,13 @@ pid_t spawn(spawn_args_t args) {
         Process_T P = Command_execute(C);
         if (P) {
                 status = Process_pid(P);
-                if (args->detach) { // Fire-and-forget
-                        Process_detach(P);
-                        Process_free(&P);
-                } else { // Cache Process_T object for later use
+                if (cmd == S->start) { // We only cache the Process representing the service
+                        S->inf.process->pid = Process_pid(P);
                         Process_setName(P, S->name);
                         ProcessTable_setProcess(Process_Table, P);
+                } else { // Fire-and-forget
+                        Process_detach(P);
+                        Process_free(&P);
                 }
         } else if (err) {
                 snprintf(err, errlen, "Failed to execute '%s'  -- %s", cmd->arg[0], System_lastError());

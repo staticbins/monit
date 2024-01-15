@@ -30,12 +30,7 @@ typedef struct spawn_args_t {
         Service_T S;
         /// Required: The command_t object containing the command to execute
         command_t cmd;
-        /// Optional: Set to true if spawn should detach, i.e. fire-and-forget
-        /// once the program has called exec. Otherwise if false (the default)
-        /// spawn will cache the Process_T object so the Process can be 
-        /// inspected later
-        bool detach;
-        /// Optional: The event associated with the call. Used to set
+        /// Optional: The event associated with the Servvice. Used to set
         /// environment description
         Event_T E;
         /// Optional: Write any error to this buffer. If not set, the
@@ -46,16 +41,17 @@ typedef struct spawn_args_t {
 } *spawn_args_t;
 
 
-/// Create a new process from the command given in args.
-/// If the detach property is false (the default) the Process_T
-/// object created is cached in the global ProcessTable and can be
-/// obtained using the returned pid
-/// @param args Arguments given to spawn with information on how
-/// to create the process
-/// @return If creating the process failed, -1 is returned
-/// and errno set to indicate the error that occured. On success
-/// the process identification number (pid) of the new process
-/// is returned
+/// Create Service related processes' such as those given in a 'check process'
+/// start, stop and restart statement or by any associated 'exec' statements.
+/// The Process created from the 'start' program is special as it represents
+/// the Service and the pid saved in a Service's pid-file. This Process is
+/// cached in the global ProcessTable so the Service can retrieve and inspect
+/// it's own Process later. All other Processes' created by this method are
+/// created detached and not cached.
+/// @param args A struct with information on how to create the process.
+/// @return If creating the process failed, -1 is returned and errno set to
+/// indicate the error that occured. On success the process identification
+/// number (pid) of the new process is returned. 
 pid_t spawn(spawn_args_t args);
 
 
