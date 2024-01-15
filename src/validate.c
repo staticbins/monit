@@ -1544,23 +1544,22 @@ static bool _doScheduledAction(Service_T s) {
 int validate(void) {
         Run.handler_flag = Handler_Succeeded;
         Event_queue_process();
-
+        
         SystemInfo_update();
         ProcessTable_update(Process_Table);
         gettimeofday(&System_Info.collected, NULL);
-
+        
         /* In the case that at least one action is pending, perform quick loop to handle the actions ASAP */
         if (Run.flags & Run_ActionPending) {
                 Run.flags &= ~Run_ActionPending;
                 for (Service_T s = Service_List; s; s = s->next)
                         _doScheduledAction(s);
         }
-
+        
         int errors = 0;
         /* Check the services */
         for (Service_T s = Service_List; s && ! interrupt(); s = s->next) {
-                // FIXME: The Service_Program must collect the exit value from last run, even if the program start should be skipped in this cycle => let check program always run the test (to be refactored with new scheduler) WARNING: do not(!) call the _checkSkip for Service_Program here
-                if (! _doScheduledAction(s) && s->monitor && (s->type == Service_Program || ! _checkSkip(s))) {
+                if (! _doScheduledAction(s) && s->monitor && (! _checkSkip(s))) {
                         _checkTimeout(s); // Can disable monitoring => need to check s->monitor again
                         if (s->monitor) {
                                 State_Type state = s->check(s);
@@ -1568,8 +1567,7 @@ int validate(void) {
                                         s->monitor = Monitor_Yes;
                                 if (state == State_Failed)
                                         errors++;
-                                if (s->type != Service_Program)
-                                        gettimeofday(&s->collected, NULL);
+                                gettimeofday(&s->collected, NULL);
                         }
                 }
         }
@@ -1910,8 +1908,7 @@ State_Type check_program(Service_T s) {
                 // Process program output
                 _programOutput(Process_errorStream(P), s->program->inprogressOutput);
                 _programOutput(Process_inputStream(P), s->program->inprogressOutput);
-                // Is the program still running?
-                if (Process_exitStatus(P) < 0) {
+                if (Process_isRunning(P)) {
                         long long execution_time = (now - s->program->started) * 1000;
                         if (execution_time > s->program->timeout) { // Program timed out
                                 rv = State_Failed;
@@ -1964,25 +1961,23 @@ State_Type check_program(Service_T s) {
                         else
                                 Event_post(s, Event_Content, State_ChangedNot, ml->action,  "content doesn't match on program output:\n%s", lastOutput);
                 }
-                
-                Process_free(&s->program->P);
+                ProcessTable_removeProcess(Process_Table, Process_pid(P));
+                Process_free(&P);
         } else {
                 rv = State_Init;
         }
-        //FIXME: the current off-by-one-cycle based design requires that the check program will collect the exit value next cycle even if program startup should be skipped in the given cycle => must test skip here (new scheduler will obsolete this deferred skip checking)
-        if (s->monitor != Monitor_Not && ! _checkSkip(s)) { // The status evaluation may disable service monitoring
+        if (s->monitor != Monitor_Not) { // The status evaluation may disable service monitoring
                 // Start program
                 StringBuffer_clear(s->program->inprogressOutput);
                 s->program->P = Command_execute(s->program->C);
                 if (! s->program->P) {
                         rv = State_Failed;
-                        Event_post(s, Event_Status, State_Failed, s->action_EXEC, "failed to execute '%s' -- %s", s->path, STRERROR);
+                        Event_post(s, Event_Status, State_Failed, s->action_EXEC, "failed to execute '%s' -- %s", s->path, System_lastError());
                 } else {
-                        Event_post(s, Event_Status, State_Succeeded, s->action_EXEC, "program started");
                         s->program->started = now;
+                        ProcessTable_setProcess(Process_Table, s->program->P);
+                        Event_post(s, Event_Status, State_Succeeded, s->action_EXEC, "program started");
                 }
-                // We canot set the data collection timestmap in validate(), as the program check calls the _checkSkip() here
-                gettimeofday(&s->collected, NULL);
         }
         return rv;
 }

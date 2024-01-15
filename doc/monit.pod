@@ -3036,7 +3036,8 @@ If Monit is run as the super user, you can optionally run the program
 as a different user and/or group. In this example we run the I<ls>
 program as user www and as group staff:
 
- check program ls with path "/bin/ls /tmp" as uid "www"
+ check program ls with path "/bin/ls /tmp"
+          as uid "www"
           and gid "staff"
        if status != 0 then alert
 
@@ -3057,18 +3058,6 @@ after the first cycle, Monit will wait another cycle and so on. If the
 program is still running after 5 minutes, Monit will kill it and
 generate a program timeout event. It is possible to override the
 default timeout (see the syntax below).
-
-The asynchronous nature of the program check allows for
-non-blocking behaviour in the current Monit design, but it comes
-with a side-effect: when the program has finished executing and
-is waiting for Monit to collect the result, it becomes a
-so-called "zombie" process. A zombie process does not consume
-any system resources (only the PID remains in use) and it is
-under Monit's control and the zombie process is removed from the
-system as soon as Monit collects the exit status. This means that
-every "check program" will be associated with either a running
-process or a temporary zombie. This unwanted zombie side-effect
-will be removed in a later release of Monit.
 
 Multiple status tests can be used, for example:
 
