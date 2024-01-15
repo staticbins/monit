@@ -94,8 +94,8 @@ static Process_Status _waitProcessStart(Service_T s, long long *timeout) {
                 Time_usleep(wait);
                 pid_t pid = ProcessTable_findServiceProcess(s);
                 if (pid) {
-                        ProcessTable_update(Process_Table);
-                        ProcessTable_updateServiceProcess(Process_Table, s, pid);
+                        if (ProcessTable_update(Process_Table))
+                                ProcessTable_updateServiceProcess(Process_Table, s, pid);
                         return Process_Started;
                 }
                 *timeout -= wait;
@@ -166,17 +166,17 @@ static bool _doStart(Service_T s) {
                                 Log_info("'%s' start: '%s'\n", s->name, Util_commandDescription(s->start, (char[STRLEN]){}));
                                 char msg[1024];
                                 long long timeout = s->start->timeout * USEC_PER_MSEC;
-                                int status = spawn(&(struct spawn_args_t){
+                                pid_t status = spawn(&(struct spawn_args_t){
                                         .S = s,
                                         .cmd = s->start,
                                         .err = msg,
                                         .errlen = sizeof(msg)
                                 });
                                 if (status < 0 || (s->type == Service_Process && _waitProcessStart(s, &timeout) != Process_Started)) {
-                                        Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to start (exit status %d) -- %s", status, *msg ? msg : "no output");
+                                        Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to start (exit status %d) -- %s", errno, *msg ? msg : "no output");
                                         rv = false;
                                 } else {
-                                        Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "started");
+                                        Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "started (pid = %d)", status);
                                 }
                         }
                 } else {
@@ -208,7 +208,7 @@ static void _evaluateStop(Service_T s, bool succeeded, int exitStatus, char *msg
         if (succeeded)
                 Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "stopped");
         else
-                Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to stop (exit status %d) -- %s", exitStatus, *msg ? msg : "no output");
+                Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to stop (exit status %d) -- %s", errno, *msg ? msg : "no output");
 }
 
 
@@ -264,7 +264,7 @@ static bool _doRestart(Service_T s) {
                 Util_resetInfo(s);
                 char msg[1024];
                 long long timeout = s->restart->timeout * USEC_PER_MSEC;
-                int status = spawn(&(struct spawn_args_t){
+                pid_t status = spawn(&(struct spawn_args_t){
                         .S = s,
                         .cmd = s->restart,
                         .err = msg,
@@ -274,7 +274,7 @@ static bool _doRestart(Service_T s) {
                         rv = false;
                         Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to restart (exit status %d) -- %s", status, msg);
                 } else {
-                        Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "restarted");
+                        Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "restarted (pid=%d)", status);
                 }
         } else {
                 Log_debug("'%s' restart skipped -- method not defined\n", s->name);
