@@ -30,12 +30,13 @@ system/startup/monit.service
 system/startup/monit.upstart
 
 libmonit/test/CommandTest
-libmonit/test/ConvertTest
+libmonit/test/FmtTest
 libmonit/test/DirTest
 libmonit/test/ExceptionTest
 libmonit/test/FileTest
 libmonit/test/InputStreamTest
 libmonit/test/LinkTest
+libmonit/test/ArrayTest
 libmonit/test/ListTest
 libmonit/test/NetTest
 libmonit/test/OutputStreamTest

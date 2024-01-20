@@ -4,8 +4,9 @@ LDADD = ../libmonit.la
 AM_CPPFLAGS = -I../src/ -I../src/util -I../src/net -I../src/io -I../src/exceptions -I../src/thread 
 
 noinst_PROGRAMS = StrTest \
-                  ConvertTest \
+                  FmtTest \
                   SystemTest \
+                  ArrayTest \
                   ListTest \
                   DirTest \
                   StringBufferTest \
@@ -18,10 +19,11 @@ noinst_PROGRAMS = StrTest \
                   CommandTest
 
 StrTest_SOURCES = StrTest.c
-ConvertTest_SOURCES = ConvertTest.c
+FmtTest_SOURCES = FmtTest.c
 CommandTest_SOURCES = CommandTest.c
 SystemTest_SOURCES = SystemTest.c
 ListTest_SOURCES = ListTest.c
+ArrayTest_SOURCES = ArrayTest.c
 DirTest_SOURCES = DirTest.c
 StringBufferTest_SOURCES = StringBufferTest.c
 InputStreamTest_SOURCES = InputStreamTest.c

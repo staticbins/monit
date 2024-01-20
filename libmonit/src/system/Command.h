@@ -40,6 +40,8 @@
  * but will not affect previously created processes nor the calling process
  * itself.
  *
+ * This class is reentrant but not thread-safe
+ *
  * @see Process.h
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
@@ -53,26 +55,24 @@ typedef struct T *T;
 
 /**
  * Create a new Command object and set the operating system program with
- * arguments to execute. The <code>arg0</code> argument is the first argument
- * in a sequence of arguments to the program. The arguments list can be thought
- * of as arg0, arg1, ..., argn. Together they describe a list of one or more
- * pointers to null-terminated strings that represent the argument list 
- * available to the executed program specified in <code>path</code>. The 
- * list of arguments <em style="color:red">must</em> be terminated by a
- * NULL pointer. Example:
+ * arguments to execute. The <code>...</code> variable argument list denotes
+ * an optional sequence of arguments to the program. The arguments list can
+ * be thought of as arg0, arg1, ..., argn. Together they describe a list of
+ * zero or more pointers to null-terminated strings that represent the argument
+ * list available to the executed program specified in <code>path</code>. Example:
  * <pre>
- * Command_new("/bin/ls", NULL)
- * Command_new("/bin/ls", "-lrt", NULL)
- * Command_new("/bin/sh", "-c", "ps -aef|egrep mmonit", NULL)
+ * Command_new("/bin/ls")
+ * Command_new("/bin/ls", "-lrt")
+ * Command_new("/bin/sh", "-c", "ps -aef|egrep mmonit")
  * </pre>
- * @param path A string containing the path to the program to execute
- * @param arg0 The first argument in a sequence of arguments. The last value
- * in the arguments list <strong>must</strong> be NULL.
- * @exception AssertException if the program does not exist or cannot be
- * executed
- * @return This Command object
+ * @param path The program to execute, _without_ any arguments
+ * @param ... An optional sequence of arguments to the program given in path
+ * @exception AssertException if the program given in path does not exist.
+ * @return A Command object
  */
-T Command_new(const char *path, const char *arg0, ...);
+#define Command_new(path, ...) _Command_new((path), ##__VA_ARGS__, NULL)
+/** Internal function. Use Command_new() */
+T _Command_new(const char *path, ...) __attribute__((sentinel));
 
 
 /**
@@ -86,7 +86,6 @@ void Command_free(T *C);
 /** @name Properties */
 //@{
 
-
 /**
  * Append an argument to the command that should be used to launch this executable.
  * @param C A Command object
@@ -96,11 +95,15 @@ void Command_appendArgument(T C, const char *argument);
 
 
 /**
- * Set the user id the sub-process should switch to on exec. If not set, the uid of 
- * the calling process is used. Note that this process must run with super-user
- * privileges for the sub-process to be able to switch uid
+ * Set the user id the sub-process should switch to on exec. If not set, the
+ * uid of the calling process is used. Note that this process must run with
+ * super-user privileges for the sub-process to be able to switch uid. In fact
+ * it is a checked runtime error to call this method if this process does not
+ * run with super-user privileges
  * @param C A Command object
  * @param uid The user id the sub-process should switch to when executed
+ * @exception AssertException If this process is not run by the super-user or
+ * with super-user privileges.
  */
 void Command_setUid(T C, uid_t uid);
 
@@ -112,15 +115,17 @@ void Command_setUid(T C, uid_t uid);
  * if not set, meaning the sub-process will run with the same
  * uid as this process.
  */
-uid_t Command_getUid(T C);
+uid_t Command_uid(T C);
 
 
 /**
- * Set the group id the sub-process should switch to on exec. If not set, the gid of 
- * the calling process is used. Note that this process must run with super-user
- * privileges for the sub-process to be able to switch gid
+ * Set the group id the sub-process should switch to on exec. If not set, 
+ * the gid of the calling process is used. Note that this process must run
+ * with super-user privileges for the sub-process to be able to switch gid
  * @param C A Command object
  * @param gid The group id the sub-process should switch to when executed
+ * @exception AssertException If this process is not run by the super-user or
+ * with super-user privileges.
  */
 void Command_setGid(T C, gid_t gid);
 
@@ -132,15 +137,34 @@ void Command_setGid(T C, gid_t gid);
  * if not set, meaning the sub-process will run with the same
  * gid as this process.
  */
-gid_t Command_getGid(T C);
+gid_t Command_gid(T C);
 
 
 /**
- * Set the working directory for the sub-process. If directory cannot be changed
- * the sub-process will exit
+ * Set the umask value for the sub-process. The default value if not set
+ * is 022. See also http://en.wikipedia.org/wiki/Umask and man umask(2)
+ * @param C A Command object
+ * @param umask The new umask value, as a 3 digit octal number, e.g. 002
+ */
+void Command_setUmask(T C, mode_t umask);
+
+
+/**
+ * Returns the umask value for the sub-process. The default value is 022
+ * unless changed with Command_setUmask().
+ * @param C A Command object
+ * @return The umask value for the sub-process
+ */
+mode_t Command_umask(T C);
+
+
+/**
+ * Set the working directory for the sub-process. If the directory cannot
+ * be changed to, the sub-process will exit with an error
  * @param C A Command object
  * @param dir The working directory for the sub-process
- * @exception AssertException if the directory does not exist or is not accessible
+ * @exception AssertException if the directory does not exist or is not
+ * accessible
  */
 void Command_setDir(T C, const char *dir);
 
@@ -150,35 +174,35 @@ void Command_setDir(T C, const char *dir);
  * set, the returned value is NULL, meaning the calling process's current
  * directory
  * @param C A Command object
- * @return The working directory for the sub-process or NULL meaning the calling
- * process's current directory
+ * @return The working directory for the sub-process or NULL meaning the 
+ * calling process's current directory
  */
-const char *Command_getDir(T C);
+const char *Command_dir(T C);
 
 
 /**
  * Set or replace the environment variable identified by <code>name</code>.
- * The sub-process initially inherits the environment from the calling process.
- * Environment variables set with this method does not affect the parent
- * process and only apply to the sub-process.
+ * The sub-process initially inherits the environment from the calling 
+ * process. Environment variables set with this method does not affect the
+ * parent process and only apply to the sub-process.
  * @param C A Command object
  * @param name The environment variable to set or replace
- * @param value The value
+ * @param value The value. A NULL value is converted to the empty string ""
  */
 void Command_setEnv(T C, const char *name, const char *value);
 
 
 /**
  * Set or replace the environment variable identified by <code>name</code>.
- * The sub-process initially inherits the environment from the calling process.
- * Environment variables set with this method does not affect the parent
- * process and only apply to the sub-process. Example:
+ * The sub-process initially inherits the environment from the calling 
+ * process. Environment variables set with this method does not affect the
+ * parent process and only apply to the sub-process. Example:
  *<pre>
  * Command_vSetEnv(C, "PID", "%ld", getpid()) -> PID=1234
  * </pre>
  * @param C A Command object
  * @param name The environment variable to set or replace
- * @param value The value
+ * @param value The value. A NULL value is converted to the empty string ""
  */
 void Command_vSetEnv(T C, const char *name, const char *value, ...) __attribute__((format (printf, 3, 4)));
 
@@ -190,8 +214,7 @@ void Command_vSetEnv(T C, const char *name, const char *value, ...) __attribute_
  * @param name The environment variable to get the value of
  * @return The value for name or NULL if name was not found
  */
-const char *Command_getEnv(T C, const char *name);
-
+const char *Command_env(T C, const char *name);
 
 
 /**
@@ -203,8 +226,7 @@ const char *Command_getEnv(T C, const char *name);
  * @return A list with the operating system program with arguments to 
  * execute. The first element in the list is the program.
  */
-List_T Command_getCommand(T C);
-
+List_T Command_command(T C);
 
 //@}
 

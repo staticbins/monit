@@ -67,10 +67,10 @@ extern const char *PATH_SEPARATOR;
 /**
  * Open <code>file</code> and return its file descriptor. The file is 
  * opened in non-blocking mode, meaning that read and write operations
- * will not block. Clients can pass the descriptor to an Input- and/or 
- * an OutputStream for reading/writing to the file. The mode parameter
- * is used to specify the access requested for the file. The mode may 
- * be one of
+ * will usually not block. Clients can pass the descriptor to an Input-
+ * and/or an OutputStream for reading/writing to the file. The mode
+ * parameter is used to specify the access requested for the file. The
+ * mode may be one of
  * <ol>
  * <li>"r" Open for reading. The stream is positioned at the beginning 
  * of the file</li>
@@ -88,7 +88,7 @@ extern const char *PATH_SEPARATOR;
  * <li>"a+" Open for reading and writing. If the file does not exist it 
  * will be created. The stream is positioned at the end of the file</li>
  *</ol>
- * @param file An absolute  file path
+ * @param file An absolute file path
  * @param mode the file access mode
  * @return A file descriptor or -1 if the file cannot be opened. Use 
  * System_getLastError() to get a description of the error that occurred
@@ -362,7 +362,7 @@ char *File_removeTrailingSeparator(char *path);
  * @param resolved The buffer to write the real path too
  * @return A pointer to the resolved buffer or NULL if an error occurred
  */
-char *File_getRealPath(const char *path, char *resolved);
+char *File_realPath(const char *path, char *resolved);
 
 
 #endif

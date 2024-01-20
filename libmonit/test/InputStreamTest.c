@@ -33,7 +33,7 @@ int main(void) {
         {
                 in = InputStream_new(File_open(DATA, "r"));
                 assert(!InputStream_isClosed(in));
-                File_close(InputStream_getDescriptor(in));
+                File_close(InputStream_descriptor(in));
                 InputStream_free(&in);
                 assert(in == NULL);
         }
@@ -43,9 +43,9 @@ int main(void) {
         {
                 assert((fd = File_open(DATA, "r")) >= 0);
                 in = InputStream_new(fd);
-                printf("\tCurrent timeout: %lldms\n", (long long)InputStream_getTimeout(in));
+                printf("\tCurrent timeout: %lldms\n", (long long)InputStream_timeout(in));
                 InputStream_setTimeout(in, TIMEOUT);
-                assert(InputStream_getTimeout(in) == TIMEOUT);
+                assert(InputStream_timeout(in) == TIMEOUT);
                 printf("\tTimeout set to:  %dms\n", TIMEOUT);
                 File_close(fd);
                 InputStream_free(&in);
@@ -140,7 +140,7 @@ int main(void) {
         {
                 in = InputStream_new(File_open(DATA, "r"));
                 assert(!InputStream_isClosed(in));
-                File_close(InputStream_getDescriptor(in));
+                File_close(InputStream_descriptor(in));
                 assert(InputStream_read(in) == -1); // 1st
                 assert(InputStream_read(in) == -1); // 2nd
                 assert(InputStream_isClosed(in));

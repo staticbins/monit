@@ -140,7 +140,7 @@
 #include "net.h"
 
 // libmonit
-#include "util/Convert.h"
+#include "util/Fmt.h"
 #include "system/Net.h"
 #include "system/Time.h"
 #include "exceptions/AssertException.h"
@@ -307,16 +307,16 @@ static void _setPingOptions(int socket, struct addrinfo *addr) {
         switch (addr->ai_family) {
                 case AF_INET:
                         if (setsockopt(socket, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0)
-                                Log_error("Ping: setsockopt for TTL failed -- %s\n", System_getLastError());
+                                Log_error("Ping: setsockopt for TTL failed -- %s\n", System_lastError());
                         break;
 #ifdef HAVE_IPV6
                 case AF_INET6:
                         if (setsockopt(socket, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &ttl, sizeof(ttl)) < 0)
-                                Log_error("Ping: setsockopt for multicast hops failed -- %s\n", System_getLastError());
+                                Log_error("Ping: setsockopt for multicast hops failed -- %s\n", System_lastError());
                         if (setsockopt(socket, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &ttl, sizeof(ttl)) < 0)
-                                Log_error("Ping: setsockopt for unicast hops failed -- %s\n", System_getLastError());
+                                Log_error("Ping: setsockopt for unicast hops failed -- %s\n", System_lastError());
                         if (setsockopt(socket, IPPROTO_ICMPV6, ICMP6_FILTER, &filter, sizeof(struct icmp6_filter)) < 0)
-                                Log_error("Ping: setsockopt for filter failed -- %s\n", System_getLastError());
+                                Log_error("Ping: setsockopt for filter failed -- %s\n", System_lastError());
                         break;
 #endif
                 default:
@@ -456,11 +456,11 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                 } else {
                         memcpy(&started, data, sizeof(long long));
                         double response = (double)(stopped - started) / 1000.; // Convert microseconds to milliseconds
-                        DEBUG("Ping response for %s %d/%d succeeded -- received id=%d sequence=%d response_time=%s\n", hostname, retry, maxretries, in_id, in_seq, Convert_time2str(response, (char[11]){}));
+                        DEBUG("Ping response for %s %d/%d succeeded -- received id=%d sequence=%d response_time=%s\n", hostname, retry, maxretries, in_id, in_seq, Fmt_time2str(response, (char[11]){}));
                         return response; // Wait for one response only
                 }
         }
-        _log_warningOrError(retry, maxretries, "Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Convert_time2str(timeout, (char[11]){}));
+        _log_warningOrError(retry, maxretries, "Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Fmt_time2str(timeout, (char[11]){}));
         return -1.;
 }
 

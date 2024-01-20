@@ -40,7 +40,7 @@
  * Returns a String describing the last system error
  * @return The last error message
  */
-const char *System_getLastError(void);
+const char *System_lastError(void);
 
 
 /**
@@ -69,12 +69,27 @@ void System_error(const char *e, ...) __attribute__((format (printf, 1, 2)));
 
 
 /**
+ * If a DebugHandler function is defined for the library, call this function
+ * with the given debug message. If a DebugHandler function is not defined
+ * this method does nothing.
+ * @param d A formatted (printf-style) debug string
+ */
+void System_debug(const char *d, ...) __attribute__((format (printf, 1, 2)));
+
+
+/**
  * Returns the number of available file descriptors for a process.
- * This method uses <code>sysconf</code> internally, but returns
- * a fixed size of <code>2^16</code> if the value is larger. 
+ * This method uses <code>sysconf</code> internally. If the guard
+ * parameter is 0, return the value from <code>sysconf</code>. If
+ * the guard parameter is > 0 and available descriptors is larger
+ * than guard, return the guard value instead.
+ * @param guard If guard is > 0 and available descriptors is larger
+ * than guard, return the guard value instead. Otherwise if guard
+ * is 0, return the maximum available file descriptors for a process
+ * as reported by the system
  * @return A guarded number of available file descriptors for a process
  */
-int System_getDescriptorsGuarded(void);
+int System_descriptorsGuarded(int guard);
 
 
 /**

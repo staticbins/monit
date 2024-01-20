@@ -414,11 +414,7 @@ typedef enum {
 
 /* Replace the standard signal function with a more reliable using
  * sigaction. Taken from Stevens APUE book. */
-typedef void Sigfunc(int);
-Sigfunc *signal(int signo, Sigfunc * func);
-#if defined(SIG_IGN) && !defined(SIG_ERR)
-#define SIG_ERR ((Sigfunc *)-1)
-#endif
+sig_t signal(int signo, sig_t func);
 
 
 /** ------------------------------------------------- General purpose macros */
@@ -1430,7 +1426,6 @@ extern const char *Httpmethod_Names[];
 bool parse(char *);
 bool control_service(const char *, Action_Type);
 bool control_service_string(List_T, const char *);
-void spawn(Service_T, command_t, Event_T);
 bool Log_init(void);
 void Log_emergency(const char *, ...) __attribute__((format (printf, 1, 2)));
 void Log_alert(const char *, ...) __attribute__((format (printf, 1, 2)));

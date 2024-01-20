@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 53;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -142,19 +142,40 @@
 			remoteGlobalIDString = 522FF2F9192E700200C62A13;
 			remoteInfo = TimeTest;
 		};
-		52A20915299AD408004FFCB4 /* PBXContainerItemProxy */ = {
+		52CCD89E2B521967004DB685 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 52A2090F299AD3BB004FFCB4;
-			remoteInfo = InputstreamTest;
+			remoteGlobalIDString = 52CCD8902B51C26A004DB685;
+			remoteInfo = ArrayTest;
 		};
-		52AE7B971FEC8EBD00B838B3 /* PBXContainerItemProxy */ = {
+		52CCD8A02B521967004DB685 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 52AE7B921FEC8E0100B838B3;
-			remoteInfo = StringBufferTest;
+			remoteGlobalIDString = 52CCD8912B51C26A004DB685;
+			remoteInfo = OutputStreamTest;
+		};
+		52CCD8A22B521967004DB685 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 52CCD8922B51C26A004DB685;
+			remoteInfo = InputStreamTest;
+		};
+		52CCD8A42B521967004DB685 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 52CCD8932B51C26A004DB685;
+			remoteInfo = SystemTest;
+		};
+		52CCD8A62B521967004DB685 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 52CCD8942B51C26A004DB685;
+			remoteInfo = FileTest;
 		};
 		52DDC12913C59D46003AA75C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -249,6 +270,7 @@
 		52BB060423B49C00008E61F1 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../../../../../opt/local/lib/libcrypto.a; sourceTree = "<group>"; };
 		52BB060523B49C5F008E61F1 /* libssl.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.1.1.dylib; path = ../../../../../opt/local/lib/libssl.1.1.dylib; sourceTree = "<group>"; };
 		52BB060923B49C7E008E61F1 /* libcrypto.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.1.dylib; path = ../../../../../opt/local/lib/libcrypto.1.1.dylib; sourceTree = "<group>"; };
+		52CCD8952B521966004DB685 /* spawn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = spawn.h; sourceTree = "<group>"; };
 		52D25EDC17C0E8680039D3E4 /* bootstrap */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = bootstrap; sourceTree = "<group>"; };
 		52D25EDD17C0E8680039D3E4 /* CHANGES */ = {isa = PBXFileReference; lastKnownFileType = text; path = CHANGES; sourceTree = "<group>"; };
 		52D25EDE17C0E8680039D3E4 /* configure.ac */ = {isa = PBXFileReference; lastKnownFileType = text; path = configure.ac; sourceTree = "<group>"; };
@@ -601,8 +623,11 @@
 				52FDD6B6189C2762008E3D5E /* CommandTest */,
 				524981ED194B368C004A50DB /* TimeTest */,
 				52F675FD19B873A100E1FF1E /* StrTest */,
-				52AE7B981FEC8EBD00B838B3 /* StringBufferTest */,
-				52A20916299AD408004FFCB4 /* InputstreamTest */,
+				52CCD89F2B521967004DB685 /* ArrayTest */,
+				52CCD8A12B521967004DB685 /* OutputStreamTest */,
+				52CCD8A32B521967004DB685 /* InputStreamTest */,
+				52CCD8A52B521967004DB685 /* SystemTest */,
+				52CCD8A72B521967004DB685 /* FileTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -674,6 +699,7 @@
 				52AE77CB14037DA300D2861D /* sha1.h */,
 				52F6E7A313A74F220023F87A /* signal.c */,
 				52F6E7A613A74F220023F87A /* spawn.c */,
+				52CCD8952B521966004DB685 /* spawn.h */,
 				52F6E7AA13A74F220023F87A /* state.c */,
 				52F6E7AB13A74F220023F87A /* state.h */,
 				52F6E7AD13A74F220023F87A /* util.c */,
@@ -869,7 +895,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 1520;
 				ORGANIZATIONNAME = "Tildeslash Ltd.";
 				TargetAttributes = {
 					528EA77113A74E05003DA4BE = {
@@ -909,18 +935,39 @@
 			remoteRef = 524981EC194B368C004A50DB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		52A20916299AD408004FFCB4 /* InputstreamTest */ = {
+		52CCD89F2B521967004DB685 /* ArrayTest */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
-			path = InputstreamTest;
-			remoteRef = 52A20915299AD408004FFCB4 /* PBXContainerItemProxy */;
+			path = ArrayTest;
+			remoteRef = 52CCD89E2B521967004DB685 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		52AE7B981FEC8EBD00B838B3 /* StringBufferTest */ = {
+		52CCD8A12B521967004DB685 /* OutputStreamTest */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
-			path = StringBufferTest;
-			remoteRef = 52AE7B971FEC8EBD00B838B3 /* PBXContainerItemProxy */;
+			path = OutputStreamTest;
+			remoteRef = 52CCD8A02B521967004DB685 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		52CCD8A32B521967004DB685 /* InputStreamTest */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = InputStreamTest;
+			remoteRef = 52CCD8A22B521967004DB685 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		52CCD8A52B521967004DB685 /* SystemTest */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = SystemTest;
+			remoteRef = 52CCD8A42B521967004DB685 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		52CCD8A72B521967004DB685 /* FileTest */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = FileTest;
+			remoteRef = 52CCD8A62B521967004DB685 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		52DDC12A13C59D46003AA75C /* libmonit.a */ = {
@@ -1074,6 +1121,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
 				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_ENABLE_PASCAL_STRINGS = NO;
@@ -1140,6 +1188,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
 				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_ENABLE_PASCAL_STRINGS = NO;

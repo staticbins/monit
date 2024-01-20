@@ -3671,7 +3671,7 @@ static void addservice(Service_T s) {
                         strncpy(program, s->program->args->arg[0], sizeof(program) - 1);
                         // Require that the program exist before creating the Command object
                         if (File_isExecutable(program)) {
-                                s->program->C = Command_new(program, NULL);
+                                s->program->C = Command_new(program);
                                 for (int i = 1; i < s->program->args->length; i++) {
                                         Command_appendArgument(s->program->C, s->program->args->arg[i]);
                                         snprintf(program + strlen(program), sizeof(program) - strlen(program) - 1, " %s", s->program->args->arg[i]);
@@ -4559,7 +4559,7 @@ static void addgeneric(Port_T port, char *send, char *expect) {
  * Add the current command object to the current service object's
  * start or stop program.
  */
-static void addcommand(int what, unsigned int timeout) {
+static void addcommand(int what, unsigned int cmdtimeout) {
 
         switch (what) {
                 case START:   current->start = command; break;
@@ -4567,7 +4567,7 @@ static void addcommand(int what, unsigned int timeout) {
                 case RESTART: current->restart = command; break;
         }
 
-        command->timeout = timeout;
+        command->timeout = cmdtimeout;
 
         command = NULL;
 
@@ -4962,13 +4962,6 @@ static bool addcredentials(char *uname, char *passwd, Digest_Type dtype, bool re
 
         assert(uname);
         assert(passwd);
-
-        if (strlen(passwd) > Str_compareConstantTimeStringLength) {
-                yyerror2("Password for user %s is too long, maximum %d allowed", uname, Str_compareConstantTimeStringLength);
-                FREE(uname);
-                FREE(passwd);
-                return false;
-        }
 
         if (! Run.httpd.credentials) {
                 NEW(Run.httpd.credentials);

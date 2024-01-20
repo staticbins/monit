@@ -15,13 +15,6 @@
  */
 
 
-static void testEscaping(char *buf, int buflen, int n, const char *expect) {
-        Str_escapeZero(buf, buflen, n);
-        printf("\tExpect: \"%s\", got: \"%s\"\n", expect, buf);
-        assert(Str_isByteEqual(buf, expect) == true);
-}
-
-
 int main(void) {
 
         Bootstrap(); // Need to initialize library
@@ -509,21 +502,19 @@ int main(void) {
         }
         printf("=> Test23: OK\n\n");
 
-        printf("=> Test24: Str_compareConstantTime\n");
+        printf("=> Test24: Str_authcmp\n");
         {
-                assert(Str_compareConstantTime(NULL,     NULL)        == 0);
-                assert(Str_compareConstantTime("abcdef", NULL)        != 0);
-                assert(Str_compareConstantTime(NULL,     "abcdef")    != 0);
-                assert(Str_compareConstantTime("abcdef", "abcdef")    == 0);
-                assert(Str_compareConstantTime("abcdef", "ABCDEF")    != 0);
-                assert(Str_compareConstantTime("abcdef", "abc")       != 0);
-                assert(Str_compareConstantTime("abcdef", "abcdefghi") != 0);
-                // Test maximum length
-                unsigned char ok[] = "1111111111111111111111111111111111111111111111111111111111111111"; // 64 characters currently
-                assert(Str_compareConstantTime(ok, ok) == 0);
-                // Test maximum length + 1
-                unsigned char ko[] = "11111111111111111111111111111111111111111111111111111111111111111"; // 65 characters should fail
-                assert(Str_compareConstantTime(ko, ko) != 0);
+                assert(!Str_authcmp(NULL,     NULL));
+                assert(!Str_authcmp("abcdef", NULL));
+                assert(!Str_authcmp(NULL,     "abcdef"));
+                assert(!Str_authcmp("",     "abcdef"));
+                assert(!Str_authcmp("abcdef",     ""));
+                assert(Str_authcmp("abcdef", "abcdef"));
+                assert(!Str_authcmp("abcdef", "ABCDEF"));
+                char *a = "da091173a92116fc7b86990368647f99228cd0b5d993e93248b501e059674b7e";
+                char *b = "9b594557f02a0084bcd10cbb160406618312ce6612aeb8da86e57b2929fa1465";
+                assert(!Str_authcmp(a, b));
+                assert(Str_authcmp(a, a));
         }
         printf("=> Test24: OK\n\n");
 
@@ -534,97 +525,6 @@ int main(void) {
                 assert(Str_cmp("foo", "bar") != 0);
         }
         printf("=> Test25: OK\n\n");
-
-        printf("=> Test26: Str_escapeZero\n");
-        {
-            int buflen = 10;
-            char *buf = calloc(buflen + 1, 1);
-
-            // No escaping
-            buf[0] = 'a';
-            buf[1] = 'b';
-            buf[2] = 'c';
-            buf[3] = 'd';
-            testEscaping(buf, buflen, 4, "abcd");
-
-            // Leading zero escape (tests also nul-termination, as previous string was longer)
-            buf[0] = '\0';
-            buf[1] = 'b';
-            testEscaping(buf, buflen, 2, "\\0b");
-
-            // No space for escaping, test truncation (the last byte is used for nul-terminator, so there'll be just four escaped zeros)
-            buf[0] = '\0';
-            buf[1] = '\0';
-            buf[2] = '\0';
-            buf[3] = '\0';
-            buf[4] = '\0';
-            buf[5] = '\0';
-            buf[6] = '\0';
-            buf[7] = '\0';
-            buf[8] = '\0';
-            buf[9] = '\0';
-            testEscaping(buf, buflen, 10, "\\0\\0\\0\\0");
-
-            // No data
-            buf[0] = '\0';
-            testEscaping(buf, buflen, 0, "");
-
-            // One zero
-            buf[0] = '\0';
-            testEscaping(buf, buflen, 1, "\\0");
-
-            // One character (no escaping)
-            buf[0] = 'a';
-            testEscaping(buf, buflen, 1, "a");
-
-            // One character including nul-terminator, which will be escaped
-            buf[0] = 'a';
-            buf[1] = '\0';
-            testEscaping(buf, buflen, 2, "a\\0");
-
-            // Mixed escaping
-            buf[0] = 'a';
-            buf[1] = '\0';
-            buf[2] = '\0';
-            buf[3] = 'b';
-            buf[4] = 'c';
-            buf[5] = '\0';
-            buf[6] = '\0';
-            buf[7] = '\0';
-            buf[8] = '\0';
-            buf[9] = '\0';
-            testEscaping(buf, buflen, 6, "a\\0\\0bc\\0");
-
-            // No space for escaping, test truncation with odd count of characters (no space for last character escaping)
-            buf[0] = 'a';
-            buf[1] = '\0';
-            buf[2] = '\0';
-            buf[3] = 'b';
-            buf[4] = 'c';
-            buf[5] = '\0';
-            buf[6] = '\0';
-            buf[7] = '\0';
-            buf[8] = '\0';
-            buf[9] = '\0';
-            testEscaping(buf, buflen, 10, "a\\0\\0bc\\0");
-
-            // Test nul-termination
-            buf[0] = 'z';
-            buf[1] = 'z';
-            buf[2] = 'z';
-            buf[3] = 'z';
-            buf[4] = 'z';
-            buf[5] = 'z';
-            buf[6] = 'z';
-            buf[7] = 'z';
-            buf[8] = 'z';
-            buf[9] = 'z';
-            testEscaping(buf, buflen, 3, "zzz"); // The buffer contained unterminated data, we want to escape only 3 bytes and expect it'll be nul-terminated
-
-            // No data
-            free(buf);
-        }
-        printf("=> Test26: OK\n\n");
 
         printf("============> Str Tests: OK\n\n");
         return 0;

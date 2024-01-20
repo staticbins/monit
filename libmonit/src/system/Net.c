@@ -142,6 +142,29 @@ ssize_t Net_write(int socket, const void *buffer, size_t size, time_t timeout) {
 }
 
 
+bool Net_isSocket(int fd) {
+        if (fd > 2) {
+                struct stat buf;
+                return (fstat(fd, &buf) == 0 && S_ISSOCK(buf.st_mode));
+        }
+        return  false;
+}
+
+
+bool Net_isIPv6(int socket) {
+#ifdef HAVE_IPV6
+        if (Net_isSocket(socket)) {
+                struct sockaddr_storage addr;
+                socklen_t len = sizeof(addr);
+                if (getsockname(socket, (struct sockaddr*)&addr, &len) == 0) {
+                        return addr.ss_family == AF_INET6;
+                }
+        }
+#endif
+        return false;
+}
+
+
 bool Net_shutdown(int socket, int how) {
         return (shutdown(socket, how) == 0);
 }
@@ -160,7 +183,7 @@ bool Net_abort(int socket) {
    	int r;
         struct linger linger = {1, 0};
         if (setsockopt(socket, SOL_SOCKET, SO_LINGER, &linger, sizeof linger) < 0) {
-                ERROR("Net: setsockopt failed -- %s\n", System_getLastError());
+                ERROR("Net: setsockopt failed -- %s\n", System_lastError());
         }
         do {
                 r = close(socket);

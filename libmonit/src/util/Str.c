@@ -53,9 +53,6 @@
  */
 
 
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-
-
 /* -------------------------------------------------------- Public Methods */
 
 
@@ -194,9 +191,9 @@ char *Str_replaceChar(char *s, char o, char n) {
 
 
 bool Str_startsWith(const char *a, const char *b) {
-	if (a && b) {
-	        do {
-	                if (toupper(*a) != toupper(*b))
+        if (a && b) {
+                do {
+                        if (toupper(*a) != toupper(*b))
                                 return false;
                         if (*a++ == 0 || *b++ == 0)
                                 break;
@@ -290,13 +287,13 @@ bool Str_isByteEqual(const char *a, const char *b) {
 
 
 char *Str_copy(char *dest, const char *src, int n) {
-	if (src && dest && (n > 0)) {
-        	char *t = dest;
-	        while (*src && n--)
-        		*t++ = *src++;
-        	*t = 0;
-	} else if (dest)
-	        *dest = 0;
+        if (src && dest && (n > 0)) {
+                char *t = dest;
+                while (*src && n--)
+                        *t++ = *src++;
+                *t = 0;
+        } else if (dest)
+                *dest = 0;
         return dest;
 }
 
@@ -439,40 +436,17 @@ int Str_cmp(const void *x, const void *y) {
 }
 
 
-int Str_compareConstantTime(const void *x, const void *y) {
-        // Copy input to zero initialized buffers of fixed size, to prevent string length timing attack (handle NULL input as well). If some string exceeds hardcoded buffer size, error is returned.
-        char _x[Str_compareConstantTimeStringLength + 1] = {};
-        char _y[Str_compareConstantTimeStringLength + 1] = {};
-        if (snprintf(_x, sizeof(_x), "%s", x ? (const char *)x : "") > Str_compareConstantTimeStringLength || snprintf(_y, sizeof(_y), "%s", y ? (const char *)y : "") > Str_compareConstantTimeStringLength)
-                return 1;
-        int rv = 0;
-        for (size_t i = 0; i < sizeof(_x); i++)
-                rv |= _x[i] ^ _y[i];
-        return rv;
-}
-
-
-// Escape zero i.e. '\0' in expect buffer with "\0" so zero can be tested in expect strings as "\0". If there are no '\0' in the buffer it is returned as it is
-char *Str_escapeZero(char *buf, int bufferLength, int contentLength) {
-        int currentByteIndex = 0;
-        for (int bytesProcessed = 0; bytesProcessed < contentLength && currentByteIndex < bufferLength; bytesProcessed++, currentByteIndex++) {
-                if (buf[currentByteIndex] == '\0') {
-                        // Escape the zero, unless we run out of space in the buffer. We reserve the last byte for trailing nul-terminator, so if there is no space for the
-                        // nul-terminated escape sequence, we won't perform the escaping and this zero will become the string terminator)
-                        if (currentByteIndex + 1 < bufferLength - 1) {
-                                // Shift the remaining content by one to the right, to make space for '\'. If there's no space for all remaining bytes, we'll truncate the data
-                                memmove(buf + currentByteIndex + 1, buf + currentByteIndex, MIN(contentLength - bytesProcessed, bufferLength - currentByteIndex - 1));
-                                // Escape 0 with "\0"
-                                buf[currentByteIndex] = '\\';
-                                buf[currentByteIndex + 1] = '0';
-                                currentByteIndex++;
-                        }
-                }
+bool Str_authcmp(const char *a, const char *b) {
+        if (!a || !b)
+                return false;
+        size_t al = strlen(a);
+        size_t bl = strlen(b);
+        size_t length = (al > bl) ? al : bl;
+        volatile int rv = 0;
+        for (size_t i = 0; i < length; i++) {
+                char _a = (i < al) ? a[i] : 0;
+                char _b = (i < bl) ? b[i] : 0;
+                rv |= _a ^ _b;
         }
-        if (currentByteIndex < bufferLength)
-                buf[currentByteIndex] = 0;
-        else
-                buf[bufferLength - 1] = 0;
-        return buf;
+        return rv == 0;
 }
-

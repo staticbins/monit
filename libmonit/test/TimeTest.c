@@ -20,7 +20,7 @@
 
 int main(void) {
 
-        // Note: When the bellow setenv() is present on Alpine linux with MUSL, the test Time_string test fails and returns UTC time. The tzset() is called automatically
+        // Note: When the below setenv() is present on Alpine linux with MUSL, the test Time_localStr test fails and returns UTC time. The tzset() is called automatically
         //       by localtime_r(). The test may fail though, if it is executed on machine, which is not in CET timezone.
         //setenv("TZ", "CET", 1);
         //tzset();
@@ -33,15 +33,15 @@ int main(void) {
         printf("=> Test1: check string output\n");
         {
                 char result[STRLEN];
-                Time_string(1267441200, result); /* 01 Mar 2010 12:00:00 */
+                Time_localStr(1267441200, result); /* 01 Mar 2010 12:00:00 */
                 printf("\tResult: unix time 1267441200 to localtime:\n\t %s\n", result);
                 assert(Str_isEqual(result, "Mon, 01 Mar 2010 12:00:00"));
-                Time_gmtstring(1267441200, result); /* 01 Mar 2010 12:00:00 GMT */
+                Time_str(1267441200, result); /* 01 Mar 2010 11:00:00 GMT */
                 printf("\tResult: unix time 1267441200 to UTC:\n\t %s\n", result);
                 assert(Str_isEqual("Mon, 01 Mar 2010 11:00:00 GMT", result));
                 Time_fmt(result, STRLEN, "%D %T", 1267441200);
                 printf("\tResult: 1267441200 -> %s\n", result);
-                assert(Str_isEqual(result, "03/01/10 12:00:00"));
+                assert(Str_isEqual(result, "03/01/10 11:00:00"));
                 Time_fmt(result, STRLEN, "%D %z", 1267441200);
                 printf("\tResult: 1267441200 -> %s\n", result);
 #ifdef AIX
@@ -92,30 +92,25 @@ int main(void) {
         printf("=> Test5: Time attributes\n");
         {
                 char b[STRLEN];
-                time_t time = 730251059; // Sun, 21. Feb 1993 00:30:59
-                printf("\tResult: %s (winter time)\n", Time_string(time, b));
-                assert(Time_seconds(time) == 59);
-                assert(Time_minutes(time) == 30);
-                assert(Time_hour(time) == 0);
-                assert(Time_weekday(time) == 0);
-                assert(Time_day(time) == 21);
-                assert(Time_month(time) == 2);
-                assert(Time_year(time) == 1993);
-                time = 1253045894; // Tue, 15 Sep 2009 22:18:14 +0200
-                printf("\tResult: %s (DTS/summer time)\n", Time_string(time, b));
-                assert(Str_startsWith(b, "Tue, 15 Sep 2009 22:18:14"));
+                time_t time = 730337459; // Sun, 21 Feb 1993 23:30:59 GMT
+                printf("\tResult: %s (winter time)\n", Time_str(time, b));
+                assert(Str_isEqual(b, "Sun, 21 Feb 1993 23:30:59 GMT"));
+                time = 1253045894; // Tue, 15 Sep 2009n 20:18:14
+                printf("\tResult: %s (DTS/summer time)\n", Time_str(time, b));
+                assert(Str_startsWith(b, "Tue, 15 Sep 2009 20:18:14"));
         }
         printf("=> Test5: OK\n\n");
 
         printf("=> Test6: Time_build\n");
         {
                 time_t time = Time_build(2001, 1, 29, 12, 0, 0);
-                assert(Time_seconds(time) == 0);
-                assert(Time_minutes(time) == 0);
-                assert(Time_hour(time) == 12);
-                assert(Time_day(time) == 29);
-                assert(Time_month(time) == 1);
-                assert(Time_year(time) == 2001);
+                struct tm tm; gmtime_r(&time, &tm);
+                assert(tm.tm_sec == 0);
+                assert(tm.tm_min == 0);
+                assert(tm.tm_hour == 12);
+                assert(tm.tm_mday == 29);
+                assert(tm.tm_mon + 1 == 1);
+                assert(tm.tm_year + 1900 == 2001);
                 // Verify assert on out of range
                 TRY
                 {
@@ -138,25 +133,29 @@ int main(void) {
 
         printf("=> Test7: Time_incron\n");
         {
-                const char *exactmatch = "27 11 5 7 2";
+                // Cannot test match on time as the TZ this test
+                // runs in is unknown. Time_incron converts time
+                // to local time.
+
+                // const char *exactmatch = "27 11 5 7 2";
                 const char *matchall = "* * * * *";
                 const char *invalid1 = "a bc d";
                 const char *invalid2 = "* * * *  "; // Too few fields
                 const char *invalid3 = "* * * * * * "; // Too many fields
-                const char *range1 = "* 10-11 1-5 * 1-5";
-                const char *rangeoutside = "1-10 9-10 1-5 * 1-5";
-                const char *sequence = "* 10,11 1-3,5,6 * *";
-                const char *sequenceoutside = "* 10,11,12 4,5,6 * 0,6";
+                // const char *range1 = "* 10-11 1-5 * 1-5";
+                // const char *rangeoutside = "1-10 9-10 1-5 * 1-5";
+                // const char *sequence = "* 10,11 1-3,5,6 * *";
+                // const char *sequenceoutside = "* 10,11,12 4,5,6 * 0,6";
                 time_t time = Time_build(2011, 7, 5, 11, 27, 5);
-                assert(Time_incron(exactmatch, time));
+                // assert(Time_incron(exactmatch, time));
                 assert(Time_incron(matchall, time));
                 assert(! Time_incron(invalid1, time));
                 assert(! Time_incron(invalid2, time));
                 assert(! Time_incron(invalid3, time));
-                assert(Time_incron(range1, time));
-                assert(! Time_incron(rangeoutside, time));
-                assert(Time_incron(sequence, time));
-                assert(! Time_incron(sequenceoutside, time));
+                // assert(Time_incron(range1, time));
+                // assert(! Time_incron(rangeoutside, time));
+                // assert(Time_incron(sequence, time));
+                //assert(! Time_incron(sequenceoutside, time));
         }
         printf("=> Test7: OK\n\n");
 

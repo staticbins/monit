@@ -64,6 +64,12 @@
 #define ERROR	System_error
 
 
+/**
+ * The standard debug routine
+ */
+#define DEBUG   System_debug
+
+
 /* ------------------------------------------------------------ Exceptions */
 
 

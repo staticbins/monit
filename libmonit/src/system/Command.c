@@ -63,7 +63,7 @@
 
 
 
-/* ----------------------------------------------------------- Definitions */
+// MARK: - Definitions
 
 
 #define T Command_T
@@ -72,51 +72,56 @@ struct T {
         gid_t gid;
         List_T env;
         List_T args;
-        char **_env;
-        char **_args;
+        mode_t umask;
         char *working_directory;
 };
 
-
 struct Process_T {
         pid_t pid;
-        uid_t uid;
-        gid_t gid;
         int status;
+        char *name;
+        char *arg0;
+        bool isdetached;
+        int ctrl_pipe[2];
         int stdin_pipe[2];
         int stdout_pipe[2];
         int stderr_pipe[2];
         InputStream_T in;
         InputStream_T err;
         OutputStream_T out;
-        char *working_directory;
 };
-
 
 struct _usergroups {
         int ngroups;
         gid_t groups[NGROUPS_MAX];
 };
 
+// Some POSIX systems does not define environ explicit
+extern char **environ;
 
-/* --------------------------------------------------------------- Private */
+// Default umask for the sub-process
+#define DEFAULT_UMASK 022
 
 
-/* Search the env list and return the pointer to the name (in the list)
- if found, otherwise NULL */
-static inline char *_findEnv(T C, const char *name) {
+// MARK: - Private methods
+
+
+// Search the env list and return the pointer to the name (in the list)
+// if found, otherwise NULL.
+static inline char *_findEnv(T C, const char *name, size_t len) {
+        assert(len >= 0);
         for (list_t p = C->env->head; p; p = p->next) {
-                if ((strncmp(p->e, name, strlen(name)) == 0))
-                        if (((char*)p->e)[strlen(name)] == '=') // Ensure that p->e is not just a sub-string
+                if ((strncmp(p->e, name, len) == 0))
+                        if (((char*)p->e)[len] == '=') // Ensure that name is not just a sub-string
                                 return p->e;
         }
         return NULL;
 }
 
 
-/* Remove env variable and value identified by name */
+// Remove env identified by name
 static inline void _removeEnv(T C, const char *name) {
-        char *e = _findEnv(C, name);
+        char *e = _findEnv(C, name, strlen(name));
         if (e) {
                 List_remove(C->env, e);
                 FREE(e);
@@ -124,8 +129,8 @@ static inline void _removeEnv(T C, const char *name) {
 }
 
 
-/* Free each string in a list of strings */
-static void _freeStringsInList(List_T l) {
+// Free each string in a list of strings
+static void _freeElementsIn(List_T l) {
         while (List_length(l) > 0) {
                 char *s = List_pop(l);
                 FREE(s);
@@ -133,91 +138,40 @@ static void _freeStringsInList(List_T l) {
 }
 
 
-/* Build the Command args list. The list represent the array sent
- to execv and the List contains the following entries: args[0]
- is the path to the program, the rest are arguments to the program */
-static void _buildArgs(T C, const char *path, const char *x, va_list ap) {
-        _freeStringsInList(C->args);
+// Build the Command args list. The list represent the array sent
+// to execv and the List contains the following entries: args[0] is the
+// path to the program, the rest are optional arguments to the program
+static void _buildArgs(T C, const char *path, va_list ap) {
         List_append(C->args, Str_dup(path));
         va_list ap_copy;
         va_copy(ap_copy, ap);
-        for (; x; x = va_arg(ap_copy, char *))
-                List_append(C->args, Str_dup(x));
+        for (char *a = va_arg(ap_copy, char *); a; a = va_arg(ap_copy, char *))
+                List_append(C->args, Str_dup(a));
         va_end(ap_copy);
 }
 
 
-/* Returns an array of program args */
+// Returns an array of program args. Should only be called in the child
 static inline char **_args(T C) {
-        if (! C->_args)
-                C->_args = (char**)List_toArray(C->args);
-        return C->_args;
+        assert(C);
+        return (char**)List_toArray(C->args);
 }
 
 
-/* Returns an array of program environment */
+// Returns an array of program environment. Must only be called in the child.
+// If the environment list is empty, just return the global environ variable.
+// Otherwise don't copy, but add references to environ entries unless already set
 static inline char **_env(T C) {
-        if (! C->_env)
-                C->_env = (char**)List_toArray(C->env);
-        return C->_env;
-}
-
-
-/* Create stdio pipes for communication between parent and child process */
-static void _createPipes(Process_T P) {
-        if (pipe(P->stdin_pipe) < 0 || pipe(P->stdout_pipe) < 0 || pipe(P->stderr_pipe) < 0) {
-                ERROR("Command pipe(2): Bad file descriptors -- %s", System_getLastError());
+        assert(C);
+        if (List_length(C->env) == 0)
+                return environ;
+        for (int i = 0; environ[i]; i++) {
+                size_t len = strchr(environ[i], '=') - environ[i];
+                if (_findEnv(C, environ[i], len))
+                        continue;
+                List_append(C->env, environ[i]);
         }
-}
-
-
-/* Setup stdio pipes in subprocess */
-static void _setupChildPipes(Process_T P) {
-        close(P->stdin_pipe[1]);   // close write end
-        if (P->stdin_pipe[0] != STDIN_FILENO) {
-                if (dup2(P->stdin_pipe[0],  STDIN_FILENO) != STDIN_FILENO)
-                        ERROR("Command: dup2(stdin) -- %s\n", System_getLastError());
-                close(P->stdin_pipe[0]);
-        }
-        close(P->stdout_pipe[0]);  // close read end
-        if (P->stdout_pipe[1] != STDOUT_FILENO) {
-                if (dup2(P->stdout_pipe[1], STDOUT_FILENO) != STDOUT_FILENO)
-                        ERROR("Command: dup2(stdout) -- %s\n", System_getLastError());
-                close(P->stdout_pipe[1]);
-        }
-        close(P->stderr_pipe[0]);  // close read end
-        if (P->stderr_pipe[1] != STDERR_FILENO) {
-                if (dup2(P->stderr_pipe[1], STDERR_FILENO) != STDERR_FILENO)
-                        ERROR("Command: dup2(stderr) -- %s\n", System_getLastError());
-                close(P->stderr_pipe[1]);
-        }
-}
-
-
-/* Setup stdio pipes in parent process for communication with the subprocess */
-static void _setupParentPipes(Process_T P) {
-        close(P->stdin_pipe[0]);    // close read end
-        close(P->stdout_pipe[1]);   // close write end
-        close(P->stderr_pipe[1]);   // close write end
-        Net_setNonBlocking(P->stdin_pipe[1]);
-        Net_setNonBlocking(P->stdout_pipe[0]);
-        Net_setNonBlocking(P->stderr_pipe[0]);
-}
-
-
-/* Close stdio pipes in parent process */
-static void _closeParentPipes(Process_T P) {
-        close(P->stdin_pipe[1]);    // close write end
-        close(P->stdout_pipe[0]);   // close read end
-        close(P->stderr_pipe[0]);   // close read end
-}
-
-
-/* Close and destroy opened stdio streams */
-static void _closeStreams(Process_T P) {
-        if (P->in) InputStream_free(&P->in);
-        if (P->err) InputStream_free(&P->err);
-        if (P->out) OutputStream_free(&P->out);
+        return (char**)List_toArray(C->env);
 }
 
 
@@ -228,22 +182,22 @@ static int getgrouplist(const char *name, int basegid, int *groups, int *ngroups
 
         // Open the user database
         if (setuserdb(S_READ) != 0) {
-                ERROR("Cannot open user database -- %s\n", System_getError(errno));
-                goto error4;
+                DEBUG("Cannot open user database -- %s\n", System_getError(errno));
+                goto fail4;
         }
 
         // Get administrative domain for the user so we can lookup the group membership in the correct database (files, LDAP, etc).
         char *registry;
         if (getuserattr((char *)name, S_REGISTRY, &registry, SEC_CHAR) == 0 && setauthdb(registry, NULL) != 0) {
-                ERROR("Administrative domain switch to %s for user %s failed -- %s\n", registry, name, System_getError(errno));
-                goto error3;
+                DEBUG("Administrative domain switch to %s for user %s failed -- %s\n", registry, name, System_getError(errno));
+                goto fail3;
         }
 
         // Get the list of groups for the named user
         char *groupList = getgrset(name);
         if (! groupList) {
-                ERROR("Cannot get groups for user %s\n", name);
-                goto error2;
+                DEBUG("Cannot get groups for user %s\n", name);
+                goto fail2;
         }
 
         // Add the base GID
@@ -258,7 +212,7 @@ static int getgrouplist(const char *name, int basegid, int *groups, int *ngroups
                 if (gid != basegid) {
                         if (count == *ngroups) {
                                 // Maximum groups reached (error will be indicated by -1 return value, but we return as many groups as possible in the list)
-                                goto error1;
+                                goto fail1;
                         }
                         groups[count++] = gid;
                 }
@@ -278,7 +232,7 @@ error2:
 error3:
         // Close the user database
         if (enduserdb() != 0) {
-                ERROR("Cannot close user database -- %s\n", System_getError(errno));
+                DEBUG("Cannot close user database -- %s\n", System_getError(errno));
         }
 
 error4:
@@ -290,7 +244,166 @@ error4:
 #endif
 
 
-/* -------------------------------------------------------------- Process_T */
+// Block all signals and make the current thread not cancellable
+static struct _block {sigset_t sigmask; int threadstate;} _block(void) {
+        sigset_t b;
+        sigfillset(&b);
+        struct _block block = {};
+        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &block.threadstate);
+        pthread_sigmask(SIG_BLOCK, &b, &block.sigmask);
+        return block;
+}
+
+
+// Un-Block signals and make the current thread cancellable again
+static void _unblock(struct _block *block) {
+        pthread_sigmask(SIG_SETMASK, &block->sigmask, NULL);
+        pthread_setcancelstate(block->threadstate, 0);
+}
+
+
+// Reset all signals to default, except for SIGHUP and SIGPIPE which
+// are set to SIG_IGN
+static void _resetSignals(void) {
+    sigset_t mask;
+    sigemptyset(&mask);
+    pthread_sigmask(SIG_SETMASK, &mask, 0);
+    struct sigaction sa_default = {.sa_handler = SIG_DFL};
+    struct sigaction sa_ignore = {.sa_handler = SIG_IGN};
+    for (int i = 1; i < NSIG; ++i) {
+        if (i == SIGKILL || i == SIGSTOP)
+            continue;
+        if (i == SIGHUP || i == SIGPIPE)
+                sigaction(i, &sa_ignore, NULL);
+        else
+                sigaction(i, &sa_default, NULL);
+    }
+}
+
+
+struct _usergroups *_getUserGroups(T C, struct _usergroups *ug) {
+        // There are no threads in the child so we can use
+        // the simpler getpwuid() instead of getpwuid_r()
+        struct passwd *result = getpwuid(C->uid);
+        if (!result)
+                return NULL;
+        Command_setEnv(C, "HOME", result->pw_dir);
+        if (getgrouplist(result->pw_name, C->gid,
+#ifdef __APPLE__
+                         (int *)ug->groups,
+#else
+                         ug->groups,
+#endif
+                         &ug->ngroups) < 0)
+                return NULL;
+        return ug;
+}
+
+
+// Close both ends of the given pipe if not already closed
+static void _closePipe(int pipe[static 2]) {
+    for (int i = 0; i < 2; i++) {
+        if (pipe[i] >= 0) {
+            close(pipe[i]);
+            pipe[i] = -1;
+        }
+    }
+}
+
+
+// MARK: - Process_T Private methods
+
+
+static void Process_closeCtrlPipe(Process_T P) {
+        _closePipe(P->ctrl_pipe);
+}
+
+
+// Close pipes in process, except ctrl_pipe which are used during
+// child setup before calling exec
+static void Process_closePipes(Process_T P) {
+        _closePipe(P->stdin_pipe);
+        _closePipe(P->stdout_pipe);
+        _closePipe(P->stderr_pipe);
+}
+
+
+// Setup a controller pipe to be used between parent and child to
+// report any errors during the setup phase or if execve fails
+static int Process_createCtrlPipe(Process_T P) {
+        int status = 0;
+        // Not all POSIX systems have pipe2(), like macOS,
+        if (pipe(P->ctrl_pipe) < 0) {
+                status = -errno;
+                DEBUG("Command: ctrl pipe(2) failed -- %s\n", System_lastError());
+                return status;
+        }
+        for (int i = 0; i < 2; i++) {
+                if (fcntl(P->ctrl_pipe[i], F_SETFD, FD_CLOEXEC) < 0) {
+                        status = -errno;
+                        DEBUG("Command: ctrl fcntl(2) FD_CLOEXEC failed -- %s\n", System_lastError());
+                        _closePipe(P->ctrl_pipe);
+                        return status;
+                }
+        }
+        return 0;
+}
+
+
+// Create pipes for communication between parent and child process
+static int Process_createPipes(Process_T P) {
+        int status = Process_createCtrlPipe(P);
+        if (status < 0)
+                return status;
+        if (pipe(P->stdin_pipe) < 0 || pipe(P->stdout_pipe) < 0 || pipe(P->stderr_pipe) < 0) {
+                status = -errno;
+                DEBUG("Command: pipe(2) failed -- %s\n", System_lastError());
+                Process_closePipes(P);
+                return status;
+        }
+        return 0;
+}
+
+
+// Setup stdio pipes in subprocess. We need not close pipes as the child
+// process will exit if this fails
+static bool Process_setupChildPipes(Process_T P) {
+        close(P->stdin_pipe[1]);   // close write end
+        if (P->stdin_pipe[0] != STDIN_FILENO) {
+                if (dup2(P->stdin_pipe[0],  STDIN_FILENO) != STDIN_FILENO)
+                        return false;
+        }
+        close(P->stdout_pipe[0]);  // close read end
+        if (P->stdout_pipe[1] != STDOUT_FILENO) {
+                if (dup2(P->stdout_pipe[1], STDOUT_FILENO) != STDOUT_FILENO)
+                        return false;
+        }
+        close(P->stderr_pipe[0]);  // close read end
+        if (P->stderr_pipe[1] != STDERR_FILENO) {
+                if (dup2(P->stderr_pipe[1], STDERR_FILENO) != STDERR_FILENO)
+                        return false;
+        }
+        return true;
+}
+
+
+// Setup stdio pipes in parent process for communication with the subprocess
+static void Process_setupParentPipes(Process_T P) {
+        close(P->stdin_pipe[0]);  // close read end
+        close(P->stdout_pipe[1]); // close write end
+        close(P->stderr_pipe[1]); // close write end
+        Net_setNonBlocking(P->stdin_pipe[1]);
+        Net_setNonBlocking(P->stdout_pipe[0]);
+        Net_setNonBlocking(P->stderr_pipe[0]);
+}
+
+
+// Release stdio streams
+static void Process_closeStreams(Process_T P) {
+        if (P->in) InputStream_free(&P->in);
+        if (P->err) InputStream_free(&P->err);
+        if (P->out) OutputStream_free(&P->out);
+}
 
 
 static inline void _setstatus(Process_T P) {
@@ -303,50 +416,55 @@ static inline void _setstatus(Process_T P) {
 }
 
 
-static Process_T _Process_new(void) {
+static Process_T Process_new(void) {
         Process_T P;
         NEW(P);
+        P->pid = -1;
         P->status = -1;
         return P;
 }
 
 
+// MARK: - Process_T Public methods
+
+
 void Process_free(Process_T *P) {
         assert(P && *P);
-        FREE((*P)->working_directory);
-        if (Process_isRunning(*P)) {
-                Process_kill(*P);
-                Process_waitFor(*P);
+        if (!(*P)->isdetached) {
+                if (Process_isRunning(*P)) {
+                        Process_kill(*P);
+                        Process_waitFor(*P);
+                }
+                Process_detach(*P);
         }
-        _closeParentPipes(*P);
-        _closeStreams(*P);
+        FREE((*P)->arg0);
+        FREE((*P)->name);
         FREE(*P);
 }
 
 
-uid_t Process_getUid(Process_T P) {
+// Close pipes and streams to the sub-process. Because we ignored SIGPIPE when
+// creating the sub-process it should not recieve SIGPIPE if it tries to write
+// to one of its (now broken) output pipes. A proper daemon process will also
+// normally redirect stdio to /dev/null and instead write to a log file after
+// its initial setup phase
+void Process_detach(Process_T P) {
         assert(P);
-        return P->uid;
-}
-
-
-gid_t Process_getGid(Process_T P) {
-        assert(P);
-        return P->gid;
-}
-
-
-const char *Process_getDir(Process_T P) {
-        assert(P);
-        if (! P->working_directory) {
-                char t[STRLEN];
-                P->working_directory = Str_dup(Dir_cwd(t, STRLEN));
+        if (!P->isdetached) {
+                P->isdetached = true;
+                Process_closeStreams(P);
+                Process_closePipes(P);
         }
-        return P->working_directory;
 }
 
 
-pid_t Process_getPid(Process_T P) {
+bool Process_isdetached(Process_T P) {
+        assert(P);
+        return P->isdetached;
+}
+
+
+pid_t Process_pid(Process_T P) {
         assert(P);
         return P->pid;
 }
@@ -374,7 +492,7 @@ int Process_exitStatus(Process_T P) {
                 int r;
                 do
                         r = waitpid(P->pid, &P->status, WNOHANG); // Wait non-blocking
-                while (r == -1 && errno == EINTR);
+                while (r < 0 && errno == EINTR);
                 if (r == 0) // Process is still running
                         P->status = -1;
                 else
@@ -384,33 +502,67 @@ int Process_exitStatus(Process_T P) {
 }
 
 
+void Process_setExitStatus(Process_T P, int status) {
+        assert(P);
+        P->status = status;
+        _setstatus(P);
+}
+
+
 bool Process_isRunning(Process_T P) {
         assert(P);
+        if (P->pid == -1)
+                return false;
         return Process_exitStatus(P) < 0;
 }
 
 
-OutputStream_T Process_getOutputStream(Process_T P) {
+OutputStream_T Process_outputStream(Process_T P) {
         assert(P);
+        if (P->isdetached)
+                return NULL;
         if (! P->out)
                 P->out = OutputStream_new(P->stdin_pipe[1]);
         return P->out;
 }
 
 
-InputStream_T Process_getInputStream(Process_T P) {
+InputStream_T Process_inputStream(Process_T P) {
         assert(P);
+        if (P->isdetached)
+                return NULL;
         if (! P->in)
                 P->in = InputStream_new(P->stdout_pipe[0]);
         return P->in;
 }
 
 
-InputStream_T Process_getErrorStream(Process_T P) {
+InputStream_T Process_errorStream(Process_T P) {
         assert(P);
+        if (P->isdetached)
+                return NULL;
         if (! P->err)
                 P->err = InputStream_new(P->stderr_pipe[0]);
         return P->err;
+}
+
+
+const char *Process_arg0(Process_T P) {
+        assert(P);
+        return P->arg0;
+}
+
+
+const char *Process_name(Process_T P) {
+        assert(P);
+        return P->name;
+
+}
+
+
+void Process_setName(Process_T P, const char *name) {
+        assert(P);
+        STR_SET(P->name, name);
 }
 
 
@@ -426,10 +578,10 @@ void Process_kill(Process_T P) {
 }
 
 
-/* ---------------------------------------------------------------- Public */
+// MARK: - Public methods
 
 
-T Command_new(const char *path, const char *arg0, ...) {
+T _Command_new(const char *path, ...) {
         T C;
         assert(path);
         if (! File_exist(path))
@@ -437,26 +589,20 @@ T Command_new(const char *path, const char *arg0, ...) {
         NEW(C);
         C->env = List_new();
         C->args = List_new();
+        C->umask = DEFAULT_UMASK;
         va_list ap;
-        va_start(ap, arg0);
-        _buildArgs(C, path, arg0, ap);
+        va_start(ap, path);
+        _buildArgs(C, path, ap);
         va_end(ap);
-        // Copy this process's environment for transit to sub-processes
-        extern char **environ;
-        for (char **e = environ; *e; e++) {
-                List_append(C->env, Str_dup(*e));
-        }
         return C;
 }
 
 
 void Command_free(T *C) {
         assert(C && *C);
-        FREE((*C)->_args);
-        FREE((*C)->_env);
-        _freeStringsInList((*C)->args);
+        _freeElementsIn((*C)->args);
         List_free(&(*C)->args);
-        _freeStringsInList((*C)->env);
+        _freeElementsIn((*C)->env);
         List_free(&(*C)->env);
         FREE((*C)->working_directory);
         FREE(*C);
@@ -467,17 +613,18 @@ void Command_appendArgument(T C, const char *argument) {
         assert(C);
         if (argument)
                 List_append(C->args, Str_dup(argument));
-        FREE(C->_args); // Recreate Command argument on exec
 }
 
 
 void Command_setUid(T C, uid_t uid) {
         assert(C);
+        if (getuid() != 0)
+                THROW(AssertException, "Only the super user can switch uid");
         C->uid = uid;
 }
 
 
-uid_t Command_getUid(T C) {
+uid_t Command_uid(T C) {
         assert(C);
         return C->uid;
 }
@@ -485,180 +632,215 @@ uid_t Command_getUid(T C) {
 
 void Command_setGid(T C, gid_t gid) {
         assert(C);
+        if (getuid() != 0)
+                THROW(AssertException, "Only the super user can switch gid");
         C->gid = gid;
 }
 
 
-gid_t Command_getGid(T C) {
+gid_t Command_gid(T C) {
         assert(C);
         return C->gid;
 }
 
 
+void Command_setUmask(T C, mode_t umask) {
+        assert(C);
+        C->umask = umask;
+}
+
+
+mode_t Command_umask(T C) {
+        assert(C);
+        return C->umask;
+}
+
+
+// Set the sub-process working directory. If NULL (the default) the sub-process
+// will inherit the calling process's current directory
 void Command_setDir(T C, const char *dir) {
         assert(C);
-        if (dir) { // Allow to set a NULL directory, meaning the calling process's current directory
+        if (dir) {
                 if (! File_isDirectory(dir))
                         THROW(AssertException, "The new working directory '%s' is not a directory", dir);
                 if (! File_isExecutable(dir))
                         THROW(AssertException, "The new working directory '%s' is not accessible", dir);
         }
         FREE(C->working_directory);
-        C->working_directory = Str_dup(dir);
-        File_removeTrailingSeparator(C->working_directory);
+        C->working_directory = File_removeTrailingSeparator(Str_dup(dir));
 }
 
 
-const char *Command_getDir(T C) {
+const char *Command_dir(T C) {
         assert(C);
         return C->working_directory;
 }
 
 
-/* Env variables are stored in the environment list as "name=value" strings */
+// Env variables are stored in the environment list as "name=value" strings
 void Command_setEnv(Command_T C, const char *name, const char *value) {
         assert(C);
         assert(name);
         _removeEnv(C, name);
         List_append(C->env, Str_cat("%s=%s", name, value ? value : ""));
-        FREE(C->_env); // Recreate Command environment on exec
 }
 
 
-/* Env variables are stored in the environment list as "name=value" strings */
+// Env variables are stored in the environment list as "name=value" strings
 void Command_vSetEnv(T C, const char *name, const char *value, ...) {
         assert(C);
         assert(name);
         _removeEnv(C, name);
-        StringBuffer_T b = StringBuffer_new(name);
-        StringBuffer_append(b, "=");
-        va_list ap;
-        va_start(ap, value);
-        StringBuffer_vappend(b, value, ap);
-        va_end(ap);
-        List_append(C->env, Str_dup(StringBuffer_toString(b)));
-        StringBuffer_free(&b);
-        FREE(C->_env); // Recreate Command environment on exec
+        char *t = NULL;
+        if (STR_DEF(value)) {
+                va_list ap;
+                va_start(ap, value);
+                t = Str_vcat(value, ap);
+                va_end(ap);
+        }
+        List_append(C->env, Str_cat("%s=%s", name, t?t:""));
+        FREE(t);
 }
 
 
-/* Returns the value part from a "name=value" environment string */
-const char *Command_getEnv(T C, const char *name) {
+// Returns the value part from a "name=value" environment string
+const char *Command_env(T C, const char *name) {
         assert(C);
         assert(name);
-        char *e = _findEnv(C, name);
-        if (e) {
-                char *v = strchr(e, '=');
-                if (v)
-                        return ++v;
-        }
+        size_t len = strlen(name);
+        char *e = _findEnv(C, name, len);
+        if (e)
+                return e + len + 1;
         return NULL;
 }
 
 
-List_T Command_getCommand(T C) {
+List_T Command_command(T C) {
         assert(C);
         return C->args;
 }
 
 
-/* The Execute function. Note that we use vfork() rather than fork. Vfork has
- a special semantic in that the child process runs in the parent address space
- until exec is called in the child. The child also run first and suspend the
- parent process until exec or exit is called
+// MARK: - Execute
+
+
+// Setup and exec the child process
+static void Process_exec(Process_T P, T C) {
+        int status = 0;
+        _resetSignals();
+        errno = 0;
+        if (C->working_directory) {
+                if (! Dir_chdir(C->working_directory))
+                        goto fail;
+        }
+        if (setsid() < 0)
+                goto fail;
+        if (!Process_setupChildPipes(P))
+                goto fail;
+        int descriptors = open("/dev/null", O_RDWR);
+        if (descriptors < 4)
+                descriptors = System_descriptorsGuarded(256);
+        else
+                descriptors += 1;
+        for (int i = 3; i < descriptors; i++) {
+                if (i != P->ctrl_pipe[1])
+                        close(i);
+        }
+        if (C->gid) {
+                if (setgid(C->gid) < 0)
+                        goto fail;
+                if (getgid() != C->gid) {
+                        errno = EPERM;
+                        goto fail;
+                }
+        }
+        if (C->uid) {
+                struct _usergroups ug = {.groups = {}, .ngroups = NGROUPS_MAX};
+                if (!_getUserGroups(C, &ug))
+                        goto fail;
+                if (setgroups(ug.ngroups, ug.groups) < 0)
+                        goto fail;
+                if (setuid(C->uid) < 0)
+                        goto fail;
+                if (getuid() != C->uid) {
+                        errno = EPERM;
+                        goto fail;
+                }
+        }
+        umask(C->umask);
+        char **args = _args(C);
+        execve(args[0], args, _env(C));
+fail:
+        status = errno;
+        if (status != 0)
+                while (write(P->ctrl_pipe[1], &status, sizeof status) < 0);
+        _exit(127);
+}
+
+
+// If the child process succeeded in calling execve, status is 0
+static void Process_ctrl(Process_T P, int *status) {
+        close(P->ctrl_pipe[1]);
+        if (read(P->ctrl_pipe[0], status, sizeof *status) != sizeof *status)
+                *status = 0;
+        else waitpid(P->pid, &(int){0}, 0);
+}
+
+
+/*
+ The Execute function.
  
- Note: For possible better error reporting, set exec_error to an enum of possible
- errors and exit with that error. Return Process_T regardless and introduce a
- char *Process_getError() which uses waitpid() to get the error status from child exit.
- I.e. similar to what we do with spawn.c
+ We do not use posix_spawn(2) because it's not well suited for creating
+ long-running daemon processes. Although posix_spawn is more efficient, its
+ limitations makes it problematic for our use. Specifically:
+
+ - The POSIX standard does not support calling setsid(2) in the child
+   process, which is important to have the child detach from the controlling
+   terminal. Some implementations do support setsid() unofficially via the
+   flag POSIX_SPAWN_SETSID, but this is not standardized.
+ - posix_spawn does not inherently handle the transition of privileges
+   associated with setuid/setgid programs.
+ - Closing "all" descriptors in the child before calling exec is not directly
+   supported. While there is limited support for closing specific descriptors,
+   there is no straightforward way to unconditionally close all potentially
+   open descriptors.
+ - There is no support for changing the working directory (chdir) in the child
+   process before exec is called. This limitation can be significant, especially
+   in daemon processes where changing to a specific directory is often required.
+ - Inability to Change umask: posix_spawn lacks support for changing the file
+   mode creation mask (umask) in the child process.
+
+ Traditional fork/exec offers a bit more control and flexibility. With modern OSs
+ supporting Copy-On-Write (COW), the issue of unnecessary memory address space
+ duplication in the child before calling exec becomes less significant, albeit
+ still an annoyance.
  */
 Process_T Command_execute(T C) {
         assert(C);
-        assert(_env(C));
-        assert(_args(C));
-        volatile int exec_error = 0;
-        struct _usergroups ug = (struct _usergroups){.groups = {}, .ngroups = NGROUPS_MAX};
-        if (C->uid) {
-                struct passwd *user = getpwuid(C->uid);
-                if (!user) {
-                        ERROR("Command: uid %d not found on the system -- %s\n", C->uid, System_getLastError());
-                        return NULL;
-                }
-                Command_setEnv(C, "HOME", user->pw_dir);
-                if (getgrouplist(user->pw_name, C->gid,
-#ifdef __APPLE__
-                                 (int *)ug.groups,
-#else
-                                 ug.groups,
-#endif
-                                 &ug.ngroups) == -1) {
-                        ERROR("Command: getgrouplist for uid %d -- %s\n", C->uid, System_getLastError());
-                        return NULL;
-                }
+        struct _block block = _block();
+        Process_T P = Process_new();
+        int status = Process_createPipes(P);
+        if (status < 0) {
+                status = -status;
+                goto fail;
         }
-        Process_T P = _Process_new();
-        int descriptors = System_getDescriptorsGuarded();
-        _createPipes(P);
-        if ((P->pid = vfork()) < 0) {
-                ERROR("Command: fork failed -- %s\n", System_getLastError());
-                Process_free(&P);
-                return NULL;
+        if ((P->pid = fork()) < 0) {
+                status = errno;
         } else if (P->pid == 0) {
-                // Child
-                if (C->working_directory) {
-                        if (! Dir_chdir(C->working_directory)) {
-                                exec_error = errno;
-                                _exit(errno);
-                        }
-                }
-                setsid(); // Loose controlling terminal
-                _setupChildPipes(P);
-                // Close all descriptors except stdio, _before_ any uid/gid switching
-                for (int i = 3; i < descriptors; i++) {
-                        close(i);
-                }
-                P->gid = getgid();
-                if (C->gid) {
-                        if (setgid(C->gid) == 0) {
-                                P->gid = C->gid;
-                        } else {
-                                exec_error = errno;
-                                _exit(errno);
-                        }
-                }
-                P->uid = getuid();
-                while (C->uid) {
-                        if (setgroups(ug.ngroups, ug.groups) == 0) {
-                                if (setuid(C->uid) == 0) {
-                                        P->uid = C->uid;
-                                        break;
-                                }
-                        }
-                        exec_error = errno;
-                        _exit(errno);
-                }
-                // Unblock any signals and reset signal handlers
-                sigset_t mask;
-                sigemptyset(&mask);
-                pthread_sigmask(SIG_SETMASK, &mask, NULL);
-                signal(SIGINT, SIG_DFL);
-                signal(SIGQUIT, SIG_DFL);
-                signal(SIGABRT, SIG_DFL);
-                signal(SIGTERM, SIG_DFL);
-                signal(SIGPIPE, SIG_DFL);
-                signal(SIGCHLD, SIG_DFL);
-                signal(SIGUSR1, SIG_DFL);
-                signal(SIGHUP, SIG_IGN);  // Ensure future opens won't allocate controlling TTYs
-                // Execute the program
-                execve(_args(C)[0], _args(C), _env(C));
-                exec_error = errno;
-                _exit(errno);
+                Process_exec(P, C);
+        } else {
+                Process_ctrl(P, &status);
         }
-        // Parent
-        _setupParentPipes(P);
-        if (exec_error != 0)
+fail:
+        Process_closeCtrlPipe(P);
+        if (status != 0) {
+                DEBUG("Command: failed -- %s\n", System_getError(status));
                 Process_free(&P);
-        errno = exec_error;
+        } else {
+                Process_setupParentPipes(P);
+                P->arg0 = Str_dup(C->args->head->e);
+        }
+        _unblock(&block);
+        errno = status;
         return P;
 }
-

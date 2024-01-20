@@ -41,6 +41,20 @@
 /** @name class methods */
 //@{
 
+/**
+ * Factory method for building a specific time in UTC (GMT).
+ * @param year the year ~ (1970..2037) for this time
+ * @param month the month (January=1..December=12)
+ * @param day the day of the month (1..31)
+ * @param hour the hour (0..23)
+ * @param min the minutes (0..59)
+ * @param sec the seconds of the minute (0..61). Yes, seconds can range
+ * from 0 to 61. This allows the system to inject leap seconds.
+ * @return A time_t representing the specified time in UTC
+ * @exception AssertException If a parameter is outside the valid range
+ */
+time_t Time_build(int year, int month, int day, int hour, int min, int sec);
+
 
 /**
  * Returns a Unix timestamp representation of an ISO-8601 or RFC 7231 date
@@ -90,22 +104,6 @@ struct tm *Time_toDateTime(const char *s, struct tm *t);
 
 
 /**
- * Factory method for building a specific time. Time is normalized and
- * built in the local time zone.
- * @param year the year ~ (1970..2037) for this time
- * @param month the month (January=1..December=12)
- * @param day the day of the month (1..31)
- * @param hour the hour (0..23)
- * @param min the minutes (0..59)
- * @param sec the seconds of the minute (0..61). Yes, seconds can range
- * from 0 to 61. This allows the system to inject leap seconds.
- * @return A time_t representing the specified time
- * @exception AssertException If a parameter is outside the valid range
- */
-time_t Time_build(int year, int month, int day, int hour, int min, int sec);
-
-
-/**
  * Returns the time since the epoch measured in seconds.
  * @return A time_t representing the systems notion of seconds since the
  * <strong>epoch</strong> (January 1, 1970, 00:00:00 GMT) in Coordinated
@@ -147,86 +145,97 @@ long long Time_micro(void);
 
 /**
  * Returns the second of the minute for time.
- * @param time Number of seconds since the EPOCH
- * @return The second of the minute (0..61)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The second of the minute (0..61) in local time
  */
 int Time_seconds(time_t time);
 
 
 /**
  * Returns the minute of the hour for time.
- * @param time Number of seconds since the EPOCH
- * @return The minute of the hour (0..59)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The minute of the hour (0..59) in local time
  */
 int Time_minutes(time_t time);
 
 
 /**
  * Returns the hour of the day for time.
- * @param time Number of seconds since the EPOCH
- * @return The hour of the day (0..23)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The hour of the day (0..23) in local time
  */
 int Time_hour(time_t time);
 
 
 /**
  * Returns the day of week expressed as number of days since Sunday.
- * @param time Number of seconds since the EPOCH
- * @return The day of the week (Sunday=0..Saturday=6)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The day of the week (Sunday=0..Saturday=6) in local time
  */
 int Time_weekday(time_t time);
 
 
 /**
  * Returns the day of the month for time.
- * @param time Number of seconds since the EPOCH
- * @return The day of the month (1..31)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The day of the month (1..31) in local time
  */
 int Time_day(time_t time);
 
 
 /**
  * Returns the month of the year.
- * @param time Number of seconds since the EPOCH
- * @return The month of the year (January=1..December=12)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The month of the year (January=1..December=12) in local time
  */
 int Time_month(time_t time);
 
 
 /**
  * Returns the year of time.
- * @param time Number of seconds since the EPOCH
- * @return The year of time in the range ~ (1970..2037)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The year of time in the range ~ (1970..2037) in local time
  */
 int Time_year(time_t time);
 
 
 /**
- * Returns a RFC1123 date string for the given UTC time. The returned string
- * is computed in the local timezone. The result buffer must be large enough
- * to hold at least 26 bytes. Example:
+ * Returns a RFC1123 formated date string minus the timezone for the given
+ * time. The returned string is computed in the local timezone. The result
+ * buffer must be large enough to hold at least 26 bytes. Example:
  * <pre>
- *  Time_string(1253052085, buf) -> "Wed, 16 Sep 2009 12:01:25"
+ * Tue, 15 Sep 2009 22:01:25
  * </pre>
- * @param time Number of time seconds since the EPOCH in UTC
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
  * @param result The buffer to write the date string too
- * @return a pointer to the result buffer
+ * @return a pointer to the result buffer or NULL if <code>result</code>
+ * was NULL
  */
-char *Time_string(time_t time, char result[static 26]);
+char *Time_localStr(time_t time, char result[static 26]);
 
 
 /**
- * Returns a RFC1123 date string for the given UTC time. The returned string
- * represent the specified time in GMT timezone. The submitted result buffer
- * must be large enough to hold at least 30 bytes. Example:
+ * Returns a RFC1123 formated date string for the given GMT time. The returned
+ * string represent the specified time in UTC. The submitted result buffer must
+ * be large enough to hold at least 30 bytes. Result example:
  * <pre>
- *  Time_gmtstring(1253052085, buf) -> "Tue, 15 Sep 2009 22:01:25 GMT"
+ * Tue, 15 Sep 2009 21:01:25 GMT
  * </pre>
- * @param time Number of time seconds since the EPOCH in UTC
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
  * @param result The buffer to write the date string too
- * @return a pointer to the result buffer
+ * @return a pointer to the result buffer or NULL if <code>result</code>
+ * was NULL
  */
-char *Time_gmtstring(time_t time, char result[static 30]);
+char *Time_str(time_t time, char result[static 30]);
 
 
 /**
@@ -239,7 +248,8 @@ char *Time_gmtstring(time_t time, char result[static 30]);
  * @param result The buffer to write the date string too
  * @param size Size of the result buffer
  * @param format A <code>strftime</code> format string
- * @param time seconds since ephoc to convert to a date string
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
  * @return A pointer to the result buffer
  * @exception AssertException If <code>format</code> or <code>result</code>
  * is NULL
@@ -258,7 +268,7 @@ char *Time_fmt(char *result, int size, const char *format, time_t time);
  * @return a pointer to the result buffer or NULL if <code>result</code>
  * was NULL
  */
-char *Time_uptime(time_t sec, char result[static 24]);
+char *Time_uptime(long sec, char result[static 24]);
 
 
 /**

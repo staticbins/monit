@@ -310,7 +310,7 @@ char *File_removeTrailingSeparator(char *path) {
 }
 
 
-char *File_getRealPath(const char *path, char *resolved) {
+char *File_realPath(const char *path, char *resolved) {
         if (path && resolved)
                 return realpath(path, resolved);
         return NULL;

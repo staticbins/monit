@@ -174,6 +174,24 @@ static inline int _m2i(const char m[static 3]) {
 /* ----------------------------------------------------------------- Class */
 
 
+time_t Time_build(int year, int month, int day, int hour, int min, int sec) {
+        struct tm tm = {.tm_isdst = -1};
+        TEST_RANGE(year, 1970, 2037);
+        TEST_RANGE(month, 1, 12);
+        TEST_RANGE(day, 1, 31);
+        TEST_RANGE(hour, 0, 23);
+        TEST_RANGE(min, 0, 59);
+        TEST_RANGE(sec, 0, 61);
+        tm.tm_year = (year - 1900);
+        tm.tm_mon  = (month - 1);
+        tm.tm_mday = day;
+        tm.tm_hour = hour;
+        tm.tm_min  = min;
+        tm.tm_sec  = sec;
+        return timegm(&tm);
+}
+
+
 time_t Time_toTimestamp(const char *s) {
         if (STR_DEF(s)) {
                 struct tm t = {};
@@ -1251,29 +1269,10 @@ yyeof:
 }
 
 
-time_t Time_build(int year, int month, int day, int hour, int min, int sec) {
-        TEST_RANGE(year, 1970, 2037);
-        TEST_RANGE(month, 1, 12);
-        TEST_RANGE(day, 1, 31);
-        TEST_RANGE(hour, 0, 23);
-        TEST_RANGE(min, 0, 59);
-        TEST_RANGE(sec, 0, 61);
-        return mktime(&(struct tm) {
-                .tm_isdst = -1,
-                .tm_year = (year - 1900),
-                .tm_mon = (month - 1),
-                .tm_mday = day,
-                .tm_hour = hour,
-                .tm_min  = min,
-                .tm_sec  = sec
-        });
-}
-
-
 time_t Time_now(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
-                THROW(AssertException, "%s", System_getLastError());
+                THROW(AssertException, "%s", System_lastError());
 	return t.tv_sec;
 }
 
@@ -1290,7 +1289,7 @@ time_t Time_monotonic(void) {
         #error "clock_gettime() present but no monotonic clock available"
     #endif
 	if (clock_gettime(clockid, &t) != 0)
-                THROW(AssertException, "%s", System_getLastError());
+                THROW(AssertException, "%s", System_lastError());
 	return t.tv_sec;
 #else
         #warning "no monotonic clock available, fall back to gettimeofday"
@@ -1302,7 +1301,7 @@ time_t Time_monotonic(void) {
 long long Time_milli(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
-                THROW(AssertException, "%s", System_getLastError());
+                THROW(AssertException, "%s", System_lastError());
 	return (long long)t.tv_sec * 1000  +  (long long)t.tv_usec / 1000;
 }
 
@@ -1310,7 +1309,7 @@ long long Time_milli(void) {
 long long Time_micro(void) {
 	struct timeval t;
 	if (gettimeofday(&t, NULL) != 0)
-                THROW(AssertException, "%s", System_getLastError());
+                THROW(AssertException, "%s", System_lastError());
 	return (long long)t.tv_sec * 1000000  +  (long long)t.tv_usec;
 }
 
@@ -1364,7 +1363,7 @@ int Time_year(time_t time) {
 }
 
 
-char *Time_string(time_t time, char result[static 26]) {
+char *Time_localStr(time_t time, char result[static 26]) {
         if (result) {
                 char x[2];
                 struct tm ts;
@@ -1396,7 +1395,7 @@ char *Time_string(time_t time, char result[static 26]) {
 }
 
 
-char *Time_gmtstring(time_t time, char result[static 30]) {
+char *Time_str(time_t time, char result[static 30]) {
         if (result) {
                 char x[2];
                 struct tm ts;
@@ -1432,18 +1431,18 @@ char *Time_fmt(char *result, int size, const char *format, time_t time) {
         struct tm tm;
         assert(result);
         assert(format);
-        localtime_r((const time_t *)&time, &tm);
+        gmtime_r((const time_t *)&time, &tm);
         if (strftime(result, size, format, &tm) == 0)
                 *result = 0;
         return result;
 }
 
 
-char *Time_uptime(time_t sec, char result[static 24]) {
+char *Time_uptime(long sec, char result[static 24]) {
         // Write max 24 bytes to result
         if (result) {
                 int n = 0;
-                time_t r = 0;
+                long r = 0;
                 result[0] = 0;
                 if (sec > 0) {
                         if ((r = sec/86400) > 0) {
@@ -1481,7 +1480,10 @@ int Time_incron(const char *cron, time_t time) {
         const char *end = cron + strlen(cron);
         int n = 0;
         int found = 0;
-        int fields[] = {Time_minutes(time), Time_hour(time), Time_day(time), Time_month(time), Time_weekday(time)};
+        // Convert UTC time to local time
+        struct tm tm;
+        localtime_r(&time, &tm);
+        int fields[] = {tm.tm_min, tm.tm_hour, tm.tm_mday, tm.tm_mon + 1, tm.tm_wday};
 parse:
         if (YYCURSOR >= YYLIMIT)
                 return found == 5;

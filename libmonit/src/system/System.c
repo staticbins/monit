@@ -56,12 +56,13 @@
 
 extern void(*_AbortHandler)(const char *error, va_list ap);
 extern void(*_ErrorHandler)(const char *error, va_list ap);
+extern void(*_DebugHandler)(const char *info, va_list ap);
 
 
 /* ---------------------------------------------------------------- Public */
 
 
-const char *System_getLastError(void) { 
+const char *System_lastError(void) { 
         return strerror(errno); 
 }
 
@@ -87,21 +88,34 @@ void System_abort(const char *e, ...) {
 void System_error(const char *e, ...) {
         va_list ap;
         va_start(ap, e);
-        if (_ErrorHandler) 
+        if (_ErrorHandler)
                 _ErrorHandler(e, ap);
-        else 
+        else
                 vfprintf(stderr, e, ap);
         va_end(ap);
 }
 
 
-int System_getDescriptorsGuarded(void) {
-        int max = 2<<15;
+void System_debug(const char *d, ...) {
+        if (_DebugHandler) {
+                va_list ap;
+                va_start(ap, d);
+                _DebugHandler(d, ap);
+                va_end(ap);
+        }
+}
+
+
+int System_descriptorsGuarded(int guard) {
         int fileDescriptors = (int)sysconf(_SC_OPEN_MAX);
         if (fileDescriptors < 2)
                 fileDescriptors = getdtablesize();
         assert(fileDescriptors > 2);
-        return (fileDescriptors > max) ? max : fileDescriptors;
+        if (guard > 0) {
+                if (fileDescriptors > guard)
+                        fileDescriptors = guard;
+        }
+        return fileDescriptors;
 }
 
 

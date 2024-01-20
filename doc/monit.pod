@@ -3036,7 +3036,8 @@ If Monit is run as the super user, you can optionally run the program
 as a different user and/or group. In this example we run the I<ls>
 program as user www and as group staff:
 
- check program ls with path "/bin/ls /tmp" as uid "www"
+ check program ls with path "/bin/ls /tmp"
+          as uid "www"
           and gid "staff"
        if status != 0 then alert
 
@@ -3057,18 +3058,6 @@ after the first cycle, Monit will wait another cycle and so on. If the
 program is still running after 5 minutes, Monit will kill it and
 generate a program timeout event. It is possible to override the
 default timeout (see the syntax below).
-
-The asynchronous nature of the program check allows for
-non-blocking behaviour in the current Monit design, but it comes
-with a side-effect: when the program has finished executing and
-is waiting for Monit to collect the result, it becomes a
-so-called "zombie" process. A zombie process does not consume
-any system resources (only the PID remains in use) and it is
-under Monit's control and the zombie process is removed from the
-system as soon as Monit collects the exit status. This means that
-every "check program" will be associated with either a running
-process or a temporary zombie. This unwanted zombie side-effect
-will be removed in a later release of Monit.
 
 Multiple status tests can be used, for example:
 
@@ -3313,7 +3302,7 @@ Syntax:
   IF <FAILED|SUCCEEDED> PING[4|6]
      [COUNT number]
      [SIZE number]
-     [RESPONSETIME number <MILLISECONDS|SECONDS>]
+     [RESPONSETIME operator number <MILLISECONDS|SECONDS>]
      [TIMEOUT number SECONDS]
      [ADDRESS string]
   THEN action
@@ -3331,7 +3320,12 @@ will be sent to the host in one cycle at maximum. The default value is 3.
 The B<SIZE> parameter specifies the ping request payload size. Default
 is 64 bytes, minimum is 8 bytes, maximum 1492 bytes.
 
-The B<RESPONSETIME> parameter sets the response time limit.
+The B<RESPONSETIME> parameter sets the response time limit. I<operator>
+is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL).
+
 
 If no reply arrive within B<TIMEOUT> seconds, Monit reports an error.
 If at least one reply was received, the ping test is considered a
@@ -3407,7 +3401,7 @@ TCP/UDP port test syntax:
     [CERTIFICATE CHECKSUM [MD5|SHA1] string]
     [CERTIFICATE VALID for number DAYS]
     [PROTOCOL protocol | <SEND|EXPECT> "string",...]
-    [RESPONSETIME number <MILLISECONDS|SECONDS>]
+    [RESPONSETIME operator number <MILLISECONDS|SECONDS>]
     [TIMEOUT number SECONDS]
     [RETRY number]
  THEN action
@@ -3418,7 +3412,7 @@ Unix socket test syntax:
     <UNIXSOCKET path>
     [TYPE <TCP|UDP>]
     [PROTOCOL protocol | <SEND|EXPECT> "string",...]
-    [RESPONSETIME number <MILLISECONDS|SECONDS>]
+    [RESPONSETIME operator number <MILLISECONDS|SECONDS>]
     [TIMEOUT number SECONDS]
     [RETRY number]
  THEN action
@@ -3541,7 +3535,11 @@ If the target server's protocol is not found in this list, simply
 do not specify the protocol and Monit will use a default connection
 test.
 
-I<RESPONSETIME> parameter sets the response time limit.
+I<RESPONSETIME> parameter sets the response time limit. I<operator>
+is a choice of "<",">","!=","==" in c notation, "gt",
+"lt", "eq", "ne" in shell sh notation and "greater", "less",
+"equal", "notequal" in human readable form (if not specified,
+default is EQUAL). 
 
 I<TIMEOUT number SECONDS>. Optionally specifies the
 connect and read timeout for the connection. If Monit cannot

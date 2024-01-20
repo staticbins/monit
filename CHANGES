@@ -4,6 +4,10 @@
 
 Version 5.34.0
 
+New: Added the "timeout" option to the exec action. It can be set either globally (in the "set limit" statement
+using the "execTimeout" option) or locally (using the "timeout <number> seconds" in the exec action). The default
+timeout is 0 (no limit), to keep the original behaviour. Thanks to Lutz Mader.
+
 New: Issue #1074: Added a hardlink test to file, directory and fifo checks. Thanks to Lutz Mader. Example:
     check directory upload with path /data/upload
        if hardlink > 32000 then alert
@@ -23,6 +27,10 @@ Fixed: Issue #1086: The HTTP protocol test may return false error "HTTP error: i
 if the HTTP response contained header with more then 511 bytes. We have increased the limit
 to 8192 bytes per header and will report "response header exceeded maximum size" error if
 the HTTP response contains longer header.
+
+Fixed: When the monit ID is generated in first start and the system is shut down before the
+file was stored to the filesystem, an empty monitid file may be created. Thanks to Alexander Dahl
+for fix.
 
 
 Version 5.33.0

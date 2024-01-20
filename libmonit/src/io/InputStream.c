@@ -50,8 +50,11 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-// One TCP frame data size
-#define BUFFER_SIZE 1500
+// One standard IPv6 Ethernet frame (MTU) data size (MSS)
+// We read what we get and the buffer size is mostly important
+// for buffering. This is different to OutputStream where we try
+// to do our bit to minimize fragmentation
+#define BUFFER_SIZE 1440
 
 #define T InputStream_T
 struct T {
@@ -126,7 +129,7 @@ void InputStream_free(T *S) {
 /* ------------------------------------------------------------ Properties */
 
 
-int InputStream_getDescriptor(T S) {
+int InputStream_descriptor(T S) {
         assert(S);
         return S->fd;
 }
@@ -139,7 +142,7 @@ void InputStream_setTimeout(T S, time_t timeout) {
 }
 
 
-time_t InputStream_getTimeout(T S) {
+time_t InputStream_timeout(T S) {
         assert(S);
         return S->timeout;
 }

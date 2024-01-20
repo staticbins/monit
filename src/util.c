@@ -122,7 +122,7 @@
 
 // libmonit
 #include "io/File.h"
-#include "util/Convert.h"
+#include "util/Fmt.h"
 #include "system/Time.h"
 #include "exceptions/AssertException.h"
 #include "exceptions/IOException.h"
@@ -590,7 +590,7 @@ Service_T Util_getService(const char *name) {
 }
 
 
-        int Util_getNumberOfServices(void) {
+int Util_getNumberOfServices(void) {
         int i = 0;
         Service_T s;
         for (s = Service_List; s; s = s->next)
@@ -605,7 +605,7 @@ bool Util_existService(const char *name) {
 }
 
 
-        void Util_printRunList(void) {
+void Util_printRunList(void) {
         char buf[10];
         printf("Runtime constants:\n");
         printf(" %-18s = %s\n", "Control file", is_str_defined(Run.files.control));
@@ -619,16 +619,16 @@ bool Util_existService(const char *name) {
         printf(" %-18s = %s\n", "Is Daemon", (Run.flags & Run_Daemon) ? "True" : "False");
         printf(" %-18s = %s\n", "Use process engine", (Run.flags & Run_ProcessEngineEnabled) ? "True" : "False");
         printf(" %-18s = {\n", "Limits");
-        printf(" %-18s =   programOutput:     %s\n", " ", Convert_bytes2str(Run.limits.programOutput, buf));
-        printf(" %-18s =   sendExpectBuffer:  %s\n", " ", Convert_bytes2str(Run.limits.sendExpectBuffer, buf));
-        printf(" %-18s =   fileContentBuffer: %s\n", " ", Convert_bytes2str(Run.limits.fileContentBuffer, buf));
-        printf(" %-18s =   httpContentBuffer: %s\n", " ", Convert_bytes2str(Run.limits.httpContentBuffer, buf));
-        printf(" %-18s =   networkTimeout:    %s\n", " ", Convert_time2str(Run.limits.networkTimeout, (char[11]){}));
-        printf(" %-18s =   programTimeout:    %s\n", " ", Convert_time2str(Run.limits.programTimeout, (char[11]){}));
-        printf(" %-18s =   stopTimeout:       %s\n", " ", Convert_time2str(Run.limits.stopTimeout, (char[11]){}));
-        printf(" %-18s =   startTimeout:      %s\n", " ", Convert_time2str(Run.limits.startTimeout, (char[11]){}));
-        printf(" %-18s =   restartTimeout:    %s\n", " ", Convert_time2str(Run.limits.restartTimeout, (char[11]){}));
-        printf(" %-18s =   execTimeout:       %s\n", " ", Convert_time2str(Run.limits.execTimeout, (char[11]){}));
+        printf(" %-18s =   programOutput:     %s\n", " ", Fmt_bytes2str(Run.limits.programOutput, buf));
+        printf(" %-18s =   sendExpectBuffer:  %s\n", " ", Fmt_bytes2str(Run.limits.sendExpectBuffer, buf));
+        printf(" %-18s =   fileContentBuffer: %s\n", " ", Fmt_bytes2str(Run.limits.fileContentBuffer, buf));
+        printf(" %-18s =   httpContentBuffer: %s\n", " ", Fmt_bytes2str(Run.limits.httpContentBuffer, buf));
+        printf(" %-18s =   networkTimeout:    %s\n", " ", Fmt_time2str(Run.limits.networkTimeout, (char[11]){}));
+        printf(" %-18s =   programTimeout:    %s\n", " ", Fmt_time2str(Run.limits.programTimeout, (char[11]){}));
+        printf(" %-18s =   stopTimeout:       %s\n", " ", Fmt_time2str(Run.limits.stopTimeout, (char[11]){}));
+        printf(" %-18s =   startTimeout:      %s\n", " ", Fmt_time2str(Run.limits.startTimeout, (char[11]){}));
+        printf(" %-18s =   restartTimeout:    %s\n", " ", Fmt_time2str(Run.limits.restartTimeout, (char[11]){}));
+        printf(" %-18s =   execTimeout:       %s\n", " ", Fmt_time2str(Run.limits.execTimeout, (char[11]){}));
         printf(" %-18s = }\n", " ");
         printf(" %-18s = %s\n", "On reboot", onReboot_Names[Run.onreboot]);
         printf(" %-18s = %d seconds with start delay %d seconds\n", "Poll time", Run.polltime, Run.startdelay);
@@ -655,7 +655,7 @@ bool Util_existService(const char *name) {
                 Mmonit_T c;
                 printf(" %-18s = ", "M/Monit(s)");
                 for (c = Run.mmonits; c; c = c->next) {
-                        printf("%s with timeout %s", c->url->url, Convert_time2str(c->timeout, (char[11]){}));
+                        printf("%s with timeout %s", c->url->url, Fmt_time2str(c->timeout, (char[11]){}));
 #ifdef HAVE_OPENSSL
                         if (c->ssl.flags) {
                                 printf(" using TLS");
@@ -692,7 +692,7 @@ bool Util_existService(const char *name) {
                         if (mta->next)
                                 printf(", ");
                 }
-                printf(" with timeout %s", Convert_time2str(Run.mailserver_timeout, (char[11]){}));
+                printf(" with timeout %s", Fmt_time2str(Run.mailserver_timeout, (char[11]){}));
                 if (Run.mail_hostname)
                         printf(" using '%s' as my hostname", Run.mail_hostname);
                 printf("\n");
@@ -796,7 +796,7 @@ void Util_printService(Service_T s) {
                         printf(" as uid %d", s->start->uid);
                 if (s->start->has_gid)
                         printf(" as gid %d", s->start->gid);
-                printf(" timeout %s", Convert_time2str(s->start->timeout, (char[11]){}));
+                printf(" timeout %s", Fmt_time2str(s->start->timeout, (char[11]){}));
                 printf("\n");
         }
         if (s->stop) {
@@ -805,7 +805,7 @@ void Util_printService(Service_T s) {
                         printf(" as uid %d", s->stop->uid);
                 if (s->stop->has_gid)
                         printf(" as gid %d", s->stop->gid);
-                printf(" timeout %s", Convert_time2str(s->stop->timeout, (char[11]){}));
+                printf(" timeout %s", Fmt_time2str(s->stop->timeout, (char[11]){}));
                 printf("\n");
         }
         if (s->restart) {
@@ -814,7 +814,7 @@ void Util_printService(Service_T s) {
                         printf(" as uid %d", s->restart->uid);
                 if (s->restart->has_gid)
                         printf(" as gid %d", s->restart->gid);
-                printf(" timeout %s", Convert_time2str(s->restart->timeout, (char[11]){}));
+                printf(" timeout %s", Fmt_time2str(s->restart->timeout, (char[11]){}));
                 printf("\n");
         }
 
@@ -849,7 +849,7 @@ void Util_printService(Service_T s) {
 
         if (s->type == Service_Program) {
                 printf(" %-20s = ", "Program timeout");
-                printf("terminate the program if not finished within %s\n", Convert_time2str(s->program->timeout, (char[11]){}));
+                printf("terminate the program if not finished within %s\n", Fmt_time2str(s->program->timeout, (char[11]){}));
                 for (Status_T o = s->statuslist; o; o = o->next) {
                         StringBuffer_clear(buf);
                         if (o->operator == Operator_Changed)
@@ -916,9 +916,9 @@ void Util_printService(Service_T s) {
         for (Icmp_T o = s->icmplist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 StringBuffer_T buf2 = StringBuffer_create(64);
-                StringBuffer_append(buf2, "if %s count %d size %d with timeout %s", o->check_invers ? "succeeded" : "failed", o->count, o->size, Convert_time2str(o->timeout, (char[11]){}));
+                StringBuffer_append(buf2, "if %s count %d size %d with timeout %s", o->check_invers ? "succeeded" : "failed", o->count, o->size, Fmt_time2str(o->timeout, (char[11]){}));
                 if (o->responsetime.limit > -1.)
-                        StringBuffer_append(buf2, " and responsetime %s %s", Operator_Names[o->responsetime.operator], Convert_time2str(o->responsetime.limit, (char[11]){}));
+                        StringBuffer_append(buf2, " and responsetime %s %s", Operator_Names[o->responsetime.operator], Fmt_time2str(o->responsetime.limit, (char[11]){}));
                 if (o->outgoing.ip)
                         StringBuffer_append(buf2, " via address %s",  o->outgoing.ip);
                 switch (o->family) {
@@ -943,11 +943,11 @@ void Util_printService(Service_T s) {
                 if (o->outgoing.ip)
                         StringBuffer_append(buf2, " via address %s", o->outgoing.ip);
                 StringBuffer_append(buf2, " type %s/%s protocol %s with timeout %s",
-                        Util_portTypeDescription(o), Util_portIpDescription(o), o->protocol->name, Convert_time2str(o->timeout, (char[11]){}));
+                        Util_portTypeDescription(o), Util_portIpDescription(o), o->protocol->name, Fmt_time2str(o->timeout, (char[11]){}));
                 if (o->retry > 1)
                         StringBuffer_append(buf2, " and retry %d times", o->retry);
                 if (o->responsetime.limit > -1.)
-                        StringBuffer_append(buf2, " and responsetime %s %s", Operator_Names[o->responsetime.operator], Convert_time2str(o->responsetime.limit, (char[11]){}));
+                        StringBuffer_append(buf2, " and responsetime %s %s", Operator_Names[o->responsetime.operator], Fmt_time2str(o->responsetime.limit, (char[11]){}));
 #ifdef HAVE_OPENSSL
                 if (o->target.net.ssl.options.flags) {
                         StringBuffer_append(buf2, " using TLS");
@@ -967,11 +967,11 @@ void Util_printService(Service_T s) {
         for (Port_T o = s->socketlist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 StringBuffer_T buf2 = StringBuffer_create(64);
-                StringBuffer_append(buf2, "if %s %s type %s protocol %s with timeout %s", o->check_invers ? "succeeded" : "failed", o->target.unix.pathname, Util_portTypeDescription(o), o->protocol->name, Convert_time2str(o->timeout, (char[11]){}));
+                StringBuffer_append(buf2, "if %s %s type %s protocol %s with timeout %s", o->check_invers ? "succeeded" : "failed", o->target.unix.pathname, Util_portTypeDescription(o), o->protocol->name, Fmt_time2str(o->timeout, (char[11]){}));
                 if (o->retry > 1)
                         StringBuffer_append(buf2, " and retry %d times", o->retry);
                 if (o->responsetime.limit > -1.)
-                        StringBuffer_append(buf2, " and responsetime %s %s", Operator_Names[o->responsetime.operator], Convert_time2str(o->responsetime.limit, (char[11]){}));
+                        StringBuffer_append(buf2, " and responsetime %s %s", Operator_Names[o->responsetime.operator], Fmt_time2str(o->responsetime.limit, (char[11]){}));
                 printf(" %-20s = %s\n", "Unix Socket", StringBuffer_toString(Util_printRule(o->check_invers, buf, o->action, "%s", StringBuffer_toString(buf2))));
                 StringBuffer_free(&buf2);
         }
@@ -983,7 +983,7 @@ void Util_printService(Service_T s) {
                        ?
                        StringBuffer_toString(Util_printRule(false, buf, o->action, "if changed"))
                        :
-                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Convert_time2str(o->time * 1000., (char[11]){})))
+                       StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Fmt_time2str(o->time * 1000., (char[11]){})))
                        );
         }
 
@@ -1027,9 +1027,9 @@ void Util_printService(Service_T s) {
         for (Bandwidth_T o = s->uploadbyteslist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->range == Time_Second) {
-                        printf(" %-20s = %s\n", "Upload bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit, buffer))));
+                        printf(" %-20s = %s\n", "Upload bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Fmt_bytes2str(o->limit, buffer))));
                 } else {
-                        printf(" %-20s = %s\n", "Total upload bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s in last %d %s(s)", Operator_Names[o->operator], Convert_bytes2str(o->limit, buffer), o->rangecount, Util_timestr(o->range))));
+                        printf(" %-20s = %s\n", "Total upload bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s in last %d %s(s)", Operator_Names[o->operator], Fmt_bytes2str(o->limit, buffer), o->rangecount, Util_timestr(o->range))));
                 }
         }
 
@@ -1045,9 +1045,9 @@ void Util_printService(Service_T s) {
         for (Bandwidth_T o = s->downloadbyteslist; o; o = o->next) {
                 StringBuffer_clear(buf);
                 if (o->range == Time_Second) {
-                        printf(" %-20s = %s\n", "Download bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit, buffer))));
+                        printf(" %-20s = %s\n", "Download bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Fmt_bytes2str(o->limit, buffer))));
                 } else {
-                        printf(" %-20s = %s\n", "Total download bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s in last %d %s(s)", Operator_Names[o->operator], Convert_bytes2str(o->limit, buffer), o->rangecount, Util_timestr(o->range))));
+                        printf(" %-20s = %s\n", "Total download bytes", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s in last %d %s(s)", Operator_Names[o->operator], Fmt_bytes2str(o->limit, buffer), o->rangecount, Util_timestr(o->range))));
                 }
         }
 
@@ -1096,26 +1096,26 @@ void Util_printService(Service_T s) {
                                );
                 } else if (o->resource == Resource_Space) {
                         if (o->limit_absolute > -1) {
-                                printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Convert_bytes2str(o->limit_absolute, buffer))));
+                                printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Fmt_bytes2str(o->limit_absolute, buffer))));
                         } else {
                                printf(" %-20s = %s\n", "Space usage limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", Operator_Names[o->operator], o->limit_percent)));
                         }
                 } else if (o->resource == Resource_SpaceFree) {
                         if (o->limit_absolute > -1) {
-                                printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Convert_bytes2str(o->limit_absolute, buffer))));
+                                printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Fmt_bytes2str(o->limit_absolute, buffer))));
                         } else {
                                printf(" %-20s = %s\n", "Space free limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %.1f%%", Operator_Names[o->operator], o->limit_percent)));
                         }
                 } else if (o->resource == Resource_ReadBytes) {
-                        printf(" %-20s = %s\n", "Read limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if read %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit_absolute, (char[10]){}))));
+                        printf(" %-20s = %s\n", "Read limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if read %s %s/s", Operator_Names[o->operator], Fmt_bytes2str(o->limit_absolute, (char[10]){}))));
                 } else if (o->resource == Resource_ReadOperations) {
                         printf(" %-20s = %s\n", "Read limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if read %s %llu operations/s", Operator_Names[o->operator], o->limit_absolute)));
                 } else if (o->resource == Resource_WriteBytes) {
-                        printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if write %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit_absolute, (char[10]){}))));
+                        printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if write %s %s/s", Operator_Names[o->operator], Fmt_bytes2str(o->limit_absolute, (char[10]){}))));
                 } else if (o->resource == Resource_WriteOperations) {
                         printf(" %-20s = %s\n", "Write limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if write %s %llu operations/s", Operator_Names[o->operator], o->limit_absolute)));
                 } else if (o->resource == Resource_ServiceTime) {
-                        printf(" %-20s = %s\n", "Service time limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if service time %s %s/operation", Operator_Names[o->operator], Convert_time2str(o->limit_absolute, (char[11]){}))));
+                        printf(" %-20s = %s\n", "Service time limit", StringBuffer_toString(Util_printRule(false, buf, o->action, "if service time %s %s/operation", Operator_Names[o->operator], Fmt_time2str(o->limit_absolute, (char[11]){}))));
                 }
         }
 
@@ -1270,7 +1270,7 @@ void Util_printService(Service_T s) {
                         case Resource_MemoryKbyte:
                         case Resource_SwapKbyte:
                         case Resource_MemoryKbyteTotal:
-                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Convert_bytes2str(o->limit, buffer))));
+                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s", Operator_Names[o->operator], Fmt_bytes2str(o->limit, buffer))));
                                 break;
 
                         case Resource_LoadAverage1m:
@@ -1289,12 +1289,12 @@ void Util_printService(Service_T s) {
 
                         case Resource_ReadBytes:
                         case Resource_WriteBytes:
-                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit, (char[10]){}))));
+                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Fmt_bytes2str(o->limit, (char[10]){}))));
                                 break;
 
                         case Resource_ReadBytesPhysical:
                         case Resource_WriteBytesPhysical:
-                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Convert_bytes2str(o->limit, (char[10]){}))));
+                                printf("%s", StringBuffer_toString(Util_printRule(false, buf, o->action, "if %s %s/s", Operator_Names[o->operator], Fmt_bytes2str(o->limit, (char[10]){}))));
                                 break;
 
                         case Resource_ReadOperations:
@@ -1389,6 +1389,8 @@ char *Util_monitId(char *idfile) {
                         return NULL;
                 }
         }
+        fflush(file);
+        fsync(fileno(file));
         if (fclose(file))
                 Log_error("Error closing file '%s' -- %s\n", idfile, STRERROR);
 
@@ -1496,7 +1498,7 @@ char *Util_getBasicAuthHeader(char *username, char *password) {
 }
 
 
-        void Util_redirectStdFds(void) {
+void Util_redirectStdFds(void) {
         for (int i = 0; i < 3; i++) {
                 if (close(i) == -1 || open("/dev/null", O_RDWR) != i) {
                         Log_error("Cannot reopen standard file descriptor (%d) -- %s\n", i, STRERROR);
@@ -1505,8 +1507,8 @@ char *Util_getBasicAuthHeader(char *username, char *password) {
 }
 
 
-        void Util_closeFds(void) {
-        for (int i = 3, descriptors = System_getDescriptorsGuarded(); i < descriptors; i++) {
+void Util_closeFds(void) {
+        for (int i = 3, descriptors = System_descriptorsGuarded(1024); i < descriptors; i++) {
                 close(i);
         }
         errno = 0;
@@ -1587,9 +1589,7 @@ bool Util_checkCredentials(char *uname, char *outside) {
                         Log_error("Unknown password digestion method.\n");
                         return false;
         }
-        if (Str_compareConstantTime(outside_crypt, c->passwd) == 0)
-                return true;
-        return false;
+        return Str_authcmp(outside_crypt, c->passwd);
 }
 
 

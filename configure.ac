@@ -469,14 +469,21 @@ AC_ARG_WITH(ipv6,
 
 # Find the right directory to put the root-mode PID file in
 AC_MSG_CHECKING([pid file location])
-if test -d "/run"
-then
-	piddir="/run"
-elif test -d "/var/run"; then
-        piddir="/var/run"
-elif test -d "/etc"; then
-        piddir="/etc"
-fi
+AC_ARG_WITH([piddir],
+	[AS_HELP_STRING([--with-piddir=DIR], [Define a pid directory (default: autodetection)])],
+	[
+		piddir="$withval"
+	],
+	[
+		if test -d "/run"
+                then
+			piddir="/run"
+		elif test -d "/var/run"; then
+		        piddir="/var/run"
+		elif test -d "/etc"; then
+		        piddir="/etc"
+		fi
+	])
 
 AC_DEFINE_UNQUOTED([PIDDIR], "$piddir",
 	  [Define to the pid storage directory.])
@@ -565,7 +572,7 @@ then
    CFLAGS="$CFLAGS -DREENTRANT -no-cpp-precomp -DNEED_SOCKLEN_T_DEFINED"
    LDFLAGS="$LDFLAGS -Wl,-search_paths_first"
    AC_CHECK_LIB([kvm], [kvm_open])
-   LIBS="$LIBS -framework System -framework CoreFoundation -framework DiskArbitration -framework IOKit -multiply_defined suppress"
+   LIBS="$LIBS -framework System -framework CoreFoundation -framework DiskArbitration -framework IOKit"
 elif test "$architecture" = "AIX"
 then
    ARCH="AIX"

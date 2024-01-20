@@ -80,7 +80,21 @@
 // MARK: - Private methods
 
 
-static inline void _prune(process_t process, __attribute__ ((unused)) void *ap) {
+static void _freeCachedProcesses(__attribute__ ((unused))int key, void **value, __attribute__ ((unused))void *ap) {
+        Process_T p = *value;
+        Process_detach(p);
+        Process_free(&p);
+}
+
+
+// Predicator function for looking up a Process_T given a Service name
+static bool _compareName(void *value, void *name) {
+        Process_T p = value;
+        return Str_isEqual(Process_name(p), name);
+}
+
+
+static inline void _prune(process_t process, __attribute__ ((unused))void *ap) {
         FREE(process->cmdline);
         FREE(process->secattr);
 }
@@ -266,7 +280,7 @@ static bool _updateProcessTable(T P) {
                         _calculateResourceUsage(&prev[i], current);
                 }
         }
-        _delete(prev, &prevSize);
+        FREE(prev);
         // Aggregate child resource usage into parent. The table is already sorted
         // ascending on pid. Start with leafs and work backwards towards the root.
         for (int i = (int)(P->size - 1); i >= 0 ; i--) {
@@ -294,6 +308,8 @@ T ProcessTable_new(void) {
         P->options = ProcessEngine_CollectCommandLine;
         if (!_buildProcessTable(P)) {
                 ProcessTable_free(&P);
+        } else {
+                P->cache = Array_new(1024);
         }
         return P;
 }
@@ -302,6 +318,8 @@ T ProcessTable_new(void) {
 void ProcessTable_free(T *P) {
         assert(P && *P);
         _delete((*P)->table, &(*P)->size);
+        Array_map((*P)->cache, _freeCachedProcesses, NULL);
+        Array_free(&(*P)->cache);
         Mutex_destroy((*P)->mutex);
         FREE(*P);
 }
@@ -361,6 +379,70 @@ void ProcessTable_sort(T P, ProcessTableSort_Type func, void (*apply)(process_t 
 }
 
 
+// MARK: - Process_T cache
+
+
+void ProcessTable_setProcess(T P, Process_T process) {
+        assert(P);
+        assert(process);
+        Process_T p = NULL;
+        LOCK(P->mutex)
+        {
+                p = Array_put(P->cache, Process_pid(process), process);
+        }
+        END_LOCK;
+        if (p) {
+                // In the very unlikely case that a process already exist with
+                // the same pid, we detach and free the process, unless it's
+                // the same process, in witch case we just write a debug msg
+                if (p != process) {
+                        Process_detach(p);
+                        Process_free(&p);
+                } else {
+                        DEBUG("ProcessTable_setProcess: Trying to store the same process again\n");
+                }
+        }
+}
+
+
+Process_T ProcessTable_getProcess(T P, pid_t pid) {
+        assert(P);
+        Process_T p = NULL;
+        LOCK(P->mutex)
+        {
+                p = Array_get(P->cache, pid);
+        }
+        END_LOCK;
+        return p;
+}
+
+
+// Find a cached Process_T given a service name
+Process_T ProcessTable_findProcess(T P, const char *name) {
+        assert(P);
+        assert(name);
+        Process_T p = NULL;
+        LOCK(P->mutex)
+        {
+                p = Array_find(P->cache, _compareName, (void*)name);
+        }
+        END_LOCK;
+        return p;
+}
+
+
+Process_T ProcessTable_removeProcess(T P, pid_t pid) {
+        assert(P);
+        Process_T p = NULL;
+        LOCK(P->mutex)
+        {
+                p = Array_remove(P->cache, pid);
+        }
+        END_LOCK;
+        return p;
+}
+
+
 // MARK: - Class methods
 
 
@@ -373,7 +455,7 @@ bool ProcessTable_exist(pid_t pid) {
 // MARK: - Service methods
 
 
-pid_t ProcessTable_findProcess(Service_T s) {
+pid_t ProcessTable_findServiceProcess(Service_T s) {
         assert(s);
         // Test the cached PID first
         if (s->inf.process->pid > 0) {
@@ -405,7 +487,7 @@ pid_t ProcessTable_findProcess(Service_T s) {
 }
 
 
-bool ProcessTable_updateProcess(T P, Service_T s, pid_t pid) {
+bool ProcessTable_updateServiceProcess(T P, Service_T s, pid_t pid) {
         assert(P);
         assert(s);
         /* save the previous pid and set actual one */

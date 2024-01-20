@@ -95,8 +95,6 @@ static void _gcfiledescriptors(Filedescriptors_T *);
 
 void gc(void) {
         Engine_destroyAllow();
-        if (Process_Table)
-                ProcessTable_free(&Process_Table);
         if (Service_List)
                 _gc_service_list(&Service_List);
         if (Service_Group_List)

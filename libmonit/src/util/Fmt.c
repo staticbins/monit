@@ -28,13 +28,13 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "Convert.h"
+#include "Fmt.h"
 
 
 /* ----------------------------------------------------------- Definitions */
 
 
-static double epsilon = 1e-6;
+static double epsilon = 1e-5;
 
 static bool _isInt(double x) {
     return fabs(x - round(x)) < epsilon;
@@ -44,7 +44,7 @@ static bool _isInt(double x) {
 /* -------------------------------------------------------- Public Methods */
 
 
-char *Convert_bytes2str(double bytes, char s[static 10]) {
+char *Fmt_bytes2str(double bytes, char s[static 10]) {
     assert(s);
     static const char *kNotation[] = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", NULL};
     *s = 0;
@@ -63,7 +63,7 @@ char *Convert_bytes2str(double bytes, char s[static 10]) {
 }
 
 
-char *Convert_time2str(double milli, char s[static 11]) {
+char *Fmt_time2str(double milli, char s[static 11]) {
     assert(s);
     struct conversion {
         double base;

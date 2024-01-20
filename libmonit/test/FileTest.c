@@ -151,10 +151,10 @@ int main(void) {
         printf("=> Test7: normalize path\n");
         {
                 char s[PATH_MAX];
-                assert(File_getRealPath(NULL, s) == NULL);
-                assert(File_getRealPath(s, NULL) == NULL);
-                assert(File_getRealPath(NULL, NULL) == NULL);
-                assert(File_getRealPath("/././tmp/../tmp", s) != NULL);
+                assert(File_realPath(NULL, s) == NULL);
+                assert(File_realPath(s, NULL) == NULL);
+                assert(File_realPath(NULL, NULL) == NULL);
+                assert(File_realPath("/././tmp/../tmp", s) != NULL);
 #ifdef DARWIN
                 /* On Darwin /tmp is a link to /private/tmp */
                 assert(Str_isEqual(s, "/private/tmp")); 

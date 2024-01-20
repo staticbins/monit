@@ -45,15 +45,16 @@ int main(void) {
                 assert(error != NULL);
                 printf("\tEINVAL description: %s\n", error);
                 errno = EINVAL;
-                assert(Str_isEqual(System_getLastError(), error));
+                assert(Str_isEqual(System_lastError(), error));
 
         }
         printf("=> Test0: OK\n\n");
 
-        printf("=> Test1: check filedescriptors wrapper\n");
+        printf("=> Test1: Filedescriptors guard\n");
         {
-                assert(System_getDescriptorsGuarded() <= 2<<15);
-
+                assert(System_descriptorsGuarded(65) == 65);
+                assert(System_descriptorsGuarded(0) > 65);
+                printf("\tMaximum file descriptors for process: %d\n", System_descriptorsGuarded(0));
         }
         printf("=> Test1: OK\n\n");
 

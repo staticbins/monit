@@ -53,8 +53,8 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-// One TCP frame data size
-#define BUFFER_SIZE 1500
+// One standard IPv4 Ethernet frame (MTU) data size (MSS)
+#define BUFFER_SIZE 1460
 
 #define T OutputStream_T
 struct T {
@@ -65,7 +65,7 @@ struct T {
         bool isclosed;
         int sessionWritten;
         long long bytesWritten;
-        uchar_t buffer[BUFFER_SIZE + 1];
+        uchar_t buffer[BUFFER_SIZE];
 };
 
 
@@ -347,6 +347,8 @@ T OutputStream_new(int descriptor) {
         S->timeout = NET_WRITE_TIMEOUT;
         S->length = S->buffer;
         S->limit = S->buffer + BUFFER_SIZE;
+        if (Net_isIPv6(descriptor))
+                S->limit -= 20;
         return S;
 }
 
@@ -361,7 +363,7 @@ void OutputStream_free(T *S) {
 /* ------------------------------------------------------------ Properties */
 
 
-int OutputStream_getDescriptor(T S) {
+int OutputStream_descriptor(T S) {
         assert(S);
         return S->fd;
 }
@@ -380,7 +382,7 @@ void OutputStream_setTimeout(T S, time_t timeout) {
 }
 
 
-time_t OutputStream_getTimeout(T S) {
+time_t OutputStream_timeout(T S) {
         assert(S);
         return S->timeout;
 }
@@ -392,7 +394,7 @@ bool OutputStream_isClosed(T S) {
 }
 
 
-long long OutputStream_getBytesWritten(T S) {
+long long OutputStream_bytesWritten(T S) {
         assert(S);
         return S->bytesWritten;
 }
