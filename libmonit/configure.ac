@@ -300,7 +300,7 @@ AC_C_BIGENDIAN
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
 # Compiler; tune warnings
-CFLAGS="$CFLAGS -Wall -Wunused ";
+CFLAGS="$CFLAGS -Wall -Wunused "
 
 # Require at least C99 and use C11 if available
 AC_COMPUTE_INT([STDC_VERSION],[__STDC_VERSION__],,[STDC_VERSION=0])
@@ -357,6 +357,35 @@ AC_ARG_WITH(ipv6,
     ]
 )
 
+# ---------------------------------------------------------------------------
+# Build options
+# ---------------------------------------------------------------------------
+
+# Determine the minimum macOS version we can build
+if [[ $(uname) == "Darwin" ]]; then
+    AC_MSG_CHECKING([for minimum macOS version supported])
+
+    # Create a simple C program
+    echo "int main() { return 0; }" > t.c
+
+    # Try to compile it with the specified macOS version
+    $CC -mmacosx-version-min=10.15 -o t t.c || AC_MSG_ERROR([Could not compile test program])
+
+    # Extract the minos value using otool
+    min_macos_version=$(otool -l t | egrep minos | awk '{print $2}')
+
+    # Clean up the test files
+    rm -f t.c t
+
+    # Check if min_macos_version is set
+    if test -z "$min_macos_version"; then
+        AC_MSG_ERROR([Could not determine minimum macOS version])
+    else
+        # Set CFLAGS with the determined minimum macOS version
+        CFLAGS="$CFLAGS -mmacosx-version-min=$min_macos_version"
+        AC_MSG_RESULT([$min_macos_version])
+    fi
+fi
 
 # ---------------------------------------------------------------------------
 # Outputs
