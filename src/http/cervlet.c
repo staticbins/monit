@@ -647,9 +647,15 @@ __attribute__((format (printf, 5, 6))) static void _displayTableRow(HttpResponse
                 StringBuffer_append(res->outputbuffer, "<tr class='%s'><td>%s</td><td>", class, key);
         else
                 StringBuffer_append(res->outputbuffer, "<tr><td>%s</td><td>", key);
-        if (escape)
+        if (escape) {
+                // If the data contains multiple lines, wrap use <pre>, otherwise keep as is
+                bool multiline = strrchr(_value, '\n') ? true : false;
+                if (multiline)
+                        StringBuffer_append(res->outputbuffer, "<pre>");
                 escapeHTML(res->outputbuffer, _value);
-        else
+                if (multiline)
+                        StringBuffer_append(res->outputbuffer, "</pre>");
+        } else
                 StringBuffer_append(res->outputbuffer, "%s", _value);
         StringBuffer_append(res->outputbuffer, "</td></tr>");
         FREE(_value);

@@ -1060,6 +1060,32 @@ AC_ARG_ENABLE([codesign],
 )
 AM_CONDITIONAL([WITH_CODESIGN], [test $enable_codesign -eq 1])
 
+# Determine the minimum macOS version we can build
+if [[ $(uname) == "Darwin" ]]; then
+    AC_MSG_CHECKING([for minimum macOS version supported])
+
+    # Create a simple C program
+    echo "int main() { return 0; }" > t.c
+
+    # Try to compile it with the specified macOS version
+    $CC -mmacosx-version-min=10.15 -o t t.c || AC_MSG_ERROR([Could not compile test program])
+
+    # Extract the minos value using otool
+    min_macos_version=$(otool -l t | awk '/minos/{print $2}')
+
+    # Clean up the test files
+    rm -f t.c t
+
+    # Check if min_macos_version is set
+    if test -z "$min_macos_version"; then
+        AC_MSG_ERROR([Could not determine minimum macOS version])
+    else
+        # Set CFLAGS with the determined minimum macOS version
+        CFLAGS="$CFLAGS -mmacosx-version-min=$min_macos_version"
+        AC_MSG_RESULT([$min_macos_version])
+    fi
+fi
+
 
 # ------------------------------------------------------------------------
 # Outputs
@@ -1106,5 +1132,6 @@ AX_INFO_ENABLED([Profiling:],             [test $enable_profile -eq 1])
 if test "x$ARCH" = "xDARWIN"; then
 AX_INFO_SEPARATOR()
 AX_INFO_ENABLED([MacOS Code Signing:],    [test $enable_codesign -eq 1])
+AX_INFO_VAR([Minimum macOS Version:],     [$min_macos_version])
 fi
 AX_INFO_BREAK()
