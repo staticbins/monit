@@ -128,9 +128,9 @@ bool Net_isIPv6(int socket);
 
 
 /**
- * Aborts a TCP a connection. That is, TCP discards any data still remaining
- * in the socket send buffer and sends an RST to the peer, not the normal 
- * four-packet connection termination sequence. See "UNIX Network Programming" 
+ * Aborts a TCP connection. That is, TCP discards any data still remaining
+ * in the socket's send buffer and sends an RST to the peer, not the normal
+ * four-packet connection termination sequence. See "UNIX Network Programming"
  * third edition ch 7.5. Generic Socket Options
  * @param socket The socket connection to abort and close
  * @return true if success otherwise false

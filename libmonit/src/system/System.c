@@ -106,7 +106,7 @@ void System_debug(const char *d, ...) {
 }
 
 
-int System_descriptorsGuarded(int guard) {
+int System_descriptors(int guard) {
         int fileDescriptors = (int)sysconf(_SC_OPEN_MAX);
         if (fileDescriptors < 2)
                 fileDescriptors = getdtablesize();
