@@ -54,8 +54,9 @@
 #include "SMTP.h"
 
 // libmonit
-#include "system/Time.h"
 #include "util/Str.h"
+#include "system/Time.h"
+#include "system/Random.h"
 #include "exceptions/IOException.h"
 
 
@@ -244,7 +245,7 @@ static bool _send(List_T list) {
                                                 m->subject,
                                                 now,
                                                 VERSION,
-                                                (long long)Time_now(), System_randomNumber(), Run.mail_hostname ? Run.mail_hostname : Run.system->name,
+                                                (long long)Time_now(), Random_number(), Run.mail_hostname ? Run.mail_hostname : Run.system->name,
                                                 m->message) <= 0
                                    )
                                 {

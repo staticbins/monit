@@ -58,54 +58,20 @@ int main(void) {
         }
         printf("=> Test1: OK\n\n");
 
-        printf("=> Test2: random data generator\n");
-        {
-                srandom((unsigned)(Time_now() + getpid()));
-                //
-                printf("\tnumber:   %llu\n", System_randomNumber());
-                //
-                printf("\t1  byte:  ");
-                char buf0[1];
-                assert(System_random(buf0, sizeof(buf0)));
-                for (size_t i = 0; i < sizeof(buf0); i++) {
-                        printf("%x", buf0[i]);
-                }
-                printf("\n");
-                //
-                printf("\t4  bytes: ");
-                char buf1[4];
-                assert(System_random(buf1, sizeof(buf1)));
-                for (size_t i = 0; i < sizeof(buf1); i++) {
-                        printf("%x", buf1[i]);
-                }
-                printf("\n");
-                //
-                printf("\t16 bytes: ");
-                char buf2[16];
-                assert(System_random(buf2, sizeof(buf2)));
-                for (size_t i = 0; i < sizeof(buf2); i++) {
-                        printf("%x", buf2[i]);
-                }
-                printf("\n");
-                //
-                assert(System_randomNumber() != System_randomNumber());
-        }
-        printf("=> Test2: OK\n\n");
-
-        printf("=> Test3: check System_error\n");
+        printf("=> Test2: check System_error\n");
         {
                 System_error("\thello %s (%d)(%ld)\n", "world", 1, 2L);
                 Bootstrap_setErrorHandler(_handler);
                 System_error("\tyellow %s (%d)(%ld)\n", "submarine", 5, 6L);
         }
-        printf("=> Test3: OK\n\n");
+        printf("=> Test2: OK\n\n");
 
-        printf("=> Test4: check System_error\n");
+        printf("=> Test3: check System_error\n");
         {
                 Bootstrap_setAbortHandler(_handler);
                 System_abort("\tyellow %s (%d)(%ld)\n", "submarine", 5, 6L);
         }
-        printf("=> Test4: OK\n\n");
+        printf("=> Test3: OK\n\n");
 
         printf("============> System Tests: OK\n\n");
 
