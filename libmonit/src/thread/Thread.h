@@ -44,7 +44,7 @@
 
 
 /** @cond hidden */
-#define wrapper(F) do { \
+#define __trapper(F) do { \
         int status = (F); if (! (status == 0 || status==ETIMEDOUT)) \
         THROW(AssertException, "%s -- %s", #F, System_getError(status)); \
 } while (0)
@@ -88,7 +88,7 @@
  * @hideinitializer
  */
 #define Thread_create(thread, threadFunc, threadArgs) \
-        wrapper(pthread_create(&thread, NULL, threadFunc, (void*)threadArgs))
+        __trapper(pthread_create(&thread, NULL, threadFunc, (void*)threadArgs))
 /**
  * Returns the thread ID of the calling thread
  * @return The id of the calling thread
@@ -101,21 +101,21 @@
  * @exception AssertException If detaching the thread failed
  * @hideinitializer
  */
-#define Thread_detach(thread) wrapper(pthread_detach(thread))
+#define Thread_detach(thread) __trapper(pthread_detach(thread))
 /**
  * Cancel execution of a thread
  * @param thread The thread to cancel
  * @exception AssertException If thread cancellation failed
  * @hideinitializer
  */
-#define Thread_cancel(thread) wrapper(pthread_cancel(thread))
+#define Thread_cancel(thread) __trapper(pthread_cancel(thread))
 /**
  * Wait for thread termination
  * @param thread The thread to wait for
  * @exception AssertException If thread join failed
  * @hideinitializer
  */
-#define Thread_join(thread) wrapper(pthread_join(thread, NULL))
+#define Thread_join(thread) __trapper(pthread_join(thread, NULL))
 //@}
 /** @name Semaphore methods */
 //@{
@@ -125,7 +125,7 @@
  * @exception AssertException If initialization failed
  * @hideinitializer
  */
-#define Sem_init(sem) wrapper(pthread_cond_init(&sem, NULL))
+#define Sem_init(sem) __trapper(pthread_cond_init(&sem, NULL))
 /**
  * Wait on a semaphore
  * @param sem The semaphore to wait on
@@ -133,28 +133,28 @@
  * @exception AssertException If wait failed
  * @hideinitializer
  */
-#define Sem_wait(sem, mutex) wrapper(pthread_cond_wait(&sem, &(mutex)))
+#define Sem_wait(sem, mutex) __trapper(pthread_cond_wait(&sem, &(mutex)))
 /**
  * Unblock a thread waiting for a semaphore
  * @param sem The semaphore to signal
  * @exception AssertException If signal failed
  * @hideinitializer
  */
-#define Sem_signal(sem) wrapper(pthread_cond_signal(&sem))
+#define Sem_signal(sem) __trapper(pthread_cond_signal(&sem))
 /**
  * Unblock all threads waiting for a semaphore
  * @param sem The semaphore to broadcast
  * @exception AssertException If broadcast failed
  * @hideinitializer
  */
-#define Sem_broadcast(sem) wrapper(pthread_cond_broadcast(&sem))
+#define Sem_broadcast(sem) __trapper(pthread_cond_broadcast(&sem))
 /**
  * Destroy a semaphore
  * @param sem The semaphore to destroy
  * @exception AssertException If destroy failed
  * @hideinitializer
  */
-#define Sem_destroy(sem) wrapper(pthread_cond_destroy(&sem))
+#define Sem_destroy(sem) __trapper(pthread_cond_destroy(&sem))
 /**
  * Wait on a semaphore for a specific amount of time. During the wait
  * the mutex is unlocked and reacquired afterwards
@@ -165,7 +165,7 @@
  * @hideinitializer
  */
 #define Sem_timeWait(sem, mutex, time) \
-        wrapper(pthread_cond_timedwait(&sem, &(mutex), &time))
+        __trapper(pthread_cond_timedwait(&sem, &(mutex), &time))
 //@}
 /** @name Mutex methods */
 //@{
@@ -175,28 +175,28 @@
  * @exception AssertException If initialization failed
  * @hideinitializer
  */
-#define Mutex_init(mutex) wrapper(pthread_mutex_init(&(mutex), NULL))
+#define Mutex_init(mutex) __trapper(pthread_mutex_init(&(mutex), NULL))
 /**
  * Destroy a the given mutex
  * @param mutex The mutex to destroy
  * @exception AssertException If destroy failed
  * @hideinitializer
  */
-#define Mutex_destroy(mutex) wrapper(pthread_mutex_destroy(&(mutex)))
+#define Mutex_destroy(mutex) __trapper(pthread_mutex_destroy(&(mutex)))
 /**
  * Locks a mutex
  * @param mutex The mutex to lock
  * @exception AssertException If mutex lock failed
  * @hideinitializer
  */
-#define Mutex_lock(mutex) wrapper(pthread_mutex_lock(&(mutex)))
+#define Mutex_lock(mutex) __trapper(pthread_mutex_lock(&(mutex)))
 /**
  * Unlocks a mutex
  * @param mutex The mutex to unlock
  * @exception AssertException If mutex unlock failed
  * @hideinitializer
  */
-#define Mutex_unlock(mutex) wrapper(pthread_mutex_unlock(&(mutex)))
+#define Mutex_unlock(mutex) __trapper(pthread_mutex_unlock(&(mutex)))
 /**
  * Defines a block of code to execute after the given mutex is locked
  * @param mutex The mutex to lock
@@ -217,35 +217,35 @@
  * @exception AssertException If initialization failed
  * @hideinitializer
  */
-#define Lock_init(lock) wrapper(pthread_rwlock_init(&(lock), NULL))
+#define Lock_init(lock) __trapper(pthread_rwlock_init(&(lock), NULL))
 /**
  * Destroy a read/write lock
  * @param lock The lock to destroy
  * @exception AssertException If destroy failed
  * @hideinitializer
  */
-#define Lock_destroy(lock) wrapper(pthread_rwlock_destroy(&(lock)))
+#define Lock_destroy(lock) __trapper(pthread_rwlock_destroy(&(lock)))
 /**
  * Acquire a read/write lock for reading
  * @param lock A read/write lock
  * @exception AssertException If failed
  * @hideinitializer
  */
-#define Lock_read(lock) wrapper(pthread_rwlock_rdlock(&(lock)))
+#define Lock_read(lock) __trapper(pthread_rwlock_rdlock(&(lock)))
 /**
  * Acquire a read/write lock for writing
  * @param lock A read/write lock
  * @exception AssertException If failed
  * @hideinitializer
  */
-#define Lock_write(lock) wrapper(pthread_rwlock_wrlock(&(lock)))
+#define Lock_write(lock) __trapper(pthread_rwlock_wrlock(&(lock)))
 /**
  * Release a read/write lock
  * @param lock A read/write lock
  * @exception AssertException If failed
  * @hideinitializer
  */
-#define Lock_unlock(lock) wrapper(pthread_rwlock_unlock(&(lock)))
+#define Lock_unlock(lock) __trapper(pthread_rwlock_unlock(&(lock)))
 /**
  * Defines a block of code to execute after the given read locked is acquired
  * @param lock The read lock
@@ -277,7 +277,7 @@
  * @exception AssertException If thread data creation failed
  * @hideinitializer
  */
-#define ThreadData_create(key) wrapper(pthread_key_create(&(key), NULL))
+#define ThreadData_create(key) __trapper(pthread_key_create(&(key), NULL))
 /**
  * Sets a thread-specific data value. The key is of type ThreadData_T
  * @param key The ThreadData_T key to set a new value for
@@ -285,7 +285,7 @@
  * @exception AssertException If setting thread data failed
  * @hideinitializer
  */
-#define ThreadData_set(key, value) wrapper(pthread_setspecific((key), (value)))
+#define ThreadData_set(key, value) __trapper(pthread_setspecific((key), (value)))
 /**
  * Gets a thread-specific data value
  * @param key The ThreadData_T key
