@@ -32,6 +32,8 @@ Fixed: When the monit ID is generated in first start and the system is shut down
 file was stored to the filesystem, an empty monitid file may be created. Thanks to Alexander Dahl
 for fix.
 
+Fixed: The SSL connection can be sporadically interrupted.
+
 
 Version 5.33.0
 

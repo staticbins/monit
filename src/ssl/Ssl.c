@@ -608,6 +608,7 @@ void Ssl_close(T C) {
         bool retry = false;
         int timeout = Run.limits.networkTimeout;
         do {
+                ERR_clear_error();
                 int rv = SSL_shutdown(C->handler);
                 if (rv == 0) {
                         // close notify sent
@@ -644,6 +645,7 @@ void Ssl_connect(T C, int socket, int timeout, const char *name) {
         _setServerNameIdentification(C, name);
         bool retry = false;
         do {
+                ERR_clear_error();
                 int rv = SSL_connect(C->handler);
                 if (rv < 0) {
                         switch (SSL_get_error(C->handler, rv)) {
@@ -676,6 +678,7 @@ int Ssl_write(T C, const void *b, int size, int timeout) {
         if (size > 0) {
                 bool retry = false;
                 do {
+                        ERR_clear_error();
                         switch (SSL_get_error(C->handler, (n = SSL_write(C->handler, b, size)))) {
                                 case SSL_ERROR_NONE:
                                 case SSL_ERROR_ZERO_RETURN:
@@ -717,6 +720,7 @@ int Ssl_read(T C, void *b, int size, int timeout) {
         if (size > 0) {
                 bool retry = false;
                 do {
+                        ERR_clear_error();
                         switch (SSL_get_error(C->handler, (n = SSL_read(C->handler, b, size)))) {
                                 case SSL_ERROR_NONE:
                                 case SSL_ERROR_ZERO_RETURN:
@@ -989,6 +993,7 @@ bool SslServer_accept(T C, int socket, int timeout) {
         SSL_set_fd(C->handler, C->socket);
         bool retry = false;
         do {
+                ERR_clear_error();
                 int rv = SSL_accept(C->handler);
                 if (rv < 0) {
                         switch (SSL_get_error(C->handler, rv)) {
