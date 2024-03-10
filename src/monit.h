@@ -155,7 +155,8 @@ typedef enum {
         Run_Stopped              = 0x400,                          /**< Stop Monit */
         Run_DoReload             = 0x800,                        /**< Reload Monit */
         Run_DoWakeup             = 0x1000,                       /**< Wakeup Monit */
-        Run_Batch                = 0x2000                      /**< CLI batch mode */
+        Run_DoChild              = 0x2000,                     /**< Handle SIGCHLD */
+        Run_Batch                = 0x4000                      /**< CLI batch mode */
 } __attribute__((__packed__)) Run_Flags;
 
 
@@ -1472,5 +1473,6 @@ int  check_URL(Service_T s);
 void status_xml(StringBuffer_T, Event_T, int, const char *);
 bool  do_wakeupcall(void);
 bool interrupt(void);
+void do_children(void);
 
 #endif
