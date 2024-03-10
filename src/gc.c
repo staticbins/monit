@@ -184,8 +184,6 @@ static void _gc_service_list(Service_T *s) {
 static void _gc_service(Service_T *s) {
         assert(s&&*s);
         if ((*s)->program) {
-                if ((*s)->program->P)
-                        Process_free(&(*s)->program->P);
                 if ((*s)->program->C)
                         Command_free(&(*s)->program->C);
                 if ((*s)->program->args)
