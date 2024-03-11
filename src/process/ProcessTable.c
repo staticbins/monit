@@ -176,7 +176,6 @@ static pid_t _match(T P, regex_t *regex) {
         assert(P);
         pid_t pid = -1;
         int found = 0;
-        signal_block(SIGCHLD);
         LOCK(P->mutex)
         {
                 for (int i = 0; i < P->size ; i++) {
@@ -205,7 +204,6 @@ static pid_t _match(T P, regex_t *regex) {
                 }
         }
         END_LOCK;
-        signal_unblock(SIGCHLD);
         return pid;
 }
 
@@ -330,7 +328,6 @@ void ProcessTable_free(T *P) {
 bool ProcessTable_update(T P) {
         assert(P);
         bool result;
-        signal_block(SIGCHLD);
         LOCK(P->mutex)
         {
                 result = _updateProcessTable(P);
@@ -338,7 +335,6 @@ bool ProcessTable_update(T P) {
                         _delete(P->table, &P->size);
         }
         END_LOCK;
-        signal_unblock(SIGCHLD);
         return result;
 }
 
@@ -347,26 +343,22 @@ bool ProcessTable_update(T P) {
 // It should not do any i/o or stuff that might block
 void ProcessTable_map(T P, void (*apply)(process_t process, void *ap), void *ap) {
         assert(P);
-        signal_block(SIGCHLD);
         LOCK(P->mutex)
         {
                 _map(P, apply, ap);
         }
         END_LOCK;
-        signal_unblock(SIGCHLD);
 }
 
 
 time_t ProcessTable_uptime(T P, pid_t pid) {
         time_t t = 0;
-        signal_block(SIGCHLD);
         LOCK(P->mutex)
         {
                 process_t p = _find(P, pid);
                 if (p) t = p->uptime;
         }
         END_LOCK;
-        signal_unblock(SIGCHLD);
         return t;
 }
 
@@ -381,14 +373,12 @@ static int (*_sort[])(const void *x, const void *y) = {
 // It should not do any i/o or stuff that might block
 void ProcessTable_sort(T P, ProcessTableSort_Type func, void (*apply)(process_t process, void *ap), void *ap) {
         assert(P);
-        signal_block(SIGCHLD);
         LOCK(P->mutex)
         {
                 qsort(P->table, P->size, sizeof(struct process_t), _sort[func]);
                 _map(P, apply, ap);
         }
         END_LOCK;
-        signal_unblock(SIGCHLD);
 }
 
 
@@ -399,13 +389,11 @@ void ProcessTable_setProcess(T P, Process_T process) {
         assert(P);
         assert(process);
         Process_T p = NULL;
-        signal_block(SIGCHLD);
         LOCK(P->mutex)
         {
                 p = Array_put(P->cache, Process_pid(process), process);
         }
         END_LOCK;
-        signal_unblock(SIGCHLD);
         if (p) {
                 // In the very unlikely case that a process already exist with
                 // the same pid, we detach and free the process, unless it's
@@ -423,13 +411,11 @@ void ProcessTable_setProcess(T P, Process_T process) {
 Process_T ProcessTable_getProcess(T P, pid_t pid) {
         assert(P);
         Process_T p = NULL;
-        signal_block(SIGCHLD);
         LOCK(P->mutex)
         {
                 p = Array_get(P->cache, pid);
         }
         END_LOCK;
-        signal_unblock(SIGCHLD);
         return p;
 }
 
@@ -439,13 +425,11 @@ Process_T ProcessTable_findProcess(T P, const char *name) {
         assert(P);
         assert(name);
         Process_T p = NULL;
-        signal_block(SIGCHLD);
         LOCK(P->mutex)
         {
                 p = Array_find(P->cache, _compareName, (void*)name);
         }
         END_LOCK;
-        signal_unblock(SIGCHLD);
         return p;
 }
 
@@ -453,13 +437,11 @@ Process_T ProcessTable_findProcess(T P, const char *name) {
 Process_T ProcessTable_removeProcess(T P, pid_t pid) {
         assert(P);
         Process_T p = NULL;
-        signal_block(SIGCHLD);
         LOCK(P->mutex)
         {
                 p = Array_remove(P->cache, pid);
         }
         END_LOCK;
-        signal_unblock(SIGCHLD);
         return p;
 }
 
@@ -517,7 +499,6 @@ bool ProcessTable_updateServiceProcess(T P, Service_T s, pid_t pid) {
         struct process_t process = {.pid = -1};
         // Minimize table lock to things that might change, then do a value copy of the struct
         // which can safely be used without locking
-        signal_block(SIGCHLD);
         LOCK(P->mutex)
         {
                 process_t t = _find(P, pid);
@@ -527,7 +508,6 @@ bool ProcessTable_updateServiceProcess(T P, Service_T s, pid_t pid) {
                 }
         }
         END_LOCK;
-        signal_unblock(SIGCHLD);
         if (process.pid != -1) {
                 /* save the previous ppid and set actual one */
                 s->inf.process->_ppid             = s->inf.process->ppid;

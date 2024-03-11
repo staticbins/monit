@@ -155,7 +155,8 @@ typedef enum {
         Run_Stopped              = 0x400,                          /**< Stop Monit */
         Run_DoReload             = 0x800,                        /**< Reload Monit */
         Run_DoWakeup             = 0x1000,                       /**< Wakeup Monit */
-        Run_Batch                = 0x2000                      /**< CLI batch mode */
+        Run_DoChild              = 0x2000,                     /**< Handle SIGCHLD */
+        Run_Batch                = 0x4000                      /**< CLI batch mode */
 } __attribute__((__packed__)) Run_Flags;
 
 
@@ -1460,8 +1461,6 @@ void init_env(void);
 void monit_http(Httpd_Action);
 bool can_http(void);
 void set_signal_block(void);
-void signal_block(int sig);
-void signal_unblock(int sig);
 State_Type check_process(Service_T);
 State_Type check_filesystem(Service_T);
 State_Type check_file(Service_T);
@@ -1475,5 +1474,6 @@ int  check_URL(Service_T s);
 void status_xml(StringBuffer_T, Event_T, int, const char *, Mmonit_T);
 bool  do_wakeupcall(void);
 bool interrupt(void);
+void do_children(void);
 
 #endif

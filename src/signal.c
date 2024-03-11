@@ -83,19 +83,3 @@ void set_signal_block(void) {
         pthread_sigmask(SIG_BLOCK, &mask, NULL);
 }
 
-
-void signal_block(int sig) {
-        sigset_t mask;
-        sigemptyset(&mask);
-        sigaddset(&mask, sig);
-        pthread_sigmask(SIG_BLOCK, &mask, NULL);
-}
-
-
-void signal_unblock(int sig) {
-        sigset_t mask;
-        sigemptyset(&mask);
-        sigaddset(&mask, sig);
-        pthread_sigmask(SIG_UNBLOCK, &mask, NULL);
-}
-
