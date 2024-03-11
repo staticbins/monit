@@ -1570,7 +1570,6 @@ int validate(void) {
                                 gettimeofday(&s->collected, NULL);
                         }
                 }
-                do_children();
         }
         return errors;
 }

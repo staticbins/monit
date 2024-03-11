@@ -419,22 +419,6 @@ static void do_reinit(bool full) {
 }
 
 
-void do_children(void) {
-        if (Run.flags & Run_DoChild) {
-                Run.flags &= ~Run_DoChild;
-
-                pid_t pid;
-                int status;
-                while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-                        Process_T P = ProcessTable_getProcess(Process_Table, pid);
-                        if (P) {
-                                Process_setExitStatus(P, status);
-                        }
-                }
-        }
-}
-
-
 static bool _isMemberOfGroup(Service_T s, ServiceGroup_T g) {
         for (list_t m = g->members->head; m; m = m->next) {
                 Service_T member = m->e;
@@ -661,8 +645,6 @@ reload:
                         /* In the case that there is no pending action then sleep */
                         if (! (Run.flags & Run_ActionPending) && ! interrupt())
                                 sleep(Run.polltime);
-
-                        do_children();
 
                         if (Run.flags & Run_DoWakeup) {
                                 Run.flags &= ~Run_DoWakeup;
@@ -1017,5 +999,12 @@ static void handle_wakeup(__attribute__ ((unused)) int sig) {
 
 // Signal handler for child processes exit
 static void handle_wait(__attribute__ ((unused)) int sig) {
-        Run.flags |= Run_DoChild;
+        pid_t pid;
+        int status;
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+                Process_T P = ProcessTable_getProcess(Process_Table, pid);
+                if (P) {
+                        Process_setExitStatus(P, status);
+                }
+        }
 }
