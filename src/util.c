@@ -656,23 +656,29 @@ void Util_printRunList(void) {
                 Mmonit_T c;
                 printf(" %-18s = ", "M/Monit(s)");
                 for (c = Run.mmonits; c; c = c->next) {
-                        printf("%s with timeout %s", c->url->url, Fmt_time2str(c->timeout, (char[11]){}));
+                        printf("%s\n", c->url->url);
+                        printf("                    =     with timeout %s\n", Fmt_time2str(c->timeout, (char[11]){}));
 #ifdef HAVE_OPENSSL
                         if (c->ssl.flags) {
-                                printf(" using TLS");
+                                printf("                    =     using TLS");
                                 const char *options = Ssl_printOptions(&c->ssl, (char[STRLEN]){}, STRLEN);
                                 if (options && *options)
                                         printf(" with options {%s}", options);
                                 if (c->ssl.checksum)
                                         printf(" and certificate checksum %s equal to '%s'", Checksum_Names[c->ssl.checksumType], c->ssl.checksum);
+                                printf("\n");
                         }
 #endif
                         if (Run.flags & Run_MmonitCredentials && c->url->user)
-                                printf(" with credentials");
+                                printf("                    =     with credentials\n");
+                        if (c->hostgroups) {
+                                for (list_t g = c->hostgroups->head; g; g = g->next) {
+                                        printf("                    =     hostgroup \"%s\"\n", (const char *)g->e);
+                                }
+                        }
                         if (c->next)
-                               printf(",\n                    = ");
+                                printf("                    = ");
                 }
-                printf("\n");
         }
 
         if (Run.mailservers) {
