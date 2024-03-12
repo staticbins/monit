@@ -4466,6 +4466,17 @@ The program status (exit value).
 
 =back
 
+The following environment variables can be used for debugging:
+
+=item SSLKEYLOGFILE
+
+To debug the SSL/TLS connections, Monit supports the SSLKEYLOGFILE=<path>
+environment variable in debug mode (with the -v option). The log file can
+be used with Wireshark to decrypt the SSL/TLS communication (set the path
+to the logfile in Wireshark's "Settings -> Protocols -> TLS -> (Pre)-Master-Secret log filename".
+
+=back
+
 
 =head1 SIGNALS
 
