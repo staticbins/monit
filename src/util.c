@@ -672,9 +672,12 @@ void Util_printRunList(void) {
                         if (Run.flags & Run_MmonitCredentials && c->url->user)
                                 printf("                    =     with credentials\n");
                         if (c->hostgroups) {
+                                int hostgroups = 0;
+                                printf("                    =     with hostgroups [");
                                 for (list_t g = c->hostgroups->head; g; g = g->next) {
-                                        printf("                    =     hostgroup \"%s\"\n", (const char *)g->e);
+                                        printf("%s\"%s\"", hostgroups++ ? ", " : "", (const char *)g->e);
                                 }
+                                printf("]\n");
                         }
                         if (c->next)
                                 printf("                    = ");

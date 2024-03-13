@@ -109,7 +109,6 @@ wws            [ \r\t;,()]+
 number         [0-9]+
 real           [0-9]+([.][0-9]+)?
 str            [^\000-\041@:{}"';(),%]+
-hostgroup      [^\000-\037"';,%]+
 address        [^\000-\041<>{}\[\]]+
 addrname       [^\000-\037@<>{}\[\]]+
 hostname       {str}(\.{str})*
@@ -576,9 +575,9 @@ group[ \t]+       {
                     return GROUP;
                   }
 
-hostgroup[ \t]+   {
+"hostgroups"{ws}  {
                     BEGIN(HOSTGROUP_COND);
-                    return HOSTGROUP;
+                    return '[';
                   }
 
 "http headers"{ws} {
@@ -930,30 +929,36 @@ hostgroup[ \t]+   {
 
 <HOSTGROUP_COND>{
 
-  {hostgroup}     {
-                    yylval.string = Str_dup(yytext);
-                    BEGIN(INITIAL);
-                    save_arg();
-                    return HOSTGROUPNAME;
-                  }
+        {wws}   ;
 
-  \"{hostgroup}\" {
-                    yylval.string = handle_quoted_string(yytext);
-                    BEGIN(INITIAL);
-                    save_arg();
-                    return HOSTGROUPNAME;
-                  }
+        "["     ;
 
-  \'{hostgroup}\' {
-                    yylval.string = handle_quoted_string(yytext);
-                    BEGIN(INITIAL);
-                    save_arg();
-                    return HOSTGROUPNAME;
-                  }
+        [\n]    {
+                        lineno++;
+                }
 
-  [\"\']          {
-                      yyerror("unbalanced quotes");
-                  }
+        ([^\r\n\[\] \t,]+) {
+                        yylval.string = Str_dup(yytext);
+                        save_arg();
+                        return HOSTGROUPNAME;
+                }
+
+        (({ws}?["][^"]+["])|({ws}?['][^']+['])) {
+                        yylval.string = Str_cat("%s", Str_unquote(yytext + 1));
+                        save_arg();
+                        return HOSTGROUPNAME;
+                }
+
+        "]"     {
+                        BEGIN(INITIAL);
+                        save_arg();
+                        return ']';
+                }
+
+        .       {
+                        BEGIN(INITIAL);
+                        yyerror("invalid hostgroup list format");
+                }
 
 }
 

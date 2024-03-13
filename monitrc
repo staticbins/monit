@@ -108,9 +108,9 @@ set log syslog
 #
 # set mmonit
 #     http://monit:monit@192.168.1.10:8080/collector
-#     # with timeout 30 seconds              # Default timeout is 5 seconds
-#     # and register without credentials     # Don't register credentials
-#     # hostgroup "Virtual machines"         # Member of M/Monit hostgroup
+#     # with timeout 30 seconds                     # Default timeout is 5 seconds
+#     # and register without credentials            # Don't register credentials
+#     # with hostgroups [ "Virtual machines", Web ] # Member of M/Monit hostgroup
 #
 #
 ## Monit by default uses the following format for alerts if the mail-format
