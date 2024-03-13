@@ -162,6 +162,7 @@ static int session_id_context = 1;
 
 #ifdef HAVE_SSL_CTX_SET_KEYLOG_CALLBACK
 static FILE *keylog = NULL;
+static const char *keylogName = NULL;
 #endif
 
 
@@ -179,30 +180,34 @@ static void _keylogClose(void) {
 
 
 // If the SSLKEYLOGFILE environment variable is set, open the keylog file, to be used with Wireshark for TLS debugging
-static void _keylogOpen(void) {
-        if (! keylog) {
-                const char *name = getenv("SSLKEYLOGFILE");
-                if (name) {
-                        mode_t savemask = umask(0077);
-                        keylog = fopen(name, "a");
-                        umask(savemask);
-                        if (! keylog) {
-                                Log_error("Cannot open the key log file '%s' -- %s\n", name, STRERROR);
-                                return;
-                        } else {
-                                atexit(_keylogClose);
-                                fprintf(keylog, "# TLS material log file for Monit Wireshark debugging\n");
-                                fflush(keylog);
-                        }
-                }
+static bool _keylogOpen(void) {
+        if (keylog) {
+                // Open already
+                return true;
         }
+
+        if (keylogName) {
+                // Open the file if SSLKEYLOGFILE is set
+                mode_t savemask = umask(0077);
+                keylog = fopen(keylogName, "a");
+                umask(savemask);
+                if (! keylog) {
+                        Log_error("Cannot open the key log file '%s' -- %s\n", keylogName, STRERROR);
+                        return false;
+                }
+
+                atexit(_keylogClose);
+                fprintf(keylog, "# TLS material log file for Monit Wireshark debugging\n");
+                fflush(keylog);
+                return true;
+        }
+        return false;
 }
 
 
 // Keylog callback for OpenSSL
 static void _keylogWrite(const SSL *ssl, const char *line) {
-        if (ssl && STR_DEF(line)) {
-                _keylogOpen();
+        if (ssl && keylog && STR_DEF(line)) {
                 fprintf(keylog, "%s\n", line);
                 fflush(keylog);
         }
@@ -211,7 +216,7 @@ static void _keylogWrite(const SSL *ssl, const char *line) {
 
 // Enable the keylog callback
 static void _keylogSet(SSL_CTX *ctx) {
-        if (Run.debug)
+        if (Run.debug && _keylogOpen())
                 SSL_CTX_set_keylog_callback(ctx, _keylogWrite);
 }
 #endif
@@ -570,6 +575,9 @@ void Ssl_start(void) {
                 RAND_load_file(RANDOM_DEVICE, RANDOM_BYTES);
         else
                 THROW(AssertException, "SSL: cannot find %s nor %s on the system", URANDOM_DEVICE, RANDOM_DEVICE);
+#ifdef HAVE_SSL_CTX_SET_KEYLOG_CALLBACK
+        keylogName = getenv("SSLKEYLOGFILE");
+#endif
 }
 
 
