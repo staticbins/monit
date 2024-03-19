@@ -372,7 +372,7 @@ if [[ $(uname) == "Darwin" ]]; then
     $CC -mmacosx-version-min=10.15 -o t t.c || AC_MSG_ERROR([Could not compile test program])
 
     # Extract the minos value using otool
-    min_macos_version=$(otool -l t | egrep minos | awk '{print $2}')
+    min_macos_version=$(otool -l t | awk '/minos/{print $2}')
 
     # Clean up the test files
     rm -f t.c t
