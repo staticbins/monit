@@ -1582,9 +1582,35 @@ int validate(void) {
  */
 State_Type check_process(Service_T s) {
         assert(s);
-        State_Type rv = State_Succeeded;
+        pid_t pid = 0;
         bool checkResources = false;
-        pid_t pid = ProcessTable_findServiceProcess(s);
+        State_Type rv = State_Succeeded;
+        Process_T P = ProcessTable_getProcess(Process_Table, s->inf.process->pid);
+        // Did Monit start the Process?
+        if (P) {
+                pid = Process_pid(P);
+                if (! Process_isRunning(P)) {
+                        // The Process was started, but failed to stay up. There are 2 reasons, either
+                        // the process failed in its initialization phase or it failed later from some
+                        // error. If we run in debug mode, which we typically do in the first case,
+                        // grab any output from the Process to make it easier to debug the cause.
+                        if (Run.debug) {
+                                StringBuffer_T err = StringBuffer_create(STRLEN);
+                                _programOutput(Process_errorStream(P), err);
+                                _programOutput(Process_inputStream(P), err);
+                                DEBUG("Process '%s' failed to run -- %s\n", s->name, StringBuffer_toString(err));
+                                StringBuffer_free(&err);
+                        }
+                        ProcessTable_removeProcess(Process_Table, pid);
+                        Process_free(&P);
+                        pid = 0;
+                }
+        }
+        // No, get the pid from the pid-file or from a name match
+        else {
+                
+                pid = ProcessTable_findServiceProcess(s);
+        }
         if (! pid) {
                 for (NonExist_T l = s->nonexistlist; l; l = l->next) {
                         rv = State_Failed;

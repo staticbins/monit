@@ -72,13 +72,16 @@
  */
 
 
+// TODO: Refactor all attempts to wait on anything. Instead continous check
+// should be handled non-blocking in the validate state-machine
+
 /* ------------------------------------------------------------- Definitions */
 
 
 typedef enum {
         Process_Stopped = 0,
         Process_Started
-} __attribute__((__packed__)) Process_Status;
+} Process_Status;
 
 
 #define RETRY_INTERVAL 100000 // 100ms
@@ -87,7 +90,7 @@ typedef enum {
 /* ----------------------------------------------------------------- Private */
 
 
-// TODO: Remove If Command_execute returns a process it did start
+// TODO: Remove, will be replaced by state-machine
 static Process_Status _waitProcessStart(Service_T s, long long *timeout) {
         long wait = RETRY_INTERVAL;
         do {
@@ -105,6 +108,7 @@ static Process_Status _waitProcessStart(Service_T s, long long *timeout) {
 }
 
 
+// TODO: Remove, will be replaced by state-machine
 static Process_Status _waitProcessStop(int pid, long long *timeout) {
         do {
                 Time_usleep(RETRY_INTERVAL);
@@ -116,6 +120,7 @@ static Process_Status _waitProcessStop(int pid, long long *timeout) {
 }
 
 
+// TODO: Remove, will be replaced by state-machine
 static State_Type _check(Service_T s) {
         assert(s);
         State_Type rv = State_Succeeded;

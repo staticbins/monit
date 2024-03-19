@@ -309,7 +309,7 @@ T ProcessTable_new(void) {
         if (!_buildProcessTable(P)) {
                 ProcessTable_free(&P);
         } else {
-                P->cache = Array_new(1024);
+                P->cache = Array_new(263);
         }
         return P;
 }
@@ -327,14 +327,11 @@ void ProcessTable_free(T *P) {
 
 bool ProcessTable_update(T P) {
         assert(P);
-        bool result;
-        LOCK(P->mutex)
-        {
-                result = _updateProcessTable(P);
-                if (!result)
-                        _delete(P->table, &P->size);
-        }
-        END_LOCK;
+        Mutex_lock(P->mutex);
+        bool result = _updateProcessTable(P);
+        if (!result)
+                _delete(P->table, &P->size);
+        Mutex_unlock(P->mutex);
         return result;
 }
 
@@ -466,6 +463,9 @@ pid_t ProcessTable_findServiceProcess(Service_T s) {
                         return s->inf.process->pid;
         }
         // If the cached PID is not running, scan for the process in the shared Process Table
+        
+        // TODO: Update Process_T with correct pid from match or from pid-file.
+        // TODO: If pid-file is older than system boottime, ignore the pid
         if (s->matchlist) {
                 if (Run.flags & Run_ProcessEngineEnabled) {
                         assert(Process_Table);
