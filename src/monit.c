@@ -419,10 +419,9 @@ static void do_reinit(bool full) {
 }
 
 
-void do_children(void) {
-        if (Run.flags & Run_DoChild) {
-                Run.flags &= ~Run_DoChild;
-
+void do_wait(void) {
+        if (Run.flags & Run_DoWait) {
+                Run.flags &= ~Run_DoWait;
                 pid_t pid;
                 int status;
                 while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
@@ -662,7 +661,7 @@ reload:
                         if (! (Run.flags & Run_ActionPending) && ! interrupt())
                                 sleep(Run.polltime);
 
-                        do_children();
+                        do_wait();
 
                         if (Run.flags & Run_DoWakeup) {
                                 Run.flags &= ~Run_DoWakeup;
@@ -1017,5 +1016,5 @@ static void handle_wakeup(__attribute__ ((unused)) int sig) {
 
 // Signal handler for child processes exit
 static void handle_wait(__attribute__ ((unused)) int sig) {
-        Run.flags |= Run_DoChild;
+        Run.flags |= Run_DoWait;
 }

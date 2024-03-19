@@ -202,6 +202,12 @@
 		521ECE3821D85CFE00F8045E /* Fmt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Fmt.c; sourceTree = "<group>"; };
 		521ECE3B21D85EC100F8045E /* FmtTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FmtTest.c; sourceTree = "<group>"; };
 		522539AC18B91092003EB002 /* THIRDPARTY */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = THIRDPARTY; sourceTree = "<group>"; };
+		52683EBC2BA9A7B600EE1910 /* ArrayTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ArrayTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		52683EBD2BA9A7B600EE1910 /* OutputStreamTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = OutputStreamTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		52683EBE2BA9A7B600EE1910 /* InputStreamTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = InputStreamTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		52683EBF2BA9A7B600EE1910 /* SystemTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SystemTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		52683EC02BA9A7B600EE1910 /* FileTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FileTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		52683EC12BA9A7B600EE1910 /* RandomTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = RandomTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5274580B13A1009C00C422FE /* bootstrap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = bootstrap; sourceTree = "<group>"; };
 		5274580C13A1009C00C422FE /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; lineEnding = 0; path = configure.ac; sourceTree = "<group>"; };
 		5274580D13A1009C00C422FE /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
@@ -226,15 +232,9 @@
 		529D79B61A59EBFA003C3931 /* TimeTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TimeTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		529D79B71A59EBFA003C3931 /* StrTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = StrTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		52A31C821A6531D8009D3D83 /* libmonit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmonit.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		52C149D22B738C0B004CE8B0 /* ArrayTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ArrayTest; sourceTree = BUILT_PRODUCTS_DIR; };
-		52C149D32B738C0B004CE8B0 /* OutputStreamTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = OutputStreamTest; sourceTree = BUILT_PRODUCTS_DIR; };
-		52C149D42B738C0B004CE8B0 /* InputStreamTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = InputStreamTest; sourceTree = BUILT_PRODUCTS_DIR; };
-		52C149D52B738C0B004CE8B0 /* SystemTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SystemTest; sourceTree = BUILT_PRODUCTS_DIR; };
-		52C149D62B738C0B004CE8B0 /* FileTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FileTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		52C149D72B73957C004CE8B0 /* Random.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Random.h; sourceTree = "<group>"; };
 		52C149D82B73957C004CE8B0 /* Random.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Random.c; sourceTree = "<group>"; };
 		52C149D92B73970C004CE8B0 /* RandomTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = RandomTest.c; sourceTree = "<group>"; };
-		52C149E62B739FDB004CE8B0 /* RandomTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = RandomTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		52D7964A13A6CE560014CED2 /* Bootstrap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = Bootstrap.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52D7964B13A6CE560014CED2 /* Bootstrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Bootstrap.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		52D7964C13A6CE560014CED2 /* Config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = Config.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -411,12 +411,12 @@
 				5274583A13A1009C00C422FE /* test */,
 				52A31C831A6531DF009D3D83 /* Products */,
 				52F8BB431ECE55D60007DF91 /* Frameworks */,
-				52C149D22B738C0B004CE8B0 /* ArrayTest */,
-				52C149D32B738C0B004CE8B0 /* OutputStreamTest */,
-				52C149D42B738C0B004CE8B0 /* InputStreamTest */,
-				52C149D52B738C0B004CE8B0 /* SystemTest */,
-				52C149D62B738C0B004CE8B0 /* FileTest */,
-				52C149E62B739FDB004CE8B0 /* RandomTest */,
+				52683EBC2BA9A7B600EE1910 /* ArrayTest */,
+				52683EBD2BA9A7B600EE1910 /* OutputStreamTest */,
+				52683EBE2BA9A7B600EE1910 /* InputStreamTest */,
+				52683EBF2BA9A7B600EE1910 /* SystemTest */,
+				52683EC02BA9A7B600EE1910 /* FileTest */,
+				52683EC12BA9A7B600EE1910 /* RandomTest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -560,7 +560,7 @@
 			);
 			name = SystemTest;
 			productName = CommandTest;
-			productReference = 52C149D52B738C0B004CE8B0 /* SystemTest */;
+			productReference = 52683EBF2BA9A7B600EE1910 /* SystemTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		522A76DF2B50CB6400B9584B /* FileTest */ = {
@@ -578,7 +578,7 @@
 			);
 			name = FileTest;
 			productName = CommandTest;
-			productReference = 52C149D62B738C0B004CE8B0 /* FileTest */;
+			productReference = 52683EC02BA9A7B600EE1910 /* FileTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		522FF2F0192E700200C62A13 /* TimeTest */ = {
@@ -649,7 +649,7 @@
 			);
 			name = RandomTest;
 			productName = CommandTest;
-			productReference = 52C149E62B739FDB004CE8B0 /* RandomTest */;
+			productReference = 52683EC12BA9A7B600EE1910 /* RandomTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		52CEBC422B4F3F9400FEDE7B /* ArrayTest */ = {
@@ -667,7 +667,7 @@
 			);
 			name = ArrayTest;
 			productName = CommandTest;
-			productReference = 52C149D22B738C0B004CE8B0 /* ArrayTest */;
+			productReference = 52683EBC2BA9A7B600EE1910 /* ArrayTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		52ECF8062B50C79300F9C4DF /* OutputStreamTest */ = {
@@ -685,7 +685,7 @@
 			);
 			name = OutputStreamTest;
 			productName = CommandTest;
-			productReference = 52C149D32B738C0B004CE8B0 /* OutputStreamTest */;
+			productReference = 52683EBD2BA9A7B600EE1910 /* OutputStreamTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		52ECF8132B50C88400F9C4DF /* InputStreamTest */ = {
@@ -703,7 +703,7 @@
 			);
 			name = InputStreamTest;
 			productName = CommandTest;
-			productReference = 52C149D42B738C0B004CE8B0 /* InputStreamTest */;
+			productReference = 52683EBE2BA9A7B600EE1910 /* InputStreamTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		52FDD6A7189C2036008E3D5E /* CommandTest */ = {
@@ -731,7 +731,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1520;
+				LastUpgradeCheck = 1530;
 				ORGANIZATIONNAME = "Tildeslash Ltd.";
 			};
 			buildConfigurationList = 52A12C2513A0FFAB00C6CEB7 /* Build configuration list for PBXProject "libmonit" */;
@@ -1106,6 +1106,7 @@
 		52A12C2D13A0FFAB00C6CEB7 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(HOST_ARCH)";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -1154,6 +1155,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Debug;
@@ -1161,6 +1163,7 @@
 		52A12C2E13A0FFAB00C6CEB7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(HOST_ARCH)";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -1204,6 +1207,8 @@
 					$SRCROOT/src/util,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Release;

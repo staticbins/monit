@@ -6,7 +6,7 @@ AC_PREREQ([2.53])
 # Note: in  case of beta subversion, use underscore "_" rather then dash "-"
 # since RPM doesn't allow dash in Version
 # Example: 5.0_beta2
-AC_INIT([monit], [5.34.0], [monit-general@nongnu.org])
+AC_INIT([monit], [6.0.0], [monit-general@nongnu.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
@@ -398,17 +398,32 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_C_CONST
 AC_C_BIGENDIAN
-# Define _GNU_SOURCE so we can have Posix headers etc included. We use the
-# -std=cXX compiler switch which only include a minimum of C headers
-CFLAGS="$CFLAGS -D_GNU_SOURCE"
+
+if test `uname` != "Darwin"
+then
+        # Define _GNU_SOURCE so we can have Posix headers etc included. We use the
+        # -std=cXX compiler switch which only include a minimum of C headers
+        CFLAGS="$CFLAGS -D_GNU_SOURCE"
+else
+        # Instead of -D_GNU_SOURCE, on Darwin use -D_DARWIN_C_SOURCE -D_POSIX_C_SOURCE=200809L
+        CFLAGS="$CFLAGS -D_DARWIN_C_SOURCE -D_POSIX_C_SOURCE=200809L"
+fi
 
 # Compiler; tune warnings
 CFLAGS="$CFLAGS -Wall -Wunused ";
 
-# Require at least C99 and use C11 if available
+# Require C11
 AC_COMPUTE_INT([STDC_VERSION],[__STDC_VERSION__],,[STDC_VERSION=0])
-AS_IF([test "$STDC_VERSION" -ge 201112],[CFLAGS="$CFLAGS -std=c11"],[CFLAGS="$CFLAGS -std=c99"])
+AS_IF([test "$STDC_VERSION" -ge 201112],
+        [CFLAGS="$CFLAGS -std=c11"],
+        [AC_MSG_ERROR([Your compiler does not support C11])]
+)
+
+# Check for C99 headers
 AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
+
+# Check for C11 atomic operations support
+AC_CHECK_HEADERS([stdatomic.h], [], [AC_MSG_ERROR([toolchain does not support C11 atomic operations])])
 
 
 # ------------------------------------------------------------------------

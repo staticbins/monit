@@ -55,6 +55,7 @@
 /* ----------------------------------------------------------- Definitions */
 
 
+#ifndef HAVE_ARC4RANDOM_BUF
 static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 
 
@@ -62,6 +63,7 @@ static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 
 
 static void _seed_once(void) { srandom((unsigned)(Time_now() + getpid())); }
+#endif
 
 
 /* ---------------------------------------------------------------- Public */
