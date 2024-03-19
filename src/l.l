@@ -85,7 +85,7 @@ typedef enum {
         Program_State,
         Net_State,
         None_State
-} __attribute__((__packed__)) Check_State;
+} Check_State;
 
 static Check_State check_state = None_State;
 

@@ -30,7 +30,7 @@
 typedef enum {
         Socket_Tcp = SOCK_STREAM,
         Socket_Udp = SOCK_DGRAM
-} __attribute__((__packed__)) Socket_Type;
+} Socket_Type;
 
 
 typedef enum {
@@ -38,7 +38,7 @@ typedef enum {
         Socket_Ip,      // IP, version not specified (IPv4 or IPv6)
         Socket_Ip4,     // IPv4 only
         Socket_Ip6      // IPv6 only
-} __attribute__((__packed__)) Socket_Family;
+} Socket_Family;
 
 
 /**

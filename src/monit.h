@@ -157,19 +157,19 @@ typedef enum {
         Run_DoWakeup             = 0x1000,                       /**< Wakeup Monit */
         Run_DoWait              = 0x2000,                     /**< Handle SIGCHLD */
         Run_Batch                = 0x4000                      /**< CLI batch mode */
-} __attribute__((__packed__)) Run_Flags;
+} Run_Flags;
 
 
 typedef enum {
         ProcessEngine_None               = 0x0,
         ProcessEngine_CollectCommandLine = 0x1
-} __attribute__((__packed__)) ProcessEngine_Flags;
+} ProcessEngine_Flags;
 
 
 typedef enum {
         Httpd_Start = 1,
         Httpd_Stop
-} __attribute__((__packed__)) Httpd_Action;
+} Httpd_Action;
 
 
 typedef enum {
@@ -178,7 +178,7 @@ typedef enum {
         Every_SkipCycles,
         Every_Cron,
         Every_NotInCron
-} __attribute__((__packed__)) Every_Type;
+} Every_Type;
 
 
 typedef enum {
@@ -188,7 +188,7 @@ typedef enum {
         State_ChangedNot = 0x4,
         State_Init       = 0x8,
         State_None       = State_Init // Alias
-} __attribute__((__packed__)) State_Type;
+} State_Type;
 
 
 typedef enum {
@@ -199,7 +199,7 @@ typedef enum {
         Operator_Equal,
         Operator_NotEqual,
         Operator_Changed
-} __attribute__((__packed__)) Operator_Type;
+} Operator_Type;
 
 
 typedef enum {
@@ -207,7 +207,7 @@ typedef enum {
         Timestamp_Access,
         Timestamp_Change,
         Timestamp_Modification
-} __attribute__((__packed__)) Timestamp_Type;
+} Timestamp_Type;
 
 
 typedef enum {
@@ -218,13 +218,13 @@ typedef enum {
         Httpd_UnixGid                     = 0x8,  // Unix socket: override GID
         Httpd_UnixPermission              = 0x10, // Unix socket: override permissions
         Httpd_Signature                   = 0x20  // Server Signature enabled
-} __attribute__((__packed__)) Httpd_Flags;
+} Httpd_Flags;
 
 
 typedef enum {
         Http_Head = 1,
         Http_Get
-} __attribute__((__packed__)) Http_Method;
+} Http_Method;
 
 
 typedef enum {
@@ -233,7 +233,7 @@ typedef enum {
         Time_Hour   = 3600,
         Time_Day    = 86400,
         Time_Month  = 2678400
-} __attribute__((__packed__)) Time_Type;
+} Time_Type;
 
 
 typedef enum {
@@ -245,20 +245,20 @@ typedef enum {
         Action_Unmonitor,
         Action_Start,
         Action_Monitor
-} __attribute__((__packed__)) Action_Type;
+} Action_Type;
 
 
 typedef enum {
         Monitor_Active = 0,
         Monitor_Passive
-} __attribute__((__packed__)) Monitor_Mode;
+} Monitor_Mode;
 
 
 typedef enum {
         Onreboot_Start = 0,
         Onreboot_Nostart,
         Onreboot_Laststate
-} __attribute__((__packed__)) Onreboot_Type;
+} Onreboot_Type;
 
 
 typedef enum {
@@ -266,14 +266,14 @@ typedef enum {
         Monitor_Yes     = 0x1,
         Monitor_Init    = 0x2,
         Monitor_Waiting = 0x4
-} __attribute__((__packed__)) Monitor_State;
+} Monitor_State;
 
 
 typedef enum {
         Connection_Failed = 0,
         Connection_Ok,
         Connection_Init
-} __attribute__((__packed__)) Connection_State;
+} Connection_State;
 
 
 typedef enum {
@@ -287,7 +287,7 @@ typedef enum {
         Service_Program,
         Service_Net,
         Service_Last = Service_Net
-} __attribute__((__packed__)) Service_Type;
+} Service_Type;
 
 
 typedef enum {
@@ -328,7 +328,7 @@ typedef enum {
         Resource_LoadAveragePerCore5m,
         Resource_LoadAveragePerCore15m,
         Resource_HardLink                   // Used by check file, fifo and directory
-} __attribute__((__packed__)) Resource_Type;
+} Resource_Type;
 
 
 
@@ -337,7 +337,7 @@ typedef enum {
         Digest_Crypt,
         Digest_Md5,
         Digest_Pam
-} __attribute__((__packed__)) Digest_Type;
+} Digest_Type;
 
 
 typedef enum {
@@ -345,7 +345,7 @@ typedef enum {
         Unit_Kilobyte = 1024,
         Unit_Megabyte = 1048576,
         Unit_Gigabyte = 1073741824
-} __attribute__((__packed__)) Unit_Type;
+} Unit_Type;
 
 
 typedef enum {
@@ -353,7 +353,7 @@ typedef enum {
         Hash_Md5,
         Hash_Sha1,
         Hash_Default = Hash_Md5
-} __attribute__((__packed__)) Hash_Type;
+} Hash_Type;
 
 
 typedef enum {
@@ -361,14 +361,14 @@ typedef enum {
         Handler_Alert     = 0x1,
         Handler_Mmonit    = 0x2,
         Handler_Max       = Handler_Mmonit
-} __attribute__((__packed__)) Handler_Type;
+} Handler_Type;
 
 
 typedef enum {
         MmonitCompress_Init = 0,
         MmonitCompress_No,
         MmonitCompress_Yes
-} __attribute__((__packed__)) MmonitCompress_Type;
+} MmonitCompress_Type;
 
 
 typedef enum {
@@ -384,7 +384,7 @@ typedef enum {
         Statistics_FiledescriptorsPerSystem     = 0x200,
         Statistics_FiledescriptorsPerProcess    = 0x400,
         Statistics_FiledescriptorsPerProcessMax = 0x800
-} __attribute__((__packed__)) Statistics_Flags;
+} Statistics_Flags;
 
 
 /* Length of the longest message digest in bytes */

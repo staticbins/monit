@@ -88,7 +88,7 @@ typedef enum {
         MTA_StartTLS  = 0x1,
         MTA_AuthPlain = 0x2,
         MTA_AuthLogin = 0x4
-} __attribute__((__packed__)) MTA_Flags;
+} MTA_Flags;
 
 
 typedef enum {
@@ -102,7 +102,7 @@ typedef enum {
         SMTP_DataBegin,
         SMTP_DataCommit,
         SMTP_Quit
-} __attribute__((__packed__)) SMTP_State;
+} SMTP_State;
 
 
 #define T SMTP_T

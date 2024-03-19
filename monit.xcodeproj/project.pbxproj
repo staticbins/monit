@@ -140,6 +140,13 @@
 			remoteGlobalIDString = 522FF2F9192E700200C62A13;
 			remoteInfo = TimeTest;
 		};
+		52683ED32BA9E20400EE1910 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 52683EC12BA9A7B600EE1910;
+			remoteInfo = RandomTest;
+		};
 		52CCD89E2B521967004DB685 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
@@ -309,7 +316,7 @@
 		52F6E76F13A74F220023F87A /* monit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = monit.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		52F6E77013A74F220023F87A /* net.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = net.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E77113A74F220023F87A /* net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = net.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		52F6E77213A74F220023F87A /* p.y */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.yacc; lineEnding = 0; path = p.y; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.simpleColoring; };
+		52F6E77213A74F220023F87A /* p.y */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.yacc; lineEnding = 0; path = p.y; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.yacc; };
 		52F6E77513A74F220023F87A /* process_sysdep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = process_sysdep.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		52F6E77613A74F220023F87A /* sysdep_AIX.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_AIX.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		52F6E77713A74F220023F87A /* sysdep_DARWIN.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = sysdep_DARWIN.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
@@ -616,6 +623,7 @@
 				52CCD8A32B521967004DB685 /* InputStreamTest */,
 				52CCD8A52B521967004DB685 /* SystemTest */,
 				52CCD8A72B521967004DB685 /* FileTest */,
+				52683ED42BA9E20400EE1910 /* RandomTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -924,40 +932,53 @@
 			remoteRef = 524981EC194B368C004A50DB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		52683ED42BA9E20400EE1910 /* RandomTest */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			name = RandomTest;
+			path = "/Users/hauk/src/monit-branches/monit-dev/libmonit/build/Debug/RandomTest";
+			remoteRef = 52683ED32BA9E20400EE1910 /* PBXContainerItemProxy */;
+			sourceTree = "<absolute>";
+		};
 		52CCD89F2B521967004DB685 /* ArrayTest */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
-			path = ArrayTest;
+			name = ArrayTest;
+			path = "/Users/hauk/src/monit-branches/monit-dev/libmonit/build/Debug/ArrayTest";
 			remoteRef = 52CCD89E2B521967004DB685 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
+			sourceTree = "<absolute>";
 		};
 		52CCD8A12B521967004DB685 /* OutputStreamTest */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
-			path = OutputStreamTest;
+			name = OutputStreamTest;
+			path = "/Users/hauk/src/monit-branches/monit-dev/libmonit/build/Debug/OutputStreamTest";
 			remoteRef = 52CCD8A02B521967004DB685 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
+			sourceTree = "<absolute>";
 		};
 		52CCD8A32B521967004DB685 /* InputStreamTest */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
-			path = InputStreamTest;
+			name = InputStreamTest;
+			path = "/Users/hauk/src/monit-branches/monit-dev/libmonit/build/Debug/InputStreamTest";
 			remoteRef = 52CCD8A22B521967004DB685 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
+			sourceTree = "<absolute>";
 		};
 		52CCD8A52B521967004DB685 /* SystemTest */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
-			path = SystemTest;
+			name = SystemTest;
+			path = "/Users/hauk/src/monit-branches/monit-dev/libmonit/build/Debug/SystemTest";
 			remoteRef = 52CCD8A42B521967004DB685 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
+			sourceTree = "<absolute>";
 		};
 		52CCD8A72B521967004DB685 /* FileTest */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
-			path = FileTest;
+			name = FileTest;
+			path = "/Users/hauk/src/monit-branches/monit-dev/libmonit/build/Debug/FileTest";
 			remoteRef = 52CCD8A62B521967004DB685 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
+			sourceTree = "<absolute>";
 		};
 		52DDC12A13C59D46003AA75C /* libmonit.a */ = {
 			isa = PBXReferenceProxy;
