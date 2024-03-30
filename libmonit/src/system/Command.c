@@ -566,15 +566,15 @@ void Process_setName(Process_T P, const char *name) {
 }
 
 
-void Process_terminate(Process_T P) {
+bool Process_terminate(Process_T P) {
         assert(P);
-        kill(P->pid, SIGTERM);
+        return (kill(P->pid, SIGTERM) == 0);
 }
 
 
-void Process_kill(Process_T P) {
+bool Process_kill(Process_T P) {
         assert(P);
-        kill(P->pid, SIGKILL);
+        return (kill(P->pid, SIGKILL) == 0);
 }
 
 

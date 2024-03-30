@@ -219,8 +219,10 @@ void Process_detach(T P);
  * it a termination signal (SIGTERM). Note that SIGTERM can be ignored
  * or blocked by a process
  * @param P A Process object
+ * @return True if signaling the sub-process succeed, otherwise false
+ * and errno is set to indicate the error
  */
-void Process_terminate(T P);
+bool Process_terminate(T P);
 
 
 /**
@@ -228,8 +230,10 @@ void Process_terminate(T P);
  * it a termination signal (SIGKILL). While SIGTERM may be blocked
  * by a process, SIGKILL cannot be blocked and will kill the process
  * @param P A Process object
+ * @return True if signaling the sub-process succeed, otherwise false
+ * and errno is set to indicate the error
  */
-void Process_kill(T P);
+bool Process_kill(T P);
 
 
 #undef T

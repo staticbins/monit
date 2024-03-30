@@ -53,7 +53,7 @@ static void onTerminate(Process_T P) {
         assert(P);
         printf("\tTest terminate subprocess ((pid=%d)\n", Process_pid(P));
         assert(Process_isRunning(P));
-        Process_terminate(P);
+        assert(Process_terminate(P));
         printf("\tProcess exited with status: %d\n", Process_waitFor(P));
         assert(Process_exitStatus(P) == SIGTERM);
         Process_free(&P);
@@ -64,7 +64,7 @@ static void onKill(Process_T P) {
         assert(P);
         printf("\tTest kill subprocess ((pid=%d)\n", Process_pid(P));
         assert(Process_isRunning(P));
-        Process_kill(P);
+        assert(Process_kill(P));
         printf("\tProcess exited with status: %d\n", Process_waitFor(P));
         assert(Process_exitStatus(P) == SIGKILL);
         Process_free(&P);
