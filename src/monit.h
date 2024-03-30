@@ -139,24 +139,25 @@
 #define SSL_TIMEOUT        15000
 #define SMTP_TIMEOUT       30000
 
+// The default service check interval unless specified with
+// 'set interval n' is 5 seconds
+#define DEFAULT_CHECK_INTERVAL   5
 
-//FIXME: refactor Run_Flags to bit field
+
 typedef enum {
-        Run_Once                 = 0x1,                   /**< Run Monit only once */
-        Run_Foreground           = 0x2,                 /**< Don't daemonize Monit */ //FIXME: cleanup: Run_Foreground and Run_Daemon are mutually exclusive => no need for 2 flags
-        Run_Daemon               = 0x4,                       /**< Daemonize Monit */ //FIXME: cleanup: Run_Foreground and Run_Daemon are mutually exclusive => no need for 2 flags
-        Run_Log                  = 0x8,                           /**< Log enabled */
-        Run_UseSyslog            = 0x10,                           /**< Use syslog */ //FIXME: cleanup: no need for standalone flag ... if syslog is enabled, don't set Run.files.log, then (Run.flags&Run_Log && ! Run.files.log => syslog)
-        Run_FipsEnabled          = 0x20,                 /** FIPS-140 mode enabled */
-        Run_HandlerInit          = 0x40,    /**< The handlers queue initialization */
-        Run_ProcessEngineEnabled = 0x80,    /**< Process monitoring engine enabled */
-        Run_ActionPending        = 0x100,              /**< Service action pending */
-        Run_MmonitCredentials    = 0x200,      /**< Should set M/Monit credentials */
-        Run_Stopped              = 0x400,                          /**< Stop Monit */
-        Run_DoReload             = 0x800,                        /**< Reload Monit */
-        Run_DoWakeup             = 0x1000,                       /**< Wakeup Monit */
-        Run_DoWait              = 0x2000,                     /**< Handle SIGCHLD */
-        Run_Batch                = 0x4000                      /**< CLI batch mode */
+        Run_Daemon               = 0x1,    /**< Daemonize Monit. Not setting this flag means run interactive in forground */
+        Run_Log                  = 0x2,    /**< Log enabled */
+        Run_UseSyslog            = 0x4,    /**< Use syslog */
+        Run_FipsEnabled          = 0x8,    /**< FIPS-140 mode enabled */
+        Run_HandlerInit          = 0x10,   /**< The handlers queue initialization */
+        Run_ProcessEngineEnabled = 0x20,   /**< Process monitoring engine enabled */
+        Run_ActionPending        = 0x40,   /**< Service action pending */
+        Run_MmonitCredentials    = 0x80,   /**< Should set M/Monit credentials */
+        Run_Stopped              = 0x100,  /**< Stop Monit */
+        Run_DoReload             = 0x200,  /**< Reload Monit */
+        Run_DoWakeup             = 0x400,  /**< Wakeup Monit */
+        Run_DoReap               = 0x800,  /**< Handle SIGCHLD */
+        Run_Batch                = 0x1000  /**< CLI batch mode */
 } Run_Flags;
 
 
@@ -1448,7 +1449,7 @@ void Log_vdebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)))
 void Log_abort_handler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
 void Log_close(void);
 void validate_init(void);
-int  validate(void);
+int  validate(time_t);
 void daemonize(void);
 void gc(void);
 void gc_mail_list(Mail_T *);
@@ -1474,6 +1475,6 @@ int  check_URL(Service_T s);
 void status_xml(StringBuffer_T, Event_T, int, const char *, Mmonit_T);
 bool  do_wakeupcall(void);
 bool interrupt(void);
-void do_wait(void);
+void do_reap(void);
 
 #endif

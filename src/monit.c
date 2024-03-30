@@ -215,16 +215,6 @@ bool interrupt(void) {
 /* ----------------------------------------------------------------- Private */
 
 
-static void _validateOnce(void) {
-        if (State_open()) {
-                State_restore();
-                validate();
-                State_save();
-                State_close();
-        }
-}
-
-
 /**
  * Initialize this application - Register signal handlers,
  * Parse the control file and initialize the program's
@@ -419,16 +409,13 @@ static void do_reinit(bool full) {
 }
 
 
-void do_wait(void) {
-        if (Run.flags & Run_DoWait) {
-                Run.flags &= ~Run_DoWait;
-                pid_t pid;
-                int status;
-                while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-                        Process_T P = ProcessTable_getProcess(Process_Table, pid);
-                        if (P) {
-                                Process_setExitStatus(P, status);
-                        }
+void do_reap(void) {
+        pid_t pid;
+        int status;
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+                Process_T P = ProcessTable_getProcess(Process_Table, pid);
+                if (P) {
+                        Process_setExitStatus(P, status);
                 }
         }
 }
@@ -459,8 +446,6 @@ static bool _hasParentInTheSameGroup(Service_T s, ServiceGroup_T g) {
  */
 static void do_action(List_T arguments) {
         char *action = List_pop(arguments);
-
-        Run.flags |= Run_Once;
 
         if (! action) {
                 do_default();
@@ -534,8 +519,6 @@ static void do_action(List_T arguments) {
                 if (do_wakeupcall()) {
                         char *service = List_pop(arguments);
                         HttpClient_status(Run.mygroup, service);
-                } else {
-                        _validateOnce();
                 }
                 exit(1);
         } else {
@@ -551,7 +534,7 @@ static void do_action(List_T arguments) {
 static void do_exit(bool saveState) {
         set_signal_block();
         Run.flags |= Run_Stopped;
-        if ((Run.flags & Run_Daemon) && ! (Run.flags & Run_Once)) {
+        if ((Run.flags & Run_Daemon)) {
                 if (can_http())
                         monit_http(Httpd_Stop);
 
@@ -581,103 +564,100 @@ static void do_exit(bool saveState) {
 
 /**
  * Default action - become a daemon if defined in the Run object and
- * run validate() between sleeps. If not, just run validate() once.
- * Also, if specified, start the monit http server if in daemon mode.
+ * run validate() between sleeps. Also, if specified, start the monit
+ * http server
  */
 static void do_default(void) {
-        if (Run.flags & Run_Daemon) {
-                if (do_wakeupcall())
-                        exit(0);
-
-                Run.flags &= ~Run_Once;
-                if (can_http()) {
-                        if (Run.httpd.flags & Httpd_Net)
-                                Log_info("Starting Monit %s daemon with http interface at [%s]:%d\n", VERSION, Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "*", Run.httpd.socket.net.port);
-                        else if (Run.httpd.flags & Httpd_Unix)
-                                Log_info("Starting Monit %s daemon with http interface at %s\n", VERSION, Run.httpd.socket.unix.path);
-                } else {
-                        Log_info("Starting Monit %s daemon\n", VERSION);
-                }
-
-                if (! (Run.flags & Run_Foreground)) {
-                        if (getpid() == 1) {
-                                Log_error("Error: Monit is running as process 1 (init) and cannot daemonize\n"
-                                          "Please start monit with the -I option to avoid seeing this error\n");
-                        } else {
-                                daemonize();
-                        }
-                }
-
-                if (! file_createPidFile(Run.files.pid)) {
-                        Log_error("Monit daemon died\n");
-                        exit(1);
-                }
-
-                if (! State_open())
-                        exit(1);
-                State_restore();
-
-                atexit(file_finalize);
-
-reload:
-                if (Run.startdelay) {
-                        if (State_reboot()) {
-                                time_t now = Time_monotonic();
-                                time_t delay = now + Run.startdelay;
-
-                                Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
-
-                                /* sleep can be interrupted by signal => make sure we paused long enough */
-                                while (now < delay) {
-                                        sleep((unsigned int)(delay - now));
-                                        if (Run.flags & Run_Stopped) {
-                                                do_exit(false);
-                                        } else if (Run.flags & Run_DoReload) {
-                                                do_reinit(false);
-                                                goto reload;
-                                        }
-                                        now = Time_monotonic();
-                                }
-                        } else {
-                                DEBUG("Monit delay %ds skipped -- the system boot time has not changed since last Monit start\n", Run.startdelay);
-                        }
-                }
-
-                if (can_http())
-                        monit_http(Httpd_Start);
-
-                /* send the monit startup notification */
-                Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
-
-                if (Run.mmonits) {
-                        Thread_create(Heartbeat_Thread, do_heartbeat, NULL);
-                        isHeartbeatRunning = true;
-                }
-
-                while (true) {
-                        validate();
-
-                        /* In the case that there is no pending action then sleep */
-                        if (! (Run.flags & Run_ActionPending) && ! interrupt())
-                                sleep(Run.polltime);
-
-                        do_wait();
-
-                        if (Run.flags & Run_DoWakeup) {
-                                Run.flags &= ~Run_DoWakeup;
-                                Log_info("Awakened by User defined signal 1\n");
-                        }
-
-                        if (Run.flags & Run_Stopped) {
-                                do_exit(true);
-                        } else if (Run.flags & Run_DoReload) {
-                                do_reinit(true);
-                        } else {
-                                State_saveIfDirty();
-                        }
-                }
+        if (exist_daemon())
+                exit(0);
+        
+        if (can_http()) {
+                if (Run.httpd.flags & Httpd_Net)
+                        Log_info("Starting Monit %s daemon with http interface at [%s]:%d\n", VERSION, Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "*", Run.httpd.socket.net.port);
+                else if (Run.httpd.flags & Httpd_Unix)
+                        Log_info("Starting Monit %s daemon with http interface at %s\n", VERSION, Run.httpd.socket.unix.path);
         } else {
-                _validateOnce();
+                Log_info("Starting Monit %s daemon\n", VERSION);
+        }
+        
+        if ((Run.flags & Run_Daemon)) {
+                if (getpid() == 1) {
+                        Log_error("Error: Monit is running as process 1 (init) and cannot daemonize\n"
+                                  "Please start monit with the -I option to avoid seeing this error\n");
+                } else {
+                        daemonize();
+                }
+        }
+        
+        if (! file_createPidFile(Run.files.pid)) {
+                Log_error("Monit daemon died\n");
+                exit(1);
+        }
+        
+        if (! State_open())
+                exit(1);
+        State_restore();
+        
+        atexit(file_finalize);
+        
+reload:
+        if (Run.startdelay) {
+                if (State_reboot()) {
+                        time_t now = Time_monotonic();
+                        time_t delay = now + Run.startdelay;
+                        
+                        Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
+                        
+                        /* sleep can be interrupted by signal => make sure we paused long enough */
+                        while (now < delay) {
+                                sleep((unsigned int)(delay - now));
+                                if (Run.flags & Run_Stopped) {
+                                        do_exit(false);
+                                } else if (Run.flags & Run_DoReload) {
+                                        do_reinit(false);
+                                        goto reload;
+                                }
+                                now = Time_monotonic();
+                        }
+                } else {
+                        DEBUG("Monit delay %ds skipped -- the system boot time has not changed since last Monit start\n", Run.startdelay);
+                }
+        }
+        
+        if (can_http())
+                monit_http(Httpd_Start);
+        
+        /* send the monit startup notification */
+        Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
+        
+        if (Run.mmonits) {
+                Thread_create(Heartbeat_Thread, do_heartbeat, NULL);
+                isHeartbeatRunning = true;
+        }
+        
+        while (true) {
+                time_t start = Time_monotonic();
+                validate(start);
+                // Handle signals
+                if (Run.flags & Run_DoReap) {
+                        Run.flags &= ~Run_DoReap;
+                        do_reap();
+                }
+                if (Run.flags & Run_DoWakeup) {
+                        Run.flags &= ~Run_DoWakeup;
+                        Log_info("Awakened by User defined signal 1\n");
+                }
+                if (Run.flags & Run_Stopped) {
+                        do_exit(true);
+                } else if (Run.flags & Run_DoReload) {
+                        do_reinit(true);
+                } else {
+                        State_saveIfDirty();
+                }
+                // If there is no pending action and we have time from our second, usleep
+                if (! (Run.flags & Run_ActionPending) && ! interrupt())
+                        sleep(Run.polltime);
+
         }
 }
 
@@ -787,7 +767,7 @@ static void do_options(int argc, char **argv, List_T arguments) {
                                 }
                                 case 'I':
                                 {
-                                        Run.flags |= Run_Foreground;
+                                        deferred_opt = 'I';
                                         break;
                                 }
                                 case 'i':
@@ -896,6 +876,11 @@ static void do_options(int argc, char **argv, List_T arguments) {
                         exit(0);
                         break;
                 }
+                case 'I':
+                {
+                        Run.flags &= ~Run_Daemon;
+                        break;
+                }
         }
 }
 
@@ -908,12 +893,12 @@ static void help(void) {
                "Usage: %s [options]+ [command]\n"
                "Options are as follows:\n"
                " -c file       Use this control file\n"
-               " -d n          Run as a daemon once per n seconds\n"
+               " -d n          Run as a daemon with default check interval 'n' seconds\n"
                " -g name       Set group name for monit commands\n"
                " -l logfile    Print log information to this file\n"
                " -p pidfile    Use this lock file in daemon mode\n"
                " -s statefile  Set the file monit should write state information to\n"
-               " -I            Do not run in background (needed when run from init)\n"
+               " -I            Do not run in background (needed when run from init or is init)\n"
                " --id          Print Monit's unique ID\n"
                " --resetid     Reset Monit's unique ID. Use with caution\n"
                " -B            Batch command line mode (do not output tables or colors)\n"
@@ -1016,5 +1001,5 @@ static void handle_wakeup(__attribute__ ((unused)) int sig) {
 
 // Signal handler for child processes exit
 static void handle_wait(__attribute__ ((unused)) int sig) {
-        Run.flags |= Run_DoWait;
+        Run.flags |= Run_DoReap;
 }

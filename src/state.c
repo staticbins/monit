@@ -330,7 +330,7 @@ static void _restoreV4(void) {
         State4_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && service->type == state.type) {
+                if (service && (int32_t)service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         switch (service->type) {
@@ -377,7 +377,7 @@ static void _restoreV3(void) {
         State3_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && service->type == state.type) {
+                if (service && (int32_t)service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         switch (service->type) {
@@ -419,7 +419,7 @@ static void _restoreV2(void) {
         State2_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && service->type == state.type) {
+                if (service && (int32_t)service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         switch (service->type) {
@@ -461,7 +461,7 @@ static void _restoreV1(void) {
         State1_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && service->type == state.type) {
+                if (service && (int32_t)service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         if (service->type == Service_File)

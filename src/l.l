@@ -225,6 +225,7 @@ cacertificatefile { return CACERTIFICATEFILE; }
 cacertificatepath { return CACERTIFICATEPATH; }
 set               { return SET; }
 daemon            { return DAEMON; }
+interval          { return INTERVAL; }
 delay             { return DELAY; }
 terminal          { return TERMINAL; }
 batch             { return BATCH; }

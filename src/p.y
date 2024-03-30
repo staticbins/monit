@@ -339,7 +339,7 @@ static void _sanityCheckEveryStatement(Service_T s);
 }
 
 %token IF ELSE THEN FAILED
-%token SET LOGFILE FACILITY DAEMON SYSLOG MAILSERVER HTTPD ALLOW REJECTOPT ADDRESS INIT TERMINAL BATCH
+%token SET LOGFILE FACILITY DAEMON INTERVAL SYSLOG MAILSERVER HTTPD ALLOW REJECTOPT ADDRESS INIT TERMINAL BATCH
 %token READONLY CLEARTEXT MD5HASH SHA1HASH CRYPT DELAY
 %token PEMFILE PEMKEY PEMCHAIN ENABLE DISABLE SSLTOKEN CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
 %token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL UP DOWN
@@ -393,9 +393,9 @@ statement_list  : statement
                 | statement_list statement
                 ;
 
-statement       : setalert
+statement       : setdaemon | setinterval
+                | setalert
                 | setssl
-                | setdaemon
                 | setterminal
                 | setlog
                 | seteventqueue
@@ -637,7 +637,19 @@ setalert        : SET alertmail formatlist reminder {
                   }
                 ;
 
+setinterval     : SET INTERVAL NUMBER startdelay {
+                        if (! (Run.flags & Run_Daemon) || ihp.daemon) {
+                                ihp.daemon     = true;
+                                Run.flags      |= Run_Daemon;
+                                Run.polltime   = $3;
+                                Run.startdelay = $<number>4;
+                        }
+                  }
+                ;
+
+// Deprecated
 setdaemon       : SET DAEMON NUMBER startdelay {
+                        yywarning("The 'set daemon' statement is deprecated. Use 'set interval' instead.");
                         if (! (Run.flags & Run_Daemon) || ihp.daemon) {
                                 ihp.daemon     = true;
                                 Run.flags      |= Run_Daemon;
@@ -661,7 +673,7 @@ startdelay      : /* EMPTY */ {
                 ;
 
 setinit         : SET INIT {
-                        Run.flags |= Run_Foreground;
+                        Run.flags &= ~Run_Daemon;
                   }
                 ;
 
@@ -3511,9 +3523,10 @@ static void postparse(void) {
                 current = NULL;
         }
 
-        /* Check that we do not start monit in daemon mode without having a poll time */
-        if (! Run.polltime && ((Run.flags & Run_Daemon) || (Run.flags & Run_Foreground))) {
-                Log_error("Poll time is invalid or not defined. Please define poll time in the control file\nas a number (> 0)  or use the -d option when starting monit\n");
+        /* Check that we do not start monit without having an interval time */
+        if (Run.polltime <= 0) {
+                Run.polltime = DEFAULT_CHECK_INTERVAL;
+                Log_warning("Interval time is invalid or not defined. Setting default service check interval to 5 seconds\n");
                 cfg_errflag++;
         }
 
