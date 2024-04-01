@@ -114,12 +114,12 @@ time_t Time_now(void);
 
 
 /**
- * Returns the monotonic time structure with various resolutions from
- * some unspecified starting point. This clock is not affected by NTP
+ * Returns a monotonic time at some unspecified starting point as a
+ * structure with various resolutions. This time is not affected by NTP
  * time jumps, but may change in frequency on platforms that don't
  * support CLOCK_MONOTONIC_RAW.
- * @return A time_monotonic_t structure with various resolutions since
- * the clock start.
+ * @return A time_monotonic_t structure with various resolutions of the
+ * time since the clock started.
  * @exception AssertException If time could not be obtained
  */
 struct time_monotonic_t {
