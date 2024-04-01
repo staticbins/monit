@@ -1537,11 +1537,12 @@ static bool _doScheduledAction(Service_T s) {
 
 
 /**
- *  This function contains the main check machinery for monit. The
- *  validate function check services in the service list to see if
- *  they will pass all defined tests.
+ * This function contains the main check machinery for monit and is
+ * responsible for driving the main non-blocking state-machine.
+ * Important: Nothing called from this function must block. Anything
+ * that _can_ block must be put on the Dispatcher thread-pool.
  */
-int validate(time_t monotonic) {
+int validate(void) {
         Run.handler_flag = Handler_Succeeded;
         Event_queue_process();
         

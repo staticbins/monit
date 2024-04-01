@@ -145,21 +145,21 @@
 
 
 typedef enum {
-        Run_Daemon               = 0x1,    /**< Daemonize Monit. Not setting this flag means run interactive in forground */
-        Run_Log                  = 0x2,    /**< Log enabled */
-        Run_UseSyslog            = 0x4,    /**< Use syslog */
-        Run_FipsEnabled          = 0x8,    /**< FIPS-140 mode enabled */
-        Run_HandlerInit          = 0x10,   /**< The handlers queue initialization */
-        Run_ProcessEngineEnabled = 0x20,   /**< Process monitoring engine enabled */
-        Run_ActionPending        = 0x40,   /**< Service action pending */
-        Run_MmonitCredentials    = 0x80,   /**< Should set M/Monit credentials */
-        Run_Stopped              = 0x100,  /**< Stop Monit */
-        Run_DoReload             = 0x200,  /**< Reload Monit */
-        Run_DoWakeup             = 0x400,  /**< Wakeup Monit */
-        Run_DoReap               = 0x800,  /**< Handle SIGCHLD */
-        Run_Batch                = 0x1000  /**< CLI batch mode */
+        Run_Daemon               = 0x1,    /**< Daemonize Monit */
+        Run_Foreground           = 0x2,    /**< Don't daemonize Monit. NB. We need both this flag and Run_Daemon */
+        Run_Log                  = 0x4,    /**< Log enabled */
+        Run_UseSyslog            = 0x8,    /**< Use syslog */
+        Run_FipsEnabled          = 0x10,   /**< FIPS-140 mode enabled */
+        Run_HandlerInit          = 0x20,   /**< The handlers queue initialization */
+        Run_ProcessEngineEnabled = 0x40,   /**< Process monitoring engine enabled */
+        Run_ActionPending        = 0x80,   /**< Service action pending */
+        Run_MmonitCredentials    = 0x100,  /**< Should set M/Monit credentials */
+        Run_Stopped              = 0x200,  /**< Stop Monit */
+        Run_DoReload             = 0x400,  /**< Reload Monit */
+        Run_DoWakeup             = 0x800,  /**< Wakeup Monit */
+        Run_DoReap               = 0x1000, /**< Handle SIGCHLD */
+        Run_Batch                = 0x2000  /**< CLI batch mode */
 } Run_Flags;
-
 
 typedef enum {
         ProcessEngine_None               = 0x0,
@@ -1449,7 +1449,7 @@ void Log_vdebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)))
 void Log_abort_handler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
 void Log_close(void);
 void validate_init(void);
-int  validate(time_t);
+int  validate(void);
 void daemonize(void);
 void gc(void);
 void gc_mail_list(Mail_T *);

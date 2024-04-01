@@ -114,13 +114,20 @@ time_t Time_now(void);
 
 
 /**
- * Returns the monotonic time since some unspecified starting point. This
- * clock is not affected by NTP time jumps, but may change in frequency
- * on platforms that don't support CLOCK_MONOTONIC_RAW.
- * @return A time_t representing the number of seconds since clock start.
+ * Returns the monotonic time structure with various resolutions from
+ * some unspecified starting point. This clock is not affected by NTP
+ * time jumps, but may change in frequency on platforms that don't
+ * support CLOCK_MONOTONIC_RAW.
+ * @return A time_monotonic_t structure with various resolutions since
+ * the clock start.
  * @exception AssertException If time could not be obtained
  */
-time_t Time_monotonic(void);
+struct time_monotonic_t {
+    time_t seconds;
+    long long milliseconds;
+    long long microseconds;
+    long long nanoseconds;
+} Time_monotonic(void);
 
 
 /**

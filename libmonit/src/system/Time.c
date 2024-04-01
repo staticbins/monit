@@ -1277,10 +1277,11 @@ time_t Time_now(void) {
 }
 
 
-time_t Time_monotonic(void) {
+struct time_monotonic_t Time_monotonic(void) {
+    struct time_monotonic_t tm;
 #ifdef HAVE_CLOCK_GETTIME
-	struct timespec t;
-        clockid_t clockid;
+    struct timespec t;
+    clockid_t clockid;
     #ifdef CLOCK_MONOTONIC_RAW
         clockid = CLOCK_MONOTONIC_RAW;
     #elif defined CLOCK_MONOTONIC
@@ -1288,13 +1289,23 @@ time_t Time_monotonic(void) {
     #else
         #error "clock_gettime() present but no monotonic clock available"
     #endif
-	if (clock_gettime(clockid, &t) != 0)
-                THROW(AssertException, "%s", System_lastError());
-	return t.tv_sec;
+    if (clock_gettime(clockid, &t) != 0)
+        THROW(AssertException, "%s", System_lastError());
+    tm.seconds = t.tv_sec;
+    tm.milliseconds = t.tv_sec * 1000LL + t.tv_nsec / 1000000LL;
+    tm.microseconds = t.tv_sec * 1000000LL + t.tv_nsec / 1000LL;
+    tm.nanoseconds = t.tv_sec * 1000000000LL + t.tv_nsec;
 #else
-        #warning "no monotonic clock available, fall back to gettimeofday"
-	return Time_now();
+    #warning "no monotonic clock available, fall back to gettimeofday"
+    struct timeval t;
+    if (gettimeofday(&t, NULL) != 0)
+        THROW(AssertException, "%s", System_lastError());
+    tm.seconds = t.tv_sec;
+    tm.milliseconds = t.tv_sec * 1000LL + t.tv_usec / 1000LL;
+    tm.microseconds = t.tv_sec * 1000000LL + t.tv_usec;
+    tm.nanoseconds = t.tv_sec * 1000000000LL + t.tv_usec * 1000LL; // Approximation
 #endif
+    return tm;
 }
 
 

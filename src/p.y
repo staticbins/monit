@@ -673,7 +673,7 @@ startdelay      : /* EMPTY */ {
                 ;
 
 setinit         : SET INIT {
-                        Run.flags &= ~Run_Daemon;
+                        Run.flags |= Run_Foreground;
                   }
                 ;
 

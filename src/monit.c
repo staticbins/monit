@@ -534,21 +534,19 @@ static void do_action(List_T arguments) {
 static void do_exit(bool saveState) {
         set_signal_block();
         Run.flags |= Run_Stopped;
-        if ((Run.flags & Run_Daemon)) {
-                if (can_http())
-                        monit_http(Httpd_Stop);
-
-                if (Run.mmonits && isHeartbeatRunning) {
-                        Sem_signal(Heartbeat_Cond);
-                        Thread_join(Heartbeat_Thread);
-                        isHeartbeatRunning = false;
-                }
-
-                Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
-
-                /* send the monit stop notification */
-                Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_STOP, "Monit %s stopped", VERSION);
+        if (can_http())
+                monit_http(Httpd_Stop);
+        
+        if (Run.mmonits && isHeartbeatRunning) {
+                Sem_signal(Heartbeat_Cond);
+                Thread_join(Heartbeat_Thread);
+                isHeartbeatRunning = false;
         }
+        
+        Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
+        
+        /* send the monit stop notification */
+        Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_STOP, "Monit %s stopped", VERSION);
         if (saveState) {
                 State_save();
         }
@@ -562,10 +560,24 @@ static void do_exit(bool saveState) {
 }
 
 
+/// If the delta between the start time and now is less than a second,
+/// put the main thread to sleep for the remaining micro seconds
+/// - Parameter start: A monotonic start time to compare against now
+static void do_delta_sleep(const struct time_monotonic_t *start) {
+        struct time_monotonic_t now = Time_monotonic();
+        time_t delta_seconds = now.seconds - start->seconds;
+        if (delta_seconds < 1) {
+                long delta_micro = (long)(now.microseconds - start->microseconds);
+                if (delta_micro > 0) {
+                        Time_usleep(delta_micro);
+                }
+        }
+}
+
+
 /**
  * Default action - become a daemon if defined in the Run object and
- * run validate() between sleeps. Also, if specified, start the monit
- * http server
+ * run validate(). Also, if specified, start the monit http server
  */
 static void do_default(void) {
         if (exist_daemon())
@@ -580,7 +592,7 @@ static void do_default(void) {
                 Log_info("Starting Monit %s daemon\n", VERSION);
         }
         
-        if ((Run.flags & Run_Daemon)) {
+        if (! (Run.flags & Run_Foreground)) {
                 if (getpid() == 1) {
                         Log_error("Error: Monit is running as process 1 (init) and cannot daemonize\n"
                                   "Please start monit with the -I option to avoid seeing this error\n");
@@ -603,14 +615,14 @@ static void do_default(void) {
 reload:
         if (Run.startdelay) {
                 if (State_reboot()) {
-                        time_t now = Time_monotonic();
-                        time_t delay = now + Run.startdelay;
+                        struct time_monotonic_t now = Time_monotonic();
+                        time_t delay = now.seconds + Run.startdelay;
                         
                         Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
                         
                         /* sleep can be interrupted by signal => make sure we paused long enough */
-                        while (now < delay) {
-                                sleep((unsigned int)(delay - now));
+                        while (now.seconds < delay) {
+                                sleep((unsigned int)(delay - now.seconds));
                                 if (Run.flags & Run_Stopped) {
                                         do_exit(false);
                                 } else if (Run.flags & Run_DoReload) {
@@ -635,9 +647,10 @@ reload:
                 isHeartbeatRunning = true;
         }
         
-        while (true) {
-                time_t start = Time_monotonic();
-                validate(start);
+        // The validate loop runs continously with sub-second resolution (optimally)
+       while (true) {
+                struct time_monotonic_t start = Time_monotonic();
+                validate();
                 // Handle signals
                 if (Run.flags & Run_DoReap) {
                         Run.flags &= ~Run_DoReap;
@@ -654,10 +667,9 @@ reload:
                 } else {
                         State_saveIfDirty();
                 }
-                // If there is no pending action and we have time from our second, usleep
-                if (! (Run.flags & Run_ActionPending) && ! interrupt())
-                        sleep(Run.polltime);
-
+               // If there are microseconds time left on a second,
+               // we usleep, otherwise we just continue
+                do_delta_sleep(&start);
         }
 }
 
@@ -767,7 +779,7 @@ static void do_options(int argc, char **argv, List_T arguments) {
                                 }
                                 case 'I':
                                 {
-                                        deferred_opt = 'I';
+                                        Run.flags |= Run_Foreground;
                                         break;
                                 }
                                 case 'i':
@@ -876,11 +888,6 @@ static void do_options(int argc, char **argv, List_T arguments) {
                         exit(0);
                         break;
                 }
-                case 'I':
-                {
-                        Run.flags &= ~Run_Daemon;
-                        break;
-                }
         }
 }
 
@@ -898,7 +905,7 @@ static void help(void) {
                " -l logfile    Print log information to this file\n"
                " -p pidfile    Use this lock file in daemon mode\n"
                " -s statefile  Set the file monit should write state information to\n"
-               " -I            Do not run in background (needed when run from init or is init)\n"
+               " -I            Do not run in background (needed when run from init or as init)\n"
                " --id          Print Monit's unique ID\n"
                " --resetid     Reset Monit's unique ID. Use with caution\n"
                " -B            Batch command line mode (do not output tables or colors)\n"
