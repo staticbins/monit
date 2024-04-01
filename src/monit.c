@@ -563,14 +563,13 @@ static void do_exit(bool saveState) {
 /// If the delta between the start time and now is less than a second,
 /// put the main thread to sleep for the remaining micro seconds
 /// - Parameter start: A monotonic start time to compare against now
-static void do_delta_sleep(const struct time_monotonic_t *start) {
+static void do_micro_nap(const struct time_monotonic_t *start) {
+        const long long sleep_target = 1000000LL; // Targeting 1 second period
         struct time_monotonic_t now = Time_monotonic();
-        time_t delta_seconds = now.seconds - start->seconds;
-        if (delta_seconds < 1) {
-                long delta_micro = (long)(now.microseconds - start->microseconds);
-                if (delta_micro > 0) {
-                        Time_usleep(delta_micro);
-                }
+        long long elapsed_microseconds = now.microseconds - start->microseconds;
+        if (elapsed_microseconds < sleep_target) {
+            long long sleep_microseconds = sleep_target - elapsed_microseconds;
+            Time_usleep(sleep_microseconds);
         }
 }
 
@@ -648,10 +647,8 @@ reload:
         }
         
         // The validate loop runs continously with sub-second resolution (optimally)
-       while (true) {
+        while (true) {
                 struct time_monotonic_t start = Time_monotonic();
-                validate();
-                // Handle signals
                 if (Run.flags & Run_DoReap) {
                         Run.flags &= ~Run_DoReap;
                         do_reap();
@@ -667,9 +664,8 @@ reload:
                 } else {
                         State_saveIfDirty();
                 }
-               // If there are microseconds time left on a second,
-               // we usleep, otherwise we just continue
-                do_delta_sleep(&start);
+                validate();
+                do_micro_nap(&start);
         }
 }
 

@@ -1616,13 +1616,16 @@ yy68:
 }
 
 
-void Time_usleep(long u) {
-#ifdef NETBSD
-        // usleep is broken on NetBSD (at least in version 5.1)
-        struct timespec t = {u / 1000000, (u % 1000000) * 1000};
-        nanosleep(&t, NULL);
-#else
-        usleep((useconds_t)u);
-#endif
+int Time_usleep(long long u) {
+        struct timespec req, rem;
+        req.tv_sec = u / 1000000LL;
+        req.tv_nsec = (u % 1000000LL) * 1000LL;
+        while (nanosleep(&req, &rem) == -1) {
+            if (errno == EINTR) {
+                return -1;
+            }
+            req = rem;
+        }
+        return 0;
 }
 

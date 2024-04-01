@@ -346,8 +346,10 @@ int Time_incron(const char *cron, time_t time);
  * This method suspend the calling process or Thread for
  * <code>u</code> micro seconds.
  * @param u Micro seconds to sleep
+ * @return 0 if sleep was completed, —1 if a signal
+ * interrupted the sleep
  */
-void Time_usleep(long u);
+int Time_usleep(long long u);
 
 //@}
 
