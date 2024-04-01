@@ -63,12 +63,15 @@ int main(void) {
         }
         printf("=> Test2: OK\n\n");
 
-        printf("=> Test3: sleep 1s\n");
+        printf("=> Test3: sleep 0.1s\n");
         {
-                time_t now;
-                now = Time_now();
-                Time_usleep(1000000);
-                assert((now + 1) == Time_now());
+                struct time_monotonic_t start = Time_monotonic();
+                Time_usleep(100000LL); // Sleep for 100 ms (100,000 µs)
+                struct time_monotonic_t afterSleep = Time_monotonic();
+                long long elapsedMs = afterSleep.milliseconds - start.milliseconds;
+                printf("\tElapsed ms: %lld\n", elapsedMs);
+                long long toleranceMs = 7LL; // Tolerate 7 ms drift
+                assert(elapsedMs >= 100 && elapsedMs <= 100 + toleranceMs);
         }
         printf("=> Test3: OK\n\n");
 
