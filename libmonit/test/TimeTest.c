@@ -65,10 +65,9 @@ int main(void) {
 
         printf("=> Test3: sleep 0.1s\n");
         {
-                struct time_monotonic_t start = Time_monotonic();
+                long long startMs = Time_monotonic().milliseconds;
                 Time_usleep(100000LL); // Sleep for 100 ms (100,000 µs)
-                struct time_monotonic_t afterSleep = Time_monotonic();
-                long long elapsedMs = afterSleep.milliseconds - start.milliseconds;
+                long long elapsedMs = Time_monotonic().milliseconds - startMs;
                 printf("\tElapsed ms: %lld\n", elapsedMs);
                 long long toleranceMs = 7LL; // Tolerate 7 ms drift
                 assert(elapsedMs >= 100 && elapsedMs <= 100 + toleranceMs);
