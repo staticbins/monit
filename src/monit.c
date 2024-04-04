@@ -125,7 +125,7 @@ static void handle_wakeup(int);    /* Signalhandler for a daemon wakeup call */
 static void handle_wait(int); /* Signalhandler for handling sub-process exit */
 
 
-/* ------------------------------------------------------------------ Global */
+/* ----------------------------------------------------------------- Globals */
 
 
 const char *Prog;                                /**< The Name of this Program */
@@ -564,11 +564,11 @@ static void do_exit(bool saveState) {
 /// put the main thread to sleep for the remaining micro seconds
 /// - Parameter start: A monotonic start time to compare against now
 static void do_micro_nap(const struct time_monotonic_t *start) {
-        const long long sleep_target = 1000000LL; // Targeting 1 second period
+        const long long sleep_target_microseconds = 1000000LL; // Targeting 1 second interval
         struct time_monotonic_t now = Time_monotonic();
         long long elapsed_microseconds = now.microseconds - start->microseconds;
-        if (elapsed_microseconds < sleep_target) {
-            long long sleep_microseconds = sleep_target - elapsed_microseconds;
+        if (elapsed_microseconds < sleep_target_microseconds) {
+            long long sleep_microseconds = sleep_target_microseconds - elapsed_microseconds;
             Time_usleep(sleep_microseconds);
         }
 }
@@ -662,8 +662,13 @@ reload:
                 } else if (Run.flags & Run_DoReload) {
                         do_reinit(true);
                 } else {
-                        State_saveIfDirty();
+                        State_saveIfDirty(); // This is potentially blocking and must be done in a thread or fsync avoided
                 }
+                // TODO: validate should return possible sleep periode. I.e. if there is nothing to do
+                // for X seconds we should sleep, but allow interruption. The default check interval is
+                // 5 seconds unless configured otherwise. If we have every statements set with seconds
+                // resolution we cannot sleep for more than a second, otherwise we can probably sleep
+                // longer and spare the CPU
                 validate();
                 do_micro_nap(&start);
         }

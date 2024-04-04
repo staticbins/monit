@@ -115,11 +115,11 @@ time_t Time_now(void);
 
 /**
  * Returns a monotonic time at some unspecified starting point as a
- * structure with various resolutions. This time is not affected by NTP
- * time jumps, but may change in frequency on platforms that don't
- * support CLOCK_MONOTONIC_RAW.
+ * structure with various temporal resolution of the <b>same</b> time.
+ * This time is not affected by NTP time jumps, but may change in
+ * frequency on platforms that don't support CLOCK_MONOTONIC_RAW.
  * @return A time_monotonic_t structure with various resolutions of the
- * time since the clock started.
+ * same time since the clock started.
  * @exception AssertException If time could not be obtained
  */
 struct time_monotonic_t {
@@ -344,10 +344,10 @@ int Time_incron(const char *cron, time_t time);
 
 /**
  * This method suspend the calling process or Thread for
- * <code>u</code> micro seconds.
+ * <code>u</code> micro seconds. Sleep can be interrupted
  * @param u Micro seconds to sleep
  * @return 0 if sleep was completed, —1 if a signal
- * interrupted the sleep
+ * interrupted sleep
  */
 int Time_usleep(long long u);
 
