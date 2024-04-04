@@ -38,7 +38,7 @@ monit_SOURCES	= src/y.tab.c \
                   src/net/Link.c \
 		  src/sha1.c \
 		  src/checksum.c \
-		  src/signal.c \
+		  src/_signal.c \
 		  src/spawn.c \
 		  src/state.c \
 		  src/util.c \

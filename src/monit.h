@@ -411,14 +411,6 @@ typedef enum {
 
 
 
-/** ------------------------------------------------- Special purpose macros */
-
-
-/* Replace the standard signal function with a more reliable using
- * sigaction. Taken from Stevens APUE book. */
-sig_t signal(int signo, sig_t func);
-
-
 /** ------------------------------------------------- General purpose macros */
 
 
@@ -1415,66 +1407,17 @@ extern const char *Timestamp_Names[];
 extern const char *Httpmethod_Names[];
 
 
-/* ------------------------------------------------------- Public prototypes */
-
 #include "util.h"
 #include "file.h"
+#include "log.h"
 
 // libmonit
 #include "system/Mem.h"
 
+/* ------------------------------------------------------- Public prototypes */
 
-/* FIXME: move remaining prototypes into separate header-files */
-
-bool parse(char *);
-bool control_service(const char *, Action_Type);
-bool control_service_string(List_T, const char *);
-bool Log_init(void);
-void Log_emergency(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_alert(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_critical(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_error(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_warning(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_notice(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_info(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_debug(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_vemergency(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_valert(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_vcritical(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_verror(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_vwarning(const char *,va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_vnotice(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_vinfo(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_vdebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_abort_handler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
-void Log_close(void);
-void validate_init(void);
-int  validate(void);
-void daemonize(void);
-void gc(void);
-void gc_mail_list(Mail_T *);
-void gccmd(command_t *);
-void gc_event(Event_T *e);
-bool kill_daemon(int);
-pid_t exist_daemon(void);
-bool sendmail(Mail_T);
-void init_env(void);
-void monit_http(Httpd_Action);
-bool can_http(void);
-void set_signal_block(void);
-State_Type check_process(Service_T);
-State_Type check_filesystem(Service_T);
-State_Type check_file(Service_T);
-State_Type check_directory(Service_T);
-State_Type check_remote_host(Service_T);
-State_Type check_system(Service_T);
-State_Type check_fifo(Service_T);
-State_Type check_program(Service_T);
-State_Type check_net(Service_T);
-int  check_URL(Service_T s);
-void status_xml(StringBuffer_T, Event_T, int, const char *, Mmonit_T);
-bool  do_wakeupcall(void);
-bool interrupt(void);
-void do_reap(void);
+// Monit functions
+bool do_wakeup(void);
+bool is_interrupted(void);
 
 #endif

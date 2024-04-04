@@ -63,6 +63,7 @@
 #include "event.h"
 #include "state.h"
 #include "MMonit.h"
+#include "control.h"
 
 // libmonit
 #include "io/File.h"

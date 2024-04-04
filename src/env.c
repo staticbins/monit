@@ -69,6 +69,7 @@
 #endif
 
 #include "monit.h"
+#include "env.h"
 
 
 // libmonit

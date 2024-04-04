@@ -58,6 +58,7 @@
 #include "TextBox.h"
 #include "httpstatus.h"
 #include "client.h"
+#include "daemonize.h"
 
 // libmonit
 #include "exceptions/AssertException.h"

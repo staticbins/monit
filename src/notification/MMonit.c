@@ -44,6 +44,7 @@
 #include "monit.h"
 #include "event.h"
 #include "MMonit.h"
+#include "xml.h"
 
 
 /**

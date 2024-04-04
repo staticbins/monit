@@ -49,13 +49,14 @@
 #include <unistd.h>
 #endif
 
-// libmonit
-#include "util/List.h"
-#include "system/Time.h"
-
 #include "monit.h"
 #include "event.h"
 #include "protocol.h"
+#include "xml.h"
+
+// libmonit
+#include "util/List.h"
+#include "system/Time.h"
 
 
 /**

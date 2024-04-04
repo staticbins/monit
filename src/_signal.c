@@ -32,7 +32,7 @@
 #include <signal.h>
 #endif
 
-#include "monit.h"
+#include "_signal.h"
 
 /**
  *  Signal handling routines.
@@ -46,9 +46,6 @@
 
 #if ! defined HAVE_ASAN && ! defined FREEBSD
 
-// Replace the standard signal() function, with a more reliable
-// using sigaction. From W. Richard Stevens' "Advanced Programming
-// in the UNIX Environment"
 sig_t signal(int signo, sig_t func) {
         struct sigaction act, oact;
         act.sa_handler = func;
@@ -70,8 +67,7 @@ sig_t signal(int signo, sig_t func) {
 #endif
 
 
-// Set a collective thread signal block for signals relevant for Monit
-void set_signal_block(void) {
+void signal_block(void) {
         sigset_t mask;
         sigemptyset(&mask);
         sigaddset(&mask, SIGHUP);

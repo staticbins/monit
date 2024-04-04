@@ -105,6 +105,7 @@
 #include "md5.h"
 #include "sha1.h"
 #include "checksum.h"
+#include "control.h"
 
 // libmonit
 #include "system/Time.h"
@@ -1559,7 +1560,7 @@ int validate(void) {
         
         int errors = 0;
         /* Check the services */
-        for (Service_T s = Service_List; s && ! interrupt(); s = s->next) {
+        for (Service_T s = Service_List; s && ! is_interrupted(); s = s->next) {
                 if (! _doScheduledAction(s) && s->monitor && (! _checkSkip(s))) {
                         _checkTimeout(s); // Can disable monitoring => need to check s->monitor again
                         if (s->monitor) {
@@ -1572,7 +1573,6 @@ int validate(void) {
                         }
                 }
         }
-        do_reap();
         return errors;
 }
 

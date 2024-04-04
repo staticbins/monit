@@ -83,9 +83,17 @@
 #include "engine.h"
 #include "client.h"
 #include "MMonit.h"
+#include "_signal.h"
 #include "md5.h"
 #include "sha1.h"
 #include "checksum.h"
+#include "validate.h"
+#include "daemonize.h"
+#include "control.h"
+#include "gc.h"
+#include "env.h"
+#include "http.h"
+#include "p.h"
 
 // libmonit
 #include "Bootstrap.h"
@@ -108,7 +116,6 @@
 
 
 /* -------------------------------------------------------------- Prototypes */
-
 
 static void do_init(void);                    /* Initialize this application */
 static void do_reinit(bool full);   /* Re-initialize the runtime application */
@@ -193,7 +200,7 @@ int main(int argc, char **argv) {
  * Wakeup a sleeping monit daemon.
  * Returns true on success otherwise false
  */
-bool do_wakeupcall(void) {
+bool do_wakeup(void) {
         pid_t pid;
 
         if ((pid = exist_daemon()) > 0) {
@@ -207,7 +214,7 @@ bool do_wakeupcall(void) {
 }
 
 
-bool interrupt(void) {
+bool is_interrupted(void) {
         return Run.flags & Run_Stopped || Run.flags & Run_DoReload;
 }
 
@@ -409,7 +416,7 @@ static void do_reinit(bool full) {
 }
 
 
-void do_reap(void) {
+static void do_reap(void) {
         pid_t pid;
         int status;
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
@@ -516,7 +523,7 @@ static void do_action(List_T arguments) {
         } else if (IS(action, "quit")) {
                 kill_daemon(SIGTERM);
         } else if (IS(action, "validate")) {
-                if (do_wakeupcall()) {
+                if (do_wakeup()) {
                         char *service = List_pop(arguments);
                         HttpClient_status(Run.mygroup, service);
                 }
@@ -532,7 +539,7 @@ static void do_action(List_T arguments) {
  * Finalize monit
  */
 static void do_exit(bool saveState) {
-        set_signal_block();
+        signal_block();
         Run.flags |= Run_Stopped;
         if (can_http())
                 monit_http(Httpd_Stop);
@@ -970,11 +977,11 @@ static void version(void) {
 
 // M/Monit heartbeat thread
 static void *do_heartbeat(__attribute__ ((unused)) void *args) {
-        set_signal_block();
+        signal_block();
         Log_info("M/Monit heartbeat started\n");
         LOCK(Heartbeat_Mutex)
         {
-                while (! interrupt()) {
+                while (! is_interrupted()) {
                         MMonit_send(NULL);
                         struct timespec wait = {.tv_sec = Time_now() + Run.polltime};
                         Sem_timeWait(Heartbeat_Cond, Heartbeat_Mutex, wait);

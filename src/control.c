@@ -57,11 +57,12 @@
 #include "Proc.h"
 #include "event.h"
 #include "util.h"
-#include "system/Time.h"
+#include "control.h"
 
 // libmonit
 #include "io/File.h"
 #include "util/Fmt.h"
+#include "system/Time.h"
 #include "exceptions/AssertException.h"
 
 

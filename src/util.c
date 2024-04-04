@@ -119,6 +119,7 @@
 #include "state.h"
 #include "protocol.h"
 #include "checksum.h"
+#include "gc.h"
 
 // libmonit
 #include "io/File.h"

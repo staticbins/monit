@@ -130,7 +130,10 @@
 #include "md5.h"
 #include "sha1.h"
 #include "checksum.h"
+#include "validate.h"
 #include "process_sysdep.h"
+#include "gc.h"
+#include "p.h"
 
 // libmonit
 #include "io/File.h"

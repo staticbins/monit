@@ -39,6 +39,7 @@
 #include "protocol.h"
 #include "ProcessTable.h"
 #include "engine.h"
+#include "gc.h"
 
 
 /* Private prototypes */
@@ -158,6 +159,9 @@ void gc_event(Event_T *e) {
 }
 
 
+/* ----------------------------------------------------------------- Private */
+
+
 static void _gc_hostgroups(List_T *hostgroups) {
         if (*hostgroups) {
                 char *hostgroup = NULL;
@@ -167,9 +171,6 @@ static void _gc_hostgroups(List_T *hostgroups) {
                 List_free(hostgroups);
         }
 }
-
-
-/* ----------------------------------------------------------------- Private */
 
 
 static void _gcssloptions(SslOptions_T o) {

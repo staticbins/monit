@@ -68,11 +68,6 @@
 #include <ctype.h>
 #endif
 
-// libmonit
-#include "system/Time.h"
-#include "util/Fmt.h"
-#include "util/List.h"
-
 #include "monit.h"
 #include "cervlet.h"
 #include "engine.h"
@@ -85,10 +80,15 @@
 #include "protocol.h"
 #include "TextColor.h"
 #include "TextBox.h"
+#include "daemonize.h"
+#include "xml.h"
 
+// libmonit
+#include "system/Time.h"
+#include "util/Fmt.h"
+#include "util/List.h"
 
 #define ACTION(c) ! strncasecmp(req->url, c, sizeof(c))
-
 
 /* URL Commands supported */
 #define HOME        "/"
@@ -1180,7 +1180,7 @@ static void handle_service_action(HttpRequest req, HttpResponse res) {
                                 }
                                 _serviceMapAction(s, &ap);
                                 Run.flags |= Run_ActionPending; /* set the global flag */
-                                do_wakeupcall();
+                                do_wakeup();
                                 do_service(req, res, s);
                         }
                 }
@@ -1211,7 +1211,7 @@ static void handle_doaction(HttpRequest req, HttpResponse res) {
                         }
                         if (ap.found > 0) {
                                 Run.flags |= Run_ActionPending;
-                                do_wakeupcall();
+                                do_wakeup();
                         }
                 }
         }
@@ -1234,7 +1234,7 @@ static void handle_runtime_action(HttpRequest req, HttpResponse res) {
                 }
                 if (IS(action, "validate")) {
                         Log_info("The Monit http server woke up on user request\n");
-                        do_wakeupcall();
+                        do_wakeup();
                 } else if (IS(action, "stop")) {
                         Log_info("The Monit http server stopped on user request\n");
                         send_error(req, res, SC_SERVICE_UNAVAILABLE, "The Monit http server is stopped");

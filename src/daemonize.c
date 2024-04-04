@@ -62,6 +62,7 @@
 #endif
 
 #include "monit.h"
+#include "daemonize.h"
 
 
 /**

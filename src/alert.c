@@ -52,6 +52,7 @@
 #include "event.h"
 #include "alert.h"
 #include "SMTP.h"
+#include "gc.h"
 
 // libmonit
 #include "util/Str.h"
