@@ -45,7 +45,6 @@
 
 
 #if ! defined HAVE_ASAN && ! defined FREEBSD
-
 sig_t signal(int signo, sig_t func) {
         struct sigaction act, oact;
         act.sa_handler = func;

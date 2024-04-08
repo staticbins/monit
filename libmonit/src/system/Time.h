@@ -114,23 +114,6 @@ time_t Time_now(void);
 
 
 /**
- * Returns a monotonic time at some unspecified starting point as a
- * structure with various temporal resolution of the <b>same</b> time.
- * This time is not affected by NTP time jumps, but may change in
- * frequency on platforms that don't support CLOCK_MONOTONIC_RAW.
- * @return A time_monotonic_t structure with various resolutions of the
- * same time since the clock started.
- * @exception AssertException If time could not be obtained
- */
-struct time_monotonic_t {
-    time_t seconds;
-    long long milliseconds;
-    long long microseconds;
-    long long nanoseconds;
-} Time_monotonic(void);
-
-
-/**
  * Returns the time since the epoch measured in milliseconds.
  * @return A 64 bits long representing the systems notion of milliseconds
  * since the <strong>epoch</strong> (January 1, 1970, 00:00:00 GMT) in
@@ -148,6 +131,23 @@ long long Time_milli(void);
  * @exception AssertException If time could not be obtained
  */
 long long Time_micro(void);
+
+
+/**
+ * Returns a monotonic time at some unspecified starting point as a
+ * structure with various temporal resolution of the <b>same</b> time.
+ * This time is not affected by NTP time jumps, but may change in
+ * frequency on platforms that don't support CLOCK_MONOTONIC_RAW.
+ * @return A time_monotonic_t structure with various resolutions of the
+ * same time since the clock started.
+ * @exception AssertException If time could not be obtained
+ */
+struct time_monotonic_t {
+    time_t seconds;
+    long long milliseconds;
+    long long microseconds;
+    long long nanoseconds;
+} Time_monotonic(void);
 
 
 /**

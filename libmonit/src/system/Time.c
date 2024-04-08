@@ -1277,6 +1277,22 @@ time_t Time_now(void) {
 }
 
 
+long long Time_milli(void) {
+	struct timeval t;
+	if (gettimeofday(&t, NULL) != 0)
+                THROW(AssertException, "%s", System_lastError());
+	return (long long)t.tv_sec * 1000  +  (long long)t.tv_usec / 1000;
+}
+
+
+long long Time_micro(void) {
+	struct timeval t;
+	if (gettimeofday(&t, NULL) != 0)
+                THROW(AssertException, "%s", System_lastError());
+	return (long long)t.tv_sec * 1000000  +  (long long)t.tv_usec;
+}
+
+
 struct time_monotonic_t Time_monotonic(void) {
     struct time_monotonic_t tm;
 #ifdef HAVE_CLOCK_GETTIME
@@ -1296,7 +1312,7 @@ struct time_monotonic_t Time_monotonic(void) {
     tm.microseconds = t.tv_sec * 1000000LL + t.tv_nsec / 1000LL;
     tm.nanoseconds = t.tv_sec * 1000000000LL + t.tv_nsec;
 #else
-    #warning "no monotonic clock available, fall back to gettimeofday"
+    #warning "no monotonic clock available, falling back to gettimeofday"
     struct timeval t;
     if (gettimeofday(&t, NULL) != 0)
         THROW(AssertException, "%s", System_lastError());
@@ -1306,22 +1322,6 @@ struct time_monotonic_t Time_monotonic(void) {
     tm.nanoseconds = t.tv_sec * 1000000000LL + t.tv_usec * 1000LL; // Approximation
 #endif
     return tm;
-}
-
-
-long long Time_milli(void) {
-	struct timeval t;
-	if (gettimeofday(&t, NULL) != 0)
-                THROW(AssertException, "%s", System_lastError());
-	return (long long)t.tv_sec * 1000  +  (long long)t.tv_usec / 1000;
-}
-
-
-long long Time_micro(void) {
-	struct timeval t;
-	if (gettimeofday(&t, NULL) != 0)
-                THROW(AssertException, "%s", System_lastError());
-	return (long long)t.tv_sec * 1000000  +  (long long)t.tv_usec;
 }
 
 
