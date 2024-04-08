@@ -570,13 +570,44 @@ static void do_exit(bool saveState) {
 /// If the delta between the start time and now is less than a second,
 /// put the main thread to sleep for the remaining micro seconds
 /// - Parameter start: A monotonic start time to compare against now
-static void do_micro_nap(const struct time_monotonic_t *start) {
+static void do_nap(const struct time_monotonic_t *start) {
         const long long sleep_target_microseconds = 1000000LL; // Targeting 1 second interval
         struct time_monotonic_t now = Time_monotonic();
         long long elapsed_microseconds = now.microseconds - start->microseconds;
         if (elapsed_microseconds < sleep_target_microseconds) {
             long long sleep_microseconds = sleep_target_microseconds - elapsed_microseconds;
             Time_usleep(sleep_microseconds);
+        }
+}
+
+
+// The validate loop runs continously with sub-second resolution (optimally)
+static void do_validate(void) {
+        while (true) {
+                struct time_monotonic_t start = Time_monotonic();
+                if (Run.flags & Run_DoReap) {
+                        Run.flags &= ~Run_DoReap;
+                        do_reap();
+                }
+                if (Run.flags & Run_DoWakeup) {
+                        Run.flags &= ~Run_DoWakeup;
+                        Log_info("Awakened by User defined signal 1\n");
+                }
+                if (Run.flags & Run_Stopped) {
+                        do_exit(true);
+                } else if (Run.flags & Run_DoReload) {
+                        do_reinit(true);
+                } else {
+                        State_saveIfDirty(); // This is potentially blocking and must be done in a thread or fsync avoided
+                }
+                // TODO: validate should return possible sleep periode. I.e. if there is nothing to do
+                // for X seconds we should sleep, but allow interruption. The default check interval is
+                // 5 seconds unless configured otherwise. If we have every statements set with seconds
+                // resolution we cannot sleep for more than a second, otherwise we can probably sleep
+                // longer and spare the CPU
+                
+                validate();
+                do_nap(&start);
         }
 }
 
@@ -653,32 +684,7 @@ reload:
                 isHeartbeatRunning = true;
         }
         
-        // The validate loop runs continously with sub-second resolution (optimally)
-        while (true) {
-                struct time_monotonic_t start = Time_monotonic();
-                if (Run.flags & Run_DoReap) {
-                        Run.flags &= ~Run_DoReap;
-                        do_reap();
-                }
-                if (Run.flags & Run_DoWakeup) {
-                        Run.flags &= ~Run_DoWakeup;
-                        Log_info("Awakened by User defined signal 1\n");
-                }
-                if (Run.flags & Run_Stopped) {
-                        do_exit(true);
-                } else if (Run.flags & Run_DoReload) {
-                        do_reinit(true);
-                } else {
-                        State_saveIfDirty(); // This is potentially blocking and must be done in a thread or fsync avoided
-                }
-                // TODO: validate should return possible sleep periode. I.e. if there is nothing to do
-                // for X seconds we should sleep, but allow interruption. The default check interval is
-                // 5 seconds unless configured otherwise. If we have every statements set with seconds
-                // resolution we cannot sleep for more than a second, otherwise we can probably sleep
-                // longer and spare the CPU
-                validate();
-                do_micro_nap(&start);
-        }
+        do_validate();
 }
 
 
