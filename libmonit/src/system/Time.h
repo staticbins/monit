@@ -364,6 +364,20 @@ int Time_usleep(long long microseconds);
 void Time_usleepComplete(long long microseconds);
 
 
+/**
+ * Executes a predicate function with exponential backoff, retrying 
+ * up to 10 times with increasing wait intervals. Initially, minimal
+ * wait times are applied for quick retries, with subsequent wait times
+ * growing exponentially. The total worst-case wait time is approximately
+ * 5 seconds, optimizing between retry speed and recovery time.
+ * @param predicate The predicate function to be executed, returning true 
+ * on success.
+ * @param args Optional arguments for the predicate, or NULL if not needed.
+ * @return True if the predicate succeeds within the retries, otherwise false.
+ */
+bool Time_backoff(bool predicate(void *args), void *args);
+
+
 //@}
 
 #undef T

@@ -36,6 +36,7 @@
 
 #include "Str.h"
 #include "system/System.h"
+#include "system/Random.h"
 #include "system/Time.h"
 
 
@@ -168,6 +169,25 @@ static inline int _m2i(const char m[static 3]) {
                         return i / 3;
         }
         return -1;
+}
+
+
+// Exponential backoff https://en.wikipedia.org/wiki/Exponential_backoff
+// Expected mean backoff time: (2^10 - 1)/2 × slot = 2.6 seconds
+static inline void _backoff(int step) {
+        static int slot = 5100; // µs
+        switch (step) {
+                case 0:
+                        Time_usleepComplete(slot * (Random_number() % 2));
+                        break;
+                case 1:
+                        Time_usleepComplete(slot * (Random_number() % 4));
+                        break;
+                default:
+                        // slot µs * R[0...2^step - 1]
+                        Time_usleepComplete(slot * (Random_number() % (1 << step)));
+                        break;
+        }
 }
 
 
@@ -1637,5 +1657,15 @@ int Time_usleep(long long microseconds) {
 
 void Time_usleepComplete(long long microseconds) {
         _usleep(microseconds, true);
+}
+
+
+bool Time_backoff(bool predicate(void *args), void *args) {
+        for (int i = 0, steps = 10; i < steps; i++) {
+                if (predicate(args))
+                        return true;
+                _backoff(i);
+        }
+        return false;
 }
 
