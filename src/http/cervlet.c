@@ -1180,7 +1180,7 @@ static void handle_service_action(HttpRequest req, HttpResponse res) {
                                 }
                                 _serviceMapAction(s, &ap);
                                 Run.flags |= Run_ActionPending; /* set the global flag */
-                                do_wakeup();
+                                Monit_wakeup();
                                 do_service(req, res, s);
                         }
                 }
@@ -1211,7 +1211,7 @@ static void handle_doaction(HttpRequest req, HttpResponse res) {
                         }
                         if (ap.found > 0) {
                                 Run.flags |= Run_ActionPending;
-                                do_wakeup();
+                                Monit_wakeup();
                         }
                 }
         }
@@ -1234,7 +1234,7 @@ static void handle_runtime_action(HttpRequest req, HttpResponse res) {
                 }
                 if (IS(action, "validate")) {
                         Log_info("The Monit http server woke up on user request\n");
-                        do_wakeup();
+                        Monit_wakeup();
                 } else if (IS(action, "stop")) {
                         Log_info("The Monit http server stopped on user request\n");
                         send_error(req, res, SC_SERVICE_UNAVAILABLE, "The Monit http server is stopped");

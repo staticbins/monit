@@ -1414,10 +1414,8 @@ extern const char *Httpmethod_Names[];
 // libmonit
 #include "system/Mem.h"
 
-/* ------------------------------------------------------- Public prototypes */
-
 // Monit functions
-bool do_wakeup(void);
-bool is_interrupted(void);
+bool Monit_wakeup(void);
+bool Monit_isInterrupted(void);
 
 #endif

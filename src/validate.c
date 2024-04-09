@@ -1560,7 +1560,7 @@ int validate(void) {
         
         int errors = 0;
         /* Check the services */
-        for (Service_T s = Service_List; s && ! is_interrupted(); s = s->next) {
+        for (Service_T s = Service_List; s && ! Monit_isInterrupted(); s = s->next) {
                 if (! _doScheduledAction(s) && s->monitor && (! _checkSkip(s))) {
                         _checkTimeout(s); // Can disable monitoring => need to check s->monitor again
                         if (s->monitor) {
