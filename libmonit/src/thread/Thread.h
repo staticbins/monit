@@ -29,6 +29,11 @@
 #include <errno.h>
 #include <assert.h>
 #include <string.h>
+#if HAVE_STDATOMIC_H
+#include <stdatomic.h>
+#else
+#error stdatomic.h required
+#endif
 #include <pthread.h>
 #include "system/System.h"
 
@@ -56,6 +61,14 @@
  * @hideinitializer
  */
 #define Thread_T pthread_t
+/**
+ * Atomic Thread object type
+ * @hideinitializer
+ */
+typedef struct {
+        Thread_T value;
+        _Atomic(bool) active;
+} AtomicThread_T;
 /**
  * Semaphore object type
  * @hideinitializer
@@ -317,5 +330,23 @@ void Thread_init(void);
  * @exception AssertException If thread creation failed
  */
 void Thread_createDetached(Thread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs);
+
+/**
+ * Create a new Atomic Thread
+ * @param thread The Atomic thread to create
+ * @param threadFunc The thread routine to execute
+ * @param threadArgs Arguments to <code>threadFunc</code>
+ * @exception AssertException If thread creation failed
+ */
+void Thread_createAtomic(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs);
+
+/**
+ * Create a new Atomic Thread in a detached state
+ * @param thread The Atomic thread to create
+ * @param threadFunc The thread routine to execute
+ * @param threadArgs Arguments to <code>threadFunc</code>
+ * @exception AssertException If thread creation failed
+ */
+void Thread_createAtomicDetached(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs);
 
 #endif
