@@ -57,7 +57,6 @@
 #include "system/Time.h"
 #include "thread/Thread.h"
 #include "exceptions/IOException.h"
-#include "exceptions/AssertException.h"
 
 
 /**
@@ -493,24 +492,25 @@ static void _restoreV0(int services) {
 
 
 static void *_saveThread(void *args) {
+        atomic_store(&State_Thread.active, true);
         State_save();
         atomic_store(&State_Thread.active, false);
         return NULL;
 }
 
 
-static bool _isthreadactive(void *args) {
-        return atomic_load(&State_Thread.active);
+static bool _isThreadInactive(void *args) {
+        return atomic_load(&State_Thread.active) == false;
 }
 
 
 static void _waitOnSaveThread(void) {
         if (atomic_load(&State_Thread.active)) {
                 Log_info("Waiting on State file's save thread to finish..");
-                if (Time_backoff(_isthreadactive, NULL)) {
+                if (Time_backoff(_isThreadInactive, NULL)) {
                         Log_info("done\n");
                 } else {
-                        THROW(AssertException, "Aborting, saving State file timed out\n");
+                        THROW(IOException, "Aborting, saving state file timed out\n");
                 }
         }
 }
