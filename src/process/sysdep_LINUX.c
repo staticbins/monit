@@ -381,6 +381,13 @@ static bool _parseProcFdCount(Proc_T proc) {
         char path[PATH_MAX] = {};
         unsigned long long file_count = 0;
 
+        // FIXME: Do not count fds unless it is actually tested for
+        // I.e. if we don't have a service that test for open fds
+        // using one of these statements https://mmonit.com/monit/documentation/monit.html#SYSTEM-AND-PER-PROCESS-FILEDESCRIPTORS-TEST
+        // this whole function should be skipped as it can be
+        // CPU intensive. TODO: set a Run.flag if we have fd tests
+        // and if not set, this code should not run! See also:
+        // https://bitbucket.org/tildeslash/monit/issues/1099/
         snprintf(path, sizeof(path), "/proc/%d/fd", proc->data.pid);
         DIR *dirp = opendir(path);
         if (! dirp) {
