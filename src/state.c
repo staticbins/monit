@@ -494,6 +494,7 @@ static void _restoreV0(int services) {
 
 static void *_saveThread(void *args) {
         State_save();
+        atomic_store(&State_Thread.active, false);
         return NULL;
 }
 
@@ -509,7 +510,7 @@ static void _waitOnSaveThread(void) {
                 if (Time_backoff(_isthreadactive, NULL)) {
                         Log_info("done\n");
                 } else {
-                        THROW(AssertException, "Aborting, the state file save/sync thread timed out\n");
+                        THROW(AssertException, "Aborting, saving State file timed out\n");
                 }
         }
 }
@@ -541,13 +542,6 @@ void State_close(void) {
 
 
 void State_save(void) {
-        if (atomic_load(&State_Thread.active)) {
-                // Just return if the Save thread is already running
-                return;
-        } else {
-                // Reuse the threads active state as a guard flag
-                atomic_store(&State_Thread.active, true);
-        }
         TRY
         {
                 if (ftruncate(file, 0L) == -1) {
@@ -629,10 +623,6 @@ void State_save(void) {
         {
                 Log_error("State file '%s': %s\n", Run.files.state, Exception_frame.message);
         }
-        FINALLY
-        {
-                atomic_store(&State_Thread.active, false);
-        }
         END_TRY;
 }
 
@@ -644,7 +634,7 @@ void State_dirty(void) {
 
 void State_saveIfDirty(void) {
         if (_stateDirty) {
-                // Only start the Save/Sync thread if its not running
+                // Only start the Save/Sync thread if it's not already running
                 if (atomic_load(&State_Thread.active) == false) {
                         Thread_createAtomicDetached(&State_Thread, _saveThread, NULL);
                 }
