@@ -405,8 +405,8 @@ then
         # -std=cXX compiler switch which only include a minimum of C headers
         CFLAGS="$CFLAGS -D_GNU_SOURCE"
 else
-        # Instead of -D_GNU_SOURCE, on Darwin use -D_DARWIN_C_SOURCE -D_POSIX_C_SOURCE=200809L
-        CFLAGS="$CFLAGS -D_DARWIN_C_SOURCE -D_POSIX_C_SOURCE=200809L"
+        # Instead of -D_GNU_SOURCE, on Darwin use -D_DARWIN_C_SOURCE -D_POSIX_C_SOURCE=199506L
+        CFLAGS="$CFLAGS -D_DARWIN_C_SOURCE -D_POSIX_C_SOURCE=199506L"
 fi
 
 # Compiler; tune warnings
