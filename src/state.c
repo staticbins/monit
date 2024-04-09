@@ -54,7 +54,10 @@
 #include "state.h"
 
 // libmonit
+#include "system/Time.h"
+#include "thread/Thread.h"
 #include "exceptions/IOException.h"
+#include "exceptions/AssertException.h"
 
 
 /**
@@ -231,6 +234,7 @@ typedef struct mystate0 {
 static int file = -1;
 static unsigned long long booted = 0ULL;
 static bool _stateDirty = false;
+static AtomicThread_T State_Thread = (AtomicThread_T){.active = false};
 
 
 /* ----------------------------------------------------------------- Private */
@@ -488,6 +492,34 @@ static void _restoreV0(int services) {
 }
 
 
+static void *_saveThread(void *args) {
+        atomic_store(&State_Thread.active, true);
+        State_save();
+        atomic_store(&State_Thread.active, false);
+        return NULL;
+}
+
+
+#define MAX_WAIT_USEC 3 * USEC_PER_SEC  // 3 seconds in microseconds
+static void _waitOnSaveThread(void) {
+        if (atomic_load(&State_Thread.active)) {
+                Log_info("Waiting on State file's save/sync thread to finish..");
+                for (int i = 10; atomic_load(&State_Thread.active); i*=2) {
+                        long sleepTime = i * USEC_PER_MSEC;
+                        if (sleepTime > MAX_WAIT_USEC) {
+                                sleepTime = MAX_WAIT_USEC;
+                        }
+                        Time_usleep(sleepTime);
+                        if (sleepTime == MAX_WAIT_USEC) {
+                                THROW(AssertException, "Aborting, the state file save/sync thread timed out\n");
+                                break;
+                        }
+                }
+                Log_info("stopped\n");
+        }
+}
+
+
 /* ------------------------------------------------------------------ Public */
 
 
@@ -503,6 +535,7 @@ bool State_open(void) {
 
 
 void State_close(void) {
+        _waitOnSaveThread();
         if (file != -1) {
                 if (close(file) == -1)
                         Log_error("State file '%s': close error -- %s\n", Run.files.state, STRERROR);
@@ -513,6 +546,10 @@ void State_close(void) {
 
 
 void State_save(void) {
+        // Just return if the Save thread is running
+        if (atomic_load(&State_Thread.active)) {
+                return;
+        }
         TRY
         {
                 if (ftruncate(file, 0L) == -1) {
@@ -605,7 +642,10 @@ void State_dirty(void) {
 
 void State_saveIfDirty(void) {
         if (_stateDirty) {
-                State_save();
+                // Only start the Save/Sync thread if its not running
+                if (atomic_load(&State_Thread.active) == false) {
+                        Thread_createAtomicDetached(&State_Thread, _saveThread, NULL);
+                }
         }
 }
 
