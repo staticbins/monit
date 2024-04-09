@@ -117,31 +117,32 @@
 
 /* -------------------------------------------------------------- Prototypes */
 
-static void do_init(void);                    /* Initialize this application */
-static void do_reinit(bool full);   /* Re-initialize the runtime application */
-static void do_action(List_T);           /* Dispatch to the submitted action */
-static void do_exit(bool);                                 /* Finalize monit */
-static void do_default(void);                           /* Do default action */
-static void do_options(int, char **, List_T);      /* Handle program options */
-static void *do_heartbeat(void *args);           /* M/Monit heartbeat thread */
-static void help(void);              /* Print program help message to stdout */
-static void version(void);                      /* Print version information */
-static void handle_reload(int);         /* Signalhandler for a daemon reload */
-static void handle_stop(int);        /* Signalhandler for monit finalization */
-static void handle_wakeup(int);    /* Signalhandler for a daemon wakeup call */
-static void handle_wait(int); /* Signalhandler for handling sub-process exit */
+
+static void do_init(void);
+static void do_reinit(bool full);
+static void do_action(List_T);
+static void do_exit(bool);
+static void do_default(void);
+static void do_options(int, char **, List_T);
+static void *do_heartbeat(void *args);
+static void help(void);
+static void version(void);
+static void handle_reload(int);
+static void handle_stop(int);
+static void handle_wakeup(int);
+static void handle_wait(int);
 
 
 /* ----------------------------------------------------------------- Globals */
 
 
-const char *Prog;                                /**< The Name of this Program */
-struct Run_T Run;                        /**< Struct holding runtime constants */
-Service_T Service_List;                 /**< The service list (created in p.y) */
-Service_T Service_List_Conf;    /**< The service list in conf file (c. in p.y) */
-ServiceGroup_T Service_Group_List;/**< The service group list (created in p.y) */
-SystemInfo_T System_Info;                              /**< System information */
-ProcessTable_T Process_Table;                        /**< Shared Process Table */
+const char *Prog;
+struct Run_T Run;
+Service_T Service_List;
+Service_T Service_List_Conf;
+ServiceGroup_T Service_Group_List;
+SystemInfo_T System_Info;
+ProcessTable_T Process_Table;
 
 Thread_T Heartbeat_Thread;
 Sem_T    Heartbeat_Cond;
@@ -165,9 +166,7 @@ const char *Httpmethod_Names[] = {"", "HEAD", "GET"};
 /* ------------------------------------------------------------------ Public */
 
 
-/**
- * The Prime mover
- */
+/// The Prime mover
 int main(int argc, char **argv) {
         Bootstrap(); // Bootstrap libmonit
         Bootstrap_setAbortHandler(Log_abort_handler);  // Abort Monit on exceptions thrown by libmonit
@@ -196,25 +195,22 @@ int main(int argc, char **argv) {
 }
 
 
-/**
- * Wakeup a sleeping monit daemon.
- * Returns true on success otherwise false
- */
-bool do_wakeup(void) {
+/// Wakeup a sleeping monit daemon.
+/// Returns true on success otherwise false
+bool Monit_wakeup(void) {
         pid_t pid;
-
         if ((pid = exist_daemon()) > 0) {
                 kill(pid, SIGUSR1);
                 Log_info("Monit daemon with PID %d awakened\n", pid);
 
                 return true;
         }
-
         return false;
 }
 
 
-bool is_interrupted(void) {
+/// Returns true if the Monit Process was signaled and should stop or reload
+bool Monit_isInterrupted(void) {
         return Run.flags & Run_Stopped || Run.flags & Run_DoReload;
 }
 
@@ -222,119 +218,80 @@ bool is_interrupted(void) {
 /* ----------------------------------------------------------------- Private */
 
 
-/**
- * Initialize this application - Register signal handlers,
- * Parse the control file and initialize the program's
- * datastructures and the log system.
- */
+/// Initialize this application - Register signal handlers,
+/// Parse the control file and initialize the program's
+/// datastructures and the log system.
 static void do_init(void) {
-        /*
-         * Register interest for the SIGTERM signal,
-         * in case we run in daemon mode this signal
-         * will terminate a running daemon.
-         */
+        // Register interest for the SIGTERM signal,
+        // in case we run in daemon mode this signal
+        // will terminate a running daemon.
         signal(SIGTERM, handle_stop);
 
-        /*
-         * Register interest for the SIGUSER1 signal,
-         * in case we run in daemon mode this signal
-         * will wakeup a sleeping daemon.
-         */
+        // Register interest for the SIGUSER1 signal,
+        // in case we run in daemon mode this signal
+        // will wakeup a sleeping daemon.
         signal(SIGUSR1, handle_wakeup);
 
-        /*
-         * Register interest for the SIGINT signal,
-         * in case we run as a server but not as a daemon
-         * we need to catch this signal if the user pressed
-         * CTRL^C in the terminal
-         */
+        // Register interest for the SIGINT signal,
+        // in case we run as a server but not as a daemon
+        // we need to catch this signal if the user pressed
+        // CTRL^C in the terminal
         signal(SIGINT, handle_stop);
 
-        /*
-         * Register interest for the SIGHUP signal,
-         * in case we run in daemon mode this signal
-         * will reload the configuration.
-         */
+        // Register interest for the SIGHUP signal,
+        // in case we run in daemon mode this signal
+        // will reload the configuration.
         signal(SIGHUP, handle_reload);
 
-        /*
-         * Register interest for the SIGCHLD signal.
-         * As a monitoring system we very much want
-         * to be notified and handle when a child-
-         * processes exit
-         */
+        // Register interest for the SIGCHLD signal.
+        // As a monitoring system we very much want
+        // to be notified and handle when a child-
+        // processes exit
         signal(SIGCHLD, handle_wait);
-
-        /*
-         * Register no interest for the SIGPIPE signal,
-         */
+        
+        // Register no interest for the SIGPIPE signal,
         signal(SIGPIPE, SIG_IGN);
         
-        /*
-         * Initialize the random number generator
-         */
-        srandom((unsigned)(Time_now() + getpid()));
-
-        /*
-         * Initialize the Runtime mutex. This mutex
-         * is used to synchronize handling of global
-         * service data
-         */
+        // Initialize the Runtime mutex. This mutex
+        // is used to synchronize handling of global
+        // service data
         Mutex_init(Run.mutex);
 
-        /*
-         * Initialize heartbeat mutex and condition
-         */
+        // Initialize heartbeat mutex and condition
         Mutex_init(Heartbeat_Mutex);
         Sem_init(Heartbeat_Cond);
 
-        /*
-         * Get the position of the control file
-         */
+        // Get the position of the control file
         if (! Run.files.control)
                 Run.files.control = file_findControlFile();
 
-        /*
-         * Initialize the system information data collecting interface
-         */
+        // Initialize the system information data collecting interface
         if (SystemInfo_init()) {
                 Run.flags |= Run_ProcessEngineEnabled;
         }
 
-        /*
-         * Start the Parser and create the service list. This will also set
-         * any Runtime constants defined in the controlfile.
-         */
+        // Start the Parser and create the service list. This will also set
+        // any Runtime constants defined in the controlfile.
         if (! parse(Run.files.control))
                 exit(1);
-
-        /*
-         * Initialize the log system
-         */
+        
+        // Initialize the log system
         if (! Log_init())
                 exit(1);
-
-        /*
-         * Did we find any service ?
-         */
+        
+        // Did we find any service ?
         if (! Service_List) {
                 Log_error("No service has been specified\n");
                 exit(0);
         }
-
-        /*
-         * Initialize Runtime file variables
-         */
-        file_init();
         
-        /*
-         * Create the global Process_Table
-         */
+        // Initialize Runtime file variables
+        file_init();
+                
+        // Create the global Process_Table
         Process_Table = ProcessTable_new();
-
-        /*
-         * Should we print debug information ?
-         */
+        
+        // Should we print debug information ?
         if (Run.debug) {
                 Util_printRunList();
                 Util_printServiceList();
@@ -342,10 +299,9 @@ static void do_init(void) {
 }
 
 
-/**
- * Re-Initialize the application - called if a
- * monit daemon receives the SIGHUP signal.
- */
+
+/// Re-Initialize the application - called if a
+/// monit daemon receives the SIGHUP signal.
 static void do_reinit(bool full) {
         Log_info("Reinitializing Monit -- control file '%s'\n", Run.files.control);
 
@@ -357,16 +313,16 @@ static void do_reinit(bool full) {
 
         Run.flags &= ~Run_DoReload;
 
-        /* Stop http interface */
+        // Stop http interface
         if (Run.httpd.flags & Httpd_Net || Run.httpd.flags & Httpd_Unix)
                 monit_http(Httpd_Stop);
 
-        /* Save the current state (no changes are possible now since the http thread is stopped) */
+        // Save the current state (no changes are possible now since the http thread is stopped)
         if (full)
                 State_save();
         State_close();
 
-        /* Run the garbage collector */
+        // Run the "garbage collector"
         gc();
 
         if (! parse(Run.files.control)) {
@@ -374,20 +330,20 @@ static void do_reinit(bool full) {
                 exit(1);
         }
 
-        /* Close the current log */
+        // Close the current log
         Log_close();
 
-        /* Reinstall the log system */
+        // Reinstall the log system
         if (! Log_init())
                 exit(1);
 
-        /* Did we find any services ?  */
+        // Did we find any services?
         if (! Service_List) {
                 Log_error("No service has been specified\n");
                 exit(0);
         }
 
-        /* Reinitialize Runtime file variables */
+        // Reinitialize Runtime file variables
         file_init();
 
         if (! file_createPidFile(Run.files.pid)) {
@@ -395,17 +351,17 @@ static void do_reinit(bool full) {
                 exit(1);
         }
 
-        /* Update service data from the state repository */
+        // Update service data from the state repository
         if (! State_open())
                 exit(1);
         State_restore();
 
         if (full) {
-                /* Start http interface */
+                // Start http interface
                 if (can_http())
                         monit_http(Httpd_Start);
 
-                /* send the monit startup notification */
+                // Post monit startup notification
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit reloaded");
 
                 if (Run.mmonits) {
@@ -448,9 +404,8 @@ static bool _hasParentInTheSameGroup(Service_T s, ServiceGroup_T g) {
 }
 
 
-/**
- * Dispatch to the submitted action - actions are program arguments
- */
+
+/// Dispatch to the submitted action - actions are program arguments
 static void do_action(List_T arguments) {
         char *action = List_pop(arguments);
 
@@ -523,7 +478,7 @@ static void do_action(List_T arguments) {
         } else if (IS(action, "quit")) {
                 kill_daemon(SIGTERM);
         } else if (IS(action, "validate")) {
-                if (do_wakeup()) {
+                if (Monit_wakeup()) {
                         char *service = List_pop(arguments);
                         HttpClient_status(Run.mygroup, service);
                 }
@@ -535,9 +490,8 @@ static void do_action(List_T arguments) {
 }
 
 
-/**
- * Finalize monit
- */
+
+/// Finalize monit
 static void do_exit(bool saveState) {
         signal_block();
         Run.flags |= Run_Stopped;
@@ -552,7 +506,7 @@ static void do_exit(bool saveState) {
         
         Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
         
-        /* send the monit stop notification */
+        // send the monit stop notification
         Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_STOP, "Monit %s stopped", VERSION);
         if (saveState) {
                 State_save();
@@ -581,7 +535,8 @@ static void do_nap(const struct time_monotonic_t *start) {
 }
 
 
-// The validate loop runs continously with sub-second resolution (optimally)
+/// The validate loop drives the monit state-machine and run
+/// continously with sub-second resolution (optimally)
 static void do_validate(void) {
         while (true) {
                 struct time_monotonic_t start = Time_monotonic();
@@ -598,7 +553,7 @@ static void do_validate(void) {
                 } else if (Run.flags & Run_DoReload) {
                         do_reinit(true);
                 } else {
-                        State_saveIfDirty(); // This is potentially blocking and must be done in a thread or fsync avoided
+                        State_saveIfDirty(); // Saves state non-blocking in a separate thread
                 }
                 // TODO: validate should return possible sleep periode. I.e. if there is nothing to do
                 // for X seconds we should sleep, but allow interruption. The default check interval is
@@ -612,10 +567,9 @@ static void do_validate(void) {
 }
 
 
-/**
- * Default action - become a daemon if defined in the Run object and
- * run validate(). Also, if specified, start the monit http server
- */
+
+/// Default action - become a daemon if defined in the Run object and
+/// run validate(). Also, if specified, start the monit http server
 static void do_default(void) {
         if (exist_daemon())
                 exit(0);
@@ -649,25 +603,10 @@ static void do_default(void) {
         
         atexit(file_finalize);
         
-reload:
         if (Run.startdelay) {
                 if (State_reboot()) {
-                        struct time_monotonic_t now = Time_monotonic();
-                        time_t delay = now.seconds + Run.startdelay;
-                        
                         Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
-                        
-                        /* sleep can be interrupted by signal => make sure we paused long enough */
-                        while (now.seconds < delay) {
-                                sleep((unsigned int)(delay - now.seconds));
-                                if (Run.flags & Run_Stopped) {
-                                        do_exit(false);
-                                } else if (Run.flags & Run_DoReload) {
-                                        do_reinit(false);
-                                        goto reload;
-                                }
-                                now = Time_monotonic();
-                        }
+                        Time_usleepComplete(Run.startdelay * USEC_PER_SEC);
                 } else {
                         DEBUG("Monit delay %ds skipped -- the system boot time has not changed since last Monit start\n", Run.startdelay);
                 }
@@ -676,7 +615,6 @@ reload:
         if (can_http())
                 monit_http(Httpd_Start);
         
-        /* send the monit startup notification */
         Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
         
         if (Run.mmonits) {
@@ -688,10 +626,9 @@ reload:
 }
 
 
-/**
- * Handle program options - Options set from the commandline
- * takes precedence over those found in the control file
- */
+
+/// Handle program options - Options set from the commandline
+/// takes precedence over those found in the control file
 static void do_options(int argc, char **argv, List_T arguments) {
         int opt;
         int deferred_opt = 0;
@@ -906,9 +843,8 @@ static void do_options(int argc, char **argv, List_T arguments) {
 }
 
 
-/**
- * Print the program's help message
- */
+
+/// Print the program's help message
 static void help(void) {
         printf(
                "Usage: %s [options]+ [command]\n"
@@ -951,9 +887,8 @@ static void help(void) {
                Prog);
 }
 
-/**
- * Print version information
- */
+
+/// Print version information
 static void version(void) {
         printf("This is Monit version %s\n", VERSION);
         printf("Built with");
@@ -981,13 +916,13 @@ static void version(void) {
 }
 
 
-// M/Monit heartbeat thread
+/// M/Monit heartbeat thread
 static void *do_heartbeat(__attribute__ ((unused)) void *args) {
         signal_block();
         Log_info("M/Monit heartbeat started\n");
         LOCK(Heartbeat_Mutex)
         {
-                while (! is_interrupted()) {
+                while (! Monit_isInterrupted()) {
                         MMonit_send(NULL);
                         struct timespec wait = {.tv_sec = Time_now() + Run.polltime};
                         Sem_timeWait(Heartbeat_Cond, Heartbeat_Mutex, wait);
@@ -1002,25 +937,25 @@ static void *do_heartbeat(__attribute__ ((unused)) void *args) {
 }
 
 
-// Signal handler for a daemon reload call
+/// Signal handler for a daemon reload call
 static void handle_reload(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoReload;
 }
 
 
-// Signal handler for monit finalization
+/// Signal handler for monit finalization
 static void handle_stop(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_Stopped;
 }
 
 
-// Signal handler for a daemon wakeup call
+/// Signal handler for a daemon wakeup call
 static void handle_wakeup(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoWakeup;
 }
 
 
-// Signal handler for child processes exit
+/// Signal handler for child processes exit
 static void handle_wait(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoReap;
 }
