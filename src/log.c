@@ -157,7 +157,6 @@ static void _log(int priority, const char *s, va_list ap) {
         va_list ap_copy;
         LOCK(_mutex)
         {
-
                 FILE *output = priority < LOG_INFO ? stderr : stdout;
                 va_copy(ap_copy, ap);
                 vfprintf(output, s, ap_copy);
