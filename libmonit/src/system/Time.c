@@ -1616,16 +1616,26 @@ yy68:
 }
 
 
-int Time_usleep(long long u) {
-        struct timespec req, rem;
-        req.tv_sec = u / 1000000LL;
-        req.tv_nsec = (u % 1000000LL) * 1000LL;
-        while (nanosleep(&req, &rem) == -1) {
-            if (errno == EINTR) {
-                return -1;
-            }
-            req = rem;
+static inline int _usleep(long long microseconds, bool complete) {
+    struct timespec req, rem;
+    req.tv_sec = microseconds / 1000000LL;
+    req.tv_nsec = (microseconds % 1000000LL) * 1000LL;
+    while (nanosleep(&req, &rem) == -1) {
+        if (!complete && errno == EINTR) {
+            return -1;
         }
-        return 0;
+        req = rem;
+    }
+    return 0;
+}
+
+
+int Time_usleep(long long microseconds) {
+        return _usleep(microseconds, false);
+}
+
+
+void Time_usleepComplete(long long microseconds) {
+        _usleep(microseconds, true);
 }
 

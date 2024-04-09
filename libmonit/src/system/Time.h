@@ -343,13 +343,26 @@ int Time_incron(const char *cron, time_t time);
 
 
 /**
- * This method suspend the calling process or Thread for
- * <code>u</code> micro seconds. Sleep can be interrupted
- * @param u Micro seconds to sleep
- * @return 0 if sleep was completed, —1 if a signal
- * interrupted sleep
+ * Suspends the calling process or thread for the specified 
+ * duration in microseconds. If sleep is interrupted by a signal,
+ * the function aborts sleep and returns -1.
+ * @param microseconds The duration of the sleep in microseconds.
+ * @return 0 if sleep was completed, -1 if sleep was interrupted
+ * by a signal.
  */
-int Time_usleep(long long u);
+int Time_usleep(long long microseconds);
+
+
+/**
+ * Suspends the calling process or thread for the specified 
+ * duration in microseconds. Unlike Time_usleep, this function is
+ * resilient to interruptions by signals. If a signal interrupts
+ * sleep, the function will continue to sleep for the remainder
+ * of the specified duration after handling of the signal.
+ * @param microseconds The duration of the sleep in microseconds.
+ */
+void Time_usleepComplete(long long microseconds);
+
 
 //@}
 
