@@ -493,29 +493,24 @@ static void _restoreV0(int services) {
 
 
 static void *_saveThread(void *args) {
-        atomic_store(&State_Thread.active, true);
         State_save();
-        atomic_store(&State_Thread.active, false);
         return NULL;
 }
 
 
-#define MAX_WAIT_USEC 3 * USEC_PER_SEC  // 3 seconds in microseconds
+static bool _isthreadactive(void *args) {
+        return atomic_load(&State_Thread.active);
+}
+
+
 static void _waitOnSaveThread(void) {
         if (atomic_load(&State_Thread.active)) {
-                Log_info("Waiting on State file's save/sync thread to finish..");
-                for (int i = 10; atomic_load(&State_Thread.active); i*=2) {
-                        long sleepTime = i * USEC_PER_MSEC;
-                        if (sleepTime > MAX_WAIT_USEC) {
-                                sleepTime = MAX_WAIT_USEC;
-                        }
-                        Time_usleep(sleepTime);
-                        if (sleepTime == MAX_WAIT_USEC) {
-                                THROW(AssertException, "Aborting, the state file save/sync thread timed out\n");
-                                break;
-                        }
+                Log_info("Waiting on State file's save thread to finish..");
+                if (Time_backoff(_isthreadactive, NULL)) {
+                        Log_info("done\n");
+                } else {
+                        THROW(AssertException, "Aborting, the state file save/sync thread timed out\n");
                 }
-                Log_info("stopped\n");
         }
 }
 
@@ -546,9 +541,12 @@ void State_close(void) {
 
 
 void State_save(void) {
-        // Just return if the Save thread is running
         if (atomic_load(&State_Thread.active)) {
+                // Just return if the Save thread is already running
                 return;
+        } else {
+                // Reuse the threads active state as a guard flag
+                atomic_store(&State_Thread.active, true);
         }
         TRY
         {
@@ -630,6 +628,10 @@ void State_save(void) {
         ELSE
         {
                 Log_error("State file '%s': %s\n", Run.files.state, Exception_frame.message);
+        }
+        FINALLY
+        {
+                atomic_store(&State_Thread.active, false);
         }
         END_TRY;
 }
