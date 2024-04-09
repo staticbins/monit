@@ -90,9 +90,9 @@ void Thread_createAtomic(AtomicThread_T *thread, void *(*threadFunc)(void *threa
         assert(thread);
         assert(threadFunc);
         Thread_T t;
+        atomic_store(&thread->active, true);
         Thread_create(t, threadFunc, threadArgs);
         thread->value =  t;
-        atomic_store(&thread->active, true);
 }
 
 
@@ -100,8 +100,8 @@ void Thread_createAtomicDetached(AtomicThread_T *thread, void *(*threadFunc)(voi
         assert(thread);
         assert(threadFunc);
         Thread_T t;
+        atomic_store(&thread->active, true);
         Thread_createDetached(&t, threadFunc, threadArgs);
         thread->value = t;
-        atomic_store(&thread->active, true);
 }
 
