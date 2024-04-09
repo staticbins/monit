@@ -26,6 +26,61 @@
 #ifndef MONIT_VALIDATE_H
 #define MONIT_VALIDATE_H
 
+/**
+ * Validate transit the state of each configured service.
+ *
+ * State           -> Next Possible States
+ * -------------------------------------------------
+ * Idle            -> Starting, Started, Unmonitored
+ * Starting        -> Started, Error
+ * Started         -> Check, Error, Stopping, Restarting
+ * Restarting      -> Started, Error
+ * Stopping        -> Stopped, Error
+ * Stopped         -> Starting, Unmonitored
+ * Error           -> Starting, Started, Stopping, Stopped
+ * Check           -> Started, Error
+ * Unmonitored     -> Stopped, Started
+ *
+ * STATES:
+ *
+ * Idle: The initial state of a service before it has been monitored or assigned
+ * any other state. It's a starting point for service lifecycle management.
+ *
+ * Starting: Indicates that a service is in the process of starting. This
+ * involves the execution of the service's start command.
+ *
+ * Started: Denotes that a service is running and operational. The service may
+ * transition to this state from Starting or Check if it's deemed healthy.
+ *
+ * Restarting: A distinct state for services that are undergoing a restart
+ * operation, which may be performed via a dedicated restart command if
+ * available. This state reflects the special handling of restart procedures.
+ *
+ * Stopping: Represents the phase where a service is being stopped, following
+ * the invocation of the service's stop command.
+ *
+ * Stopped: Indicates that a service has been successfully stopped and is no
+ * longer running. It can be a precursor to a service being started again or
+ * become unmonitored.
+ *
+ * Error: Reflects an error condition encountered by a service. This state can
+ * result from failures in starting, stopping, restarting, or during runtime
+ * checks. Services in this state require intervention and automatic recovery
+ * actions.
+ *
+ * Check: A state indicating that a service is currently undergoing runtime
+ * checks to verify its health, such as memory usage, CPU load, or other
+ * metrics. This can be an intensive process and is managed separately in a
+ * thread-pool.
+ *
+ * Unmonitored: Used for services that are temporarily exempt from monitoring.
+ * Services can be configured to start in this state or transition to it under
+ * certain conditions.
+ *
+ * @file
+ */
+
+
 int validate(void);
 State_Type check_process(Service_T);
 State_Type check_filesystem(Service_T);
