@@ -492,7 +492,6 @@ static void _restoreV0(int services) {
 
 
 static void *_saveThread(void *args) {
-        atomic_store(&State_Thread.active, true);
         State_save();
         atomic_store(&State_Thread.active, false);
         return NULL;
