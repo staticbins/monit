@@ -66,11 +66,22 @@ static void _once(void) {
         atexit(_fini);
 }
 
+// Automatically cleanup synchronization primitives and
+// set active state to false on atomic thread exit
+static void *_atomicWrapper(void *arg) {
+        AtomicThread_T *thread = (AtomicThread_T *)arg;
+        thread->threadFunc(thread->threadArgs);
+        atomic_store(&thread->active, false);
+        Sem_destroy(thread->sem);
+        Mutex_destroy(thread->mutex);
+        return NULL;
+}
+
 
 /* ----------------------------------------------------- Protected Methods */
 
 
-/* Called from Bootstrap() */
+// Called from Bootstrap()
 void Thread_init(void) { pthread_once(&once_control, _once); }
 
 
@@ -89,15 +100,23 @@ void Thread_createDetached(Thread_T *thread, void *(*threadFunc)(void *threadArg
 void Thread_createAtomic(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
         assert(thread);
         assert(threadFunc);
+        Sem_init(thread->sem);
+        Mutex_init(thread->mutex);
+        thread->threadFunc = threadFunc;
+        thread->threadArgs = threadArgs;
         atomic_store(&thread->active, true);
-        Thread_create(thread->value, threadFunc, threadArgs);
+        Thread_create(thread->value, _atomicWrapper, thread);
 }
 
 
 void Thread_createAtomicDetached(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
         assert(thread);
         assert(threadFunc);
+        Sem_init(thread->sem);
+        Mutex_init(thread->mutex);
+        thread->threadFunc = threadFunc;
+        thread->threadArgs = threadArgs;
         atomic_store(&thread->active, true);
-        Thread_createDetached(&thread->value, threadFunc, threadArgs);
+        Thread_createDetached(&thread->value, _atomicWrapper, thread);
 }
 

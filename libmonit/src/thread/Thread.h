@@ -62,14 +62,6 @@
  */
 #define Thread_T pthread_t
 /**
- * Atomic Thread object type
- * @hideinitializer
- */
-typedef struct {
-        Thread_T value;
-        _Atomic(bool) active;
-} AtomicThread_T;
-/**
  * Semaphore object type
  * @hideinitializer
  */
@@ -306,6 +298,33 @@ typedef struct {
  * @hideinitializer
  */
 #define ThreadData_get(key) pthread_getspecific((key))
+//@}
+/** @name Atomic Thread */
+//@{
+/**
+ * An Atomic Thread object encapsulates a thread, along with synchronization
+ * primitives and thread-specific data. It is designed to facilitate thread
+ * creation, synchronization, and cleanup in a thread-safe manner.
+ *
+ * @note The `sem` and `mutex` members are used for synchronization within 
+ *            and outside the thread. As long as the active member is true
+ *            i.e. the thread is running, these synchronization primitives
+ *            are valid. Otherwise when active is false, they are destroyed.
+ *       The `value` represents the underlying thread.
+ *       The `active` atomic boolean indicating whether the thread is active.
+ *       The `threadArgs` the arguments passed to the thread function.
+ *       The `threadFunc` the function to be executed by the thread.
+ *
+ * @hideinitializer
+ */
+typedef struct {
+        Sem_T sem;
+        Mutex_T mutex;
+        Thread_T value;
+        _Atomic(bool) active;
+        void *threadArgs;
+        void *(*threadFunc)(void *threadArgs);
+} AtomicThread_T;
 //@}
 
 
