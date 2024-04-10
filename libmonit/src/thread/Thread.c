@@ -66,14 +66,11 @@ static void _once(void) {
         atexit(_fini);
 }
 
-// Automatically cleanup synchronization primitives and
-// set active state to false on atomic thread exit
+// Automatically set active state to false on thread exit
 static void *_atomicWrapper(void *arg) {
         AtomicThread_T *thread = (AtomicThread_T *)arg;
         thread->threadFunc(thread->threadArgs);
         atomic_store(&thread->active, false);
-        Sem_destroy(thread->sem);
-        Mutex_destroy(thread->mutex);
         return NULL;
 }
 
@@ -120,3 +117,9 @@ void Thread_createAtomicDetached(AtomicThread_T *thread, void *(*threadFunc)(voi
         Thread_createDetached(&thread->value, _atomicWrapper, thread);
 }
 
+
+void Thread_destroyAtomic(AtomicThread_T *thread) {
+        assert(thread);
+        Sem_destroy(thread->sem);
+        Mutex_destroy(thread->mutex);
+}

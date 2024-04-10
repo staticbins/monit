@@ -304,16 +304,15 @@
 /**
  * An Atomic Thread object encapsulates a thread, along with synchronization
  * primitives and thread-specific data. It is designed to facilitate thread
- * creation, synchronization, and cleanup in a thread-safe manner.
+ * creation, synchronization, and cleanup in a thread-safe manner. Use either
+ * Thread_createAtomicDetached or Thread_createAtomic to create an AtomicThread
  *
- * @note The `sem` and `mutex` members are used for synchronization within 
- *            and outside the thread. As long as the active member is true
- *            i.e. the thread is running, these synchronization primitives
- *            are valid. Otherwise when active is false, they are destroyed.
- *       The `value` represents the underlying thread.
- *       The `active` atomic boolean indicating whether the thread is active.
- *       The `threadArgs` the arguments passed to the thread function.
- *       The `threadFunc` the function to be executed by the thread.
+ * The `active` atomic boolean member indicate whether the thread is active or
+ * not. Client code should use atomic_load to read this value atomically. This
+ * value is automatically set to true at thread startup and to false when the
+ * thread exit. The synchronization primitives `sem` and `mutex` are created
+ * when the thread is created. Use Thread_destroyAtomic to destroy these
+ * members in a deterministic manner.
  *
  * @hideinitializer
  */
@@ -367,5 +366,13 @@ void Thread_createAtomic(AtomicThread_T *thread, void *(*threadFunc)(void *threa
  * @exception AssertException If thread creation failed
  */
 void Thread_createAtomicDetached(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs);
+
+
+/**
+ * Destroy the synchronization primitives in the atomic thread
+ * @param thread An Atomic thread
+ */
+void Thread_destroyAtomic(AtomicThread_T *thread);
+
 
 #endif

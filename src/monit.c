@@ -300,6 +300,7 @@ static void do_reinit(bool full) {
         if (Run.mmonits && atomic_load(&Heartbeat_Thread.active)) {
                 Sem_signal(Heartbeat_Thread.sem);
                 Thread_join(Heartbeat_Thread.value);
+                Thread_destroyAtomic(&Heartbeat_Thread);
         }
 
         Run.flags &= ~Run_DoReload;
@@ -491,6 +492,7 @@ static void do_exit(bool saveState) {
         if (Run.mmonits && atomic_load(&Heartbeat_Thread.active)) {
                 Sem_signal(Heartbeat_Thread.sem);
                 Thread_join(Heartbeat_Thread.value);
+                Thread_destroyAtomic(&Heartbeat_Thread);
         }
         
         Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
