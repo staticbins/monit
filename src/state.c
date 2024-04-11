@@ -233,6 +233,7 @@ typedef struct mystate0 {
 static int file = -1;
 static unsigned long long booted = 0ULL;
 static bool _stateDirty = false;
+// Initialise the Thread directly as we don't need its synchronization primitives
 static AtomicThread_T State_Thread = (AtomicThread_T){.active = false};
 
 
@@ -498,17 +499,17 @@ static void *_saveThread(void *args) {
 
 
 static bool _isThreadInactive(void *args) {
-        return atomic_load(&State_Thread.active) == false;
+        return Thread_isAtomicThreadActive(&State_Thread) == false;
 }
 
 
 static void _waitOnSaveThread(void) {
-        if (atomic_load(&State_Thread.active)) {
+        if (Thread_isAtomicThreadActive(&State_Thread)) {
                 Log_info("Waiting on State file's save thread to finish..");
                 if (Time_backoff(_isThreadInactive, NULL)) {
                         Log_info("done\n");
                 } else {
-                        THROW(IOException, "Aborting, saving state file timed out\n");
+                        THROW(IOException, "Aborting, saving State file timed out\n");
                 }
         }
 }
@@ -633,8 +634,8 @@ void State_dirty(void) {
 void State_saveIfDirty(void) {
         if (_stateDirty) {
                 // Only start the Save/Sync thread if it's not already running
-                if (atomic_load(&State_Thread.active) == false) {
-                        Thread_createAtomicDetached(&State_Thread, _saveThread, NULL);
+                if (!Thread_isAtomicThreadActive(&State_Thread)) {
+                        Thread_createAtomicThreadDetached(&State_Thread, _saveThread, NULL);
                 }
         }
 }
