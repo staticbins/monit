@@ -93,33 +93,41 @@ void Thread_createDetached(Thread_T *thread, void *(*threadFunc)(void *threadArg
                 THROW(AssertException, "pthread_create -- %s", System_getError(status));
 }
 
-
-void Thread_createAtomic(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
+void Thread_initAtomicThread(AtomicThread_T *thread) {
         assert(thread);
-        assert(threadFunc);
         Sem_init(thread->sem);
         Mutex_init(thread->mutex);
+        atomic_store(&thread->active, false);
+}
+
+void Thread_createAtomicThread(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
+        assert(thread);
+        assert(threadFunc);
+        assert(atomic_load(&thread->active) == false);
         thread->threadFunc = threadFunc;
         thread->threadArgs = threadArgs;
         atomic_store(&thread->active, true);
         Thread_create(thread->value, _atomicWrapper, thread);
 }
 
-
-void Thread_createAtomicDetached(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
+void Thread_createAtomicThreadDetached(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
         assert(thread);
         assert(threadFunc);
-        Sem_init(thread->sem);
-        Mutex_init(thread->mutex);
+        assert(atomic_load(&thread->active) == false);
         thread->threadFunc = threadFunc;
         thread->threadArgs = threadArgs;
         atomic_store(&thread->active, true);
         Thread_createDetached(&thread->value, _atomicWrapper, thread);
 }
 
+bool Thread_isAtomicThreadActive(AtomicThread_T *thread) {
+        assert(thread);
+        return atomic_load(&thread->active);
+}
 
-void Thread_destroyAtomic(AtomicThread_T *thread) {
+void Thread_cleanupAtomicThread(AtomicThread_T *thread) {
         assert(thread);
         Sem_destroy(thread->sem);
         Mutex_destroy(thread->mutex);
+        atomic_store(&thread->active, false);
 }
