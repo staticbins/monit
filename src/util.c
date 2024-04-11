@@ -1454,7 +1454,7 @@ char *Util_urlEncode(const char *string, bool isParameterValue) {
                 for (n = i = 0; string[i]; i++)
                         if (unsafe[(unsigned char)(string[i])])
                                 n += 2;
-                p = escaped = ALLOC(i + n + 1);
+                p = escaped = CALLOC(1, i + n + 1);
                 for (; *string; string++, p++) {
                         if (unsafe[(unsigned char)(*p = *string)]) {
                                 *p++ = '%';
