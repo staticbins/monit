@@ -47,14 +47,14 @@ void check_ssh(Socket_T socket) {
         assert(socket);
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "SSH: error receiving identification string -- %s", STRERROR);
+                THROW(IOException, "SSH: error receiving identification string -- %s", System_lastError());
 
         if (! Str_startsWith(buf, "SSH-"))
                 THROW(ProtocolException, "SSH: protocol error %s", buf);
 
         /* send identification string back to server */
         if (Socket_write(socket, buf, strlen(buf)) <= 0)
-                THROW(IOException, "SSH: error sending identification string -- %s", STRERROR);
+                THROW(IOException, "SSH: error sending identification string -- %s", System_lastError());
 
         /* Read one extra line to prevent the "Read from socket failed" warning */
         Socket_readLine(socket, buf, sizeof(buf));

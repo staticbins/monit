@@ -45,7 +45,7 @@ void check_default(Socket_T socket) {
                 if (Net_read(s, token, 1, 1200) < 0) {
                         switch (errno) {
                                 case ECONNREFUSED:
-                                        THROW(IOException, "%s", STRERROR);
+                                        THROW(IOException, "%s", System_lastError());
                                         break;
                                 default:
                                         break;

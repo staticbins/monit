@@ -1107,7 +1107,7 @@ static void _include(const char *path) {
         }
         FILE *_yyin = fopen(path, "r");
         if (! _yyin)
-                yyerror("Cannot include file '%s' -- %s", path, STRERROR);
+                yyerror("Cannot include file '%s' -- %s", path, System_lastError());
         else
                 push_buffer_state(yy_create_buffer(_yyin, YY_BUF_SIZE), path);
 }
@@ -1125,7 +1125,7 @@ static void include_file(char *pattern) {
                 }
                 globfree(&globbuf);
         } else if (errno != 0) {
-                yywarning("Include failed -- %s", STRERROR);
+                yywarning("Include failed -- %s", System_lastError());
         } // else no include files found -- silently ignore
 }
 

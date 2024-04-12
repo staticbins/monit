@@ -145,7 +145,7 @@ bool file_createPidFile(const char *pidfile) {
         unlink(pidfile);
         FILE *F = fopen(pidfile, "w");
         if (! F) {
-                Log_error("Error opening pidfile '%s' for writing -- %s\n", pidfile, STRERROR);
+                Log_error("Error opening pidfile '%s' for writing -- %s\n", pidfile, System_lastError());
                 return false;
         }
         fprintf(F, "%d\n", (int)getpid());
@@ -160,7 +160,7 @@ bool file_checkStat(const char *filename, const char *description, mode_t permma
         errno = 0;
         struct stat buf;
         if (stat(filename, &buf) < 0) {
-                Log_error("Cannot stat the %s '%s' -- %s\n", description, filename, STRERROR);
+                Log_error("Cannot stat the %s '%s' -- %s\n", description, filename, System_lastError());
                 return false;
         }
         if (! S_ISREG(buf.st_mode)) {
@@ -181,7 +181,7 @@ bool file_checkStat(const char *filename, const char *description, mode_t permma
 
 bool file_checkQueueDirectory(const char *path) {
         if (mkdir(path, 0700) < 0 && errno != EEXIST) {
-                Log_error("Cannot create the event queue directory '%s' -- %s\n", path, STRERROR);
+                Log_error("Cannot create the event queue directory '%s' -- %s\n", path, System_lastError());
                 return false;
         }
         return true;
@@ -192,7 +192,7 @@ bool file_checkQueueLimit(const char *path, int limit) {
         if (limit >= 0) {
                 DIR *dir = opendir(path);
                 if (! dir) {
-                        Log_error("Cannot open the event queue directory '%s' -- %s\n", path, STRERROR);
+                        Log_error("Cannot open the event queue directory '%s' -- %s\n", path, System_lastError());
                         return false;
                 }
                 int used = 0;
@@ -278,7 +278,7 @@ bool file_readProc(char *buf, int buf_size, const char *name, int pid, int *byte
         int fd = open(filename, O_RDONLY);
         if (fd < 0) {
                 if (Run.debug >= 2)
-                        DEBUG("Cannot open proc file '%s' -- %s\n", filename, STRERROR);
+                        DEBUG("Cannot open proc file '%s' -- %s\n", filename, System_lastError());
                 return false;
         }
 
@@ -291,11 +291,11 @@ bool file_readProc(char *buf, int buf_size, const char *name, int pid, int *byte
                 rv = true;
         } else {
                 *buf = 0;
-                DEBUG("Cannot read proc file '%s' -- %s\n", filename, STRERROR);
+                DEBUG("Cannot read proc file '%s' -- %s\n", filename, System_lastError());
         }
 
         if (close(fd) < 0)
-                Log_error("Failed to close proc file '%s' -- %s\n", filename, STRERROR);
+                Log_error("Failed to close proc file '%s' -- %s\n", filename, System_lastError());
 
         return rv;
 }

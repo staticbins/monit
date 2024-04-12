@@ -87,14 +87,14 @@ void init_env(void) {
         // Ensure that std descriptors (0, 1 and 2) are open
         int devnull = open("/dev/null", O_RDWR);
         if (devnull == -1) {
-                THROW(AssertException, "Cannot open /dev/null -- %s", STRERROR);
+                THROW(AssertException, "Cannot open /dev/null -- %s", System_lastError());
         }
         for (int i = 0; i < 3; i++) {
                 struct stat st;
                 if (fstat(i, &st) == -1) {
                         if (dup2(devnull, i) < 0) {
                                 close(devnull);
-                                THROW(AssertException, "dup2 failed -- %s", STRERROR);
+                                THROW(AssertException, "dup2 failed -- %s", System_lastError());
                         }
                 }
         }
@@ -103,13 +103,13 @@ void init_env(void) {
         char buf[4096];
         struct passwd pw, *result = NULL;
         if (getpwuid_r(geteuid(), &pw, buf, sizeof(buf), &result) != 0 || ! result)
-                THROW(AssertException, "getpwuid_r failed -- %s", STRERROR);
+                THROW(AssertException, "getpwuid_r failed -- %s", System_lastError());
         Run.Env.home = Str_dup(pw.pw_dir);
         Run.Env.user = Str_dup(pw.pw_name);
         // Get CWD
         char t[PATH_MAX];
         if (! Dir_cwd(t, PATH_MAX))
-                THROW(AssertException, "Monit: Cannot read current directory -- %s", STRERROR);
+                THROW(AssertException, "Monit: Cannot read current directory -- %s", System_lastError());
         Run.Env.cwd = Str_dup(t);
 }
 

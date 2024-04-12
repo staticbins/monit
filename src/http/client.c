@@ -100,7 +100,7 @@ static char *_getBasicAuthHeader(void) {
 static void _parseHttpResponse(Socket_T S) {
         char buf[1024];
         if (! Socket_readLine(S, buf, sizeof(buf)))
-                THROW(IOException, "Error receiving data -- %s", STRERROR);
+                THROW(IOException, "Error receiving data -- %s", System_lastError());
         Str_chomp(buf);
         int status;
         if (! sscanf(buf, "%*s %d", &status))
@@ -157,7 +157,7 @@ static void _send(Socket_T S, const char *request, StringBuffer_T data) {
                 StringBuffer_toString(data));
         FREE(_auth);
         if (rv < 0)
-                THROW(IOException, "Monit: cannot send command to the monit daemon -- %s", STRERROR);
+                THROW(IOException, "Monit: cannot send command to the monit daemon -- %s", System_lastError());
 }
 
 

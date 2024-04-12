@@ -90,7 +90,7 @@ static char *_getFQDNhostname(char host[256]) {
                         }
                         freeaddrinfo(result);
                 } else {
-                        Log_warning("Cannot translate '%s' to FQDN name, please set a sender address using 'set mail-format' -- %s\n", Run.system->name, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                        Log_warning("Cannot translate '%s' to FQDN name, please set a sender address using 'set mail-format' -- %s\n", Run.system->name, status == EAI_SYSTEM ? System_lastError() : gai_strerror(status));
                 }
                 if (STR_UNDEF(host)) {
                         // Fallback
@@ -196,7 +196,7 @@ static MailServer_T _connectMTA(void) {
                 if (mta->socket)
                         break;
                 else
-                        Log_error("Cannot open a connection to the mailserver %s:%i -- %s\n", mta->host, mta->port, STRERROR);
+                        Log_error("Cannot open a connection to the mailserver %s:%i -- %s\n", mta->host, mta->port, System_lastError());
         }
         if (! mta || ! mta->socket)
                 THROW(IOException, "Delivery failed -- no mail server is available");
@@ -250,7 +250,7 @@ static bool _send(List_T list) {
                                                 m->message) <= 0
                                    )
                                 {
-                                        THROW(IOException, "Error sending data to mail server %s -- %s", mta->host, STRERROR);
+                                        THROW(IOException, "Error sending data to mail server %s -- %s", mta->host, System_lastError());
                                 }
                                 SMTP_dataCommit(smtp);
                                 gc_mail_list((Mail_T *)&m);

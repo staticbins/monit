@@ -48,10 +48,10 @@ void check_gps(Socket_T socket) {
         assert(socket);
 
         if (Socket_print(socket, "G\r\n") < 0)
-                THROW(IOException, "GPS: error sending data -- %s", STRERROR);
+                THROW(IOException, "GPS: error sending data -- %s", System_lastError());
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "GPS: error receiving data -- %s", STRERROR);
+                THROW(IOException, "GPS: error receiving data -- %s", System_lastError());
 
         Str_chomp(buf);
         if (strncasecmp(buf, ok_gps_device, strlen(ok_gps_device)) != 0)

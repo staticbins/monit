@@ -98,7 +98,7 @@ static void _ping(Socket_T socket) {
                 0x00                                                              // BSON document terminal
         };
         if (Socket_write(socket, (unsigned char *)ping, sizeof(ping)) < 0)
-                THROW(IOException, "MONGODB: ping command error -- %s", STRERROR);
+                THROW(IOException, "MONGODB: ping command error -- %s", System_lastError());
 }
 
 
@@ -107,7 +107,7 @@ static void _pong(Socket_T socket) {
         unsigned char buf[STRLEN + 1];
         memset(&pong, 0, sizeof(op_reply_t));
         if (Socket_read(socket, buf, 16) < 16) // read the header
-                THROW(IOException, "MONGODB: error receiving PING response -- %s", STRERROR);
+                THROW(IOException, "MONGODB: error receiving PING response -- %s", System_lastError());
         // check response ID: should be 1 (hardcoded in _ping request above)
         pong.responseToId = B4(buf + 8);
         if (pong.responseToId != 1)
@@ -120,7 +120,7 @@ static void _pong(Socket_T socket) {
         pong.messageSize = B4(buf);
         int len = pong.messageSize - 16 > STRLEN ? STRLEN : pong.messageSize - 16; // Adjust message size for this buffer (minus 16 bytes of header - already read)
         if (Socket_read(socket, buf, len) != len)
-                THROW(IOException, "MONGODB: error receiving OP_REPLY data -- %s", STRERROR);
+                THROW(IOException, "MONGODB: error receiving OP_REPLY data -- %s", System_lastError());
         // check BSON encoded OK response: {ok:1}
         pong.response = buf + 20;
         unsigned char ok[17] = {

@@ -57,10 +57,10 @@ void check_dwp(Socket_T socket) {
         assert(socket);
 
         if (Socket_print(socket, "HEAD / HTTP/1.1\r\nConnection: close\r\n\r\n") < 0)
-                THROW(IOException, "DWP: error sending data -- %s", STRERROR);
+                THROW(IOException, "DWP: error sending data -- %s", System_lastError());
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "DWP: error receiving data -- %s", STRERROR);
+                THROW(IOException, "DWP: error receiving data -- %s", System_lastError());
 
         Str_chomp(buf);
 

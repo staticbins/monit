@@ -521,7 +521,7 @@ static void _waitOnSaveThread(void) {
 bool State_open(void) {
         State_close();
         if ((file = open(Run.files.state, O_RDWR | O_CREAT, 0600)) == -1) {
-                Log_error("State file '%s': cannot open for write -- %s\n", Run.files.state, STRERROR);
+                Log_error("State file '%s': cannot open for write -- %s\n", Run.files.state, System_lastError());
                 return false;
         }
         atexit(State_close);
@@ -533,7 +533,7 @@ void State_close(void) {
         _waitOnSaveThread();
         if (file != -1) {
                 if (close(file) == -1)
-                        Log_error("State file '%s': close error -- %s\n", Run.files.state, STRERROR);
+                        Log_error("State file '%s': close error -- %s\n", Run.files.state, System_lastError());
                 else
                         file = -1;
         }
@@ -614,7 +614,7 @@ void State_save(void) {
                         }
                 }
                 if (fsync(file)) {
-                        THROW(IOException, "Unable to sync -- %s", STRERROR);
+                        THROW(IOException, "Unable to sync -- %s", System_lastError());
                 }
                 _stateDirty = false;
         }

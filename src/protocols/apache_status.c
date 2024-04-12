@@ -114,7 +114,7 @@ static void _parseResponseHeaders(Socket_T socket) {
         int status;
         char buf[STRLEN];
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "APACHE-STATUS: error receiving data -- %s", STRERROR);
+                THROW(IOException, "APACHE-STATUS: error receiving data -- %s", System_lastError());
         Str_chomp(buf);
         if (! sscanf(buf, "%*s %d", &status))
                 THROW(ProtocolException, "APACHE-STATUS: error -- cannot parse HTTP status in response: %s", buf);
@@ -150,7 +150,7 @@ void check_apache_status(Socket_T socket) {
                 auth ? auth : "");
         FREE(auth);
         if (rv < 0)
-                THROW(IOException, "APACHE-STATUS: error sending data -- %s", STRERROR);
+                THROW(IOException, "APACHE-STATUS: error sending data -- %s", System_lastError());
         _parseResponseHeaders(socket);
         while (Socket_readLine(socket, buf, sizeof(buf))) {
                 if (Str_startsWith(buf, "Scoreboard: ")) {

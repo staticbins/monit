@@ -145,7 +145,7 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         glob_t globbuf;
         int rv = glob("/proc/[0-9]*", 0, NULL, &globbuf);
         if (rv != 0) {
-                Log_error("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
+                Log_error("system statistic error -- glob failed: %d (%s)\n", rv, System_lastError());
                 return 0;
         }
 
@@ -274,7 +274,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         /* Swap */
 again:
         if ((num = swapctl(SC_GETNSWP, 0)) == -1) {
-                Log_error("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
+                Log_error("system statistic error -- swap usage data collection failed: %s\n", System_lastError());
                 return false;
         }
         if (num == 0) {
@@ -288,7 +288,7 @@ again:
                 s->swt_ent[i].ste_path = strtab + (i * MAXSTRSIZE);
         s->swt_n = num + 1;
         if ((n = swapctl(SC_LIST, s)) < 0) {
-                Log_error("system statistic error -- swap usage data collection failed: %s\n", STRERROR);
+                Log_error("system statistic error -- swap usage data collection failed: %s\n", System_lastError());
                 si->swap.size = 0ULL;
                 FREE(s);
                 FREE(strtab);

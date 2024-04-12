@@ -1122,7 +1122,7 @@ static State_Type _checkMatch(Service_T s) {
         if (s->matchlist) {
                 FILE *file = fopen(s->path, "r");
                 if (! file) {
-                        Log_error("'%s' cannot open file %s: %s\n", s->name, s->path, STRERROR);
+                        Log_error("'%s' cannot open file %s: %s\n", s->name, s->path, System_lastError());
                         return State_Failed;
                 }
                 /* FIXME: Refactor: Initialize the filesystems table ahead of file and filesystems test and index it by device id + replace the Str_startsWith() with lookup to the table by device id (obtained via file's stat()).
@@ -1147,13 +1147,13 @@ next:
                         /* Seek to the read position */
                         if (fseek(file, (long)s->inf.file->readpos, SEEK_SET)) {
                                 rv = State_Failed;
-                                Log_error("'%s' cannot seek file %s: %s\n", s->name, s->path, STRERROR);
+                                Log_error("'%s' cannot seek file %s: %s\n", s->name, s->path, System_lastError());
                                 goto final2;
                         }
                         if (! fgets(line, (int)Run.limits.fileContentBuffer, file)) {
                                 if (! feof(file)) {
                                         rv = State_Failed;
-                                        Log_error("'%s' cannot read file %s: %s\n", s->name, s->path, STRERROR);
+                                        Log_error("'%s' cannot read file %s: %s\n", s->name, s->path, System_lastError());
                                 }
                                 goto final2;
                         }
@@ -1211,7 +1211,7 @@ final2:
 final1:
                 if (fclose(file)) {
                         rv = State_Failed;
-                        Log_error("'%s' cannot close file %s: %s\n", s->name, s->path, STRERROR);
+                        Log_error("'%s' cannot close file %s: %s\n", s->name, s->path, System_lastError());
                 }
                 /* Post process the matches: generate events for particular patterns */
                 for (Match_T ml = s->matchlist; ml; ml = ml->next) {

@@ -98,21 +98,21 @@ bool init_systeminfo_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
         size_t len = sizeof(System_Info.cpu.count);
         if (sysctl(mib, 2, &System_Info.cpu.count, &len, NULL, 0) == -1) {
-                DEBUG("system statistic error -- cannot get cpu count: %s\n", STRERROR);
+                DEBUG("system statistic error -- cannot get cpu count: %s\n", System_lastError());
                 return false;
         }
 
         mib[1] = HW_PHYSMEM;
         len    = sizeof(System_Info.memory.size);
         if (sysctl(mib, 2, &System_Info.memory.size, &len, NULL, 0) == -1) {
-                DEBUG("system statistic error -- cannot get real memory amount: %s\n", STRERROR);
+                DEBUG("system statistic error -- cannot get real memory amount: %s\n", System_lastError());
                 return false;
         }
 
         mib[1] = HW_PAGESIZE;
         len    = sizeof(pagesize);
         if (sysctl(mib, 2, &pagesize, &len, NULL, 0) == -1) {
-                DEBUG("system statistic error -- cannot get memory page size: %s\n", STRERROR);
+                DEBUG("system statistic error -- cannot get memory page size: %s\n", System_lastError());
                 return false;
         }
 
@@ -121,7 +121,7 @@ bool init_systeminfo_sysdep(void) {
         mib[1] = KERN_BOOTTIME;
         len = sizeof(booted);
         if (sysctl(mib, 2, &booted, &len, NULL, 0) == -1) {
-                DEBUG("system statistics error -- sysctl kern.boottime failed: %s\n", STRERROR);
+                DEBUG("system statistics error -- sysctl kern.boottime failed: %s\n", System_lastError());
                 return false;
         } else {
                 System_Info.booted = booted.tv_sec;
@@ -243,7 +243,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         int mib[2] = {CTL_VM, VM_UVMEXP2};
         size_t len = sizeof(struct uvmexp_sysctl);
         if (sysctl(mib, 2, &vm, &len, NULL, 0) == -1) {
-                Log_error("system statistic error -- cannot get memory usage: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get memory usage: %s\n", System_lastError());
                 si->swap.size = 0ULL;
                 return false;
         }
@@ -267,7 +267,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
         len = sizeof(cp_time);
         if (sysctl(mib, 2, &cp_time, &len, NULL, 0) == -1) {
-                Log_error("system statistic error -- cannot get cpu time: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get cpu time: %s\n", System_lastError());
                 return false;
         }
 

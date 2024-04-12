@@ -100,7 +100,7 @@ void daemonize(void) {
         }
          // Change current directory to the root so that other file systems can be unmounted while we're running
         if (chdir("/") < 0) {
-                Log_error("Cannot chdir to / -- %s\n", STRERROR);
+                Log_error("Cannot chdir to / -- %s\n", System_lastError());
                 exit(1);
         }
         // Redirect standard descriptors to /dev/null. Other descriptors should be closed in env.c
@@ -117,7 +117,7 @@ bool kill_daemon(int sig) {
         pid_t pid;
         if ((pid = exist_daemon()) > 0) {
                 if (kill(pid, sig) < 0) {
-                        Log_error("Cannot signal the monit daemon process -- %s\n", STRERROR);
+                        Log_error("Cannot signal the monit daemon process -- %s\n", System_lastError());
                         return false;
                 }
         } else {

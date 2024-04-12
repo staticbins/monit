@@ -118,7 +118,7 @@ static bool _open(void) {
         } else {
                 _LOG = fopen(Run.files.log, "a");
                 if (! _LOG) {
-                        Log_error("Error opening the log file '%s' for writing -- %s\n", Run.files.log, STRERROR);
+                        Log_error("Error opening the log file '%s' for writing -- %s\n", Run.files.log, System_lastError());
                         return false;
                 }
                 /* Set logger in unbuffered mode */
@@ -482,7 +482,7 @@ void Log_close(void) {
                 closelog();
         }
         if (_LOG  && (0 != fclose(_LOG))) {
-                Log_error("Error closing the log file -- %s\n", STRERROR);
+                Log_error("Error closing the log file -- %s\n", System_lastError());
         }
         _LOG = NULL;
 }

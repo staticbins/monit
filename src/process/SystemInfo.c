@@ -48,7 +48,7 @@ bool SystemInfo_init(void) {
         memset(&System_Info, 0, sizeof(SystemInfo_T));
         gettimeofday(&System_Info.collected, NULL);
         if (uname(&System_Info.uname) < 0) {
-                Log_error("'%s' resource monitoring initialization error -- uname failed: %s\n", Run.system->name, STRERROR);
+                Log_error("'%s' resource monitoring initialization error -- uname failed: %s\n", Run.system->name, System_lastError());
                 return false;
         }
         System_Info.cpu.usage.user = -1.;

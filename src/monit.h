@@ -115,7 +115,6 @@
 #define MONIT              "monit"
 #define MONITRC            "monitrc"
 #define TIMEFORMAT         "%FT%T%z"
-#define STRERROR            strerror(errno)
 #define STRLEN             256
 #ifndef USEC_PER_SEC
 #define USEC_PER_SEC       1000000L
@@ -1412,6 +1411,7 @@ extern const char *Httpmethod_Names[];
 
 // libmonit
 #include "system/Mem.h"
+#include "system/System.h"
 
 // Monit functions
 bool Monit_wakeup(void);

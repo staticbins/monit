@@ -105,11 +105,11 @@ void check_dns(Socket_T socket) {
         }
 
         if (Socket_write(socket, (unsigned char *)request + offset_request, sizeof(request) - offset_request) < 0)
-                THROW(IOException, "DNS: error sending query -- %s", STRERROR);
+                THROW(IOException, "DNS: error sending query -- %s", System_lastError());
 
         /* Response should have at least 14 bytes */
         if (Socket_read(socket, (unsigned char *)buf, 15) <= 14)
-                THROW(IOException, "DNS: error receiving response -- %s", STRERROR);
+                THROW(IOException, "DNS: error receiving response -- %s", System_lastError());
 
         response = buf + offset_response;
 

@@ -44,13 +44,13 @@ void check_spamassassin(Socket_T socket) {
 
         // Send PING
         if (Socket_print(socket, "PING SPAMC/1.2\r\n") < 0) {
-                THROW(IOException, "SPAMASSASSIN: PING command error -- %s", STRERROR);
+                THROW(IOException, "SPAMASSASSIN: PING command error -- %s", System_lastError());
         }
 
         // Read and check PONG
         char buf[STRLEN];
         if (! Socket_readLine(socket, buf, sizeof(buf))) {
-                THROW(IOException, "SPAMASSASSIN: PONG read error -- %s", STRERROR);
+                THROW(IOException, "SPAMASSASSIN: PONG read error -- %s", System_lastError());
         }
         Str_chomp(buf);
         if (! Str_startsWith(buf, "SPAMD/") || ! Str_sub(buf, " PONG")) {

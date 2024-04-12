@@ -121,7 +121,7 @@ static bool _getStatistics(unsigned long long now) {
                 size_t len = 0;
                 int mib[3] = {CTL_HW, HW_IOSTATS, sizeof(struct io_sysctl)};
                 if (sysctl(mib, 3, NULL, &len, NULL, 0) == -1) {
-                        Log_error("filesystem statistic error -- cannot get HW_IOSTATS size: %s\n", STRERROR);
+                        Log_error("filesystem statistic error -- cannot get HW_IOSTATS size: %s\n", System_lastError());
                         return false;
                 }
                 if (_statistics.diskLength != len) {
@@ -130,7 +130,7 @@ static bool _getStatistics(unsigned long long now) {
                         RESIZE(_statistics.disk, len);
                 }
                 if (sysctl(mib, 3, _statistics.disk, &(_statistics.diskLength), NULL, 0) == -1) {
-                        Log_error("filesystem statistic error -- cannot get HW_IOSTATS: %s\n", STRERROR);
+                        Log_error("filesystem statistic error -- cannot get HW_IOSTATS: %s\n", System_lastError());
                         return false;
                 }
                 _statistics.timestamp = now;
@@ -168,7 +168,7 @@ static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
         if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
-                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
+                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, System_lastError());
                 return false;
         }
         inf->filesystem->f_bsize = usage.f_frsize;

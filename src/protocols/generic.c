@@ -94,7 +94,7 @@ void check_generic(Socket_T socket) {
                         if (Socket_write(socket, X, l) < 0) {
                                 FREE(X);
                                 FREE(buf);
-                                THROW(IOException, "GENERIC: error sending data -- %s", STRERROR);
+                                THROW(IOException, "GENERIC: error sending data -- %s", System_lastError());
                         } else {
                                 DEBUG("GENERIC: successfully sent: '%s'\n", g->send);
                         }
@@ -107,7 +107,7 @@ void check_generic(Socket_T socket) {
                         int first_byte = Socket_readByte(socket);
                         if (first_byte < 0) {
                                 FREE(buf);
-                                THROW(IOException, "GENERIC: error receiving data -- %s", STRERROR);
+                                THROW(IOException, "GENERIC: error receiving data -- %s", System_lastError());
                         }
                         *buf = first_byte;
 

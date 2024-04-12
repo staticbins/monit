@@ -44,12 +44,12 @@ void check_clamav(Socket_T socket) {
 
         // Send PING
         if (Socket_print(socket, "PING\r\n") < 0)
-                THROW(IOException, "CLAMAV: PING command error -- %s", STRERROR);
+                THROW(IOException, "CLAMAV: PING command error -- %s", System_lastError());
 
         // Read and check PONG
         char buf[STRLEN];
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "CLAMAV: PONG read error -- %s", STRERROR);
+                THROW(IOException, "CLAMAV: PONG read error -- %s", System_lastError());
         Str_chomp(buf);
         if (strncasecmp(buf, "PONG", 4) != 0)
                 THROW(ProtocolException, "CLAMAV: invalid PONG response -- %s", buf);

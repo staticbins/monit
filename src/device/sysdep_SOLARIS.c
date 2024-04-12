@@ -142,7 +142,7 @@ static bool _getKstatDiskActivity(void *_inf) {
                         if (kstat->ks_type == KSTAT_TYPE_IO && kstat->ks_instance == inf->filesystem->object.instance && IS(kstat->ks_module, inf->filesystem->object.module) && IS(kstat->ks_name, inf->filesystem->object.key)) {
                                 static kstat_io_t kio;
                                 if (kstat_read(kctl, kstat, &kio) == -1) {
-                                        Log_error("filesystem statistics error: kstat_read failed -- %s\n", STRERROR);
+                                        Log_error("filesystem statistics error: kstat_read failed -- %s\n", System_lastError());
                                 } else {
                                         unsigned long long now = Time_milli();
                                         Statistics_update(&(inf->filesystem->read.bytes), now, kio.nread);
@@ -165,7 +165,7 @@ static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
         if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
-                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
+                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, System_lastError());
                 return false;
         }
         int size = usage.f_frsize ? (usage.f_bsize / usage.f_frsize) : 1;
@@ -228,7 +228,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                                 if (! realpath(mnt.mnt_special, special)) {
                                         // If the file doesn't exist it's a virtual filesystem -> ENOENT doesn't mean error
                                         if (errno != ENOENT && errno != ENOTDIR)
-                                                Log_error("Lookup for '%s' filesystem failed -- %s\n", path, STRERROR);
+                                                Log_error("Lookup for '%s' filesystem failed -- %s\n", path, System_lastError());
                                 } else if (! Str_startsWith(special, "/devices/")) {
                                         Log_error("Lookup for '%s' filesystem -- invalid device %s\n", path, special);
                                 } else {

@@ -50,13 +50,13 @@ void check_redis(Socket_T socket) {
         char buf[STRLEN];
 
         if (Socket_print(socket, "*1\r\n$4\r\nPING\r\n") < 0)
-                THROW(IOException, "REDIS: PING command error -- %s", STRERROR);
+                THROW(IOException, "REDIS: PING command error -- %s", System_lastError());
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "REDIS: PING response error -- %s", STRERROR);
+                THROW(IOException, "REDIS: PING response error -- %s", System_lastError());
         Str_chomp(buf);
         if (! Str_isEqual(buf, "+PONG") && ! Str_startsWith(buf, "-NOAUTH")) // We accept authentication error (-NOAUTH Authentication required): redis responded to request, but requires authentication => we assume it works
                 THROW(ProtocolException, "REDIS: PING error -- %s", buf);
         if (Socket_print(socket, "*1\r\n$4\r\nQUIT\r\n") < 0)
-                THROW(IOException, "REDIS: QUIT command error -- %s", STRERROR);
+                THROW(IOException, "REDIS: QUIT command error -- %s", System_lastError());
 }
 

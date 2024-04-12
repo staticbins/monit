@@ -784,7 +784,7 @@ static void printFavicon(HttpResponse res) {
                 Socket_print(S, "Content-Type: image/x-icon\r\n");
                 Socket_print(S, "Connection: close\r\n\r\n");
                 if (Socket_write(S, favicon, l) < 0) {
-                        Log_error("Error sending favicon data -- %s\n", STRERROR);
+                        Log_error("Error sending favicon data -- %s\n", System_lastError());
                 }
         }
 }
@@ -1128,7 +1128,7 @@ static void do_viewlog(HttpRequest req, HttpResponse res) {
                         fclose(f);
                         StringBuffer_append(res->outputbuffer, "</textarea></form>");
                 } else {
-                        StringBuffer_append(res->outputbuffer, "Error opening logfile: %s", STRERROR);
+                        StringBuffer_append(res->outputbuffer, "Error opening logfile: %s", System_lastError());
                 }
         } else {
                 StringBuffer_append(res->outputbuffer,

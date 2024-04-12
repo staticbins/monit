@@ -255,7 +255,7 @@ static void _connectRequest(mqtt_t *mqtt) {
         connect.header.messageLength += sizeof(mqtt_connect_request_t) - sizeof(mqtt_header_t) - sizeof(connect.data);
 
         if (Socket_write(mqtt->socket, &connect, sizeof(mqtt_header_t) + connect.header.messageLength) < 0) {
-                THROW(IOException, "Cannot connect -- %s\n", STRERROR);
+                THROW(IOException, "Cannot connect -- %s\n", System_lastError());
         }
         mqtt->state = MQTT_ConnectSent;
 }
@@ -264,7 +264,7 @@ static void _connectRequest(mqtt_t *mqtt) {
 static void _connectResponse(mqtt_t *mqtt) {
         mqtt_connect_response_t response = {};
         if ((long)Socket_read(mqtt->socket, &response, sizeof(mqtt_connect_response_t)) < (long)sizeof(mqtt_connect_response_t)) {
-                THROW(IOException, "Error receiving connection response -- %s", STRERROR);
+                THROW(IOException, "Error receiving connection response -- %s", System_lastError());
         }
         if (response.header.messageType != MQTT_Type_ConnectResponse) {
                 THROW(ProtocolException, "Unexpected connection response type -- %s (%d)", _describeType(response.header.messageType), response.header.messageType);
@@ -287,7 +287,7 @@ static void _disconnect(mqtt_t *mqtt) {
                         .header.messageLength = 0
                 };
                 if (Socket_write(mqtt->socket, &disconnect, sizeof(mqtt_disconnect_request_t)) < 0) {
-                        THROW(IOException, "Cannot disconnect -- %s\n", STRERROR);
+                        THROW(IOException, "Cannot disconnect -- %s\n", System_lastError());
                 }
         }
         mqtt->state = MQTT_Init;

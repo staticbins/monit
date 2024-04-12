@@ -75,11 +75,11 @@ void check_ntp3(Socket_T socket) {
 
         /* Send request to NTP server */
         if (Socket_write(socket, ntpRequest, NTPLEN) <= 0)
-                THROW(IOException, "NTP: error sending NTP request -- %s", STRERROR);
+                THROW(IOException, "NTP: error sending NTP request -- %s", System_lastError());
 
         /* Receive and validate response */
         if ((br = Socket_read(socket, ntpResponse, NTPLEN)) <= 0)
-                THROW(IOException, "NTP: did not receive answer from server -- %s", STRERROR);
+                THROW(IOException, "NTP: did not receive answer from server -- %s", System_lastError());
 
         if (br != NTPLEN)
                 THROW(ProtocolException, "NTP: Received %d bytes from server, expected %d bytes", br, NTPLEN);

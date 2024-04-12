@@ -51,13 +51,13 @@ void check_fail2ban(Socket_T socket) {
 
         // Send PING
         if (Socket_write(socket, ping, sizeof(ping)) < 0) {
-                THROW(IOException, "FAIL2BAN: PING command error -- %s", STRERROR);
+                THROW(IOException, "FAIL2BAN: PING command error -- %s", System_lastError());
         }
 
         // Read and check response - just the pickle protocol header beginning to see if the server reacts to commands, so we can keep the response test pickle-protocol-version agnostic
         unsigned char response[1] = {};
         if (Socket_read(socket, response, sizeof(response)) != 1) {
-                THROW(IOException, "FAIL2BAN: PONG read error -- %s", STRERROR);
+                THROW(IOException, "FAIL2BAN: PONG read error -- %s", System_lastError());
         }
         if (response[0] != 0x80) {
                 THROW(ProtocolException, "FAIL2BAN: PONG error");

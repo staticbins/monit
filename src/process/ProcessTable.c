@@ -482,7 +482,7 @@ pid_t ProcessTable_findServiceProcess(Service_T s) {
                 if (pid > 0) {
                         if (ProcessTable_exist(pid))
                                 return pid;
-                        DEBUG("'%s' process test failed [pid=%d] -- %s\n", s->name, pid, STRERROR);
+                        DEBUG("'%s' process test failed [pid=%d] -- %s\n", s->name, pid, System_lastError());
                 }
         }
         Util_resetInfo(s);

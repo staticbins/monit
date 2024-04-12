@@ -1375,7 +1375,7 @@ checksystem     : CHECKSYSTEM SERVICENAME {
                         if (Str_sub(servicename, "$HOST")) {
                                 char hostname[STRLEN];
                                 if (gethostname(hostname, sizeof(hostname))) {
-                                        Log_error("System hostname error -- %s\n", STRERROR);
+                                        Log_error("System hostname error -- %s\n", System_lastError());
                                         cfg_errflag++;
                                 } else {
                                         Util_replaceString(&servicename, "$HOST", hostname);
@@ -3397,7 +3397,7 @@ bool parse(char *controlfile) {
         assert(controlfile);
 
         if ((yyin = fopen(controlfile,"r")) == (FILE *)NULL) {
-                Log_error("Cannot open the control file '%s' -- %s\n", controlfile, STRERROR);
+                Log_error("Cannot open the control file '%s' -- %s\n", controlfile, System_lastError());
                 return false;
         }
 
@@ -3594,7 +3594,7 @@ static bool _parseOutgoingAddress(char *ip, Outgoing_T *outgoing) {
                 freeaddrinfo(result);
                 return true;
         } else {
-                yyerror2("IP address parsing failed for %s -- %s", ip, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                yyerror2("IP address parsing failed for %s -- %s", ip, status == EAI_SYSTEM ? System_lastError() : gai_strerror(status));
         }
         return false;
 }

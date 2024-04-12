@@ -181,7 +181,7 @@ static double hz = 0.;
 static time_t _getStartTime(void) {
         struct sysinfo info;
         if (sysinfo(&info) < 0) {
-                Log_error("system statistic error -- cannot get system uptime: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get system uptime: %s\n", System_lastError());
                 return 0;
         }
         return Time_now() - info.uptime;
@@ -326,7 +326,7 @@ static bool _parseProcPidCmdline(Proc_T proc, ProcessEngine_Flags pflags) {
                 snprintf(filename, sizeof(filename), "/proc/%d/cmdline", proc->data.pid);
                 FILE *f = fopen(filename, "r");
                 if (! f) {
-                        DEBUG("system statistic error -- cannot open /proc/%d/cmdline: %s\n", proc->data.pid, STRERROR);
+                        DEBUG("system statistic error -- cannot open /proc/%d/cmdline: %s\n", proc->data.pid, System_lastError());
                         return false;
                 }
                 size_t n;
@@ -392,7 +392,7 @@ static bool _parseProcFdCount(Proc_T proc) {
         DIR *dirp = opendir(path);
         if (! dirp) {
                 if (Run.debug >= 2)
-                        DEBUG("system statistic error -- opendir %s: %s\n", path, STRERROR);
+                        DEBUG("system statistic error -- opendir %s: %s\n", path, System_lastError());
                 return false;
         }
         errno = 0;
@@ -402,7 +402,7 @@ static bool _parseProcFdCount(Proc_T proc) {
         }
         // do not closedir() until readdir errno has been evaluated
         if (errno) {
-                DEBUG("system statistic error -- cannot iterate %s: %s\n", path, STRERROR);
+                DEBUG("system statistic error -- cannot iterate %s: %s\n", path, System_lastError());
                 closedir(dirp);
                 return false;
         }
@@ -452,17 +452,17 @@ static double _usagePercent(unsigned long long previous, unsigned long long curr
 
 bool init_systeminfo_sysdep(void) {
         if ((hz = sysconf(_SC_CLK_TCK)) <= 0.) {
-                DEBUG("system statistic error -- cannot get hz: %s\n", STRERROR);
+                DEBUG("system statistic error -- cannot get hz: %s\n", System_lastError());
                 return false;
         }
 
         if ((page_size = sysconf(_SC_PAGESIZE)) <= 0) {
-                DEBUG("system statistic error -- cannot get page size: %s\n", STRERROR);
+                DEBUG("system statistic error -- cannot get page size: %s\n", System_lastError());
                 return false;
         }
 
         if ((System_Info.cpu.count = sysconf(_SC_NPROCESSORS_ONLN)) < 0) {
-                DEBUG("system statistic error -- cannot get cpu count: %s\n", STRERROR);
+                DEBUG("system statistic error -- cannot get cpu count: %s\n", System_lastError());
                 return false;
         } else if (System_Info.cpu.count == 0) {
                 DEBUG("system reports cpu count 0, setting dummy cpu count 1\n");
@@ -505,7 +505,7 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         glob_t globbuf;
         int rv = glob("/proc/[0-9]*", 0, NULL, &globbuf);
         if (rv) {
-                Log_error("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
+                Log_error("system statistic error -- glob failed: %d (%s)\n", rv, System_lastError());
                 return 0;
         }
 

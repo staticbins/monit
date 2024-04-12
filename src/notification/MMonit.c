@@ -98,7 +98,7 @@ static bool _send(Socket_T socket, Mmonit_T C, StringBuffer_T sb) {
                               auth ? auth : "");
         FREE(auth);
         if (rv < 0 || Socket_write(socket, body, bodyLength) < 0) {
-                Log_error("M/Monit: error sending data to %s -- %s\n", C->url->url, STRERROR);
+                Log_error("M/Monit: error sending data to %s -- %s\n", C->url->url, System_lastError());
                 return false;
         }
         return true;
@@ -114,7 +114,7 @@ static bool _receive(Socket_T socket, Mmonit_T C) {
         int  status;
         char buf[STRLEN];
         if (! Socket_readLine(socket, buf, sizeof(buf))) {
-                Log_error("M/Monit: error receiving data from %s -- %s\n", C->url->url, STRERROR);
+                Log_error("M/Monit: error receiving data from %s -- %s\n", C->url->url, System_lastError());
                 return false;
         }
         Str_chomp(buf);

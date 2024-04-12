@@ -129,11 +129,11 @@ void check_sip(Socket_T socket) {
                          port,                         // contact port
                          VERSION                       // user agent
                          ) < 0) {
-                THROW(IOException, "SIP: error sending data -- %s", STRERROR);
+                THROW(IOException, "SIP: error sending data -- %s", System_lastError());
         }
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "SIP: error receiving data -- %s", STRERROR);
+                THROW(IOException, "SIP: error receiving data -- %s", System_lastError());
 
         Str_chomp(buf);
 

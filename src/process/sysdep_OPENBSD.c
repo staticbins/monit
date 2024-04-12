@@ -100,7 +100,7 @@ bool init_systeminfo_sysdep(void) {
         int mib[2] = {CTL_HW, HW_NCPU};
         size_t len = sizeof(System_Info.cpu.count);
         if (sysctl(mib, 2, &System_Info.cpu.count, &len, NULL, 0) == -1) {
-                DEBUG("system statistic error -- cannot get cpu count: %s\n", STRERROR);
+                DEBUG("system statistic error -- cannot get cpu count: %s\n", System_lastError());
                 return false;
         }
 
@@ -108,7 +108,7 @@ bool init_systeminfo_sysdep(void) {
         mib[1] = HW_PHYSMEM64;
         len    = sizeof(physmem);
         if (sysctl(mib, 2, &physmem, &len, NULL, 0) == -1) {
-                DEBUG("system statistic error -- cannot get real memory amount: %s\n", STRERROR);
+                DEBUG("system statistic error -- cannot get real memory amount: %s\n", System_lastError());
                 return false;
         }
         System_Info.memory.size = (unsigned long long)physmem;
@@ -116,7 +116,7 @@ bool init_systeminfo_sysdep(void) {
         mib[1] = HW_PAGESIZE;
         len    = sizeof(pagesize);
         if (sysctl(mib, 2, &pagesize, &len, NULL, 0) == -1) {
-                DEBUG("system statistic error -- cannot get memory page size: %s\n", STRERROR);
+                DEBUG("system statistic error -- cannot get memory page size: %s\n", System_lastError());
                 return false;
         }
 
@@ -125,7 +125,7 @@ bool init_systeminfo_sysdep(void) {
         mib[1] = KERN_BOOTTIME;
         len = sizeof(booted);
         if (sysctl(mib, 2, &booted, &len, NULL, 0) == -1) {
-                DEBUG("system statistics error -- sysctl kern.boottime failed: %s\n", STRERROR);
+                DEBUG("system statistics error -- sysctl kern.boottime failed: %s\n", System_lastError());
                 return false;
         } else {
                 System_Info.booted = booted.tv_sec;
@@ -256,7 +256,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         size_t len = sizeof(struct uvmexp);
         if (sysctl(mib, 2, &vm, &len, NULL, 0) == -1) {
                 si->swap.size = 0ULL;
-                Log_error("system statistic error -- cannot get memory usage: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get memory usage: %s\n", System_lastError());
                 return false;
         }
         si->memory.usage.bytes = (unsigned long long)(vm.active + vm.wired) * (unsigned long long)pagesize;
@@ -279,7 +279,7 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
 
         len = sizeof(cp_time);
         if (sysctl(mib, 2, &cp_time, &len, NULL, 0) == -1) {
-                Log_error("system statistic error -- cannot get cpu time: %s\n", STRERROR);
+                Log_error("system statistic error -- cannot get cpu time: %s\n", System_lastError());
                 return false;
         }
 
@@ -307,14 +307,14 @@ bool used_system_filedescriptors_sysdep(SystemInfo_T *si) {
         int mib[2] = {CTL_KERN, KERN_NFILES};
         size_t len = sizeof(si->filedescriptors.allocated);
         if (sysctl(mib, 2, &si->filedescriptors.allocated, &len, NULL, 0) == -1) {
-                DEBUG("system statistics error -- sysctl kern.nfiles failed: %s\n", STRERROR);
+                DEBUG("system statistics error -- sysctl kern.nfiles failed: %s\n", System_lastError());
                 return false;
         }
         // Max files
         mib[1] = KERN_MAXFILES;
         len = sizeof(si->filedescriptors.maximum);
         if (sysctl(mib, 2, &si->filedescriptors.maximum, &len, NULL, 0) == -1) {
-                DEBUG("system statistics error -- sysctl kern.maxfiles failed: %s\n", STRERROR);
+                DEBUG("system statistics error -- sysctl kern.maxfiles failed: %s\n", System_lastError());
                 return false;
         }
         return true;

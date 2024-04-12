@@ -195,7 +195,7 @@ static void _queueAdd(Event_T E) {
 
         FILE *file = fopen(file_name, "w");
         if (! file) {
-                Log_error("Aborting event - cannot create event file %s -- %s\n", file_name, STRERROR);
+                Log_error("Aborting event - cannot create event file %s -- %s\n", file_name, System_lastError());
                 return;
         }
 
@@ -228,7 +228,7 @@ error:
         if (! rv) {
                 Log_error("Aborting event - unable to save event information to %s\n",  file_name);
                 if (unlink(file_name) < 0)
-                        Log_error("Failed to remove event file '%s' -- %s\n", file_name, STRERROR);
+                        Log_error("Failed to remove event file '%s' -- %s\n", file_name, System_lastError());
         } else {
                 if (! (Run.flags & Run_HandlerInit) && E->flag & Handler_Alert)
                         Run.handler_queue[Handler_Alert]++;
@@ -260,7 +260,7 @@ static void _queueUpdate(Event_T E, const char *file_name) {
 
         FILE *file = fopen(file_name, "w");
         if (! file) {
-                Log_error("Aborting event - cannot open the event file %s -- %s\n", file_name, STRERROR);
+                Log_error("Aborting event - cannot open the event file %s -- %s\n", file_name, System_lastError());
                 return;
         }
 
@@ -289,7 +289,7 @@ error:
         if (! rv) {
                 Log_error("Aborting event - unable to update event information in '%s'\n", file_name);
                 if (unlink(file_name) < 0)
-                        Log_error("Failed to remove event file '%s' -- %s\n", file_name, STRERROR);
+                        Log_error("Failed to remove event file '%s' -- %s\n", file_name, System_lastError());
         }
 }
 
@@ -564,7 +564,7 @@ void Event_queue_process(void) {
         DIR *dir = opendir(Run.eventlist_dir);
         if (! dir) {
                 if (errno != ENOENT)
-                        Log_error("Cannot open the directory %s -- %s\n", Run.eventlist_dir, STRERROR);
+                        Log_error("Cannot open the directory %s -- %s\n", Run.eventlist_dir, System_lastError());
                 return;
         }
 
@@ -593,7 +593,7 @@ void Event_queue_process(void) {
 
                         FILE *file = fopen(file_name, "r");
                         if (! file) {
-                                Log_error("Queued event processing failed - cannot open the file '%s' -- %s\n", file_name, STRERROR);
+                                Log_error("Queued event processing failed - cannot open the file '%s' -- %s\n", file_name, System_lastError());
                                 goto error1;
                         }
 
@@ -697,7 +697,7 @@ void Event_queue_process(void) {
                         if (e->flag == Handler_Succeeded) {
                                 DEBUG("Removing queued event %s\n", file_name);
                                 if (unlink(file_name) < 0)
-                                        Log_error("Failed to remove queued event file '%s' -- %s\n", file_name, STRERROR);
+                                        Log_error("Failed to remove queued event file '%s' -- %s\n", file_name, System_lastError());
                         } else if (handlers_passed > 0) {
                                 DEBUG("Updating queued event %s (some handlers passed)\n", file_name);
                                 _queueUpdate(e, file_name);

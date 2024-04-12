@@ -234,7 +234,7 @@ static void _authenticateMd5(postgresql_t postgresql) {
 
         // Send the password message
         if (Socket_write(postgresql->socket, (unsigned char *)&passwordMessage, length + 1) != length + 1)
-                THROW(IOException, "PGSQL: error sending clear text password message -- %s", STRERROR);
+                THROW(IOException, "PGSQL: error sending clear text password message -- %s", System_lastError());
 
         DEBUG("PGSQL: DEBUG: MD5 authentication message sent\n");
 }
@@ -258,7 +258,7 @@ static void _authenticateClearPassword(postgresql_t postgresql) {
 
         passwordMessage.length = htonl(length);
         if (Socket_write(postgresql->socket, (unsigned char *)&passwordMessage, length + 1) != length + 1)
-                THROW(IOException, "PGSQL: error sending clear text password message -- %s", STRERROR);
+                THROW(IOException, "PGSQL: error sending clear text password message -- %s", System_lastError());
 
         DEBUG("PGSQL: DEBUG: clear password authentication message sent\n");
 }
@@ -295,7 +295,7 @@ static void _requestStartup(postgresql_t postgresql) {
         startupMessage.length = htonl(length);
 
         if (Socket_write(postgresql->socket, (unsigned char *)&startupMessage, length) != length)
-                THROW(IOException, "PGSQL: error sending startup message -- %s", STRERROR);
+                THROW(IOException, "PGSQL: error sending startup message -- %s", System_lastError());
 
         DEBUG("PGSQL: DEBUG: startup message sent\n");
 }
@@ -307,7 +307,7 @@ static void _requestTerminate(postgresql_t postgresql) {
                 .length = htonl(4)
         };
         if (Socket_write(postgresql->socket, (unsigned char *)&terminateMessage, sizeof(struct postgresql_terminatemessage_t)) != sizeof(struct postgresql_terminatemessage_t))
-                THROW(IOException, "PGSQL: error sending terminate message -- %s", STRERROR);
+                THROW(IOException, "PGSQL: error sending terminate message -- %s", System_lastError());
 
         DEBUG("PGSQL: DEBUG: terminate message sent\n");
 }
@@ -385,7 +385,7 @@ static int _readResponse(postgresql_t postgresql, void *buffer, int length, cons
         if (rv == 0 && eofAllowed)
                 return 0;
         else if (rv < 0)
-                THROW(IOException, "PGSQL: response %s read error -- %s", description, STRERROR);
+                THROW(IOException, "PGSQL: response %s read error -- %s", description, System_lastError());
         else if (rv != length)
                 THROW(IOException, "PGSQL: response %s read error -- %d bytes expected, got %d bytes", description, length, rv);
         return rv;

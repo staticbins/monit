@@ -179,7 +179,7 @@ static char *_addressToString(const struct sockaddr *addr, socklen_t addrlen, ch
                 char port[NI_MAXSERV];
                 int status = getnameinfo(addr, addrlen, ip, sizeof(ip), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
                 if (status) {
-                        Log_error("Cannot get address string -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                        Log_error("Cannot get address string -- %s\n", status == EAI_SYSTEM ? System_lastError() : gai_strerror(status));
                         *buf = 0;
                 } else {
                         snprintf(buf, buflen, "[%s]:%s", ip, port);
@@ -195,7 +195,7 @@ static bool _doConnect(int s, const struct sockaddr *addr, socklen_t addrlen, in
         if (! rv) {
                 return true;
         } else if (errno != EINPROGRESS) {
-                snprintf(error, errorlen, "%s", STRERROR);
+                snprintf(error, errorlen, "%s", System_lastError());
                 return false;
         }
         struct pollfd fds[1];
@@ -206,13 +206,13 @@ static bool _doConnect(int s, const struct sockaddr *addr, socklen_t addrlen, in
                 snprintf(error, errorlen, "Connection timed out");
                 return false;
         } else if (rv == -1) {
-                snprintf(error, errorlen, "Poll failed: %s", STRERROR);
+                snprintf(error, errorlen, "Poll failed: %s", System_lastError());
                 return false;
         }
         if (fds[0].events & POLLIN || fds[0].events & POLLOUT) {
                 socklen_t rvlen = sizeof(rv);
                 if (getsockopt(s, SOL_SOCKET, SO_ERROR, &rv, &rvlen) < 0) {
-                        snprintf(error, errorlen, "Read of error details failed: %s", STRERROR);
+                        snprintf(error, errorlen, "Read of error details failed: %s", System_lastError());
                         return false;
                 } else if (rv) {
                         snprintf(error, errorlen, "%s", strerror(rv));
@@ -233,7 +233,7 @@ static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_
         if (s >= 0) {
                 if (localaddr) {
                         if (bind(s, localaddr, localaddrlen) < 0) {
-                                snprintf(error, sizeof(error), "Cannot bind to outgoing address -- %s", STRERROR);
+                                snprintf(error, sizeof(error), "Cannot bind to outgoing address -- %s", System_lastError());
                                 goto error;
                         }
                 }
@@ -252,15 +252,15 @@ static T _createIpSocket(const char *host, const struct sockaddr *addr, socklen_
                                         return S;
                                 }
                         } else {
-                                snprintf(error, sizeof(error), "Cannot set socket close on exec -- %s", STRERROR);
+                                snprintf(error, sizeof(error), "Cannot set socket close on exec -- %s", System_lastError());
                         }
                 } else {
-                        snprintf(error, sizeof(error), "Cannot set nonblocking socket -- %s", STRERROR);
+                        snprintf(error, sizeof(error), "Cannot set nonblocking socket -- %s", System_lastError());
                 }
 error:
                 Net_close(s);
         } else {
-                snprintf(error, sizeof(error), "Cannot create socket to %s -- %s", _addressToString(addr, addrlen, (char[2048]){}, 2048), STRERROR);
+                snprintf(error, sizeof(error), "Cannot create socket to %s -- %s", _addressToString(addr, addrlen, (char[2048]){}, 2048), System_lastError());
         }
         THROW(IOException, "%s", error);
         return NULL;
@@ -296,7 +296,7 @@ static struct addrinfo *_resolve(const char *hostname, int port, Socket_Type typ
         snprintf(_port, sizeof(_port), "%d", port);
         int status = getaddrinfo(hostname, _port, &hints, &result);
         if (status != 0) {
-                Log_error("Cannot translate '%s' to IP address -- %s\n", hostname, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                Log_error("Cannot translate '%s' to IP address -- %s\n", hostname, status == EAI_SYSTEM ? System_lastError() : gai_strerror(status));
                 return NULL;
         }
         return result;
@@ -354,7 +354,7 @@ T Socket_createUnix(const char *path, Socket_Type type, int timeout) {
                         unixsocket_client.sun_family = AF_UNIX;
                         snprintf(unixsocket_client.sun_path, sizeof(unixsocket_client.sun_path), "/tmp/monit_%p.sock", &unixsocket_client);
                         if (bind(s, (struct sockaddr *) &unixsocket_client, sizeof(unixsocket_client)) != 0) {
-                                Log_error("Unix socket %s bind error -- %s\n", unixsocket_client.sun_path, STRERROR);
+                                Log_error("Unix socket %s bind error -- %s\n", unixsocket_client.sun_path, System_lastError());
                                 goto error;
                         }
                 }
@@ -376,14 +376,14 @@ T Socket_createUnix(const char *path, Socket_Type type, int timeout) {
                         }
                         Log_error("Unix socket %s connection error -- %s\n", path, error);
                 } else {
-                        Log_error("Cannot set nonblocking unix socket %s -- %s\n", path, STRERROR);
+                        Log_error("Cannot set nonblocking unix socket %s -- %s\n", path, System_lastError());
                 }
 error:
                 Net_close(s);
                 if (type == Socket_Udp)
                         unlink(unixsocket_client.sun_path);
         } else {
-                Log_error("Cannot create unix socket %s -- %s\n", path, STRERROR);
+                Log_error("Cannot create unix socket %s -- %s\n", path, System_lastError());
         }
         return NULL;
 }
@@ -447,7 +447,7 @@ void Socket_free(T *S) {
                 socklen_t length = sizeof(type);
                 int rv = getsockopt((*S)->socket, SOL_SOCKET, SO_TYPE, &type, &length);
                 if (rv) {
-                        Log_error("Freeing socket -- getsockopt failed: %s\n", STRERROR);
+                        Log_error("Freeing socket -- getsockopt failed: %s\n", System_lastError());
                 } else if (type == SOCK_DGRAM) {
                         struct sockaddr_storage addr;
                         socklen_t addrlen = sizeof(addr);
@@ -546,9 +546,9 @@ const char *Socket_getLocalHost(T S, char *host, int hostlen) {
                 int status = getnameinfo((struct sockaddr *)&addr, addrlen, host, hostlen, NULL, 0, NI_NUMERICHOST);
                 if (! status)
                         return host;
-                Log_error("Cannot translate address to hostname -- %s\n", status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                Log_error("Cannot translate address to hostname -- %s\n", status == EAI_SYSTEM ? System_lastError() : gai_strerror(status));
         } else {
-                Log_error("Cannot translate address to hostname -- getsockname failed: %s\n", STRERROR);
+                Log_error("Cannot translate address to hostname -- getsockname failed: %s\n", System_lastError());
         }
         return NULL;
 }

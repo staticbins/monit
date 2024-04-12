@@ -55,7 +55,7 @@ static void read_response(Socket_T socket, int opcode) {
                 char buf[STRLEN];
                 // Read frame header
                 if ((n = Socket_read(socket, buf, 2)) != 2)
-                        THROW(IOException, "WEBSOCKET: response 0x%x: header read error -- %s", opcode, STRERROR);
+                        THROW(IOException, "WEBSOCKET: response 0x%x: header read error -- %s", opcode, System_lastError());
                 /*
                  * As we don't know the specific protocol used by this websocket server, the pipeline
                  * may contain some frames sent by server before the response we're waiting for (such
@@ -108,10 +108,10 @@ void check_websocket(Socket_T socket) {
                          P->parameters.websocket.version,
                          P->parameters.websocket.origin ? P->parameters.websocket.origin : "http://www.mmonit.com") < 0)
         {
-                THROW(IOException, "WEBSOCKET: error sending data -- %s", STRERROR);
+                THROW(IOException, "WEBSOCKET: error sending data -- %s", System_lastError());
         }
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "WEBSOCKET: error receiving data -- %s", STRERROR);
+                THROW(IOException, "WEBSOCKET: error receiving data -- %s", System_lastError());
         int status;
         if (! sscanf(buf, "%*s %d", &status) || (status != 101))
                 THROW(ProtocolException, "WEBSOCKET: error -- %s", buf);
@@ -125,7 +125,7 @@ void check_websocket(Socket_T socket) {
                 0x5b, 0x63, 0x68, 0x84 // Key
         };
         if (Socket_write(socket, ping, sizeof(ping)) < 0)
-                THROW(IOException, "WEBSOCKET: error sending ping -- %s", STRERROR);
+                THROW(IOException, "WEBSOCKET: error sending ping -- %s", System_lastError());
 
         // Pong: verify response opcode is Pong (0xA)
         read_response(socket, 0xA);
@@ -137,7 +137,7 @@ void check_websocket(Socket_T socket) {
                 0x5b, 0x63, 0x68, 0x84 // Key
         };
         if (Socket_write(socket, close_request, sizeof(close_request)) < 0)
-                THROW(IOException, "WEBSOCKET: error sending close -- %s", STRERROR);
+                THROW(IOException, "WEBSOCKET: error sending close -- %s", System_lastError());
 
         // Close response (0x8)
         read_response(socket, 0x8);

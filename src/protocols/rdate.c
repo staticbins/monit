@@ -59,7 +59,7 @@ void check_rdate(Socket_T socket) {
         assert(socket);
         time_t time;
         if (Socket_read(socket, (char *)&time, sizeof(time)) <= 0)
-                THROW(IOException, "RDATE: error receiving data -- %s", STRERROR);
+                THROW(IOException, "RDATE: error receiving data -- %s", System_lastError());
         // Compare system time with the RDATE server time (RDATE starts at 00:00:00 UTC, January 1, 1900 => add offset to 00:00:00 UTC, January 1, 1970)
         if (llabs((long long)Time_now() + 2208988800LL - (long long)ntohl(time)) > 3LL)
                 THROW(ProtocolException, "RDATE error: time does not match system time");

@@ -77,7 +77,7 @@ void check_memcache(Socket_T socket) {
         assert(socket);
 
         if (Socket_write(socket, (unsigned char *)request, sizeof(request)) <= 0)
-                THROW(IOException, "MEMCACHE: error sending data -- %s", STRERROR);
+                THROW(IOException, "MEMCACHE: error sending data -- %s", System_lastError());
 
         /* Response should have at least MEMCACHELEN bytes */
         length = Socket_read(socket, (unsigned char *)response, sizeof(response));

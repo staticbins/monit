@@ -73,7 +73,7 @@ bool filesystem_usage(Service_T s) {
                         // Symbolic link: dereference
                         char buf[PATH_MAX] = {};
                         if (! realpath(s->path, buf)) {
-                                Log_error("Cannot dereference filesystem '%s' (symlink) -- %s\n", s->path, STRERROR);
+                                Log_error("Cannot dereference filesystem '%s' (symlink) -- %s\n", s->path, System_lastError());
                                 return false;
                         }
                         st = stat(buf, &sb);

@@ -48,7 +48,7 @@ void check_nntp(Socket_T socket) {
         assert(socket);
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "NNTP: error receiving data -- %s", STRERROR);
+                THROW(IOException, "NNTP: error receiving data -- %s", System_lastError());
 
         Str_chomp(buf);
 
@@ -56,10 +56,10 @@ void check_nntp(Socket_T socket) {
                 THROW(ProtocolException, "NNTP error: %s", buf);
 
         if (Socket_print(socket, "QUIT\r\n") < 0)
-                THROW(IOException, "NNTP: error sending data -- %s", STRERROR);
+                THROW(IOException, "NNTP: error sending data -- %s", System_lastError());
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "NNTP: error receiving data -- %s", STRERROR);
+                THROW(IOException, "NNTP: error receiving data -- %s", System_lastError());
 
         Str_chomp(buf);
 
