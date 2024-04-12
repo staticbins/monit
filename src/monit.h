@@ -292,46 +292,46 @@ typedef enum {
 } Service_Type;
 
 
-// Resource_Type is used as an extended enum type
-// via bit-fields and can hold up to 64 values.
-typedef unsigned long long Resource_Type;
-#define Resource_CpuPercent           (1ULL << 0)
-#define Resource_MemoryPercent        (1ULL << 1)
-#define Resource_MemoryKbyte          (1ULL << 2)
-#define Resource_LoadAverage1m        (1ULL << 3)
-#define Resource_LoadAverage5m        (1ULL << 4)
-#define Resource_LoadAverage15m       (1ULL << 5)
-#define Resource_Children             (1ULL << 6)
-#define Resource_MemoryKbyteTotal     (1ULL << 7)
-#define Resource_MemoryPercentTotal   (1ULL << 8)
-#define Resource_Inode                (1ULL << 9)
-#define Resource_InodeFree            (1ULL << 10)
-#define Resource_Space                (1ULL << 11)
-#define Resource_SpaceFree            (1ULL << 12)
-#define Resource_CpuUser              (1ULL << 13)
-#define Resource_CpuSystem            (1ULL << 14)
-#define Resource_CpuWait              (1ULL << 15)
-#define Resource_CpuNice              (1ULL << 16)
-#define Resource_CpuHardIRQ           (1ULL << 17)
-#define Resource_CpuSoftIRQ           (1ULL << 18)
-#define Resource_CpuSteal             (1ULL << 19)
-#define Resource_CpuGuest             (1ULL << 20)
-#define Resource_CpuGuestNice         (1ULL << 21)
-#define Resource_CpuPercentTotal      (1ULL << 22)
-#define Resource_SwapPercent          (1ULL << 23)
-#define Resource_SwapKbyte            (1ULL << 24)
-#define Resource_Threads              (1ULL << 25)
-#define Resource_ReadBytes            (1ULL << 26)
-#define Resource_ReadBytesPhysical    (1ULL << 27)
-#define Resource_ReadOperations       (1ULL << 28)
-#define Resource_WriteBytes           (1ULL << 29)
-#define Resource_WriteBytesPhysical   (1ULL << 30)
-#define Resource_WriteOperations      (1ULL << 31)
-#define Resource_ServiceTime          (1ULL << 32)
-#define Resource_LoadAveragePerCore1m (1ULL << 33)
-#define Resource_LoadAveragePerCore5m (1ULL << 34)
-#define Resource_LoadAveragePerCore15m (1ULL << 35)
-#define Resource_HardLink             (1ULL << 36)
+typedef enum {
+        Resource_CpuPercent = 1,
+        Resource_MemoryPercent,
+        Resource_MemoryKbyte,
+        Resource_LoadAverage1m,
+        Resource_LoadAverage5m,
+        Resource_LoadAverage15m,
+        Resource_Children,
+        Resource_MemoryKbyteTotal,
+        Resource_MemoryPercentTotal,
+        Resource_Inode,
+        Resource_InodeFree,
+        Resource_Space,
+        Resource_SpaceFree,
+        Resource_CpuUser,
+        Resource_CpuSystem,
+        Resource_CpuWait,
+        Resource_CpuNice,
+        Resource_CpuHardIRQ,
+        Resource_CpuSoftIRQ,
+        Resource_CpuSteal,
+        Resource_CpuGuest,
+        Resource_CpuGuestNice,
+        Resource_CpuPercentTotal,
+        Resource_SwapPercent,
+        Resource_SwapKbyte,
+        Resource_Threads,
+        Resource_ReadBytes,
+        Resource_ReadBytesPhysical,
+        Resource_ReadOperations,
+        Resource_WriteBytes,
+        Resource_WriteBytesPhysical,
+        Resource_WriteOperations,
+        Resource_ServiceTime,
+        Resource_LoadAveragePerCore1m,
+        Resource_LoadAveragePerCore5m,
+        Resource_LoadAveragePerCore15m,
+        Resource_HardLink                   // Used by check file, fifo and directory
+} Resource_Type;
+
 
 
 typedef enum {
