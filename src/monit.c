@@ -118,7 +118,6 @@
 // -------------------------------------------------------------------- Globals
 
 
-const char *Prog;
 struct Run_T Run;
 Service_T Service_List;
 Service_T Service_List_Conf;
@@ -343,7 +342,7 @@ static void do_reinit(void) {
         gc();
         
         if (! parse(Run.files.control)) {
-                Log_error("%s stopped -- error parsing configuration file\n", Prog);
+                Log_error("monit stopped -- error parsing configuration file\n");
                 exit(1);
         }
         
@@ -364,7 +363,7 @@ static void do_reinit(void) {
         file_init();
         
         if (! file_createPidFile(Run.files.pid)) {
-                Log_error("%s stopped -- cannot create a pid file\n", Prog);
+                Log_error("monit stopped -- cannot create a pid file\n");
                 exit(1);
         }
         
@@ -580,7 +579,7 @@ static void do_action(List_T arguments) {
                         exit(1);
                 }
         } else if (IS(action, "reload")) {
-                Log_info("Reinitializing %s daemon\n", Prog);
+                Log_info("Reinitializing monit daemon\n");
                 kill_daemon(SIGHUP);
         } else if (IS(action, "status")) {
                 char *service = List_pop(arguments);
@@ -619,7 +618,7 @@ static void do_action(List_T arguments) {
 /// Print the program's help message
 static void help(void) {
         printf(
-               "Usage: %s [options]+ [command]\n"
+               "Usage: monit [options]+ [command]\n"
                "Options are as follows:\n"
                " -c file       Use this control file\n"
                " -d n          Run as a daemon with default check interval 'n' seconds\n"
@@ -655,8 +654,8 @@ static void help(void) {
                " report [up|down|..]   - Report state of services. See manual for options\n"
                " quit                  - Kill the monit daemon process\n"
                " validate              - Check all services and start if not running\n"
-               " procmatch <pattern>   - Test process matching pattern\n",
-               Prog);
+               " procmatch <pattern>   - Test process matching pattern\n"
+               );
 }
 
 
@@ -912,7 +911,6 @@ int main(int argc, char **argv) {
         Bootstrap_setAbortHandler(Log_abort_handler);  // Abort Monit on exceptions thrown by libmonit
         Bootstrap_setErrorHandler(Log_verror);
         setlocale(LC_ALL, "C");
-        Prog = File_basename(argv[0]);
 #ifdef HAVE_OPENSSL
         Ssl_start();
 #endif

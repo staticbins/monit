@@ -112,7 +112,7 @@
 #include "util/StringBuffer.h"
 #include "thread/Thread.h"
 
-
+#define MONIT              "monit"
 #define MONITRC            "monitrc"
 #define TIMEFORMAT         "%FT%T%z"
 #define STRERROR            strerror(errno)
@@ -1384,7 +1384,6 @@ struct Run_T {
 /* -------------------------------------------------------- Global variables */
 
 
-extern const char    *Prog;
 extern struct Run_T   Run;
 extern Service_T      Service_List;
 extern Service_T      Service_List_Conf;

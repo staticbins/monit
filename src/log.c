@@ -114,7 +114,7 @@ static struct mylogpriority {
  */
 static bool _open(void) {
         if (Run.flags & Run_UseSyslog) {
-                openlog(Prog, LOG_PID, Run.facility);
+                openlog(MONIT, LOG_PID, Run.facility);
         } else {
                 _LOG = fopen(Run.files.log, "a");
                 if (! _LOG) {
