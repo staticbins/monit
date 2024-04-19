@@ -377,7 +377,7 @@ static void do_reinit(void) {
                 monit_http(Httpd_Start);
         
         // Post monit startup notification
-        Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit reloaded");
+        Event_post(Run.system, Event_Instance, Check_Changed, Run.system->action_MONIT_START, "Monit reloaded");
         
         if (Run.mmonits) {
                 Thread_createAtomicThread(&Heartbeat_Thread, do_heartbeat, NULL);
@@ -426,7 +426,7 @@ static void do_exit(bool saveState) {
         Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
         
         // send the monit stop notification
-        Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_STOP, "Monit %s stopped", VERSION);
+        Event_post(Run.system, Event_Instance, Check_Changed, Run.system->action_MONIT_STOP, "Monit %s stopped", VERSION);
         if (saveState) {
                 State_save();
         }
@@ -510,7 +510,7 @@ static void do_default(void) {
         
         if (Run.startdelay) {
                 if (State_reboot()) {
-                        Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
+                        Log_info("Monit will delay for %d seconds on first start after reboot ...\n", Run.startdelay);
                         Time_usleepComplete(Run.startdelay * USEC_PER_SEC);
                 } else {
                         DEBUG("Monit delay %ds skipped -- the system boot time has not changed since last Monit start\n", Run.startdelay);
@@ -520,7 +520,7 @@ static void do_default(void) {
         if (can_http())
                 monit_http(Httpd_Start);
         
-        Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
+        Event_post(Run.system, Event_Instance, Check_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
         
         if (Run.mmonits) {
                 Thread_createAtomicThread(&Heartbeat_Thread, do_heartbeat, NULL);

@@ -232,7 +232,7 @@ static void  preparse(void);
 static void  postparse(void);
 static bool _parseOutgoingAddress(char *ip, Outgoing_T *outgoing);
 static void  addmail(char *, Mail_T, Mail_T *);
-static Service_T createservice(Service_Type, char *, char *, State_Type (*)(Service_T));
+static Service_T createservice(Service_Type, char *, char *, Check_State (*)(Service_T));
 static void  addservice(Service_T);
 static void  adddependant(char *);
 static void  addservicegroup(char *);
@@ -3604,7 +3604,7 @@ static bool _parseOutgoingAddress(char *ip, Outgoing_T *outgoing) {
  * Create a new service object and add any current objects to the
  * service list.
  */
-static Service_T createservice(Service_Type type, char *name, char *value, State_Type (*check)(Service_T s)) {
+static Service_T createservice(Service_Type type, char *name, char *value, Check_State (*check)(Service_T s)) {
         assert(name);
 
         check_name(name);

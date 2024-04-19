@@ -97,7 +97,7 @@
 #endif
 
 #include <stdbool.h>
-
+#include <stdatomic.h>
 
 #include "Ssl.h"
 #include "Address.h"
@@ -183,14 +183,28 @@ typedef enum {
 } Every_Type;
 
 
+// Service State-machine states
 typedef enum {
-        State_Succeeded  = 0x0,
-        State_Failed     = 0x1,
-        State_Changed    = 0x2,
-        State_ChangedNot = 0x4,
-        State_Init       = 0x8,
-        State_None       = State_Init // Alias
-} State_Type;
+    ServiceState_Idle,
+    ServiceState_Starting,
+    ServiceState_Started,
+    ServiceState_Restarting,
+    ServiceState_Stopping,
+    ServiceState_Stopped,
+    ServiceState_Error,
+    ServiceState_Check,
+    ServiceState_Unmonitored
+} ServiceState_Type;
+
+
+typedef enum {
+        Check_Succeeded  = 0x0,
+        Check_Failed     = 0x1,
+        Check_Changed    = 0x2,
+        Check_ChangedNot = 0x4,
+        Check_Init       = 0x8,
+        Check_None       = Check_Init // Alias
+} Check_State;
 
 
 typedef enum {
@@ -331,7 +345,6 @@ typedef enum {
         Resource_LoadAveragePerCore15m,
         Resource_HardLink                   // Used by check file, fifo and directory
 } Resource_Type;
-
 
 
 typedef enum {
@@ -1193,12 +1206,12 @@ typedef union Info_T {
 /** Defines service data */
 //FIXME: use union for type-specific rules
 typedef struct Service_T {
-
+        ServiceState_Type service_state;
         /** Common parameters */
         char *name;                                  /**< Service descriptive name */
         char *name_urlescaped;                       /**< Service name URL escaped */
         StringBuffer_T name_htmlescaped;            /**< Service name HTML escaped */
-        State_Type (*check)(struct Service_T *);/**< Service verification function */
+        Check_State (*check)(struct Service_T *);/**< Service verification function */
         bool onrebootRestored;
         bool visited; /**< Service visited flag, set if dependencies are used */
         bool inverseStatus;
@@ -1276,7 +1289,7 @@ typedef struct Service_T {
                 struct Service_T *source;                              /**< Event source */
                 Monitor_Mode      mode;             /**< Monitoring mode for the service */
                 Service_Type      type;                      /**< Monitored service type */
-                State_Type        state;                                 /**< Test state */
+                Check_State        state;                                 /**< Test state */
                 bool         state_changed;              /**< true if state changed */
                 Handler_Type      flag;                     /**< The handlers state flag */
                 unsigned long long state_map;          /**< Event bitmap for last cycles */

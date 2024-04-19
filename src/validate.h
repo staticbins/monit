@@ -27,7 +27,7 @@
 #define MONIT_VALIDATE_H
 
 /**
- * Validate transit the state of each configured service.
+ * The validate function transit the service_state of each service.
  *
  * State           -> Next Possible States
  * -------------------------------------------------
@@ -82,14 +82,14 @@
 
 
 int validate(void);
-State_Type check_process(Service_T);
-State_Type check_filesystem(Service_T);
-State_Type check_file(Service_T);
-State_Type check_directory(Service_T);
-State_Type check_remote_host(Service_T);
-State_Type check_system(Service_T);
-State_Type check_fifo(Service_T);
-State_Type check_program(Service_T);
-State_Type check_net(Service_T);
+Check_State check_process(Service_T);
+Check_State check_filesystem(Service_T);
+Check_State check_file(Service_T);
+Check_State check_directory(Service_T);
+Check_State check_remote_host(Service_T);
+Check_State check_system(Service_T);
+Check_State check_fifo(Service_T);
+Check_State check_program(Service_T);
+Check_State check_net(Service_T);
 
 #endif
