@@ -233,6 +233,7 @@ static Service_T createservice(Service_Type, char *, char *, State_Type (*)(Serv
 static void  addservice(Service_T);
 static void  adddependant(char *);
 static void  addservicegroup(char *);
+static void  addhostgroup(char *name);
 static void  addport(Port_T *, Port_T);
 static void  addhttpheader(Port_T, char *);
 static void  addresource(Resource_T);
@@ -351,7 +352,7 @@ static void _sanityCheckEveryStatement(Service_T s);
 %token DEFAULT HTTP HTTPS APACHESTATUS FTP SMTP SMTPS POP POPS IMAP IMAPS CLAMAV NNTP NTP3 MYSQL MYSQLS DNS WEBSOCKET MQTT
 %token SSH DWP LDAP2 LDAP3 RDATE RSYNC TNS PGSQL POSTFIXPOLICY SIP LMTP GPS RADIUS MEMCACHE REDIS MONGODB SIEVE SPAMASSASSIN FAIL2BAN
 %token <string> STRING PATH MAILADDR MAILFROM MAILREPLYTO MAILSUBJECT
-%token <string> MAILBODY SERVICENAME STRINGNAME
+%token <string> MAILBODY SERVICENAME STRINGNAME HOSTGROUPNAME
 %token <number> NUMBER PERCENT LOGLIMIT CLOSELIMIT DNSLIMIT KEEPALIVELIMIT
 %token <number> REPLYLIMIT REQUESTLIMIT STARTLIMIT WAITLIMIT GRACEFULLIMIT
 %token <number> CLEANUPLIMIT
@@ -828,6 +829,7 @@ mmonitopt       : TIMEOUT NUMBER SECOND {
                 | sslchecksum
                 | sslversion
                 | certmd5
+                | '[' hostgrouplist ']'
                 ;
 
 credentials     : /* EMPTY */
@@ -2351,6 +2353,12 @@ group           : GROUP STRINGNAME {
                   }
                 ;
 
+hostgrouplist   : /* EMPTY */
+                | hostgrouplist HOSTGROUPNAME {
+                        addhostgroup($2);
+                 }
+                ;
+
 
 depend          : DEPENDS dependlist
                 ;
@@ -3763,6 +3771,16 @@ static void addservicegroup(char *name) {
 
 
 /*
+ * Add entry to M/Monit hostgroup membership list
+ */
+static void addhostgroup(char *name) {
+        if (! mmonitset.hostgroups)
+                mmonitset.hostgroups = List_new();
+        List_append(mmonitset.hostgroups, name);
+}
+
+
+/*
  * Add a dependant entry to the current service dependant list
  */
 static void adddependant(char *dependant) {
@@ -4658,6 +4676,7 @@ static void addmmonit(Mmonit_T mmonit) {
 #endif
         }
         c->timeout = mmonit->timeout;
+        c->hostgroups = mmonit->hostgroups;
         c->next = NULL;
 
         if (Run.mmonits) {

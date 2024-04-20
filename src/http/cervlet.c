@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -862,11 +862,11 @@ static void do_foot(HttpResponse res) {
         StringBuffer_append(res->outputbuffer,
                             "</center></div></div>"
                             "<div id='footer'>"
-                            "Copyright &copy; 2001-2023 <a href=\"http://tildeslash.com/\">Tildeslash</a>. All rights reserved. "
+                            "Copyright &copy; 2001-2024 <a href=\"https://tildeslash.com/\">Tildeslash</a>. All rights reserved. "
                             "<span style='margin-left:5px;'></span>"
-                            "<a href=\"http://mmonit.com/monit/\">Monit web site</a> | "
-                            "<a href=\"http://mmonit.com/wiki/\">Monit Wiki</a> | "
-                            "<a href=\"http://mmonit.com/\">M/Monit</a>"
+                            "<a href=\"https://mmonit.com/monit/\">Monit web site</a> | "
+                            "<a href=\"https://mmonit.com/wiki/\">Monit Wiki</a> | "
+                            "<a href=\"https://mmonit.com/\">M/Monit</a>"
                             "</div></body></html>");
 }
 
@@ -903,12 +903,12 @@ static void do_home(HttpResponse res) {
 static void do_about(HttpResponse res) {
         StringBuffer_append(res->outputbuffer,
                             "<html><head><title>about monit</title></head><body bgcolor=white>"
-                            "<br><h1><center><a href='http://mmonit.com/monit/'>"
+                            "<br><h1><center><a href='https://mmonit.com/monit/'>"
                             "monit " VERSION "</a></center></h1>");
         StringBuffer_append(res->outputbuffer,
                             "<ul>"
-                            "<li style='padding-bottom:10px;'>Copyright &copy; 2001-2023 <a "
-                            "href='http://tildeslash.com/'>Tildeslash Ltd"
+                            "<li style='padding-bottom:10px;'>Copyright &copy; 2001-2024 <a "
+                            "href='https://tildeslash.com/'>Tildeslash Ltd"
                             "</a>. All Rights Reserved.</li></ul>");
         StringBuffer_append(res->outputbuffer, "<hr size='1'>");
         StringBuffer_append(res->outputbuffer,
@@ -917,7 +917,7 @@ static void do_about(HttpResponse res) {
                             "<p>This program is distributed in the hope that it will be useful, but "
                             "WITHOUT ANY WARRANTY; without even the implied warranty of "
                             "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the "
-                            "<a href='http://www.gnu.org/licenses/agpl.html'>"
+                            "<a href='https://www.gnu.org/licenses/agpl.html'>"
                             "GNU AFFERO GENERAL PUBLIC LICENSE</a> for more details.</p>");
         StringBuffer_append(res->outputbuffer,
                             "<center><p style='padding-top:20px;'>[<a href='.'>Back to Monit</a>]</p></body></html>");
@@ -973,13 +973,12 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
 #endif
         if (Run.mmonits) {
                 StringBuffer_append(res->outputbuffer, "<tr><td>M/Monit server(s)</td><td>");
-                for (Mmonit_T c = Run.mmonits; c; c = c->next)
-                {
+                for (Mmonit_T c = Run.mmonits; c; c = c->next) {
                         escapeHTML(res->outputbuffer, c->url->url);
-                        StringBuffer_append(res->outputbuffer, " with timeout %s", Fmt_time2str(c->timeout, (char[11]){}));
+                        StringBuffer_append(res->outputbuffer, "<br>&nbsp;&nbsp;with timeout %s<br>", Fmt_time2str(c->timeout, (char[11]){}));
 #ifdef HAVE_OPENSSL
                         if (c->ssl.flags) {
-                                StringBuffer_append(res->outputbuffer, " using TLS");
+                                StringBuffer_append(res->outputbuffer, "&nbsp;&nbsp;using TLS");
                                 const char *options = Ssl_printOptions(&c->ssl, (char[STRLEN]){}, STRLEN);
                                 if (options && *options)
                                         StringBuffer_append(res->outputbuffer, " with options {%s}", options);
@@ -988,10 +987,19 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                                         escapeHTML(res->outputbuffer, c->ssl.checksum);
                                         StringBuffer_append(res->outputbuffer, "'");
                                 }
+                                StringBuffer_append(res->outputbuffer, "<br>");
                         }
 #endif
                         if (Run.flags & Run_MmonitCredentials && c->url->user)
-                                StringBuffer_append(res->outputbuffer, " with credentials");
+                                StringBuffer_append(res->outputbuffer, "&nbsp;&nbsp;with credentials<br>");
+                        if (c->hostgroups) {
+                                int hostgroups = 0;
+                                StringBuffer_append(res->outputbuffer, "&nbsp;&nbsp;with hostgroups [");
+                                for (list_t g = c->hostgroups->head; g; g = g->next) {
+                                        StringBuffer_append(res->outputbuffer, "%s\"%s\"", hostgroups++ ? ", " : "", (const char *)g->e);
+                                }
+                                StringBuffer_append(res->outputbuffer, "]<br>");
+                        }
                         if (c->next)
                                 StringBuffer_append(res->outputbuffer, "</td></tr><tr><td>&nbsp;</td><td>");
                 }
@@ -2603,7 +2611,7 @@ static void print_status(HttpRequest req, HttpResponse res, int version) {
         if (stringFormat && Str_startsWith(stringFormat, "xml")) {
                 char buf[STRLEN];
                 StringBuffer_T sb = StringBuffer_create(256);
-                status_xml(sb, NULL, version, Socket_getLocalHost(req->S, buf, sizeof(buf)));
+                status_xml(sb, NULL, version, Socket_getLocalHost(req->S, buf, sizeof(buf)), NULL);
                 StringBuffer_append(res->outputbuffer, "%s", StringBuffer_toString(sb));
                 StringBuffer_free(&sb);
                 set_content_type(res, "text/xml");

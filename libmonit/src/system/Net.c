@@ -181,7 +181,7 @@ bool Net_close(int socket) {
 
 bool Net_abort(int socket) {
    	int r;
-        struct linger linger = {1, 0};
+        struct linger linger = {.l_onoff = 1};
         if (setsockopt(socket, SOL_SOCKET, SO_LINGER, &linger, sizeof linger) < 0) {
                 ERROR("Net: setsockopt failed -- %s\n", System_lastError());
         }

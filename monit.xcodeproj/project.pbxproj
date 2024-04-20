@@ -9,15 +9,13 @@
 /* Begin PBXBuildFile section */
 		523753E71F34BC1C001522CD /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9397E3081D897CCA008CAD1F /* libz.tbd */; };
 		526614E32A9668CE009B6D86 /* SystemInfo.c in Sources */ = {isa = PBXBuildFile; fileRef = 526614DD2A9663CC009B6D86 /* SystemInfo.c */; };
-		5272D8432A01471300CF8E25 /* libssl.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5272D8412A01471300CF8E25 /* libssl.3.dylib */; };
-		5272D8442A01471300CF8E25 /* libssl.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 5272D8412A01471300CF8E25 /* libssl.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		5272D8452A01471300CF8E25 /* libcrypto.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5272D8422A01471300CF8E25 /* libcrypto.3.dylib */; };
-		5272D8462A01471300CF8E25 /* libcrypto.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 5272D8422A01471300CF8E25 /* libcrypto.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		527FDBB82A9BC487005F4D7B /* Proc.c in Sources */ = {isa = PBXBuildFile; fileRef = 527FDBB22A9BC2F4005F4D7B /* Proc.c */; };
 		5295A9EF245849FF007E3C4C /* Statistics.c in Sources */ = {isa = PBXBuildFile; fileRef = 522A1D292458487200773F8A /* Statistics.c */; };
 		5295AA0624584CDA007E3C4C /* Link.c in Sources */ = {isa = PBXBuildFile; fileRef = 5295AA0524584CDA007E3C4C /* Link.c */; };
 		52AE77CC14037DA300D2861D /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 52AE77CA14037DA300D2861D /* sha1.c */; };
 		52AE77CF14037E6A00D2861D /* md5_crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 52AE77CD14037E6A00D2861D /* md5_crypt.c */; };
+		52B8B23B2B69874600A1E720 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52B8B2392B69872700A1E720 /* libcrypto.a */; };
+		52B8B23C2B69874600A1E720 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52B8B23A2B69872700A1E720 /* libssl.a */; };
 		52DE1EB927FF3F8A00C4269C /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52DDC12A13C59D46003AA75C /* libmonit.a */; };
 		52F67BDD1BD7AC5A0092111B /* libpam.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 52F67BDC1BD7AC5A0092111B /* libpam.tbd */; };
 		52F6E80513A74F220023F87A /* alert.c in Sources */ = {isa = PBXBuildFile; fileRef = 52F6E74413A74F220023F87A /* alert.c */; };
@@ -210,18 +208,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		52BB060823B49C5F008E61F1 /* Embed Libraries */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				5272D8462A01471300CF8E25 /* libcrypto.3.dylib in Embed Libraries */,
-				5272D8442A01471300CF8E25 /* libssl.3.dylib in Embed Libraries */,
-			);
-			name = "Embed Libraries";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -267,6 +253,8 @@
 		52AE77CE14037E6A00D2861D /* md5_crypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = md5_crypt.h; sourceTree = "<group>"; };
 		52B1B3CF24301535004F9C5B /* ax_info.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_info.m4; sourceTree = "<group>"; };
 		52B1B3D0243016FC004F9C5B /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		52B8B2392B69872700A1E720 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = "../../zild-branches/zild-master/ext/repository/lib/libcrypto.a"; sourceTree = "<group>"; };
+		52B8B23A2B69872700A1E720 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = "../../zild-branches/zild-master/ext/repository/lib/libssl.a"; sourceTree = "<group>"; };
 		52BB060423B49C00008E61F1 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../../../../../opt/local/lib/libcrypto.a; sourceTree = "<group>"; };
 		52BB060523B49C5F008E61F1 /* libssl.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.1.1.dylib; path = ../../../../../opt/local/lib/libssl.1.1.dylib; sourceTree = "<group>"; };
 		52BB060923B49C7E008E61F1 /* libcrypto.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.1.dylib; path = ../../../../../opt/local/lib/libcrypto.1.1.dylib; sourceTree = "<group>"; };
@@ -410,14 +398,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				52B8B23C2B69874600A1E720 /* libssl.a in Frameworks */,
 				52DE1EB927FF3F8A00C4269C /* libmonit.a in Frameworks */,
 				523753E71F34BC1C001522CD /* libz.tbd in Frameworks */,
 				9365D2331E28F41500FCF3FB /* CoreFoundation.framework in Frameworks */,
-				5272D8432A01471300CF8E25 /* libssl.3.dylib in Frameworks */,
-				5272D8452A01471300CF8E25 /* libcrypto.3.dylib in Frameworks */,
 				9365D2311E28F40800FCF3FB /* DiskArbitration.framework in Frameworks */,
 				9365D22B1E28F3FC00FCF3FB /* IOKit.framework in Frameworks */,
 				52F67BDD1BD7AC5A0092111B /* libpam.tbd in Frameworks */,
+				52B8B23B2B69874600A1E720 /* libcrypto.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -849,6 +837,8 @@
 		9397E3071D897CCA008CAD1F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				52B8B2392B69872700A1E720 /* libcrypto.a */,
+				52B8B23A2B69872700A1E720 /* libssl.a */,
 				5272D8422A01471300CF8E25 /* libcrypto.3.dylib */,
 				5272D8412A01471300CF8E25 /* libssl.3.dylib */,
 				52BB060923B49C7E008E61F1 /* libcrypto.1.1.dylib */,
@@ -874,7 +864,6 @@
 				528EA76E13A74E05003DA4BE /* Sources */,
 				528EA76F13A74E05003DA4BE /* Frameworks */,
 				528EA77013A74E05003DA4BE /* CopyFiles */,
-				52BB060823B49C5F008E61F1 /* Embed Libraries */,
 			);
 			buildRules = (
 				52F6E86013A7504E0023F87A /* PBXBuildRule */,
@@ -1246,8 +1235,6 @@
 					/opt/local/lib,
 					/usr/local/lib,
 					"$(SDKROOT)/usr/lib/system",
-					/opt/local/libexec/openssl3/lib,
-					/opt/local/libexec/openssl11/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MARKETING_VERSION = 5.33.0;
@@ -1293,8 +1280,6 @@
 					/opt/local/lib,
 					/usr/local/lib,
 					"$(SDKROOT)/usr/lib/system",
-					/opt/local/libexec/openssl3/lib,
-					/opt/local/libexec/openssl11/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MARKETING_VERSION = 5.33.0;

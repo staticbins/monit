@@ -29,6 +29,10 @@
 #ifdef HAVE_OPENSSL
 
 
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
 #endif
@@ -39,6 +43,10 @@
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>
 #endif
 
 #ifdef HAVE_SYS_SOCKET_H
@@ -59,6 +67,10 @@
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -148,7 +160,66 @@ static Mutex_T *instanceMutexTable;
 static int session_id_context = 1;
 
 
+#ifdef HAVE_SSL_CTX_SET_KEYLOG_CALLBACK
+static FILE *keylog = NULL;
+static const char *keylogName = NULL;
+#endif
+
+
 /* ----------------------------------------------------------------- Private */
+
+
+#ifdef HAVE_SSL_CTX_SET_KEYLOG_CALLBACK
+// Close the SSLKEYLOGFILE
+static void _keylogClose(void) {
+        if (keylog) {
+                if (fclose(keylog) != 0)
+                        Log_error("Cannot close the key log file -- %s\n", STRERROR);
+        }
+}
+
+
+// If the SSLKEYLOGFILE environment variable is set, open the keylog file, to be used with Wireshark for TLS debugging
+static bool _keylogOpen(void) {
+        if (keylog) {
+                // Open already
+                return true;
+        }
+
+        if (keylogName) {
+                // Open the file if SSLKEYLOGFILE is set
+                mode_t savemask = umask(0077);
+                keylog = fopen(keylogName, "a");
+                umask(savemask);
+                if (! keylog) {
+                        Log_error("Cannot open the key log file '%s' -- %s\n", keylogName, STRERROR);
+                        return false;
+                }
+
+                atexit(_keylogClose);
+                fprintf(keylog, "# TLS material log file for Monit Wireshark debugging\n");
+                fflush(keylog);
+                return true;
+        }
+        return false;
+}
+
+
+// Keylog callback for OpenSSL
+static void _keylogWrite(const SSL *ssl, const char *line) {
+        if (ssl && keylog && STR_DEF(line)) {
+                fprintf(keylog, "%s\n", line);
+                fflush(keylog);
+        }
+}
+
+
+// Enable the keylog callback
+static void _keylogSet(SSL_CTX *ctx) {
+        if (Run.debug && _keylogOpen())
+                SSL_CTX_set_keylog_callback(ctx, _keylogWrite);
+}
+#endif
 
 
 static Ssl_Version _optionsVersion(int version) {
@@ -504,6 +575,9 @@ void Ssl_start(void) {
                 RAND_load_file(RANDOM_DEVICE, RANDOM_BYTES);
         else
                 THROW(AssertException, "SSL: cannot find %s nor %s on the system", URANDOM_DEVICE, RANDOM_DEVICE);
+#ifdef HAVE_SSL_CTX_SET_KEYLOG_CALLBACK
+        keylogName = getenv("SSLKEYLOGFILE");
+#endif
 }
 
 
@@ -556,6 +630,9 @@ T Ssl_new(SslOptions_T options) {
                 Log_error("SSL: client context initialization failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
+#ifdef HAVE_SSL_CTX_SET_KEYLOG_CALLBACK
+        _keylogSet(C->ctx);
+#endif
         if (! _setVersion(C->ctx, options)) {
                 goto sslerror;
         }
@@ -608,6 +685,7 @@ void Ssl_close(T C) {
         bool retry = false;
         int timeout = Run.limits.networkTimeout;
         do {
+                ERR_clear_error();
                 int rv = SSL_shutdown(C->handler);
                 if (rv == 0) {
                         // close notify sent
@@ -644,6 +722,7 @@ void Ssl_connect(T C, int socket, int timeout, const char *name) {
         _setServerNameIdentification(C, name);
         bool retry = false;
         do {
+                ERR_clear_error();
                 int rv = SSL_connect(C->handler);
                 if (rv < 0) {
                         switch (SSL_get_error(C->handler, rv)) {
@@ -676,6 +755,7 @@ int Ssl_write(T C, const void *b, int size, int timeout) {
         if (size > 0) {
                 bool retry = false;
                 do {
+                        ERR_clear_error();
                         switch (SSL_get_error(C->handler, (n = SSL_write(C->handler, b, size)))) {
                                 case SSL_ERROR_NONE:
                                 case SSL_ERROR_ZERO_RETURN:
@@ -717,6 +797,7 @@ int Ssl_read(T C, void *b, int size, int timeout) {
         if (size > 0) {
                 bool retry = false;
                 do {
+                        ERR_clear_error();
                         switch (SSL_get_error(C->handler, (n = SSL_read(C->handler, b, size)))) {
                                 case SSL_ERROR_NONE:
                                 case SSL_ERROR_ZERO_RETURN:
@@ -989,6 +1070,7 @@ bool SslServer_accept(T C, int socket, int timeout) {
         SSL_set_fd(C->handler, C->socket);
         bool retry = false;
         do {
+                ERR_clear_error();
                 int rv = SSL_accept(C->handler);
                 if (rv < 0) {
                         switch (SSL_get_error(C->handler, rv)) {

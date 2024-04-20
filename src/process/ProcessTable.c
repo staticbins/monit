@@ -327,11 +327,14 @@ void ProcessTable_free(T *P) {
 
 bool ProcessTable_update(T P) {
         assert(P);
-        Mutex_lock(P->mutex);
-        bool result = _updateProcessTable(P);
-        if (!result)
-                _delete(P->table, &P->size);
-        Mutex_unlock(P->mutex);
+        bool result;
+        LOCK(P->mutex)
+        {
+                result = _updateProcessTable(P);
+                if (!result)
+                        _delete(P->table, &P->size);
+        }
+        END_LOCK;
         return result;
 }
 

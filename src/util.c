@@ -124,6 +124,7 @@
 #include "io/File.h"
 #include "util/Fmt.h"
 #include "system/Time.h"
+#include "system/Random.h"
 #include "exceptions/AssertException.h"
 #include "exceptions/IOException.h"
 
@@ -655,23 +656,32 @@ void Util_printRunList(void) {
                 Mmonit_T c;
                 printf(" %-18s = ", "M/Monit(s)");
                 for (c = Run.mmonits; c; c = c->next) {
-                        printf("%s with timeout %s", c->url->url, Fmt_time2str(c->timeout, (char[11]){}));
+                        printf("%s\n", c->url->url);
+                        printf("                    =     with timeout %s\n", Fmt_time2str(c->timeout, (char[11]){}));
 #ifdef HAVE_OPENSSL
                         if (c->ssl.flags) {
-                                printf(" using TLS");
+                                printf("                    =     using TLS");
                                 const char *options = Ssl_printOptions(&c->ssl, (char[STRLEN]){}, STRLEN);
                                 if (options && *options)
                                         printf(" with options {%s}", options);
                                 if (c->ssl.checksum)
                                         printf(" and certificate checksum %s equal to '%s'", Checksum_Names[c->ssl.checksumType], c->ssl.checksum);
+                                printf("\n");
                         }
 #endif
                         if (Run.flags & Run_MmonitCredentials && c->url->user)
-                                printf(" with credentials");
+                                printf("                    =     with credentials\n");
+                        if (c->hostgroups) {
+                                int hostgroups = 0;
+                                printf("                    =     with hostgroups [");
+                                for (list_t g = c->hostgroups->head; g; g = g->next) {
+                                        printf("%s\"%s\"", hostgroups++ ? ", " : "", (const char *)g->e);
+                                }
+                                printf("]\n");
+                        }
                         if (c->next)
-                               printf(",\n                    = ");
+                                printf("                    = ");
                 }
-                printf("\n");
         }
 
         if (Run.mailservers) {
@@ -1352,7 +1362,7 @@ char *Util_getToken(MD_T token) {
         md5_context_t ctx;
         char buf[STRLEN] = {};
         MD_T digest;
-        System_random(buf, sizeof(buf));
+        Random_bytes(buf, sizeof(buf));
         md5_init(&ctx);
         md5_append(&ctx, (const md5_byte_t *)buf, STRLEN - 1);
         md5_finish(&ctx, (md5_byte_t *)digest);
@@ -1444,7 +1454,7 @@ char *Util_urlEncode(const char *string, bool isParameterValue) {
                 for (n = i = 0; string[i]; i++)
                         if (unsafe[(unsigned char)(string[i])])
                                 n += 2;
-                p = escaped = ALLOC(i + n + 1);
+                p = escaped = CALLOC(1, i + n + 1);
                 for (; *string; string++, p++) {
                         if (unsafe[(unsigned char)(*p = *string)]) {
                                 *p++ = '%';
@@ -1508,7 +1518,7 @@ void Util_redirectStdFds(void) {
 
 
 void Util_closeFds(void) {
-        for (int i = 3, descriptors = System_descriptorsGuarded(1024); i < descriptors; i++) {
+        for (int i = 3, descriptors = System_descriptors(1024); i < descriptors; i++) {
                 close(i);
         }
         errno = 0;

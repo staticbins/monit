@@ -155,7 +155,7 @@ atime          ("atime"|"access time"|"access timestamp")
 ctime          ("ctime"|"change time"|"change timestamp")
 mtime          ("mtime"|"modification time"|"modification timestamp"|"modify time"|"modify timestamp")
 
-%x ARGUMENT_COND DEPEND_COND SERVICE_COND URL_COND ADDRESS_COND STRING_COND EVERY_COND HTTP_HEADER_COND INCLUDE
+%x ARGUMENT_COND DEPEND_COND SERVICE_COND URL_COND ADDRESS_COND STRING_COND HOSTGROUP_COND EVERY_COND HTTP_HEADER_COND INCLUDE
 
 %%
 
@@ -575,6 +575,11 @@ group[ \t]+       {
                     return GROUP;
                   }
 
+"hostgroups"{ws}  {
+                    BEGIN(HOSTGROUP_COND);
+                    return '[';
+                  }
+
 "http headers"{ws} {
                         BEGIN(HTTP_HEADER_COND);
                         return '[';
@@ -922,6 +927,41 @@ group[ \t]+       {
 
 }
 
+<HOSTGROUP_COND>{
+
+        {wws}   ;
+
+        "["     ;
+
+        [\n]    {
+                        lineno++;
+                }
+
+        ([^\r\n\[\] \t,]+) {
+                        yylval.string = Str_dup(yytext);
+                        save_arg();
+                        return HOSTGROUPNAME;
+                }
+
+        (({ws}?["][^"]+["])|({ws}?['][^']+['])) {
+                        yylval.string = Str_cat("%s", Str_unquote(yytext + 1));
+                        save_arg();
+                        return HOSTGROUPNAME;
+                }
+
+        "]"     {
+                        BEGIN(INITIAL);
+                        save_arg();
+                        return ']';
+                }
+
+        .       {
+                        BEGIN(INITIAL);
+                        yyerror("invalid hostgroup list format");
+                }
+
+}
+
 <EVERY_COND>{
 
   {ws}            ;
@@ -986,7 +1026,7 @@ group[ \t]+       {
 }
 
 
-<INITIAL,ARGUMENT_COND,SERVICE_COND,DEPEND_COND,URL_COND,ADDRESS_COND,STRING_COND,EVERY_COND,HTTP_HEADER_COND>. {
+<INITIAL,ARGUMENT_COND,SERVICE_COND,DEPEND_COND,URL_COND,ADDRESS_COND,STRING_COND,HOSTGROUP_COND,EVERY_COND,HTTP_HEADER_COND>. {
                       check_state = None_State;
                       return yytext[0];
                   }

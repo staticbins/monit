@@ -106,7 +106,7 @@ void System_debug(const char *d, ...) {
 }
 
 
-int System_descriptorsGuarded(int guard) {
+int System_descriptors(int guard) {
         int fileDescriptors = (int)sysconf(_SC_OPEN_MAX);
         if (fileDescriptors < 2)
                 fileDescriptors = getdtablesize();
@@ -116,37 +116,5 @@ int System_descriptorsGuarded(int guard) {
                         fileDescriptors = guard;
         }
         return fileDescriptors;
-}
-
-
-bool System_random(void *buf, size_t nbytes) {
-#ifdef HAVE_ARC4RANDOM_BUF
-        arc4random_buf(buf, nbytes);
-        return true;
-#elif defined HAVE_GETRANDOM
-        return (getrandom(buf, nbytes, 0) == (ssize_t)nbytes);
-#else
-        int fd = File_open("/dev/urandom", "r");
-        if (fd >= 0) {
-                ssize_t bytes = read(fd, buf, nbytes);
-                close(fd);
-                if (bytes >= 0 && (size_t)bytes == nbytes) {
-                        return true;
-                }
-        }
-        // Fallback to random()
-        char *_buf = buf;
-        for (size_t i = 0; i < nbytes; i++) {
-                _buf[i] = random() % 256;
-        }
-        return true;
-#endif
-}
-
-
-unsigned long long System_randomNumber(void) {
-        unsigned long long random;
-        System_random(&random, sizeof(random));
-        return random;
 }
 

@@ -42,6 +42,7 @@
 #include "protocol.h"
 
 // libmonit
+#include "system/Random.h"
 #include "exceptions/IOException.h"
 #include "exceptions/ProtocolException.h"
 
@@ -114,15 +115,15 @@ void check_sip(Socket_T socket) {
                          transport,                    // via transport udp|tcp
                          myip,                         // who its from
                          port,                         // our port
-                         System_randomNumber(),        // branch
+                         Random_number(),              // branch
                          rport,                        // rport option
                          P->parameters.sip.maxforward ? (P->parameters.sip.maxforward == INT_MAX ? 0 : P->parameters.sip.maxforward) : 70, // maximum forwards
                          proto,                        // protocol
                          target,                       // to
                          proto,                        // protocol
                          myip,                         // from host
-                         System_randomNumber(),        // tag
-                         System_randomNumber(),        // call id
+                         Random_number(),              // tag
+                         Random_number(),              // call id
                          proto,                        // protocol
                          myip,                         // contact host
                          port,                         // contact port

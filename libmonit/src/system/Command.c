@@ -739,7 +739,7 @@ static void Process_exec(Process_T P, T C) {
                 goto fail;
         int descriptors = open("/dev/null", O_RDWR);
         if (descriptors < 4)
-                descriptors = System_descriptorsGuarded(256);
+                descriptors = System_descriptors(256);
         else
                 descriptors += 1;
         for (int i = 3; i < descriptors; i++) {

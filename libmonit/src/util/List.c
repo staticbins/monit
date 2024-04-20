@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -58,7 +58,7 @@ static inline list_t new_node(T L, void *e, list_t next) {
                 p = L->freelist;
                 L->freelist = p->next;
         } else
-                p = ALLOC(sizeof *(p));
+                p = CALLOC(1, sizeof *(p));
         p->e = e;
         p->next = next;
         return p;
@@ -109,7 +109,7 @@ void *List_pop(T L) {
                 p->next = L->freelist;
                 L->freelist = p;
                 return p->e;
-        } 
+        }
         return NULL;
 }
 
@@ -195,7 +195,7 @@ void List_clear(T L) {
 void **List_toArray(T L) {
         assert(L);
         int i = 0;
-        void **array = ALLOC((L->length + 1) * sizeof *(array)); 
+        void **array = CALLOC(L->length + 1, sizeof *(array));
         for (list_t p = L->head; p; p = p->next, i++)
                 array[i] = p->e;
         array[i] = NULL;

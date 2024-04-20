@@ -68,8 +68,7 @@ T Array_new(int hint) {
                 8191, 16381, 32771, 65521, INT_MAX };
         int i;
         for (i = 1; primes[i] < hint; i++) ;
-        T S = ALLOC(sizeof (*S) +
-                primes[i-1]*sizeof (S->buckets[0]));
+        T S = CALLOC(1, sizeof (*S) + primes[i - 1] * sizeof (S->buckets[0]));
         S->size = primes[i-1];
         S->buckets = (struct binding **)(S + 1);
         for (i = 0; i < S->size; i++)

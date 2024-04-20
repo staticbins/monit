@@ -43,6 +43,7 @@ libmonit/test/OutputStreamTest
 libmonit/test/StrTest
 libmonit/test/StringBufferTest
 libmonit/test/SystemTest
+libmonit/test/RandomTest
 libmonit/test/TimeTest
 
 monit
