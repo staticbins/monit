@@ -989,17 +989,32 @@ Sample PAM service for Monit on macOS (store as
 "/etc/pam.d/monit" file):
 
   # monit: auth account password session
-  auth       sufficient     pam_securityserver.so
-  auth       sufficient     pam_unix.so
+  #auth       sufficient     pam_securityserver.so
+  #auth       sufficient     pam_unix.so
+  auth       sufficient     pam_opendirectory.so
   auth       required       pam_deny.so
   account    required       pam_permit.so
+  password   required       pam_deny.so
+  session    required       pam_permit.so
 
-A C<monitrc> config which only allows group C<admin> authenticated via
+And a similar PAM service for Monit on Linux (store as
+"/etc/pam.d/monit" file):
+
+  # monit: auth account password session
+  auth       sufficient   pam_unix2.so
+  auth       required     pam_deny.so
+  account    required     pam_permit.so
+  password   required     pam_deny.so
+  session    required     pam_permit.so
+
+A C<monitrc> config which only allows group C<admin> and C<staff>
+authenticated via
 PAM to access the web interface:
 
   set httpd
       port 2812
       allow @admin
+      allow @staff readonly
 
 =head4 htpasswd file
 
