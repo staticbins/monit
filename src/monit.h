@@ -433,13 +433,6 @@ Sigfunc *signal(int signo, Sigfunc * func);
 #define NVLSTR(x) (x ? x : "")
 
 
-/** ------------------------------------------ Simple Assert Exception macro */
-
-
-#define ASSERT(e) do { if (!(e)) { Log_critical("AssertException: " #e \
-" at %s:%d\naborting..\n", __FILE__, __LINE__); abort(); } } while (0)
-
-
 /* --------------------------------------------------------- Data structures */
 
 

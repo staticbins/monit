@@ -82,7 +82,7 @@ static ProcessTree_T *ptree = NULL;
 
 
 static void _delete(ProcessTree_T **pt, int *size) {
-        ASSERT(pt);
+        assert(pt);
         ProcessTree_T *_pt = *pt;
         if (_pt) {
                 for (int i = 0; i < *size; i++) {
@@ -280,7 +280,7 @@ void ProcessTree_delete(void) {
 
 
 bool ProcessTree_updateProcess(Service_T s, pid_t pid) {
-        ASSERT(s);
+        assert(s);
 
         /* save the previous pid and set actual one */
         s->inf.process->_pid = s->inf.process->pid;
@@ -349,7 +349,7 @@ time_t ProcessTree_getProcessUptime(pid_t pid) {
 
 
 pid_t ProcessTree_findProcess(Service_T s) {
-        ASSERT(s);
+        assert(s);
         // Test the cached PID first
         if (s->inf.process->pid > 0) {
                 errno = 0;

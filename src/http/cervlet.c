@@ -1227,7 +1227,7 @@ static void handle_runtime_action(HttpRequest req, HttpResponse res) {
 
 
 static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
-        ASSERT(s);
+        assert(s);
         char buf[STRLEN] = {};
 
         do_head(res, s->name_urlescaped, StringBuffer_toString(s->name_htmlescaped), Run.polltime);
@@ -2761,8 +2761,8 @@ static void status_service_txt(Service_T s, HttpResponse res) {
 
 
 static char *get_monitoring_status(Output_Type type, Service_T s, char *buf, int buflen) {
-        ASSERT(s);
-        ASSERT(buf);
+        assert(s);
+        assert(buf);
         if (s->monitor == Monitor_Not) {
                 if (type == HTML)
                         snprintf(buf, buflen, "<span class='gray-text'>Not monitored</span>");
@@ -2789,8 +2789,8 @@ static char *get_monitoring_status(Output_Type type, Service_T s, char *buf, int
 
 
 static char *get_service_status(Output_Type type, Service_T s, char *buf, int buflen) {
-        ASSERT(s);
-        ASSERT(buf);
+        assert(s);
+        assert(buf);
         if (s->monitor == Monitor_Not || s->monitor & Monitor_Init) {
                 get_monitoring_status(type, s, buf, buflen);
         } else if (s->error == 0) {

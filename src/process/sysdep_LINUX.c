@@ -492,7 +492,7 @@ bool init_systeminfo_sysdep(void) {
  * @return treesize > 0 if succeeded otherwise 0
  */
 int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflags) {
-        ASSERT(reference);
+        assert(reference);
 
         // Find all processes in the /proc directory
         glob_t globbuf;

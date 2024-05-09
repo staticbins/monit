@@ -130,6 +130,7 @@
 #include "md5.h"
 #include "sha1.h"
 #include "checksum.h"
+#include "ProcessTree.h"
 #include "process_sysdep.h"
 
 // libmonit

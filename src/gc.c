@@ -128,7 +128,7 @@ void gc(void) {
 
 
 void gc_mail_list(Mail_T *m) {
-        ASSERT(m);
+        assert(m);
         if ((*m)->next)
                 gc_mail_list(&(*m)->next);
         if ((*m)->from)
@@ -143,7 +143,7 @@ void gc_mail_list(Mail_T *m) {
 
 
 void gccmd(command_t *c) {
-        ASSERT(c && *c);
+        assert(c && *c);
         for (int i = 0; (*c)->arg[i]; i++)
                 FREE((*c)->arg[i]);
         FREE(*c);
@@ -151,7 +151,7 @@ void gccmd(command_t *c) {
 
 
 void gc_event(Event_T *e) {
-        ASSERT(e && *e);
+        assert(e && *e);
         if ((*e)->next)
                 gc_event(&(*e)->next);
         (*e)->action = NULL;
@@ -176,7 +176,7 @@ static void _gcssloptions(SslOptions_T o) {
 
 
 static void _gc_service_list(Service_T *s) {
-        ASSERT(s&&*s);
+        assert(s&&*s);
         if ((*s)->next)
                 _gc_service_list(&(*s)->next);
         _gc_service(&(*s));
@@ -184,7 +184,7 @@ static void _gc_service_list(Service_T *s) {
 
 
 static void _gc_service(Service_T *s) {
-        ASSERT(s&&*s);
+        assert(s&&*s);
         if ((*s)->program) {
                 if ((*s)->program->P)
                         Process_free(&(*s)->program->P);
@@ -319,7 +319,7 @@ static void _gc_service(Service_T *s) {
 
 
 static void _gc_servicegroup(ServiceGroup_T *sg) {
-        ASSERT(sg && *sg);
+        assert(sg && *sg);
         if ((*sg)->next)
                 _gc_servicegroup(&(*sg)->next);
         List_free(&(*sg)->members);
@@ -329,7 +329,7 @@ static void _gc_servicegroup(ServiceGroup_T *sg) {
 
 
 static void _gc_request(Request_T *r) {
-        ASSERT(r);
+        assert(r);
         if ((*r)->url)
                 _gc_url(&(*r)->url);
         if ((*r)->regex)
@@ -340,7 +340,7 @@ static void _gc_request(Request_T *r) {
 
 
 static void _gc_url(URL_T *url) {
-        ASSERT(url);
+        assert(url);
         FREE((*url)->url);
         FREE((*url)->protocol);
         FREE((*url)->user);
@@ -366,7 +366,7 @@ static void _gc_mail_server(MailServer_T *s) {
 
 
 static void _gc_action(Action_T *a) {
-        ASSERT(a&&*a);
+        assert(a&&*a);
         if ((*a)->exec)
                 gccmd(&(*a)->exec);
         FREE(*a);
@@ -374,7 +374,7 @@ static void _gc_action(Action_T *a) {
 
 
 static void _gc_eventaction(EventAction_T *e) {
-        ASSERT(e&&*e);
+        assert(e&&*e);
         _gc_action(&(*e)->failed);
         _gc_action(&(*e)->succeeded);
         FREE(*e);
@@ -382,7 +382,7 @@ static void _gc_eventaction(EventAction_T *e) {
 
 
 static void _gcportlist(Port_T *p) {
-        ASSERT(p&&*p);
+        assert(p&&*p);
         if ((*p)->next)
                 _gcportlist(&(*p)->next);
         if ((*p)->action)
@@ -443,7 +443,7 @@ static void _gcportlist(Port_T *p) {
 
 
 static void _gcfilesystem(FileSystem_T *d) {
-        ASSERT(d&&*d);
+        assert(d&&*d);
         if ((*d)->next)
                 _gcfilesystem(&(*d)->next);
         if ((*d)->action)
@@ -453,7 +453,7 @@ static void _gcfilesystem(FileSystem_T *d) {
 
 
 static void _gcicmp(Icmp_T *i) {
-        ASSERT(i&&*i);
+        assert(i&&*i);
         if ((*i)->next)
                 _gcicmp(&(*i)->next);
         FREE((*i)->outgoing.ip);
@@ -464,7 +464,7 @@ static void _gcicmp(Icmp_T *i) {
 
 
 static void _gcpql(Resource_T *q) {
-        ASSERT(q);
+        assert(q);
         if ((*q)->next)
                 _gcpql(&(*q)->next);
         if ((*q)->action)
@@ -474,7 +474,7 @@ static void _gcpql(Resource_T *q) {
 
 
 static void _gcptl(Timestamp_T *p) {
-        ASSERT(p);
+        assert(p);
         if ((*p)->next)
                 _gcptl(&(*p)->next);
         if ((*p)->action)
@@ -484,7 +484,7 @@ static void _gcptl(Timestamp_T *p) {
 
 
 static void _gcuptimelist(Uptime_T *u) {
-        ASSERT(u);
+        assert(u);
         if ((*u)->next)
                 _gcuptimelist(&(*u)->next);
         if ((*u)->action)
@@ -494,7 +494,7 @@ static void _gcuptimelist(Uptime_T *u) {
 
 
 static void _gcparl(ActionRate_T *ar) {
-        ASSERT(ar);
+        assert(ar);
         if ((*ar)->next)
                 _gcparl(&(*ar)->next);
         if ((*ar)->action)
@@ -504,7 +504,7 @@ static void _gcparl(ActionRate_T *ar) {
 
 
 static void _gcso(Size_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->next)
                 _gcso(&(*s)->next);
         if ((*s)->action)
@@ -513,7 +513,7 @@ static void _gcso(Size_T *s) {
 }
 
 static void _gcnlink(NLink_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->next)
                 _gcnlink(&(*s)->next);
         if ((*s)->action)
@@ -522,7 +522,7 @@ static void _gcnlink(NLink_T *s) {
 }
 
 static void _gclinkstatus(LinkStatus_T *l) {
-        ASSERT(l);
+        assert(l);
         if ((*l)->next)
                 _gclinkstatus(&(*l)->next);
         if ((*l)->action)
@@ -532,7 +532,7 @@ static void _gclinkstatus(LinkStatus_T *l) {
 
 
 static void _gclinkspeed(LinkSpeed_T *l) {
-        ASSERT(l);
+        assert(l);
         if ((*l)->next)
                 _gclinkspeed(&(*l)->next);
         if ((*l)->action)
@@ -542,7 +542,7 @@ static void _gclinkspeed(LinkSpeed_T *l) {
 
 
 static void _gclinksaturation(LinkSaturation_T *l) {
-        ASSERT(l);
+        assert(l);
         if ((*l)->next)
                 _gclinksaturation(&(*l)->next);
         if ((*l)->action)
@@ -552,7 +552,7 @@ static void _gclinksaturation(LinkSaturation_T *l) {
 
 
 static void _gcbandwidth(Bandwidth_T *b) {
-        ASSERT(b);
+        assert(b);
         if ((*b)->next)
                 _gcbandwidth(&(*b)->next);
         if ((*b)->action)
@@ -561,7 +561,7 @@ static void _gcbandwidth(Bandwidth_T *b) {
 }
 
 static void _gcmatch(Match_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->next)
                 _gcmatch(&(*s)->next);
         if ((*s)->action)
@@ -577,7 +577,7 @@ static void _gcmatch(Match_T *s) {
 
 
 static void _gcchecksum(Checksum_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->action)
                 _gc_eventaction(&(*s)->action);
         FREE(*s);
@@ -585,7 +585,7 @@ static void _gcchecksum(Checksum_T *s) {
 
 
 static void _gcperm(Perm_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->action)
                 _gc_eventaction(&(*s)->action);
         FREE(*s);
@@ -593,7 +593,7 @@ static void _gcperm(Perm_T *s) {
 
 
 static void _gcstatus(Status_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->next)
                 _gcstatus(&(*s)->next);
         if ((*s)->action)
@@ -603,7 +603,7 @@ static void _gcstatus(Status_T *s) {
 
 
 static void _gcuid(Uid_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->action)
                 _gc_eventaction(&(*s)->action);
         FREE(*s);
@@ -611,7 +611,7 @@ static void _gcuid(Uid_T *s) {
 
 
 static void _gcgid(Gid_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->action)
                 _gc_eventaction(&(*s)->action);
         FREE(*s);
@@ -619,7 +619,7 @@ static void _gcgid(Gid_T *s) {
 
 
 static void _gcpid(Pid_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->next)
                 _gcpid(&(*s)->next);
         if ((*s)->action)
@@ -629,7 +629,7 @@ static void _gcpid(Pid_T *s) {
 
 
 static void _gcppid(Pid_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->next)
                 _gcppid(&(*s)->next);
         if ((*s)->action)
@@ -639,7 +639,7 @@ static void _gcppid(Pid_T *s) {
 
 
 static void _gcfsflag(FsFlag_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->next)
                 _gcfsflag(&(*s)->next);
         if ((*s)->action)
@@ -649,7 +649,7 @@ static void _gcfsflag(FsFlag_T *s) {
 
 
 static void _gcnonexist(NonExist_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->next)
                 _gcnonexist(&(*s)->next);
         if ((*s)->action)
@@ -659,7 +659,7 @@ static void _gcnonexist(NonExist_T *s) {
 
 
 static void _gcexist(Exist_T *s) {
-        ASSERT(s);
+        assert(s);
         if ((*s)->next)
                 _gcexist(&(*s)->next);
         if ((*s)->action)
@@ -669,7 +669,7 @@ static void _gcexist(Exist_T *s) {
 
 
 static void _gcpdl(Dependant_T *d) {
-        ASSERT(d);
+        assert(d);
         if ((*d)->next)
                 _gcpdl(&(*d)->next);
         StringBuffer_free(&((*d)->dependant_htmlescaped));
@@ -680,7 +680,7 @@ static void _gcpdl(Dependant_T *d) {
 
 
 static void _gcgeneric(Generic_T *g) {
-        ASSERT(g);
+        assert(g);
         if ((*g)->next)
                 _gcgeneric(&(*g)->next);
         FREE((*g)->send);
@@ -693,7 +693,7 @@ static void _gcgeneric(Generic_T *g) {
 
 
 static void _gcath(Auth_T *c) {
-        ASSERT(c);
+        assert(c);
         if ((*c)->next)
                 _gcath(&(*c)->next);
         FREE((*c)->uname);
@@ -704,7 +704,7 @@ static void _gcath(Auth_T *c) {
 
 
 static void _gc_mmonit(Mmonit_T *recv) {
-        ASSERT(recv);
+        assert(recv);
         if ((*recv)->next)
                 _gc_mmonit(&(*recv)->next);
         _gc_url(&(*recv)->url);
@@ -714,7 +714,7 @@ static void _gc_mmonit(Mmonit_T *recv) {
 
 
 static void _gcsecattr(SecurityAttribute_T *s) {
-        ASSERT(s && *s);
+        assert(s && *s);
         if ((*s)->next)
                 _gcsecattr(&(*s)->next);
         if ((*s)->action)
@@ -725,7 +725,7 @@ static void _gcsecattr(SecurityAttribute_T *s) {
 
 
 static void _gcfiledescriptors(Filedescriptors_T *o) {
-        ASSERT(o && *o);
+        assert(o && *o);
         if ((*o)->next)
                 _gcfiledescriptors(&(*o)->next);
         if ((*o)->action)
