@@ -235,12 +235,14 @@ static void _processStatus(Socket_T socket, Port_T P) {
 
 
 static void _processHeaders(Socket_T socket, void (**processBody)(Socket_T socket, Port_T P, char **data, int *contentLength, ChecksumContext_T context), int *contentLength) {
-        char buf[512] = {};
+        char buf[8192] = {};
         *processBody = _processBodyUntilEOF;
 
         while (Socket_readLine(socket, buf, sizeof(buf))) {
                 if ((buf[0] == '\r' && buf[1] == '\n') || (buf[0] == '\n'))
                         break;
+                if (strlen(buf) == (sizeof(buf) - 1) && buf[sizeof(buf) - 2] != '\n')
+                        THROW(ProtocolException, "HTTP error: response header exceeded maximum size %d", sizeof(buf) - 1);
                 Str_chomp(buf);
                 if (Str_startsWith(buf, "Content-Length")) {
                         if (! sscanf(buf, "%*s%*[: ]%d", contentLength))

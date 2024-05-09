@@ -19,6 +19,10 @@ Fixed: Disable SSL session renegotiation in the Monit HTTP interface (CVE-2011-1
 
 Fixed: Monit reported wrong number of CPUs in the VMWare virtual host in Debian 12.x
 
+Fixed: Issue #1086: The HTTP protocol test may return false error "HTTP error: invalid chunk size"
+if the HTTP response contained header with more then 511 bytes. We have increased the limit
+to 8192 bytes per header and will report "response header exceeded maximum size" error if
+the HTTP response contains longer header.
 
 
 Version 5.33.0
