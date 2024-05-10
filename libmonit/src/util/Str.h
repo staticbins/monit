@@ -446,23 +446,23 @@ int Str_cmp(const void *x, const void *y);
 
 
 /**
- * Compare two buffers in constant time. This function is designed to
- * mitigate side-channel attacks, such as those that might occur when
- * comparing sensitive data like credentials. It compares the first
- * 'length' bytes of each buffer. The buffers are considered equal if
- * they are identical byte for byte up to the specified length. If
- * either 'x' or 'y' is NULL, or both are NULL, the function returns
- * false. Both buffers are assumed to be 'length' bytes long. If not,
- * the 'length' parameter should not exceed the length of the shortest
- * buffer to avoid reading beyond allocated memory.
- *
- * @param x A buffer to compare for equality with 'y'
- * @param y A buffer to compare for equality with 'x'
- * @param length The number of bytes to compare in each buffer.
- * @return true if 'x' and 'y' are equal for the given length;
- * otherwise, false
+ * The maximum length of input for the Str_compareConstantTime()
+ * method. We support up to 64 characters, which is enough for
+ * SHA256 digests.
+*/
+#define Str_compareConstantTimeStringLength 64
+
+
+/**
+ * Compare case sensitive two strings in constant time. This function
+ * can be used for timing-attack resistant comparison of credentials.
+ * Only the first Str_compareConstantTimeStringLength bytes are compared
+ * if the strings are longer.
+ * @param x A String
+ * @param y A String
+ * @return 0 if x and y are equal otherwise a non-zero integer
  */
-bool Str_authcmp(const void *x, const void *y, size_t length);
+int Str_compareConstantTime(const void *x, const void *y);
 
 
 #endif

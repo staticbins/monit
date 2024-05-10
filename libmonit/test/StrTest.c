@@ -502,19 +502,21 @@ int main(void) {
         }
         printf("=> Test23: OK\n\n");
 
-        printf("=> Test24: Str_authcmp\n");
+        printf("=> Test24: Str_compareConstantTime\n");
         {
-                assert(!Str_authcmp(NULL,     NULL, 100));
-                assert(!Str_authcmp("abcdef", NULL, 10));
-                assert(!Str_authcmp(NULL,     "abcdef", 90));
-                assert(Str_authcmp("abcdef", "abcdef", 6));
-                assert(!Str_authcmp("abcdef", "ABCDEF", 6));
-                assert(Str_authcmp("abcdef", "abc", 3));
-                assert(Str_authcmp("abcdef", "abcdefghi", 6));
-                unsigned char ok[] = "1111111111111111111111111111111111111111111111111111111111111111";
-                assert(Str_authcmp(ok, ok, 65));
-                unsigned char ko[] = "1111111111111111111111111111111111111111111111111111111111111110";
-                assert(!Str_authcmp(ko, ok, 65));
+                assert(Str_compareConstantTime(NULL,     NULL)        == 0);
+                assert(Str_compareConstantTime("abcdef", NULL)        != 0);
+                assert(Str_compareConstantTime(NULL,     "abcdef")    != 0);
+                assert(Str_compareConstantTime("abcdef", "abcdef")    == 0);
+                assert(Str_compareConstantTime("abcdef", "ABCDEF")    != 0);
+                assert(Str_compareConstantTime("abcdef", "abc")       != 0);
+                assert(Str_compareConstantTime("abcdef", "abcdefghi") != 0);
+                // Test maximum length
+                unsigned char ok[] = "1111111111111111111111111111111111111111111111111111111111111111"; // 64 characters currently
+                assert(Str_compareConstantTime(ok, ok) == 0);
+                // Test maximum length + 1
+                unsigned char ko[] = "11111111111111111111111111111111111111111111111111111111111111111"; // 65 characters should fail
+                assert(Str_compareConstantTime(ko, ko) != 0);
         }
         printf("=> Test24: OK\n\n");
 

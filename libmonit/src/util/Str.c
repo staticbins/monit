@@ -53,6 +53,9 @@
  */
 
 
+#define MIN(x,y) ((x) < (y) ? (x) : (y))
+
+
 /* -------------------------------------------------------- Public Methods */
 
 
@@ -436,13 +439,15 @@ int Str_cmp(const void *x, const void *y) {
 }
 
 
-bool Str_authcmp(const void *x, const void *y, size_t length) {
-    if (!x || !y)
-        return false;
-    const unsigned char *_x = (const unsigned char *)x;
-    const unsigned char *_y = (const unsigned char *)y;
-    volatile int rv = 0;
-    for (size_t i = 0; i < length; i++)
-        rv |= _x[i] ^ _y[i];
-    return rv == 0;
+int Str_compareConstantTime(const void *x, const void *y) {
+        // Copy input to zero initialized buffers of fixed size, to prevent string length timing attack (handle NULL input as well). If some string exceeds hardcoded buffer size, error is returned.
+        char _x[Str_compareConstantTimeStringLength + 1] = {};
+        char _y[Str_compareConstantTimeStringLength + 1] = {};
+        if (snprintf(_x, sizeof(_x), "%s", x ? (const char *)x : "") > Str_compareConstantTimeStringLength || snprintf(_y, sizeof(_y), "%s", y ? (const char *)y : "") > Str_compareConstantTimeStringLength)
+                return 1;
+        int rv = 0;
+        for (size_t i = 0; i < sizeof(_x); i++)
+                rv |= _x[i] ^ _y[i];
+        return rv;
 }
+
