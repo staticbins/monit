@@ -42,16 +42,13 @@
 
 /* ----------------------------------------------------------- Definitions */
 
-
 static pthread_attr_t myDetachStateAttribute;
 static pthread_once_t once_control = PTHREAD_ONCE_INIT;
-
 
 /* --------------------------------------------------------------- Private */
 
 /* Called at program termination for cleanup */
 static void _fini(void) { pthread_attr_destroy(&myDetachStateAttribute); }
-
 
 /* Setup common thread attribute */
 static void _once(void) {
@@ -74,16 +71,12 @@ static void *_atomicWrapper(void *arg) {
         return NULL;
 }
 
-
 /* ----------------------------------------------------- Protected Methods */
-
 
 // Called from Bootstrap()
 void Thread_init(void) { pthread_once(&once_control, _once); }
 
-
 /* ---------------------------------------------------------------- Public */
-
 
 void Thread_createDetached(Thread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
         assert(thread);
@@ -93,14 +86,14 @@ void Thread_createDetached(Thread_T *thread, void *(*threadFunc)(void *threadArg
                 THROW(AssertException, "pthread_create -- %s", System_getError(status));
 }
 
-void Thread_initAtomicThread(AtomicThread_T *thread) {
+void AtomicThread_init(AtomicThread_T *thread) {
         assert(thread);
         Sem_init(thread->sem);
         Mutex_init(thread->mutex);
         atomic_store(&thread->active, false);
 }
 
-void Thread_createAtomicThread(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
+void AtomicThread_create(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
         assert(thread);
         assert(threadFunc);
         assert(atomic_load(&thread->active) == false);
@@ -110,7 +103,7 @@ void Thread_createAtomicThread(AtomicThread_T *thread, void *(*threadFunc)(void 
         Thread_create(thread->value, _atomicWrapper, thread);
 }
 
-void Thread_createAtomicThreadDetached(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
+void AtomicThread_createDetached(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
         assert(thread);
         assert(threadFunc);
         assert(atomic_load(&thread->active) == false);
@@ -120,12 +113,12 @@ void Thread_createAtomicThreadDetached(AtomicThread_T *thread, void *(*threadFun
         Thread_createDetached(&thread->value, _atomicWrapper, thread);
 }
 
-bool Thread_isAtomicThreadActive(AtomicThread_T *thread) {
+bool AtomicThread_isActive(AtomicThread_T *thread) {
         assert(thread);
         return atomic_load(&thread->active);
 }
 
-void Thread_cleanupAtomicThread(AtomicThread_T *thread) {
+void AtomicThread_destroy(AtomicThread_T *thread) {
         assert(thread);
         Sem_destroy(thread->sem);
         Mutex_destroy(thread->mutex);

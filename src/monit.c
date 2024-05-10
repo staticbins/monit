@@ -278,7 +278,7 @@ static void do_init(void) {
         Mutex_init(Run.mutex);
 
         // Initialize the Heartbeat Thread variable
-        Thread_initAtomicThread(&Heartbeat_Thread);
+        AtomicThread_init(&Heartbeat_Thread);
 
         // Get the position of the control file
         if (! Run.files.control)
@@ -323,7 +323,7 @@ static void do_init(void) {
 static void do_reinit(void) {
         Log_info("Reinitializing Monit -- control file '%s'\n", Run.files.control);
         
-        if (Thread_isAtomicThreadActive(&Heartbeat_Thread)) {
+        if (AtomicThread_isActive(&Heartbeat_Thread)) {
                 Sem_signal(Heartbeat_Thread.sem);
                 Thread_join(Heartbeat_Thread.value);
         }
@@ -380,7 +380,7 @@ static void do_reinit(void) {
         Event_post(Run.system, Event_Instance, Check_Changed, Run.system->action_MONIT_START, "Monit reloaded");
         
         if (Run.mmonits) {
-                Thread_createAtomicThread(&Heartbeat_Thread, do_heartbeat, NULL);
+                AtomicThread_create(&Heartbeat_Thread, do_heartbeat, NULL);
         }
 }
 
@@ -417,11 +417,11 @@ static void do_exit(bool saveState) {
         if (can_http())
                 monit_http(Httpd_Stop);
         
-        if (Thread_isAtomicThreadActive(&Heartbeat_Thread)) {
+        if (AtomicThread_isActive(&Heartbeat_Thread)) {
                 Sem_signal(Heartbeat_Thread.sem);
                 Thread_join(Heartbeat_Thread.value);
         }
-        Thread_cleanupAtomicThread(&Heartbeat_Thread);
+        AtomicThread_destroy(&Heartbeat_Thread);
 
         Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
         
@@ -523,7 +523,7 @@ static void do_default(void) {
         Event_post(Run.system, Event_Instance, Check_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
         
         if (Run.mmonits) {
-                Thread_createAtomicThread(&Heartbeat_Thread, do_heartbeat, NULL);
+                AtomicThread_create(&Heartbeat_Thread, do_heartbeat, NULL);
         }
         
         do_validate();

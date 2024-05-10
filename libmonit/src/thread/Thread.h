@@ -302,17 +302,18 @@
  * primitives and thread-specific data. It is designed to facilitate thread
  * creation, synchronization, and cleanup in a thread-safe manner.
  *
- * An Atomic Thread should be initialized using `Thread_initAtomicThread`. This
+ * An Atomic Thread should be initialized using `AtomicThread_init`. This
  * ensure that the synchronization primitives `sem` and `mutex` are initialized
  * before the thread is created and that the threads active state is false.
  *
- * Use `Thread_createAtomicDetached` or `Thread_createAtomic` to create the
+ * Use `AtomicThread_createDetached` or `AtomicThread_create` to create the
  * thread. You can reuse the same AtomicThread_T variable to call these methods
- * to restart the thread if needed. Use `Thread_isAtomicThreadActive` to test
- * if the thread is active/running. Finally, use `Thread_cleanupAtomicThread`
+ * to restart the thread if needed. Use `AtomicThread_isActive` to test
+ * if the thread is active/running. Finally, use `AtomicThread_destroy`
  * to destroy the semaphore and mutex in a deterministic manner.
  * @hideinitializer
- */typedef struct {
+ */
+typedef struct {
         Sem_T sem;
         Mutex_T mutex;
         Thread_T value;
@@ -324,14 +325,10 @@
 
 // ------------------------------------------------------------- Public Methods
 
-//<< Start filter-out
-
 /**
  * Initialize Threads. This method should be called at program startup
  */
 void Thread_init(void);
-
-//>> End filter-out
 
 /**
  * Create a new thread in a detached state
@@ -352,7 +349,7 @@ void Thread_createDetached(Thread_T *thread, void *(*threadFunc)(void *threadArg
  * @param thread A pointer to the Atomic Thread object to initialize
  * @exception AssertException If `thread` is NULL
  */
-void Thread_initAtomicThread(AtomicThread_T *thread);
+void AtomicThread_init(AtomicThread_T *thread);
 
 /**
  * Create a new Atomic Thread
@@ -360,9 +357,9 @@ void Thread_initAtomicThread(AtomicThread_T *thread);
  * @param threadFunc The thread routine to execute
  * @param threadArgs Arguments to <code>threadFunc</code>
  * @exception AssertException If thread creation failed or if the thread has
- * not been initialized using `Thread_initAtomicThread`
+ * not been initialized using `AtomicThread_init`
  */
-void Thread_createAtomicThread(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs);
+void AtomicThread_create(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs);
 
 /**
  * Create a new Atomic Thread in a detached state
@@ -370,22 +367,22 @@ void Thread_createAtomicThread(AtomicThread_T *thread, void *(*threadFunc)(void 
  * @param threadFunc The thread routine to execute
  * @param threadArgs Arguments to <code>threadFunc</code>
  * @exception AssertException If thread creation failed or if the thread has
- * not been initialized using` Thread_initAtomicThread`
+ * not been initialized using` AtomicThread_init`
  */
-void Thread_createAtomicThreadDetached(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs);
+void AtomicThread_createDetached(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs);
 
 /**
  * Returns true if the Atomic Thread is active/running
  * @param thread An Atomic thread
  * @return True if thread is active, otherwise false
  */
-bool Thread_isAtomicThreadActive(AtomicThread_T *thread);
+bool AtomicThread_isActive(AtomicThread_T *thread);
 
 /**
  * Destroy the synchronization primitives in the Atomic Thread
  * @param thread An Atomic thread
  */
-void Thread_cleanupAtomicThread(AtomicThread_T *thread);
+void AtomicThread_destroy(AtomicThread_T *thread);
 
 
 #endif

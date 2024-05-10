@@ -499,12 +499,12 @@ static void *_saveThread(void *args) {
 
 
 static bool _isThreadInactive(void *args) {
-        return Thread_isAtomicThreadActive(&State_Thread) == false;
+        return AtomicThread_isActive(&State_Thread) == false;
 }
 
 
 static void _waitOnSaveThread(void) {
-        if (Thread_isAtomicThreadActive(&State_Thread)) {
+        if (AtomicThread_isActive(&State_Thread)) {
                 Log_info("Waiting on State file's save thread to finish..");
                 if (Time_backoff(_isThreadInactive, NULL)) {
                         Log_info("done\n");
@@ -634,8 +634,8 @@ void State_dirty(void) {
 void State_saveIfDirty(void) {
         if (_stateDirty) {
                 // Only start the Save/Sync thread if it's not already running
-                if (!Thread_isAtomicThreadActive(&State_Thread)) {
-                        Thread_createAtomicThreadDetached(&State_Thread, _saveThread, NULL);
+                if (!AtomicThread_isActive(&State_Thread)) {
+                        AtomicThread_createDetached(&State_Thread, _saveThread, NULL);
                 }
         }
 }
