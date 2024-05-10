@@ -562,10 +562,7 @@ List_T Command_getCommand(T C) {
 }
 
 
-/* The Execute function. Note that we use vfork() rather than fork. Vfork has
- a special semantic in that the child process runs in the parent address space
- until exec is called in the child. The child also run first and suspend the
- parent process until exec or exit is called
+/* The Execute function.
  
  Note: For possible better error reporting, set exec_error to an enum of possible
  errors and exit with that error. Return Process_T regardless and introduce a
@@ -599,7 +596,7 @@ Process_T Command_execute(T C) {
         Process_T P = _Process_new();
         int descriptors = System_getDescriptorsGuarded();
         _createPipes(P);
-        if ((P->pid = vfork()) < 0) {
+        if ((P->pid = fork()) < 0) {
                 ERROR("Command: fork failed -- %s\n", System_getLastError());
                 Process_free(&P);
                 return NULL;
