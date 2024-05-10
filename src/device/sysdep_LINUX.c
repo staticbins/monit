@@ -438,7 +438,7 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                         snprintf(inf->filesystem->object.type, sizeof(inf->filesystem->object.type), "%s", mnt->mnt_type);
                         snprintf(flags, sizeof(flags), "%s", mnt->mnt_opts);
                         inf->filesystem->object.getDiskUsage = _getDiskUsage; // The disk usage method is common for all filesystem types
-                        inf->filesystem->object.getDiskActivity = _getDummyDiskActivity; // Set to dummy IO statistics method by default (can be overridden bellow if statistics method is available for this filesystem)
+                        inf->filesystem->object.getDiskActivity = _getDummyDiskActivity; // Set to dummy IO statistics method by default (can be overridden below if statistics method is available for this filesystem)
                         // Get the major and minor device number
                         _getDeviceNumbers(inf->filesystem->object.device, &(inf->filesystem->object.number.major), &(inf->filesystem->object.number.minor));
                         // Set filesystem-dependent callbacks
