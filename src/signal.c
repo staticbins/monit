@@ -50,7 +50,7 @@
  * using sigaction. From W. Richard Stevens' "Advanced Programming
  * in the UNIX Environment"
  */
-sig_t signal(int signo, sig_t func) {
+Sigfunc *signal(int signo, Sigfunc *func) {
         struct sigaction act, oact;
         act.sa_handler = func;
         sigemptyset(&act.sa_mask);

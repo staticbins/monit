@@ -413,7 +413,11 @@ typedef enum {
 
 /* Replace the standard signal function with a more reliable using
  * sigaction. Taken from Stevens APUE book. */
-sig_t signal(int signo, sig_t func);
+typedef void Sigfunc(int);
+Sigfunc *signal(int signo, Sigfunc * func);
+#if defined(SIG_IGN) && !defined(SIG_ERR)
+#define SIG_ERR ((Sigfunc *)-1)
+#endif
 
 
 /** ------------------------------------------------- General purpose macros */
