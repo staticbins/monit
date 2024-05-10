@@ -41,8 +41,9 @@
 #endif
 
 #ifdef HAVE_OPENSSL
-// We don't silence deprecation warnings as this will remind us to update for version >= 3
 #include <openssl/ssl.h>
+#include <openssl/evp.h>
+#include <openssl/pem.h>
 #include <openssl/err.h>
 #endif
 
@@ -397,12 +398,12 @@ static unsigned char *_getCachingSha2Password(unsigned char result[static SHA256
 
         // SHA256(SHA256(SHA256(password)), Nonce)
         uint8_t stage3[SHA256_DIGEST_LENGTH];
-        SHA256_CTX ctx;
-        SHA256_Init(&ctx);
-        SHA256_Update(&ctx, stage2, SHA256_DIGEST_LENGTH);
-        SHA256_Update(&ctx, salt, strlen(salt));
-        SHA256_Final(stage3, &ctx);
-
+        EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+        EVP_DigestInit_ex(ctx, EVP_sha256(), NULL);
+        EVP_DigestUpdate(ctx, stage2, SHA256_DIGEST_LENGTH);
+        EVP_DigestUpdate(ctx, salt, strlen(salt));
+        EVP_DigestFinal_ex(ctx, stage3, NULL);
+        EVP_MD_CTX_free(ctx);
         // XOR(SHA256(password), SHA256(SHA256(SHA256(password)), Nonce))
         for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
                 result[i] = stage1[i] ^ stage3[i];
@@ -622,7 +623,7 @@ static void _sendQuit(mysql_t *mysql) {
 }
 
 
-static void _sendPassword(mysql_t *mysql, const unsigned char *password, int passwordLength) {
+static void _sendPassword(mysql_t *mysql, const unsigned char *password, size_t passwordLength) {
         if (mysql->state != MySQL_FullAuthenticationNeeded && mysql->state != MySQL_FetchRSAKey && mysql->state != MySQL_AuthSwitch)
                 THROW(ProtocolException, "Unexpected communication state %d before password exchange", mysql->state);
         _initRequest(mysql);
@@ -637,23 +638,43 @@ static void _sendEncryptedPassword(mysql_t *mysql) {
 #ifdef HAVE_OPENSSL
         // Parse the server RSA public key
         BIO *bio = BIO_new_mem_buf((void *)mysql->publicKey, -1);
-        RSA *rsa = PEM_read_bio_RSA_PUBKEY(bio, NULL, NULL, NULL);
+        EVP_PKEY *evp_key = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
         BIO_free(bio);
-        if (! rsa)
-                THROW(ProtocolException, "RSA public key load failed -- %s", ERR_error_string(ERR_get_error(), NULL));
+        if (!evp_key) {
+            THROW(ProtocolException, "Public key load failed -- %s", ERR_error_string(ERR_get_error(), NULL));
+        }
+        EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(evp_key, NULL);
+        if (!ctx) {
+            EVP_PKEY_free(evp_key);
+            THROW(ProtocolException, "Encryption context allocation failed -- %s", ERR_error_string(ERR_get_error(), NULL));
+        }
+        if (EVP_PKEY_encrypt_init(ctx) <= 0 || EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0) {
+            EVP_PKEY_CTX_free(ctx);
+            EVP_PKEY_free(evp_key);
+            THROW(ProtocolException, "Encryption initialization or padding set failed -- %s", ERR_error_string(ERR_get_error(), NULL));
+        }
         // XOR the password with the salt
         unsigned char saltedPassword[STRLEN];
         size_t saltLength = strlen(mysql->salt);
-        size_t passwordLength = strlen(mysql->port->parameters.mysql.password) + 1; // Include the terminating NUL
+        size_t passwordLength = strlen(mysql->port->parameters.mysql.password) + 1;
         for (size_t i = 0; i < passwordLength; i++)
-                saltedPassword[i] = mysql->port->parameters.mysql.password[i] ^ mysql->salt[i % saltLength];
-        // RSA encrypt the salted password
-        unsigned char encryptedPassword[RSA_size(rsa)];
-        int encryptedPasswordLength = RSA_public_encrypt((int)passwordLength, saltedPassword, encryptedPassword, rsa, RSA_PKCS1_OAEP_PADDING);
-        RSA_free(rsa);
-        if (encryptedPasswordLength < 0) {
-                THROW(ProtocolException, "RSA public encrypt failed -- %s", ERR_error_string(ERR_get_error(), NULL));
+            saltedPassword[i] = mysql->port->parameters.mysql.password[i] ^ mysql->salt[i % saltLength];
+        // Determine buffer length for encrypted password
+        size_t encryptedPasswordLength;
+        if (EVP_PKEY_encrypt(ctx, NULL, &encryptedPasswordLength, saltedPassword, passwordLength) <= 0) {
+            EVP_PKEY_CTX_free(ctx);
+            EVP_PKEY_free(evp_key);
+            THROW(ProtocolException, "Encryption buffer length determination failed -- %s", ERR_error_string(ERR_get_error(), NULL));
         }
+        unsigned char encryptedPassword[encryptedPasswordLength];
+        // RSA encrypt the salted password
+        if (EVP_PKEY_encrypt(ctx, encryptedPassword, &encryptedPasswordLength, saltedPassword, passwordLength) <= 0) {
+            EVP_PKEY_CTX_free(ctx);
+            EVP_PKEY_free(evp_key);
+            THROW(ProtocolException, "RSA public encrypt failed -- %s", ERR_error_string(ERR_get_error(), NULL));
+        }
+        EVP_PKEY_CTX_free(ctx);
+        EVP_PKEY_free(evp_key);
         DEBUG("MySQL password encrypted successfully\n");
         // Send the encrypted password
         _sendPassword(mysql, encryptedPassword, encryptedPasswordLength);
