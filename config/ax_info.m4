@@ -58,6 +58,15 @@ AC_DEFUN([AX_INFO_ENABLED],
     fi
 ])
 
+AC_DEFUN([AX_INFO_VAR],
+[
+    fmt="x x"
+    if [[ $(uname -s) = "Darwin" ]]; then
+        fmt=""
+    fi
+    printf "|  %-45.45s %-21.21s  |\n" "$1" "$(tput setaf 3 ${fmt})$2$(tput sgr0)"
+])
+
 AC_DEFUN([AX_INFO_SEPARATOR],
 [
     printf "|%60s|\n" | tr " " "-"
