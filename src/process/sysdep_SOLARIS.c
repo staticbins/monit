@@ -74,7 +74,6 @@
 #endif
 
 #ifdef HAVE_SYS_SWAP_H
-#define _SYS_VNODE_H
 #include <sys/swap.h>
 #endif
 
