@@ -1778,6 +1778,7 @@ Syntax:
    STOPTIMEOUT:       <number> <timeunit>
    STARTTIMEOUT:      <number> <timeunit>
    RESTARTTIMEOUT:    <number> <timeunit>
+   EXECTIMEOUT:       <number> <timeunit>
  }
 
 Where:
@@ -1798,6 +1799,7 @@ Options legend:
  | stopTimeout       | timeout for service stop                         | 30 s    |
  | startTimeout      | timeout for service start                        | 30 s    |
  | restartTimeout    | timeout for service restart                      | 30 s    |
+ | execTimeout       | timeout for test action exec                     | nolimit |
  ----------------------------------------------------------------------------------
 
 
@@ -1827,6 +1829,18 @@ the new value and will trigger event if the value change again.
 
 
 =head2 ACTION
+
+Each test can have associated I<alert>, I<start>, I<stop>, I<restart>,
+I<unmonitor> or I<exec> methods which Monit can use to execute actions or
+programs on the service.
+Syntax:
+ ALERT | START | STOP | RESTART | UNMONITOR
+or:
+ EXEC "program"
+ [[AS] UID <number | string>]
+ [[AS] GID <number | string>]
+ [[WITH] TIMEOUT <number> SECOND(S)]
+ [REPEAT EVERY [<number>] CYCLE(S)]
 
 In each test you must select the action to be executed from this
 list:

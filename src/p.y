@@ -218,6 +218,7 @@ static char * htpasswd_file = NULL;
 static unsigned int repeat = 0;
 static unsigned int repeat1 = 0;
 static unsigned int repeat2 = 0;
+static unsigned int timeout = 0;
 static Digest_Type digesttype = Digest_Cleartext;
 
 #define BITMAP_MAX (sizeof(long long) * 8)
@@ -343,7 +344,7 @@ static void _sanityCheckEveryStatement(Service_T s);
 %token PEMFILE PEMKEY PEMCHAIN ENABLE DISABLE SSLTOKEN CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
 %token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL UP DOWN
 %token IDFILE STATEFILE SEND EXPECT CYCLE COUNT REMINDER REPEAT
-%token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT PROGRAMTIMEOUT STARTTIMEOUT STOPTIMEOUT RESTARTTIMEOUT
+%token LIMITS SENDEXPECTBUFFER EXPECTBUFFER FILECONTENTBUFFER HTTPCONTENTBUFFER PROGRAMOUTPUT NETWORKTIMEOUT PROGRAMTIMEOUT STARTTIMEOUT STOPTIMEOUT RESTARTTIMEOUT EXECTIMEOUT
 %token PIDFILE START STOP PATHTOK RSAKEY
 %token HOST HOSTNAME PORT IPV4 IPV6 TYPE UDP TCP TCPSSL PROTOCOL CONNECTION
 %token ALERT NOALERT MAILFORMAT UNIXSOCKET SIGNATURE
@@ -729,6 +730,12 @@ limit           : SENDEXPECTBUFFER ':' NUMBER unit {
                   }
                 | RESTARTTIMEOUT ':' NUMBER SECOND {
                         Run.limits.restartTimeout = $3 * 1000;
+                  }
+                | EXECTIMEOUT ':' NUMBER MILLISECOND {
+                        Run.limits.execTimeout = $3;
+                  }
+                | EXECTIMEOUT ':' NUMBER SECOND {
+                        Run.limits.execTimeout = $3 * 1000;
                   }
                 ;
 
@@ -2659,6 +2666,18 @@ totaltime       : MINUTE      { $<number>$ = Time_Minute; }
 currenttime     : /* EMPTY */ { $<number>$ = Time_Second; }
                 | SECOND      { $<number>$ = Time_Second; }
 
+// Add timeout to the test action exec command
+exectimeout     : /* EMPTY */ {
+                        timeout = Run.limits.execTimeout;
+                  }
+                | TIMEOUT NUMBER SECOND {
+                        if ($<number>3 < 0) {
+                                yyerror2("The timeout must be greater or equal to 0");
+                        }
+                        timeout = $2 * 1000; // milliseconds internally
+                  }
+                ;
+
 repeat          : /* EMPTY */ {
                         repeat = 0;
                   }
@@ -2676,10 +2695,10 @@ repeat          : /* EMPTY */ {
 action          : ALERT {
                         $<number>$ = Action_Alert;
                   }
-                | EXEC argumentlist repeat {
+                | EXEC argumentlist exectimeout repeat {
                         $<number>$ = Action_Exec;
                   }
-                | EXEC argumentlist useroptionlist repeat
+                | EXEC argumentlist useroptionlist exectimeout repeat
                   {
                         $<number>$ = Action_Exec;
                   }
@@ -2702,6 +2721,8 @@ action1         : action {
                         if ($<number>1 == Action_Exec && command) {
                                 repeat1 = repeat;
                                 repeat = 0;
+                                command->timeout = timeout;
+                                timeout = 0;
                                 command1 = command;
                                 command = NULL;
                         }
@@ -2713,6 +2734,8 @@ action2         : action {
                         if ($<number>1 == Action_Exec && command) {
                                 repeat2 = repeat;
                                 repeat = 0;
+                                command->timeout = timeout;
+                                timeout = 0;
                                 command2 = command;
                                 command = NULL;
                         }
@@ -3415,6 +3438,7 @@ static void preparse(void) {
         Run.limits.stopTimeout       = LIMIT_STOPTIMEOUT;
         Run.limits.startTimeout      = LIMIT_STARTTIMEOUT;
         Run.limits.restartTimeout    = LIMIT_RESTARTTIMEOUT;
+        Run.limits.execTimeout       = LIMIT_EXECTIMEOUT;
         Run.onreboot                 = Onreboot_Start;
         Run.mmonitcredentials        = NULL;
         Run.httpd.flags              = Httpd_Disabled | Httpd_Signature;
