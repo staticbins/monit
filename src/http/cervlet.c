@@ -989,9 +989,12 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                         if (Run.flags & Run_MmonitCredentials && c->url->user)
                                 StringBuffer_append(res->outputbuffer, "&nbsp;&nbsp;with credentials<br>");
                         if (c->hostgroups) {
+                                int hostgroups = 0;
+                                StringBuffer_append(res->outputbuffer, "&nbsp;&nbsp;with hostgroups [");
                                 for (_list_t g = c->hostgroups->head; g; g = g->next) {
-                                        StringBuffer_append(res->outputbuffer, "&nbsp;&nbsp;hostgroup \"%s\"<br>", (const char *)g->e);
+                                        StringBuffer_append(res->outputbuffer, "%s\"%s\"", hostgroups++ ? ", " : "", (const char *)g->e);
                                 }
+                                StringBuffer_append(res->outputbuffer, "]<br>");
                         }
                         if (c->next)
                                 StringBuffer_append(res->outputbuffer, "</td></tr><tr><td>&nbsp;</td><td>");

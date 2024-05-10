@@ -18,8 +18,7 @@ to Lutz Mader.
 New: Added support to add Monit to M/Monit hostgroup. Example:
  set mmonit
      https://monit:mypassword@mmonit.foo.bar:8443/collector
-     hostgroup Oslo
-     hostgroup "Mail servers"
+     with hostgroups [ Oslo, "Mail servers" ]
 
 New: Set the header X-Content-Type-Options to prevent MIME type sniffing. Thanks to Christian Goettsche.
 

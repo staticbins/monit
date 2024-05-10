@@ -363,7 +363,7 @@ static void _sanityCheckEveryStatement(Service_T s);
 %token RESOURCE MEMORY TOTALMEMORY LOADAVG1 LOADAVG5 LOADAVG15 SWAP
 %token MODE ACTIVE PASSIVE MANUAL ONREBOOT NOSTART LASTSTATE
 %token CORE CPU TOTALCPU CPUUSER CPUSYSTEM CPUWAIT CPUNICE CPUHARDIRQ CPUSOFTIRQ CPUSTEAL CPUGUEST CPUGUESTNICE
-%token GROUP HOSTGROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
+%token GROUP REQUEST DEPENDS BASEDIR SLOT EVENTQUEUE SECRET HOSTHEADER
 %token UID EUID GID MMONIT INSTANCE USERNAME PASSWORD DATABASE
 %token TIME ATIME CTIME MTIME CHANGED MILLISECOND SECOND MINUTE HOUR DAY MONTH 
 %token SSLV2 SSLV3 TLSV1 TLSV11 TLSV12 TLSV13 CERTMD5 AUTO
@@ -830,7 +830,7 @@ mmonitopt       : TIMEOUT NUMBER SECOND {
                 | sslchecksum
                 | sslversion
                 | certmd5
-                | hostgroup
+                | '[' hostgrouplist ']'
                 ;
 
 credentials     : /* EMPTY */
@@ -2354,10 +2354,12 @@ group           : GROUP STRINGNAME {
                   }
                 ;
 
-hostgroup       : HOSTGROUP HOSTGROUPNAME {
+hostgrouplist   : /* EMPTY */
+                | hostgrouplist HOSTGROUPNAME {
                         addhostgroup($2);
-                  }
+                 }
                 ;
+
 
 depend          : DEPENDS dependlist
                 ;
