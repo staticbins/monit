@@ -135,7 +135,6 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
                                 break;
                 }
                 Process_T P = Command_execute(C);
-                Command_free(&C);
                 if (P) {
                         do {
                                 Time_usleep(RETRY_INTERVAL);
@@ -158,7 +157,10 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
                                 }
                         } while (n > 0 && Run.debug && total < 2048); // Limit the debug output (if the program will have endless output, such as 'yes' utility, we have to stop at some point to not spin here forever)
                         Process_free(&P); // Will kill the program if still running
+                } else {
+                        snprintf(msg, msglen, "Program %s failed: %s", c->arg[0], System_getLastError());
                 }
+                Command_free(&C);
         }
         return status;
 }
