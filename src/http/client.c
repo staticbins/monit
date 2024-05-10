@@ -218,7 +218,7 @@ bool HttpClient_action(const char *action, List_T services) {
         }
         StringBuffer_T data = StringBuffer_create(64);
         _argument(data, "action", action);
-        for (list_t s = services->head; s; s = s->next)
+        for (_list_t s = services->head; s; s = s->next)
                 _argument(data, "service", s->e);
         bool rv = _client("/_doaction", data);
         StringBuffer_free(&data);

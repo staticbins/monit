@@ -303,7 +303,7 @@ char *Str_dup(const char *s) {
         char *t = NULL;
         if (s) {
                 size_t n = strlen(s) + 1;
-                t = ALLOC(n);
+                t = CALLOC(1, n);
                 memcpy(t, s, n);
         }
         return t;
@@ -316,7 +316,7 @@ char *Str_ndup(const char *s, long n) {
         if (s) {
                 long l = (long)strlen(s);
                 n = l < n ? l : n; // Use the actual length of s if shorter than n
-                t = ALLOC(n + 1);
+                t = CALLOC(1, n + 1);
                 memcpy(t, s, n);
                 t[n] = 0;
         }
@@ -356,7 +356,7 @@ char *Str_vcat(const char *s, va_list ap) {
                 va_copy(ap_copy, ap);
                 int size = vsnprintf(t, 0, s, ap_copy) + 1;
                 va_end(ap_copy);
-                t = ALLOC(size);
+                t = CALLOC(1, size);
                 va_copy(ap_copy, ap);
                 vsnprintf(t, size, s, ap_copy);
                 va_end(ap_copy);
@@ -439,6 +439,7 @@ int Str_cmp(const void *x, const void *y) {
 bool Str_authcmp(const char *a, const char *b) {
         if (!a || !b)
                 return false;
+        // Warning: When 'a' or 'b' is fixed size hash, strlen is no problem, otherwise a this function would be vilnerable to timing attack => DO NOT USE FOR COMPARING NON-HASHED STRINGS
         size_t al = strlen(a);
         size_t bl = strlen(b);
         size_t length = (al > bl) ? al : bl;

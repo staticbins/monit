@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -52,13 +52,13 @@
 /* --------------------------------------------------------------- Private */
 
 
-static inline list_t new_node(T L, void *e, list_t next) {
-        list_t p;
+static inline _list_t new_node(T L, void *e, _list_t next) {
+        _list_t p;
         if (L->freelist) {
                 p = L->freelist;
                 L->freelist = p->next;
         } else
-                p = ALLOC(sizeof *(p));
+                p = CALLOC(1, sizeof *(p));
         p->e = e;
         p->next = next;
         return p;
@@ -76,7 +76,7 @@ T List_new(void) {
 
 
 void List_free(T *L) {
-        list_t p, q;
+        _list_t p, q;
         assert(L && *L);
         for (p = (*L)->head; p; p = q) {
                 q = p->next;
@@ -92,7 +92,7 @@ void List_free(T *L) {
 
 void List_push(T L, void *e) {
         assert(L);
-        list_t p = new_node(L, e, L->head);
+        _list_t p = new_node(L, e, L->head);
         if (L->head == NULL)
                 L->tail = p;
         L->head = p;
@@ -103,19 +103,19 @@ void List_push(T L, void *e) {
 void *List_pop(T L) {
         assert(L);
         if (L->head) {
-                list_t p = L->head;
+                _list_t p = L->head;
                 L->head = L->head->next;
                 L->length--;
                 p->next = L->freelist;
                 L->freelist = p;
                 return p->e;
-        } 
+        }
         return NULL;
 }
 
 
 void List_append(T L, void *e) {
-        list_t p;
+        _list_t p;
         assert(L);
         p = new_node(L, e, NULL);
         if (L->head == NULL)
@@ -130,7 +130,7 @@ void List_append(T L, void *e) {
 void *List_remove(T L, void *e) {
         assert(L);
         if (e && L->head) {
-                list_t p, q;
+                _list_t p, q;
                 if (L->head->e == e)
                         return List_pop(L);
                 for (p = L->head; p; p = q) {
@@ -155,13 +155,13 @@ void List_cat(T L, T list) {
         assert(L);
         assert(list);
         if (L != list)
-                for (list_t p = list->head; p; p = p->next)
+                for (_list_t p = list->head; p; p = p->next)
                         List_append(L, p->e);
 }
 
 
 void List_reverse(T L) {
-        list_t head, next, list;
+        _list_t head, next, list;
         assert(L);
         head = NULL;
         list = L->head;
@@ -195,8 +195,8 @@ void List_clear(T L) {
 void **List_toArray(T L) {
         assert(L);
         int i = 0;
-        void **array = ALLOC((L->length + 1) * sizeof *(array)); 
-        for (list_t p = L->head; p; p = p->next, i++)
+        void **array = CALLOC(L->length + 1, sizeof *(array));
+        for (_list_t p = L->head; p; p = p->next, i++)
                 array[i] = p->e;
         array[i] = NULL;
         return array;

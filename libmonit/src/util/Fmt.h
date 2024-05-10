@@ -23,8 +23,8 @@
  */
 
 
-#ifndef CONVERT_INCLUDED
-#define CONVERT_INCLUDED
+#ifndef FMT_INCLUDED
+#define FMT_INCLUDED
 
 /**
  * General purpose value units string <b>Format</b> <b>class methods</b>.

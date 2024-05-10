@@ -381,7 +381,7 @@ bool control_service_string(List_T services, const char *action) {
                 return 1;
         }
         int errors = 0;
-        for (list_t s = services->head; s; s = s->next)
+        for (_list_t s = services->head; s; s = s->next)
                 if (control_service(s->e, a) == false)
                         errors++;
         return errors;

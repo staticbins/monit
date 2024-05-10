@@ -167,7 +167,7 @@ bool Monit_isInterrupted(void) {
 
 
 static bool _isMemberOfGroup(Service_T s, ServiceGroup_T g) {
-        for (list_t m = g->members->head; m; m = m->next) {
+        for (_list_t m = g->members->head; m; m = m->next) {
                 Service_T member = m->e;
                 if (s == member)
                         return true;
@@ -548,7 +548,7 @@ static void do_action(List_T arguments) {
                         if (Run.mygroup) {
                                 for (ServiceGroup_T sg = Service_Group_List; sg; sg = sg->next) {
                                         if (IS(Run.mygroup, sg->name)) {
-                                                for (list_t m = sg->members->head; m; m = m->next) {
+                                                for (_list_t m = sg->members->head; m; m = m->next) {
                                                         Service_T s = m->e;
                                                         if (IS(action, "restart") && _hasParentInTheSameGroup(s, sg)) {
                                                                 DEBUG("Restart of %s skipped -- it'll be handled as part of the dependency chain, as the parent service is member of the same group\n", s->name);

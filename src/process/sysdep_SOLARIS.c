@@ -282,8 +282,8 @@ again:
                 si->swap.size = 0ULL;
                 return true;
         }
-        s = (swaptbl_t *)ALLOC(num * sizeof(swapent_t) + sizeof(struct swaptable));
-        strtab = (char *)ALLOC((num + 1) * MAXSTRSIZE);
+        s = (swaptbl_t *)CALLOC(num, sizeof(swapent_t) + sizeof(struct swaptable));
+        strtab = (char *)CALLOC(num + 1, MAXSTRSIZE);
         for (int i = 0; i < (num + 1); i++)
                 s->swt_ent[i].ste_path = strtab + (i * MAXSTRSIZE);
         s->swt_n = num + 1;
@@ -347,8 +347,8 @@ bool used_system_cpu_sysdep(SystemInfo_T *si) {
                 goto error;
         }
 
-        cpu_ks   = (kstat_t **)ALLOC(ncpus * sizeof(kstat_t *));
-        cpu_stat = (cpu_stat_t *)ALLOC(ncpus * sizeof(cpu_stat_t));
+        cpu_ks   = (kstat_t **)CALLOC(ncpus, sizeof(kstat_t *));
+        cpu_stat = (cpu_stat_t *)CALLOC(ncpus, sizeof(cpu_stat_t));
 
         for (kstat = kctl->kc_chain; kstat; kstat = kstat->ks_next) {
                 if (strncmp(kstat->ks_name, "cpu_stat", 8) == 0) {
