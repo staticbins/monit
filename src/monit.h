@@ -515,6 +515,7 @@ typedef struct Mmonit_T {
         struct SslOptions_T ssl;                               /**< SSL definition */
         int timeout;                /**< The timeout to wait for connection or i/o */
         MmonitCompress_Type compress;                        /**< Compression flag */
+        List_T hostgroups;                      /**< Member of M/Monit host groups */
 
         /** For internal use */
         struct Mmonit_T *next;                         /**< next receiver in chain */
@@ -1466,7 +1467,7 @@ State_Type check_fifo(Service_T);
 State_Type check_program(Service_T);
 State_Type check_net(Service_T);
 int  check_URL(Service_T s);
-void status_xml(StringBuffer_T, Event_T, int, const char *);
+void status_xml(StringBuffer_T, Event_T, int, const char *, Mmonit_T);
 bool  do_wakeupcall(void);
 bool interrupt(void);
 

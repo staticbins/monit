@@ -160,6 +160,17 @@ void gc_event(Event_T *e) {
 }
 
 
+static void _gc_hostgroups(List_T *hostgroups) {
+        if (*hostgroups) {
+                char *hostgroup = NULL;
+                while ((hostgroup = List_pop(*hostgroups))) {
+                        FREE(hostgroup);
+                }
+                List_free(hostgroups);
+        }
+}
+
+
 /* ----------------------------------------------------------------- Private */
 
 
@@ -703,13 +714,16 @@ static void _gcath(Auth_T *c) {
 }
 
 
-static void _gc_mmonit(Mmonit_T *recv) {
-        assert(recv);
-        if ((*recv)->next)
-                _gc_mmonit(&(*recv)->next);
-        _gc_url(&(*recv)->url);
-        _gcssloptions(&((*recv)->ssl));
-        FREE(*recv);
+static void _gc_mmonit(Mmonit_T *mmonit) {
+        assert(mmonit);
+
+        if ((*mmonit)->next)
+                _gc_mmonit(&(*mmonit)->next);
+
+        _gc_url(&(*mmonit)->url);
+        _gcssloptions(&((*mmonit)->ssl));
+        _gc_hostgroups(&((*mmonit)->hostgroups));
+        FREE(*mmonit);
 }
 
 

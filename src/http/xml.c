@@ -626,12 +626,25 @@ static void status_event(Event_T E, StringBuffer_T B) {
  * @param E An event object or NULL for general status
  * @param V Format version
  * @param myip The client-side IP address
+ * @param mmonit The mmonit configuration object
  */
-void status_xml(StringBuffer_T B, Event_T E, int V, const char *myip) {
+void status_xml(StringBuffer_T B, Event_T E, int V, const char *myip, Mmonit_T mmonit) {
         Service_T S;
         ServiceGroup_T SG;
 
         document_head(B, V, myip);
+
+        // M/Monit hostgroups membership
+        if (mmonit && mmonit->hostgroups) {
+                StringBuffer_append(B, "<hostgroups>");
+                for (_list_t g = mmonit->hostgroups->head; g; g = g->next) {
+                        StringBuffer_append(B, "<name><![CDATA[");
+                        _escapeCDATA(B, (const char *)g->e);
+                        StringBuffer_append(B, "]]></name>");
+                }
+                StringBuffer_append(B, "</hostgroups>");
+        }
+
         if (V == 2)
                 StringBuffer_append(B, "<services>");
         for (S = Service_List_Conf; S; S = S->next_conf)

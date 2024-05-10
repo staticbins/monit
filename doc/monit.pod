@@ -4041,6 +4041,7 @@ control file:
   SET MMONIT <url>
         [TIMEOUT <number> SECONDS]
         [REGISTER WITHOUT CREDENTIALS]
+        [HOSTGROUP "name"]+
 
 Example:
 
@@ -4062,6 +4063,13 @@ used to perform service actions from M/Monit. You can disable sending
 credentials by using I<REGISTER WITHOUT CREDENTIALS> and instead
 manually add credentials in M/Monit.
 
+You can optionally add Monit to one or more M/Monit hostgroups. If the
+hostgroup doesn't exist, it'll be created automatically. Example:
+
+ set mmonit
+     https://monit:monit@192.168.1.10:8443/collector
+     hostgroup Oslo
+     hostgroup "Mail servers"
 
 
 =head1 CONFIGURATION EXAMPLES

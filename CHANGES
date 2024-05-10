@@ -15,6 +15,12 @@ New: Issue #1074: Added a hardlink test to file, directory and fifo checks. Than
 New: Issue #1070: Added the system boot time and uptime to the XML interface. Thanks
 to Lutz Mader.
 
+New: Added support to add Monit to M/Monit hostgroup. Example:
+ set mmonit
+     https://monit:mypassword@mmonit.foo.bar:8443/collector
+     hostgroup Oslo
+     hostgroup "Mail servers"
+
 New: Set the header X-Content-Type-Options to prevent MIME type sniffing. Thanks to Christian Goettsche.
 
 Fixed: Issue #1082: Wrong error message for the uptime test. Thanks to Lutz Mader.
