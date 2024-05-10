@@ -140,7 +140,7 @@
 #include "net.h"
 
 // libmonit
-#include "util/Convert.h"
+#include "util/Fmt.h"
 #include "system/Net.h"
 #include "system/Time.h"
 #include "exceptions/AssertException.h"
@@ -456,11 +456,11 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                 } else {
                         memcpy(&started, data, sizeof(long long));
                         double response = (double)(stopped - started) / 1000.; // Convert microseconds to milliseconds
-                        DEBUG("Ping response for %s %d/%d succeeded -- received id=%d sequence=%d response_time=%s\n", hostname, retry, maxretries, in_id, in_seq, Convert_time2str(response, (char[11]){}));
+                        DEBUG("Ping response for %s %d/%d succeeded -- received id=%d sequence=%d response_time=%s\n", hostname, retry, maxretries, in_id, in_seq, Fmt_time2str(response, (char[11]){}));
                         return response; // Wait for one response only
                 }
         }
-        _log_warningOrError(retry, maxretries, "Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Convert_time2str(timeout, (char[11]){}));
+        _log_warningOrError(retry, maxretries, "Ping response for %s %d/%d timed out -- no response within %s\n", hostname, retry, maxretries, Fmt_time2str(timeout, (char[11]){}));
         return -1.;
 }
 

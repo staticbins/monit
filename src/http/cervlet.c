@@ -70,7 +70,7 @@
 
 // libmonit
 #include "system/Time.h"
-#include "util/Convert.h"
+#include "util/Fmt.h"
 #include "util/List.h"
 
 #include "monit.h"
@@ -410,12 +410,12 @@ static void _printIOStatistics(Output_Type type, HttpResponse res, Service_T s, 
         if (Statistics_initialized(&(io->bytes))) {
                 snprintf(header, sizeof(header), "%s bytes", name);
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytes));
-                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytes)), (char[10]){}));
+                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total]", Fmt_bytes2str(deltaBytesPerSec, (char[10]){}), Fmt_bytes2str(Statistics_raw(&(io->bytes)), (char[10]){}));
         }
         if (Statistics_initialized(&(io->bytesPhysical))) {
                 snprintf(header, sizeof(header), "disk %s bytes", name);
                 double deltaBytesPerSec = Statistics_deltaNormalize(&(io->bytesPhysical));
-                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total]", Convert_bytes2str(deltaBytesPerSec, (char[10]){}), Convert_bytes2str(Statistics_raw(&(io->bytesPhysical)), (char[10]){}));
+                _formatStatus(header, Event_Resource, type, res, s, true, "%s/s [%s total]", Fmt_bytes2str(deltaBytesPerSec, (char[10]){}), Fmt_bytes2str(Statistics_raw(&(io->bytesPhysical)), (char[10]){}));
         }
         if (Statistics_initialized(&(io->operations))) {
                 snprintf(header, sizeof(header), "disk %s operations", name);
@@ -452,8 +452,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                                 StringBuffer_append(sb, "%.1f%%guestnice ", System_Info.cpu.usage.guest_nice > 0. ? System_Info.cpu.usage.guest_nice : 0.);
                                         _formatStatus("cpu", Event_Resource, type, res, s, true, "%s", StringBuffer_toString(sb));
                                         StringBuffer_free(&sb);
-                                        _formatStatus("memory usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(System_Info.memory.usage.bytes, (char[10]){}), System_Info.memory.usage.percent);
-                                        _formatStatus("swap usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Convert_bytes2str(System_Info.swap.usage.bytes, (char[10]){}), System_Info.swap.usage.percent);
+                                        _formatStatus("memory usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Fmt_bytes2str(System_Info.memory.usage.bytes, (char[10]){}), System_Info.memory.usage.percent);
+                                        _formatStatus("swap usage", Event_Resource, type, res, s, true, "%s [%.1f%%]", Fmt_bytes2str(System_Info.swap.usage.bytes, (char[10]){}), System_Info.swap.usage.percent);
                                         _formatStatus("uptime", Event_Uptime, type, res, s, System_Info.booted > 0, "%s", _getUptime(Time_now() - System_Info.booted, (char[256]){}));
                                         _formatStatus("boot time", Event_Null, type, res, s, true, "%s", Time_string(System_Info.booted, (char[32]){}));
                                         if (System_Info.statisticsAvailable & Statistics_FiledescriptorsPerSystem) {
@@ -469,7 +469,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 _formatStatus("permission", Event_Permission, type, res, s, s->inf.file->mode >= 0, "%o", s->inf.file->mode & 07777);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.file->uid >= 0, "%d", s->inf.file->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.file->gid >= 0, "%d", s->inf.file->gid);
-                                _formatStatus("size", Event_Size, type, res, s, s->inf.file->size >= 0, "%s", Convert_bytes2str(s->inf.file->size, (char[10]){}));
+                                _formatStatus("size", Event_Size, type, res, s, s->inf.file->size >= 0, "%s", Fmt_bytes2str(s->inf.file->size, (char[10]){}));
                                 _formatStatus("hardlink", Event_Resource, type, res, s, s->inf.file->nlink != -1LL, "%llu", (unsigned long long)s->inf.file->nlink);
                                 _formatStatus("access timestamp", Event_Timestamp, type, res, s, s->inf.file->timestamp.access > 0, "%s", Time_string(s->inf.file->timestamp.access, (char[32]){}));
                                 _formatStatus("change timestamp", Event_Timestamp, type, res, s, s->inf.file->timestamp.change > 0, "%s", Time_string(s->inf.file->timestamp.change, (char[32]){}));
@@ -508,11 +508,11 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("link", Event_Link, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld errors", Link_getErrorsInPerSecond(s->inf.net->stats) + Link_getErrorsOutPerSecond(s->inf.net->stats));
                                         if (speed > 0) {
                                                 _formatStatus("capacity", Event_Speed, type, res, s, Link_getState(s->inf.net->stats) == 1, "%.0lf Mb/s %s-duplex", (double)speed / 1000000., Link_getDuplex(s->inf.net->stats) == 1 ? "full" : "half");
-                                                _formatStatus("download bytes", Event_ByteIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s (%.1f%% link saturation)", Convert_bytes2str(ibytes, (char[10]){}), 100. * ibytes * 8 / (double)speed);
-                                                _formatStatus("upload bytes", Event_ByteOut, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s (%.1f%% link saturation)", Convert_bytes2str(obytes, (char[10]){}), 100. * obytes * 8 / (double)speed);
+                                                _formatStatus("download bytes", Event_ByteIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s (%.1f%% link saturation)", Fmt_bytes2str(ibytes, (char[10]){}), 100. * ibytes * 8 / (double)speed);
+                                                _formatStatus("upload bytes", Event_ByteOut, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s (%.1f%% link saturation)", Fmt_bytes2str(obytes, (char[10]){}), 100. * obytes * 8 / (double)speed);
                                         } else {
-                                                _formatStatus("download bytes", Event_ByteIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s", Convert_bytes2str(ibytes, (char[10]){}));
-                                                _formatStatus("upload bytes", Event_ByteOut, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s", Convert_bytes2str(obytes, (char[10]){}));
+                                                _formatStatus("download bytes", Event_ByteIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s", Fmt_bytes2str(ibytes, (char[10]){}));
+                                                _formatStatus("upload bytes", Event_ByteOut, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s", Fmt_bytes2str(obytes, (char[10]){}));
                                         }
                                         _formatStatus("download packets", Event_PacketIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld per second", Link_getPacketsInPerSecond(s->inf.net->stats));
                                         _formatStatus("upload packets", Event_PacketOut, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld per second", Link_getPacketsOutPerSecond(s->inf.net->stats));
@@ -525,15 +525,15 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 _formatStatus("permission", Event_Permission, type, res, s, s->inf.filesystem->mode >= 0, "%o", s->inf.filesystem->mode & 07777);
                                 _formatStatus("uid", Event_Uid, type, res, s, s->inf.filesystem->uid >= 0, "%d", s->inf.filesystem->uid);
                                 _formatStatus("gid", Event_Gid, type, res, s, s->inf.filesystem->gid >= 0, "%d", s->inf.filesystem->gid);
-                                _formatStatus("block size", Event_Null, type, res, s, true, "%s", Convert_bytes2str(s->inf.filesystem->f_bsize, (char[10]){}));
+                                _formatStatus("block size", Event_Null, type, res, s, true, "%s", Fmt_bytes2str(s->inf.filesystem->f_bsize, (char[10]){}));
                                 _formatStatus("space total", Event_Null, type, res, s, true, "%s (of which %.1f%% is reserved for root user)",
-                                        s->inf.filesystem->f_bsize > 0 ? Convert_bytes2str(s->inf.filesystem->f_blocks * s->inf.filesystem->f_bsize, (char[10]){}) : "0 MB",
+                                        s->inf.filesystem->f_bsize > 0 ? Fmt_bytes2str(s->inf.filesystem->f_blocks * s->inf.filesystem->f_bsize, (char[10]){}) : "0 MB",
                                         s->inf.filesystem->f_blocks > 0 ? ((float)100 * (float)(s->inf.filesystem->f_blocksfreetotal - s->inf.filesystem->f_blocksfree) / (float)s->inf.filesystem->f_blocks) : 0);
                                 _formatStatus("space free for non superuser", Event_Null, type, res, s, true, "%s [%.1f%%]",
-                                        s->inf.filesystem->f_bsize > 0 ? Convert_bytes2str(s->inf.filesystem->f_blocksfree * s->inf.filesystem->f_bsize, (char[10]){}) : "0 MB",
+                                        s->inf.filesystem->f_bsize > 0 ? Fmt_bytes2str(s->inf.filesystem->f_blocksfree * s->inf.filesystem->f_bsize, (char[10]){}) : "0 MB",
                                         s->inf.filesystem->f_blocks > 0 ? ((float)100 * (float)s->inf.filesystem->f_blocksfree / (float)s->inf.filesystem->f_blocks) : 0);
                                 _formatStatus("space free total", Event_Resource, type, res, s, true, "%s [%.1f%%]",
-                                        s->inf.filesystem->f_bsize > 0 ? Convert_bytes2str(s->inf.filesystem->f_blocksfreetotal * s->inf.filesystem->f_bsize, (char[10]){}) : "0 MB",
+                                        s->inf.filesystem->f_bsize > 0 ? Fmt_bytes2str(s->inf.filesystem->f_blocksfreetotal * s->inf.filesystem->f_bsize, (char[10]){}) : "0 MB",
                                         s->inf.filesystem->f_blocks > 0 ? ((float)100 * (float)s->inf.filesystem->f_blocksfreetotal / (float)s->inf.filesystem->f_blocks) : 0);
                                 if (s->inf.filesystem->f_files > 0) {
                                         _formatStatus("inodes total", Event_Null, type, res, s, true, "%lld", s->inf.filesystem->f_files);
@@ -576,8 +576,8 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                         _formatStatus("children", Event_Resource, type, res, s, s->inf.process->children >= 0, "%d", s->inf.process->children);
                                         _formatStatus("cpu", Event_Resource, type, res, s, s->inf.process->cpu_percent >= 0, "%.1f%%", s->inf.process->cpu_percent);
                                         _formatStatus("cpu total", Event_Resource, type, res, s, s->inf.process->total_cpu_percent >= 0, "%.1f%%", s->inf.process->total_cpu_percent);
-                                        _formatStatus("memory", Event_Resource, type, res, s, s->inf.process->mem_percent >= 0, "%.1f%% [%s]", s->inf.process->mem_percent, Convert_bytes2str(s->inf.process->mem, (char[10]){}));
-                                        _formatStatus("memory total", Event_Resource, type, res, s, s->inf.process->total_mem_percent >= 0, "%.1f%% [%s]", s->inf.process->total_mem_percent, Convert_bytes2str(s->inf.process->total_mem, (char[10]){}));
+                                        _formatStatus("memory", Event_Resource, type, res, s, s->inf.process->mem_percent >= 0, "%.1f%% [%s]", s->inf.process->mem_percent, Fmt_bytes2str(s->inf.process->mem, (char[10]){}));
+                                        _formatStatus("memory total", Event_Resource, type, res, s, s->inf.process->total_mem_percent >= 0, "%.1f%% [%s]", s->inf.process->total_mem_percent, Fmt_bytes2str(s->inf.process->total_mem, (char[10]){}));
 #ifdef LINUX
                                         _formatStatus("security attribute", Event_Invalid, type, res, s, *(s->inf.process->secattr), "%s", s->inf.process->secattr);
                                         long long limit = s->inf.process->filedescriptors.limit.soft < s->inf.process->filedescriptors.limit.hard ? s->inf.process->filedescriptors.limit.soft : s->inf.process->filedescriptors.limit.hard;
@@ -606,7 +606,7 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                         if (i->is_available == Connection_Failed)
                                 _formatStatus("ping response time", i->check_invers ? Event_Null : Event_Icmp, type, res, s, true, "connection failed");
                         else
-                                _formatStatus("ping response time", i->check_invers ? Event_Icmp : Event_Null, type, res, s, i->is_available != Connection_Init && i->responsetime.current >= 0., "%s", Convert_time2str(i->responsetime.current, (char[11]){}));
+                                _formatStatus("ping response time", i->check_invers ? Event_Icmp : Event_Null, type, res, s, i->is_available != Connection_Init && i->responsetime.current >= 0., "%s", Fmt_time2str(i->responsetime.current, (char[11]){}));
                 }
                 for (Port_T p = s->portlist; p; p = p->next) {
                         if (p->is_available == Connection_Failed) {
@@ -619,14 +619,14 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                                 Event_Type highlight = p->check_invers ? Event_Connection : Event_Null;
                                 if (p->target.net.ssl.certificate.validDays < p->target.net.ssl.certificate.minimumDays)
                                         highlight |= Event_Timestamp;
-                                _formatStatus("port response time", highlight, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %sprotocol %s", Convert_time2str(p->responsetime.current, (char[11]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), buf, p->protocol->name);
+                                _formatStatus("port response time", highlight, type, res, s, p->is_available != Connection_Init, "%s to %s:%d%s type %s/%s %sprotocol %s", Fmt_time2str(p->responsetime.current, (char[11]){}), p->hostname, p->target.net.port, Util_portRequestDescription(p), Util_portTypeDescription(p), Util_portIpDescription(p), buf, p->protocol->name);
                         }
                 }
                 for (Port_T p = s->socketlist; p; p = p->next) {
                         if (p->is_available == Connection_Failed) {
                                 _formatStatus("unix socket response time", p->check_invers ? Event_Null : Event_Connection, type, res, s, true, "FAILED to %s type %s protocol %s", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
                         } else {
-                                _formatStatus("unix socket response time", p->check_invers ? Event_Connection : Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s type %s protocol %s", Convert_time2str(p->responsetime.current, (char[11]){}), p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
+                                _formatStatus("unix socket response time", p->check_invers ? Event_Connection : Event_Null, type, res, s, p->is_available != Connection_Init, "%s to %s type %s protocol %s", Fmt_time2str(p->responsetime.current, (char[11]){}), p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name);
                         }
                 }
         }
@@ -662,7 +662,7 @@ static void _formatAction(HttpResponse res, const char *type, command_t cmd) {
                 StringBuffer_append(sb, " as uid %d", cmd->uid);
         if (cmd->has_gid)
                 StringBuffer_append(sb, " as gid %d", cmd->gid);
-        StringBuffer_append(sb, " timeout %s", Convert_time2str(cmd->timeout, (char[11]){}));
+        StringBuffer_append(sb, " timeout %s", Fmt_time2str(cmd->timeout, (char[11]){}));
         _displayTableRow(res, true, NULL, key, "%s", StringBuffer_toString(sb));
         StringBuffer_free(&sb);
 }
@@ -965,7 +965,7 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                 for (Mmonit_T c = Run.mmonits; c; c = c->next)
                 {
                         escapeHTML(res->outputbuffer, c->url->url);
-                        StringBuffer_append(res->outputbuffer, " with timeout %s", Convert_time2str(c->timeout, (char[11]){}));
+                        StringBuffer_append(res->outputbuffer, " with timeout %s", Fmt_time2str(c->timeout, (char[11]){}));
 #ifdef HAVE_OPENSSL
                         if (c->ssl.flags) {
                                 StringBuffer_append(res->outputbuffer, " using TLS");
@@ -1018,16 +1018,16 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                 _displayTableRow(res, true, NULL, "Default mail subject", "%s", Run.MailFormat.subject);
         if (Run.MailFormat.message)
                 _displayTableRow(res, true, NULL, "Default mail message", "%s", Run.MailFormat.message);
-        _displayTableRow(res, false, NULL, "Limit for Send/Expect buffer",      "%s", Convert_bytes2str(Run.limits.sendExpectBuffer, buf));
-        _displayTableRow(res, false, NULL, "Limit for file content buffer",     "%s", Convert_bytes2str(Run.limits.fileContentBuffer, buf));
-        _displayTableRow(res, false, NULL, "Limit for HTTP content buffer",     "%s", Convert_bytes2str(Run.limits.httpContentBuffer, buf));
-        _displayTableRow(res, false, NULL, "Limit for program output",          "%s", Convert_bytes2str(Run.limits.programOutput, buf));
-        _displayTableRow(res, false, NULL, "Limit for network timeout",         "%s", Convert_time2str(Run.limits.networkTimeout, (char[11]){}));
-        _displayTableRow(res, false, NULL, "Limit for check program timeout",   "%s", Convert_time2str(Run.limits.programTimeout, (char[11]){}));
-        _displayTableRow(res, false, NULL, "Limit for service stop timeout",    "%s", Convert_time2str(Run.limits.stopTimeout, (char[11]){}));
-        _displayTableRow(res, false, NULL, "Limit for service start timeout",   "%s", Convert_time2str(Run.limits.startTimeout, (char[11]){}));
-        _displayTableRow(res, false, NULL, "Limit for service restart timeout", "%s", Convert_time2str(Run.limits.restartTimeout, (char[11]){}));
-        _displayTableRow(res, false, NULL, "Limit for test action exec timeout","%s", Convert_time2str(Run.limits.execTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "Limit for Send/Expect buffer",      "%s", Fmt_bytes2str(Run.limits.sendExpectBuffer, buf));
+        _displayTableRow(res, false, NULL, "Limit for file content buffer",     "%s", Fmt_bytes2str(Run.limits.fileContentBuffer, buf));
+        _displayTableRow(res, false, NULL, "Limit for HTTP content buffer",     "%s", Fmt_bytes2str(Run.limits.httpContentBuffer, buf));
+        _displayTableRow(res, false, NULL, "Limit for program output",          "%s", Fmt_bytes2str(Run.limits.programOutput, buf));
+        _displayTableRow(res, false, NULL, "Limit for network timeout",         "%s", Fmt_time2str(Run.limits.networkTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "Limit for check program timeout",   "%s", Fmt_time2str(Run.limits.programTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "Limit for service stop timeout",    "%s", Fmt_time2str(Run.limits.stopTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "Limit for service start timeout",   "%s", Fmt_time2str(Run.limits.startTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "Limit for service restart timeout", "%s", Fmt_time2str(Run.limits.restartTimeout, (char[11]){}));
+        _displayTableRow(res, false, NULL, "Limit for test action exec timeout","%s", Fmt_time2str(Run.limits.execTimeout, (char[11]){}));
         _displayTableRow(res, false, NULL, "On reboot",                         "%s", onReboot_Names[Run.onreboot]);
         _displayTableRow(res, false, NULL, "Poll time",                         "%d seconds with start delay %d seconds", Run.polltime, Run.startdelay);
         if (Run.httpd.flags & Httpd_Net) {
@@ -1350,10 +1350,10 @@ static void do_home_system(HttpResponse res) {
                             "</td>");
         StringBuffer_append(res->outputbuffer,
                             "<td class='right column'>%.1f%% [%s]</td>",
-                            System_Info.memory.usage.percent, Convert_bytes2str(System_Info.memory.usage.bytes, buf));
+                            System_Info.memory.usage.percent, Fmt_bytes2str(System_Info.memory.usage.bytes, buf));
         StringBuffer_append(res->outputbuffer,
                             "<td class='right column'>%.1f%% [%s]</td>",
-                            System_Info.swap.usage.percent, Convert_bytes2str(System_Info.swap.usage.bytes, buf));
+                            System_Info.swap.usage.percent, Fmt_bytes2str(System_Info.swap.usage.bytes, buf));
         StringBuffer_append(res->outputbuffer,
                             "</tr>"
                             "</table>");
@@ -1402,14 +1402,14 @@ static void do_home_process(HttpResponse res) {
                 if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || s->inf.process->total_mem_percent < 0) {
                         StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 } else {
-                        StringBuffer_append(res->outputbuffer, "<td class='right%s'>%.1f%% [%s]</td>", (s->error & Event_Resource) ? " red-text" : "", s->inf.process->total_mem_percent, Convert_bytes2str(s->inf.process->total_mem, buf));
+                        StringBuffer_append(res->outputbuffer, "<td class='right%s'>%.1f%% [%s]</td>", (s->error & Event_Resource) ? " red-text" : "", s->inf.process->total_mem_percent, Fmt_bytes2str(s->inf.process->total_mem, buf));
                 }
                 bool hasReadBytes = Statistics_initialized(&(s->inf.process->read.bytes));
                 bool hasReadOperations = Statistics_initialized(&(s->inf.process->read.operations));
                 if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || (! hasReadBytes && ! hasReadOperations)) {
                         StringBuffer_append(res->outputbuffer, "<td class='right column'>-</td>");
                 } else if (hasReadBytes) {
-                        StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%s/s</td>", (s->error & Event_Resource) ? " red-text" : "", Convert_bytes2str(Statistics_deltaNormalize(&(s->inf.process->read.bytes)), (char[10]){}));
+                        StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%s/s</td>", (s->error & Event_Resource) ? " red-text" : "", Fmt_bytes2str(Statistics_deltaNormalize(&(s->inf.process->read.bytes)), (char[10]){}));
                 } else if (hasReadOperations) {
                         StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%.1f/s</td>", (s->error & Event_Resource) ? " red-text" : "", Statistics_deltaNormalize(&(s->inf.process->read.operations)));
                 }
@@ -1418,7 +1418,7 @@ static void do_home_process(HttpResponse res) {
                 if (! (Run.flags & Run_ProcessEngineEnabled) || ! Util_hasServiceStatus(s) || (! hasWriteBytes && ! hasWriteOperations)) {
                         StringBuffer_append(res->outputbuffer, "<td class='right column'>-</td>");
                 } else if (hasWriteBytes) {
-                        StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%s/s</td>", (s->error & Event_Resource) ? " red-text" : "", Convert_bytes2str(Statistics_deltaNormalize(&(s->inf.process->write.bytes)), (char[10]){}));
+                        StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%s/s</td>", (s->error & Event_Resource) ? " red-text" : "", Fmt_bytes2str(Statistics_deltaNormalize(&(s->inf.process->write.bytes)), (char[10]){}));
                 } else if (hasWriteOperations) {
                         StringBuffer_append(res->outputbuffer, "<td class='right column%s'>%.1f/s</td>", (s->error & Event_Resource) ? " red-text" : "", Statistics_deltaNormalize(&(s->inf.process->write.operations)));
                 }
@@ -1530,8 +1530,8 @@ static void do_home_net(HttpResponse res) {
                         StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                         StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 } else {
-                        StringBuffer_append(res->outputbuffer, "<td class='right'>%s&#47;s</td>", Convert_bytes2str(Link_getBytesOutPerSecond(s->inf.net->stats), buf));
-                        StringBuffer_append(res->outputbuffer, "<td class='right'>%s&#47;s</td>", Convert_bytes2str(Link_getBytesInPerSecond(s->inf.net->stats), buf));
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%s&#47;s</td>", Fmt_bytes2str(Link_getBytesOutPerSecond(s->inf.net->stats), buf));
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%s&#47;s</td>", Fmt_bytes2str(Link_getBytesInPerSecond(s->inf.net->stats), buf));
                 }
                 StringBuffer_append(res->outputbuffer, "</tr>");
                 on = ! on;
@@ -1580,7 +1580,7 @@ static void do_home_filesystem(HttpResponse res) {
                                             "<td class='right column%s'>%.1f%% [%s]</td>",
                                             (s->error & Event_Resource) ? " red-text" : "",
                                             s->inf.filesystem->space_percent,
-                                            s->inf.filesystem->f_bsize > 0 ? Convert_bytes2str(s->inf.filesystem->f_blocksused * s->inf.filesystem->f_bsize, buf) : "0 MB");
+                                            s->inf.filesystem->f_bsize > 0 ? Fmt_bytes2str(s->inf.filesystem->f_blocksused * s->inf.filesystem->f_bsize, buf) : "0 MB");
                         if (s->inf.filesystem->f_files > 0) {
                                 StringBuffer_append(res->outputbuffer,
                                                     "<td class='right column%s'>%.1f%% [%lld objects]</td>",
@@ -1595,9 +1595,9 @@ static void do_home_filesystem(HttpResponse res) {
                                             "<td class='right column%s'>%s/s</td>"
                                             "<td class='right column%s'>%s/s</td>",
                                             (s->error & Event_Resource) ? " red-text" : "",
-                                            Convert_bytes2str(Statistics_deltaNormalize(&(s->inf.filesystem->read.bytes)), (char[10]){}),
+                                            Fmt_bytes2str(Statistics_deltaNormalize(&(s->inf.filesystem->read.bytes)), (char[10]){}),
                                             (s->error & Event_Resource) ? " red-text" : "",
-                                            Convert_bytes2str(Statistics_deltaNormalize(&(s->inf.filesystem->write.bytes)), (char[10]){}));
+                                            Fmt_bytes2str(Statistics_deltaNormalize(&(s->inf.filesystem->write.bytes)), (char[10]){}));
                 }
                 StringBuffer_append(res->outputbuffer, "</tr>");
                 on = ! on;
@@ -1639,7 +1639,7 @@ static void do_home_file(HttpResponse res) {
                 if (! Util_hasServiceStatus(s) || s->inf.file->size < 0)
                         StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
-                        StringBuffer_append(res->outputbuffer, "<td class='right'>%s</td>", Convert_bytes2str(s->inf.file->size, (char[10]){}));
+                        StringBuffer_append(res->outputbuffer, "<td class='right'>%s</td>", Fmt_bytes2str(s->inf.file->size, (char[10]){}));
                 if (! Util_hasServiceStatus(s) || s->inf.file->mode < 0)
                         StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
                 else
@@ -1999,11 +1999,11 @@ static void print_service_rules_port(HttpResponse res, Service_T s) {
                 if (p->outgoing.ip)
                         StringBuffer_append(buf, " via address %s", p->outgoing.ip);
                 StringBuffer_append(buf, " type %s/%s protocol %s with timeout %s",
-                        Util_portTypeDescription(p), Util_portIpDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}));
+                        Util_portTypeDescription(p), Util_portIpDescription(p), p->protocol->name, Fmt_time2str(p->timeout, (char[11]){}));
                 if (p->retry > 1)
                         StringBuffer_append(buf, " and retry %d times", p->retry);
                 if (p->responsetime.limit > -1.)
-                        StringBuffer_append(buf, " and responsetime %s %s", Operator_Names[p->responsetime.operator], Convert_time2str(p->responsetime.limit, (char[11]){}));
+                        StringBuffer_append(buf, " and responsetime %s %s", Operator_Names[p->responsetime.operator], Fmt_time2str(p->responsetime.limit, (char[11]){}));
 #ifdef HAVE_OPENSSL
                 if (p->target.net.ssl.options.flags) {
                         StringBuffer_append(buf, " using TLS");
@@ -2027,11 +2027,11 @@ static void print_service_rules_socket(HttpResponse res, Service_T s) {
         for (Port_T p = s->socketlist; p; p = p->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 StringBuffer_T buf = StringBuffer_create(64);
-                StringBuffer_append(buf, "If %s %s type %s protocol %s with timeout %s", p->check_invers ? "succeeded" : "failed", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Convert_time2str(p->timeout, (char[11]){}));
+                StringBuffer_append(buf, "If %s %s type %s protocol %s with timeout %s", p->check_invers ? "succeeded" : "failed", p->target.unix.pathname, Util_portTypeDescription(p), p->protocol->name, Fmt_time2str(p->timeout, (char[11]){}));
                 if (p->retry > 1)
                         StringBuffer_append(buf, " and retry %d times", p->retry);
                 if (p->responsetime.limit > -1.)
-                        StringBuffer_append(buf, " and responsetime %s %s", Operator_Names[p->responsetime.operator], Convert_time2str(p->responsetime.limit, (char[11]){}));
+                        StringBuffer_append(buf, " and responsetime %s %s", Operator_Names[p->responsetime.operator], Fmt_time2str(p->responsetime.limit, (char[11]){}));
                 _displayTableRow(res, true, "rule", "Unix Socket", "%s", StringBuffer_toString(Util_printRule(p->check_invers, sb, p->action, "%s", StringBuffer_toString(buf))));
                 StringBuffer_free(&buf);
                 StringBuffer_free(&sb);
@@ -2055,11 +2055,11 @@ static void print_service_rules_icmp(HttpResponse res, Service_T s) {
                                 key = "Ping";
                                 break;
                 }
-                StringBuffer_append(buf, "If %s count %d size %d with timeout %s", i->check_invers ? "succeeded" : "failed", i->count, i->size, Convert_time2str(i->timeout, (char[11]){}));
+                StringBuffer_append(buf, "If %s count %d size %d with timeout %s", i->check_invers ? "succeeded" : "failed", i->count, i->size, Fmt_time2str(i->timeout, (char[11]){}));
                 if (i->outgoing.ip)
                         StringBuffer_append(buf, " via address %s", i->outgoing.ip);
                 if (i->responsetime.limit > -1.)
-                        StringBuffer_append(buf, " and responsetime %s %s", Operator_Names[i->responsetime.operator], Convert_time2str(i->responsetime.limit, (char[11]){}));
+                        StringBuffer_append(buf, " and responsetime %s %s", Operator_Names[i->responsetime.operator], Fmt_time2str(i->responsetime.limit, (char[11]){}));
                 _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(Util_printRule(i->check_invers, sb, i->action, "%s", StringBuffer_toString(buf))));
                 StringBuffer_free(&buf);
                 StringBuffer_free(&sb);
@@ -2140,7 +2140,7 @@ static void print_service_rules_timestamp(HttpResponse res, Service_T s) {
                 if (t->test_changes)
                         Util_printRule(false, sb, t->action, "If changed");
                 else
-                        Util_printRule(false, sb, t->action, "If %s %s", Operator_Names[t->operator], Convert_time2str(t->time * 1000., (char[11]){}));
+                        Util_printRule(false, sb, t->action, "If %s %s", Operator_Names[t->operator], Fmt_time2str(t->time * 1000., (char[11]){}));
                 _displayTableRow(res, true, "rule", key, "%s", StringBuffer_toString(sb));
                 StringBuffer_free(&sb);
         }
@@ -2176,32 +2176,32 @@ static void print_service_rules_filesystem(HttpResponse res, Service_T s) {
                         break;
                 case Resource_Space:
                         if (dl->limit_absolute > -1)
-                                Util_printRule(false, sb, dl->action, "If %s %s", Operator_Names[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
+                                Util_printRule(false, sb, dl->action, "If %s %s", Operator_Names[dl->operator], Fmt_bytes2str(dl->limit_absolute, (char[10]){}));
                         else
                                 Util_printRule(false, sb, dl->action, "If %s %.1f%%", Operator_Names[dl->operator], dl->limit_percent);
                         _displayTableRow(res, true, "rule", "Space usage limit", "%s", StringBuffer_toString(sb));
                         break;
                 case Resource_SpaceFree:
                         if (dl->limit_absolute > -1)
-                                Util_printRule(false, sb, dl->action, "If %s %s", Operator_Names[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}));
+                                Util_printRule(false, sb, dl->action, "If %s %s", Operator_Names[dl->operator], Fmt_bytes2str(dl->limit_absolute, (char[10]){}));
                         else
                                 Util_printRule(false, sb, dl->action, "If %s %.1f%%", Operator_Names[dl->operator], dl->limit_percent);
                         _displayTableRow(res, true, "rule", "Space free limit", "%s", StringBuffer_toString(sb));
                         break;
                 case Resource_ReadBytes:
-                        _displayTableRow(res, true, "rule", "Read limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If read %s %s/s", Operator_Names[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}))));
+                        _displayTableRow(res, true, "rule", "Read limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If read %s %s/s", Operator_Names[dl->operator], Fmt_bytes2str(dl->limit_absolute, (char[10]){}))));
                         break;
                 case Resource_ReadOperations:
                         _displayTableRow(res, true, "rule", "Read limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If read %s %llu operations/s", Operator_Names[dl->operator], dl->limit_absolute)));
                         break;
                 case Resource_WriteBytes:
-                        _displayTableRow(res, true, "rule", "Write limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If write %s %s/s", Operator_Names[dl->operator], Convert_bytes2str(dl->limit_absolute, (char[10]){}))));
+                        _displayTableRow(res, true, "rule", "Write limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If write %s %s/s", Operator_Names[dl->operator], Fmt_bytes2str(dl->limit_absolute, (char[10]){}))));
                         break;
                 case Resource_WriteOperations:
                         _displayTableRow(res, true, "rule", "Write limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If write %s %llu operations/s", Operator_Names[dl->operator], dl->limit_absolute)));
                         break;
                 case Resource_ServiceTime:
-                        _displayTableRow(res, true, "rule", "Service time limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If service time %s %s/operation", Operator_Names[dl->operator], Convert_time2str(dl->limit_absolute, (char[11]){}))));
+                        _displayTableRow(res, true, "rule", "Service time limit", "%s", StringBuffer_toString(Util_printRule(false, sb, dl->action, "If service time %s %s/operation", Operator_Names[dl->operator], Fmt_time2str(dl->limit_absolute, (char[11]){}))));
                         break;
                 default:
                         break;
@@ -2268,9 +2268,9 @@ static void print_service_rules_uploadbytes(HttpResponse res, Service_T s) {
         for (Bandwidth_T bl = s->uploadbyteslist; bl; bl = bl->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (bl->range == Time_Second)
-                        _displayTableRow(res, true, "rule", "Upload bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s/s", Operator_Names[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}))));
+                        _displayTableRow(res, true, "rule", "Upload bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s/s", Operator_Names[bl->operator], Fmt_bytes2str(bl->limit, (char[10]){}))));
                 else
-                        _displayTableRow(res, true, "rule", "Total upload bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s in last %d %s(s)", Operator_Names[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range))));
+                        _displayTableRow(res, true, "rule", "Total upload bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s in last %d %s(s)", Operator_Names[bl->operator], Fmt_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range))));
                 StringBuffer_free(&sb);
         }
 }
@@ -2292,9 +2292,9 @@ static void print_service_rules_downloadbytes(HttpResponse res, Service_T s) {
         for (Bandwidth_T bl = s->downloadbyteslist; bl; bl = bl->next) {
                 StringBuffer_T sb = StringBuffer_create(256);
                 if (bl->range == Time_Second)
-                        _displayTableRow(res, true, "rule", "Download bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s/s", Operator_Names[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}))));
+                        _displayTableRow(res, true, "rule", "Download bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s/s", Operator_Names[bl->operator], Fmt_bytes2str(bl->limit, (char[10]){}))));
                 else
-                        _displayTableRow(res, true, "rule", "Total download bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s in last %d %s(s)", Operator_Names[bl->operator], Convert_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range))));
+                        _displayTableRow(res, true, "rule", "Total download bytes", "%s", StringBuffer_toString(Util_printRule(false, sb, bl->action, "If %s %s in last %d %s(s)", Operator_Names[bl->operator], Fmt_bytes2str(bl->limit, (char[10]){}), bl->rangecount, Util_timestr(bl->range))));
                 StringBuffer_free(&sb);
         }
 }
@@ -2369,7 +2369,7 @@ static void print_service_rules_ppid(HttpResponse res, Service_T s) {
 
 static void print_service_rules_program(HttpResponse res, Service_T s) {
         if (s->type == Service_Program) {
-                _displayTableRow(res, false, "rule", "Program timeout", "Terminate the program if not finished within %s", Convert_time2str(s->program->timeout, (char[11]){}));
+                _displayTableRow(res, false, "rule", "Program timeout", "Terminate the program if not finished within %s", Fmt_time2str(s->program->timeout, (char[11]){}));
                 for (Status_T status = s->statuslist; status; status = status->next) {
                         StringBuffer_T sb = StringBuffer_create(256);
                         if (status->operator == Operator_Changed)
@@ -2529,7 +2529,7 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         case Resource_MemoryKbyte:
                         case Resource_SwapKbyte:
                         case Resource_MemoryKbyteTotal:
-                                Util_printRule(false, sb, q->action, "If %s %s", Operator_Names[q->operator], Convert_bytes2str(q->limit, buf));
+                                Util_printRule(false, sb, q->action, "If %s %s", Operator_Names[q->operator], Fmt_bytes2str(q->limit, buf));
                                 break;
 
                         case Resource_LoadAverage1m:
@@ -2550,7 +2550,7 @@ static void print_service_rules_resource(HttpResponse res, Service_T s) {
                         case Resource_ReadBytesPhysical:
                         case Resource_WriteBytes:
                         case Resource_WriteBytesPhysical:
-                                Util_printRule(false, sb, q->action, "if %s %s", Operator_Names[q->operator], Convert_bytes2str(q->limit, (char[10]){}));
+                                Util_printRule(false, sb, q->action, "if %s %s", Operator_Names[q->operator], Fmt_bytes2str(q->limit, (char[10]){}));
                                 break;
 
                         case Resource_ReadOperations:
