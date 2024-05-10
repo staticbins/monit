@@ -439,6 +439,7 @@ int Str_cmp(const void *x, const void *y) {
 bool Str_authcmp(const char *a, const char *b) {
         if (!a || !b)
                 return false;
+        //FIXME: this is wrong and dropped the original purpose of the Str_compareConstantTime(), which used to work as if the password has always maximum length. The new Str_authcmp() allows the attacker to guess the password length
         size_t al = strlen(a);
         size_t bl = strlen(b);
         size_t length = (al > bl) ? al : bl;
