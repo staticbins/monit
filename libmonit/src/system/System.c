@@ -95,13 +95,16 @@ void System_error(const char *e, ...) {
 }
 
 
-int System_getDescriptorsGuarded(void) {
-        int max = 2<<15;
+int System_getDescriptorsGuarded(int guard) {
         int fileDescriptors = (int)sysconf(_SC_OPEN_MAX);
         if (fileDescriptors < 2)
                 fileDescriptors = getdtablesize();
         assert(fileDescriptors > 2);
-        return (fileDescriptors > max) ? max : fileDescriptors;
+        if (guard > 0) {
+                if (fileDescriptors > guard)
+                        fileDescriptors = guard;
+        }
+        return fileDescriptors;
 }
 
 
