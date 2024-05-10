@@ -985,6 +985,16 @@ if test $with_sslstatic -eq 1 || test $with_ssl -eq 1; then
         if test "$asn1timediff" = "yes" ; then
                 AC_DEFINE([HAVE_ASN1_TIME_DIFF], 1, [Define to 1 if you have openssl with ASN1_TIME_diff])
         fi
+
+        AC_MSG_CHECKING([for SSL_CTX_set_keylog_callback support])
+        AC_LINK_IFELSE(
+                [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [SSL_CTX_set_keylog_callback(0, 0)])],
+                [sslkeylogfile=yes],
+                [sslkeylogfile=no])
+        AC_MSG_RESULT($sslkeylogfile)
+        if test "$sslkeylogfile" = "yes" ; then
+                AC_DEFINE([HAVE_SSL_CTX_SET_KEYLOG_CALLBACK], 1, [Define to 1 if you have ssl library with SSL_CTX_set_keylog_callback])
+        fi
 fi
 
 

@@ -29,6 +29,10 @@
 #ifdef HAVE_OPENSSL
 
 
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
 #endif
@@ -39,6 +43,10 @@
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>
 #endif
 
 #ifdef HAVE_SYS_SOCKET_H
@@ -59,6 +67,10 @@
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -148,7 +160,61 @@ static Mutex_T *instanceMutexTable;
 static int session_id_context = 1;
 
 
+#ifdef HAVE_SSL_CTX_SET_KEYLOG_CALLBACK
+static FILE *keylog = NULL;
+#endif
+
+
 /* ----------------------------------------------------------------- Private */
+
+
+#ifdef HAVE_SSL_CTX_SET_KEYLOG_CALLBACK
+// Close the SSLKEYLOGFILE
+static void _keylogClose(void) {
+        if (keylog) {
+                if (fclose(keylog) != 0)
+                        Log_error("Cannot close the key log file -- %s\n", STRERROR);
+        }
+}
+
+
+// If the SSLKEYLOGFILE environment variable is set, open the keylog file, to be used with Wireshark for TLS debugging
+static void _keylogOpen(void) {
+        if (! keylog) {
+                const char *name = getenv("SSLKEYLOGFILE");
+                if (name) {
+                        mode_t savemask = umask(0077);
+                        keylog = fopen(name, "a");
+                        umask(savemask);
+                        if (! keylog) {
+                                Log_error("Cannot open the key log file '%s' -- %s\n", name, STRERROR);
+                                return;
+                        } else {
+                                atexit(_keylogClose);
+                                fprintf(keylog, "# TLS material log file for Monit Wireshark debugging\n");
+                                fflush(keylog);
+                        }
+                }
+        }
+}
+
+
+// Keylog callback for OpenSSL
+static void _keylogWrite(const SSL *ssl, const char *line) {
+        if (ssl && STR_DEF(line)) {
+                _keylogOpen();
+                fprintf(keylog, "%s\n", line);
+                fflush(keylog);
+        }
+}
+
+
+// Enable the keylog callback
+static void _keylogSet(SSL_CTX *ctx) {
+        if (Run.debug)
+                SSL_CTX_set_keylog_callback(ctx, _keylogWrite);
+}
+#endif
 
 
 static Ssl_Version _optionsVersion(int version) {
@@ -556,6 +622,9 @@ T Ssl_new(SslOptions_T options) {
                 Log_error("SSL: client context initialization failed -- %s\n", SSLERROR);
                 goto sslerror;
         }
+#ifdef HAVE_SSL_CTX_SET_KEYLOG_CALLBACK
+        _keylogSet(C->ctx);
+#endif
         if (! _setVersion(C->ctx, options)) {
                 goto sslerror;
         }

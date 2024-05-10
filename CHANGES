@@ -23,6 +23,12 @@ New: Added support to add Monit to M/Monit hostgroup. Example:
 
 New: Set the header X-Content-Type-Options to prevent MIME type sniffing. Thanks to Christian Goettsche.
 
+New: Added support for debugging TLS/SSL connections with Wireshark. It is now possible to set the
+     SSLKEYLOGFILE=<path> environment variable when starting Monit, to log the master secret to a file,
+     which can be used by Wireshark in "Settings -> Protocols -> TLS -> (Pre)-Master-Secret log filename".
+     Note: The SSLKEYLOGFILE functionality is enabled only in the monit debug mode (when monit was started
+     with the -v option).
+
 Fixed: Issue #1082: Wrong error message for the uptime test. Thanks to Lutz Mader.
 
 Fixed: Disable SSL session renegotiation in the Monit HTTP interface (CVE-2011-1473).
