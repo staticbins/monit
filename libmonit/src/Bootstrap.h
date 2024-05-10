@@ -63,12 +63,21 @@ void Bootstrap_setAbortHandler(void(*abortHandler)(const char *error, va_list ap
  * Set the function the library should call for (logging) error messages.
  * If not provided, the library will write error messages to stderr.
  * @param errorHandler The handler function to call when the library
- * emit an error message. The error message is passed to the handler
+ * emits an error message. The error message is passed to the handler
  * function in the string <code>error</code> with optional variable
  * arguments.
- * @see Exception.h
  */
 void Bootstrap_setErrorHandler(void(*errorHandler)(const char *error, va_list ap));
+
+
+/**
+ * Set the function the library should call for (logging) debug messages.
+ * If not provided, the library will not write debug messages.
+ * @param debugHandler The handler function to call when the library
+ * emits a debug message. The message is passed to the handler function in
+ * the string <code>info</code> with optional variable arguments.
+ */
+void Bootstrap_setDebugHandler(void(*debugHandler)(const char *info, va_list ap));
 
 
 #endif

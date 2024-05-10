@@ -56,6 +56,7 @@
 
 extern void(*_AbortHandler)(const char *error, va_list ap);
 extern void(*_ErrorHandler)(const char *error, va_list ap);
+extern void(*_DebugHandler)(const char *info, va_list ap);
 
 
 /* ---------------------------------------------------------------- Public */
@@ -87,11 +88,21 @@ void System_abort(const char *e, ...) {
 void System_error(const char *e, ...) {
         va_list ap;
         va_start(ap, e);
-        if (_ErrorHandler) 
+        if (_ErrorHandler)
                 _ErrorHandler(e, ap);
-        else 
+        else
                 vfprintf(stderr, e, ap);
         va_end(ap);
+}
+
+
+void System_debug(const char *d, ...) {
+        if (_DebugHandler) {
+                va_list ap;
+                va_start(ap, d);
+                _DebugHandler(d, ap);
+                va_end(ap);
+        }
 }
 
 
