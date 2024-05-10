@@ -50,10 +50,11 @@ int main(void) {
         }
         printf("=> Test0: OK\n\n");
 
-        printf("=> Test1: check filedescriptors wrapper\n");
+        printf("=> Test1: \n");
         {
-                assert(System_getDescriptorsGuarded(1024) <= 2<<15);
-
+                assert(System_getDescriptorsGuarded(65) == 65);
+                assert(System_getDescriptorsGuarded(0) > 65);
+                printf("\tMaximum file descriptors for process: %d\n", System_getDescriptorsGuarded(0));
         }
         printf("=> Test1: OK\n\n");
 
