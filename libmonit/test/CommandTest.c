@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <sys/wait.h>
 #include <stdlib.h>
