@@ -105,7 +105,7 @@ struct _usergroups {
 /* Search the env list and return the pointer to the name (in the list)
  if found, otherwise NULL */
 static inline char *_findEnv(T C, const char *name) {
-        for (list_t p = C->env->head; p; p = p->next) {
+        for (_list_t p = C->env->head; p; p = p->next) {
                 if ((strncmp(p->e, name, strlen(name)) == 0))
                         if (((char*)p->e)[strlen(name)] == '=') // Ensure that p->e is not just a sub-string
                                 return p->e;

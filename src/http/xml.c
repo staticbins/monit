@@ -579,7 +579,7 @@ static void status_service(Service_T S, StringBuffer_T B, int V) {
  */
 static void status_servicegroup(ServiceGroup_T SG, StringBuffer_T B) {
         StringBuffer_append(B, "<servicegroup name=\"%s\">", SG->name);
-        for (list_t m = SG->members->head; m; m = m->next) {
+        for (_list_t m = SG->members->head; m; m = m->next) {
                 Service_T s = m->e;
                 StringBuffer_append(B, "<service>%s</service>", s->name);
         }

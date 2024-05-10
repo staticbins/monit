@@ -1251,7 +1251,7 @@ static void do_service(HttpRequest req, HttpResponse res, Service_T s) {
                 _displayTableRow(res, true, NULL, "Path", "%s", s->path);
         _displayTableRow(res, false, NULL, "Status", "%s", get_service_status(HTML, s, buf, sizeof(buf)));
         for (ServiceGroup_T sg = Service_Group_List; sg; sg = sg->next) {
-                for (list_t m = sg->members->head; m; m = m->next)
+                for (_list_t m = sg->members->head; m; m = m->next)
                         if (m->e == s)
                                 _displayTableRow(res, false, NULL, "Group", "%s",  sg->name);
         }
@@ -2607,7 +2607,7 @@ static void print_status(HttpRequest req, HttpResponse res, int version) {
                 if (stringGroup) {
                         for (ServiceGroup_T sg = Service_Group_List; sg; sg = sg->next) {
                                 if (IS(stringGroup, sg->name)) {
-                                        for (list_t m = sg->members->head; m; m = m->next) {
+                                        for (_list_t m = sg->members->head; m; m = m->next) {
                                                 status_service_txt(m->e, res);
                                                 ap.found++;
                                         }
@@ -2647,7 +2647,7 @@ static void print_summary(HttpRequest req, HttpResponse res) {
         if (stringGroup) {
                 for (ServiceGroup_T sg = Service_Group_List; sg; sg = sg->next) {
                         if (IS(stringGroup, sg->name)) {
-                                for (list_t m = sg->members->head; m; m = m->next) {
+                                for (_list_t m = sg->members->head; m; m = m->next) {
                                         _printServiceSummary(ap.data.summary.box, m->e);
                                         ap.found++;
                                 }
@@ -2702,7 +2702,7 @@ static void _printReport(HttpRequest req, HttpResponse res) {
         if (group) {
                 for (ServiceGroup_T sg = Service_Group_List; sg; sg = sg->next) {
                         if (IS(group, sg->name)) {
-                                for (list_t m = sg->members->head; m; m = m->next) {
+                                for (_list_t m = sg->members->head; m; m = m->next) {
                                         _updateReportStatistics(m->e, &reportStatics);
                                 }
                         }

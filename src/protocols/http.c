@@ -101,7 +101,7 @@ static void _contentVerify(Port_T P, const char *data) {
 
 static bool _hasHeader(List_T list, const char *name) {
         if (list) {
-                for (list_t h = list->head; h; h = h->next) {
+                for (_list_t h = list->head; h; h = h->next) {
                         char *header = h->e;
                         if (Str_startsWith(header, name))
                                 if (header[strlen(name)] == ':') // Ensure that name is not just a prefix
@@ -330,7 +330,7 @@ static void _sendRequest(Socket_T socket, Port_T P) {
                 StringBuffer_append(sb, "Connection: close\r\n");
         // Add headers if we have them
         if (P->parameters.http.headers) {
-                for (list_t p = P->parameters.http.headers->head; p; p = p->next) {
+                for (_list_t p = P->parameters.http.headers->head; p; p = p->next) {
                         char *header = p->e;
                         StringBuffer_append(sb, "%s\r\n", header);
                 }
