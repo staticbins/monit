@@ -2748,6 +2748,9 @@ action2         : action {
                                 command = NULL;
                         }
                   }
+                  | IGNORE {
+                        $<number>$ = Action_Ignored;
+                  }
                 ;
 
 rateXcycles     : NUMBER CYCLE {
