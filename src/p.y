@@ -269,6 +269,7 @@ static void  addchecksum(Checksum_T);
 static void  addperm(Perm_T);
 static void  addmatch(Match_T, int, int);
 static void  addmatchpath(Match_T, Action_Type);
+static void  addoutputchange(bool, Action_Type, Action_Type);
 static void  addstatus(Status_T);
 static Uid_T adduid(Uid_T);
 static Gid_T addgid(Gid_T);
@@ -2987,6 +2988,12 @@ programmatch    : IF CONTENT urloperator STRING rate1 THEN action1 {
                         matchset.match_string = $4;
                         addmatch(&matchset, $<number>7, 0);
                   }
+                | IF CONTENT CHANGED rate1 THEN action1 recovery_success {
+                        addoutputchange(false, $<number>6, $<number>7);
+                  }
+                | IF CONTENT NOT CHANGED rate1 THEN action1 recovery_success {
+                        addoutputchange(true, $<number>7, $<number>8);
+                  }
                 ;
 
 match           : IF CONTENT urloperator PATH rate1 THEN action1 {
@@ -3671,7 +3678,7 @@ static void addservice(Service_T s) {
                         break;
                 case Service_Program:
                         // Verify that a program test has a status test
-                        if (! s->statuslist && ! s->matchlist) {
+                        if (! s->statuslist && ! s->matchlist && ! s->outputchangelist) {
                                 Log_error("'check program %s' is incomplete: Please add a 'status' or 'content' test\n", s->name);
                                 cfg_errflag++;
                         }
@@ -4397,6 +4404,22 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
                 gccmd(&savecommand);
 
         fclose(handle);
+}
+
+
+/*
+ * Set output change object in the current service
+ */
+static void addoutputchange(bool check_invers, Action_Type failed, Action_Type succeeded) {
+        OutputChange_T outputchange;
+
+        NEW(outputchange);
+        addeventaction(&(outputchange->action), failed, succeeded);
+        outputchange->previous = NULL;
+        outputchange->check_invers = check_invers;
+
+        outputchange->next = current->outputchangelist;
+        current->outputchangelist = outputchange;
 }
 
 
