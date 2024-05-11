@@ -26,6 +26,9 @@ properties, e.g. 'ip route' or 'udisksctl status'. Thanks to Christian Goettsche
         if content changed then alert
         if content not changed then alert else ignore
 
+New: Implemented 'ignore' functionality within the test success action, enabling the suppression of alerts when the
+     check returns to a successful state. Thanks to Christian Goettsche.
+
 New: Set the header X-Content-Type-Options to prevent MIME type sniffing. Thanks to Christian Goettsche.
 
 New: Added support for debugging TLS/SSL connections with Wireshark. It is now possible to set the
