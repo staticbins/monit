@@ -1852,7 +1852,7 @@ method.
 
 Syntax:
 
- ALERT | START | STOP | RESTART | UNMONITOR | IGNORE
+ ALERT | IGNORE | START | STOP | RESTART | UNMONITOR
 
 or:
 
@@ -1912,16 +1912,16 @@ extension is used.
 
 =item *
 
+B<IGNORE> can be used in the action to not generate an alert
+once the check reenters the state.
+
+=item *
+
 B<UNMONITOR> will disable monitoring of the service B<and> send
 an alert. The service will not be checked by Monit anymore nor
 restarted again later.  To reactivate monitoring of the service
 you must explicitly enable monitoring from the web interface or
 from the console.
-
-=item *
-
-B<IGNORE> can be used in the success action to not generate an alert
-once the check reenters the success state.
 
 =back
 
