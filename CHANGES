@@ -20,6 +20,12 @@ New: Added support to add Monit to M/Monit hostgroup. Example:
      https://monit:mypassword@mmonit.foo.bar:8443/collector
      with hostgroups [ Oslo, "Mail servers" ]
 
+New: Add support for checking the output of a program for changes. This can be used to alert on changes of system
+properties, e.g. 'ip route' or 'udisksctl status'. Thanks to Christian Goettsche. Example:
+    check program myscript with path /usr/local/bin/myscript.sh
+        if content changed then alert
+        if content not changed then alert else ignore
+
 New: Set the header X-Content-Type-Options to prevent MIME type sniffing. Thanks to Christian Goettsche.
 
 New: Added support for debugging TLS/SSL connections with Wireshark. It is now possible to set the
