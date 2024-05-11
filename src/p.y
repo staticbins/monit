@@ -2711,6 +2711,9 @@ action          : ALERT {
                   {
                         $<number>$ = Action_Exec;
                   }
+                | IGNORE {
+                        $<number>$ = Action_Ignored;
+                  }
                 | RESTART {
                         $<number>$ = Action_Restart;
                   }
