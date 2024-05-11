@@ -45,6 +45,8 @@ for fix.
 
 Fixed: The SSL connection can be sporadically interrupted.
 
+Fixed: Issue #1101: Updated configuration examples for PAM in the Monit manual. Thanks to Lutz Mader.
+
 
 Version 5.33.0
 
