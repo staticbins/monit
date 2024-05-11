@@ -352,7 +352,7 @@ void Link_update(T L) {
         if (_update(L, interface))
                 _updateHistory(L);
         else
-                THROW(AssertException, "Cannot udate network statistics -- interface %s not found", interface);
+                THROW(AssertException, "Cannot update network statistics -- interface %s not found", interface);
 }
 
 
