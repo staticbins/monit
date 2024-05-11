@@ -989,17 +989,32 @@ Sample PAM service for Monit on macOS (store as
 "/etc/pam.d/monit" file):
 
   # monit: auth account password session
-  auth       sufficient     pam_securityserver.so
-  auth       sufficient     pam_unix.so
+  #auth       sufficient     pam_securityserver.so
+  #auth       sufficient     pam_unix.so
+  auth       sufficient     pam_opendirectory.so
   auth       required       pam_deny.so
   account    required       pam_permit.so
+  password   required       pam_deny.so
+  session    required       pam_permit.so
 
-A C<monitrc> config which only allows group C<admin> authenticated via
+And a similar PAM service for Monit on Linux (store as
+"/etc/pam.d/monit" file):
+
+  # monit: auth account password session
+  auth       sufficient   pam_unix2.so
+  auth       required     pam_deny.so
+  account    required     pam_permit.so
+  password   required     pam_deny.so
+  session    required     pam_permit.so
+
+A C<monitrc> config which only allows group C<admin> and C<staff>
+authenticated via
 PAM to access the web interface:
 
   set httpd
       port 2812
       allow @admin
+      allow @staff readonly
 
 =head4 htpasswd file
 
@@ -1833,9 +1848,13 @@ the new value and will trigger event if the value change again.
 Each test can have associated I<alert>, I<start>, I<stop>, I<restart>,
 I<unmonitor> or I<exec> methods which Monit can use to execute actions or
 programs on the service.
+
 Syntax:
+
  ALERT | START | STOP | RESTART | UNMONITOR
+
 or:
+
  EXEC "program"
  [[AS] UID <number | string>]
  [[AS] GID <number | string>]
@@ -3032,7 +3051,8 @@ If Monit is run as the super user, you can optionally run the program
 as a different user and/or group. In this example we run the I<ls>
 program as user www and as group staff:
 
- check program ls with path "/bin/ls /tmp" as uid "www"
+ check program ls with path "/bin/ls /tmp"
+          as uid "www"
           and gid "staff"
        if status != 0 then alert
 
