@@ -3084,12 +3084,13 @@ Multiple status tests can be used, for example:
 
 =head2 PROGRAM OUTPUT CONTENT TEST
 
-The content statement can be used to test the content of a program by using
-regular expressions.
+The content statement can be used to either test the content of a program by
+using regular expressions or check for changes in the output.
 
 Syntax:
 
  IF CONTENT <operator> <regex> THEN action
+ IF CONTENT [NOT] CHANGED THEN action
 
 I<operator> is either a "=" for match or "!=" for no-match.
 
@@ -3106,6 +3107,9 @@ Example:
 
  check program disk0_smart with path "/usr/sbin/nvme smart-log /dev/nvme0"
        if content != "critical_warning[ ]+: 0" then alert
+
+ check program ip_route with path "/usr/bin/ip route"
+       if content changed then alert
 
 
 =head2 NETWORK INTERFACE TESTS
