@@ -58,6 +58,9 @@ Fixed: Issue #1101: Updated configuration examples for PAM in the Monit manual. 
 
 Fixed: The network test was failing on WSL (Windows subsystem for Linux).
 
+Fixed: Make network interface speed statistics optional (monit used to report link failure when
+       statistics were not available) and do not report/check if statistics are not available.
+
 
 Version 5.33.0
 
