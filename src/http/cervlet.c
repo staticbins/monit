@@ -503,19 +503,36 @@ static void _printStatus(Output_Type type, HttpResponse res, Service_T s) {
                         case Service_Net:
                                 {
                                         long long speed = Link_getSpeed(s->inf.net->stats);
+                                        long long ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
+                                        long long oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
                                         long long ibytes = Link_getBytesInPerSecond(s->inf.net->stats);
                                         long long obytes = Link_getBytesOutPerSecond(s->inf.net->stats);
-                                        _formatStatus("link", Event_Link, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld errors", Link_getErrorsInPerSecond(s->inf.net->stats) + Link_getErrorsOutPerSecond(s->inf.net->stats));
-                                        if (speed > 0) {
-                                                _formatStatus("capacity", Event_Speed, type, res, s, Link_getState(s->inf.net->stats) == 1, "%.0lf Mb/s %s-duplex", (double)speed / 1000000., Link_getDuplex(s->inf.net->stats) == 1 ? "full" : "half");
-                                                _formatStatus("download bytes", Event_ByteIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s (%.1f%% link saturation)", Fmt_bytes2str(ibytes, (char[10]){}), 100. * ibytes * 8 / (double)speed);
-                                                _formatStatus("upload bytes", Event_ByteOut, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s (%.1f%% link saturation)", Fmt_bytes2str(obytes, (char[10]){}), 100. * obytes * 8 / (double)speed);
-                                        } else {
-                                                _formatStatus("download bytes", Event_ByteIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s", Fmt_bytes2str(ibytes, (char[10]){}));
-                                                _formatStatus("upload bytes", Event_ByteOut, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s", Fmt_bytes2str(obytes, (char[10]){}));
+                                        long long ipackets = Link_getPacketsInPerSecond(s->inf.net->stats);
+                                        long long opackets = Link_getPacketsOutPerSecond(s->inf.net->stats);
+                                        if (ierrors >= 0 && oerrors >= 0) {
+                                                _formatStatus("link", Event_Link, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld errors", ierrors + oerrors);
                                         }
-                                        _formatStatus("download packets", Event_PacketIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld per second", Link_getPacketsInPerSecond(s->inf.net->stats));
-                                        _formatStatus("upload packets", Event_PacketOut, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld per second", Link_getPacketsOutPerSecond(s->inf.net->stats));
+                                        if (ibytes >= 0 && obytes >= 0) {
+                                                if (speed > 0) {
+                                                        _formatStatus("capacity", Event_Speed, type, res, s, Link_getState(s->inf.net->stats) == 1, "%.0lf Mb/s %s-duplex",
+                                                                (double)speed / 1000000., Link_getDuplex(s->inf.net->stats) == 1 ? "full" : "half");
+                                                        _formatStatus("download bytes", Event_ByteIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s (%.1f%% link saturation)",
+                                                                Fmt_bytes2str(ibytes, (char[10]){}), 100. * ibytes * 8 / (double)speed);
+                                                        _formatStatus("upload bytes", Event_ByteOut, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s (%.1f%% link saturation)",
+                                                                Fmt_bytes2str(obytes, (char[10]){}), 100. * obytes * 8 / (double)speed);
+                                                } else {
+                                                        _formatStatus("download bytes", Event_ByteIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s",
+                                                                Fmt_bytes2str(ibytes, (char[10]){}));
+                                                        _formatStatus("upload bytes", Event_ByteOut, type, res, s, Link_getState(s->inf.net->stats) == 1, "%s/s",
+                                                                Fmt_bytes2str(obytes, (char[10]){}));
+                                                }
+                                        }
+                                        if (ipackets >= 0) {
+                                                _formatStatus("download packets", Event_PacketIn, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld per second", ipackets);
+                                        }
+                                        if (opackets >= 0) {
+                                                _formatStatus("upload packets", Event_PacketOut, type, res, s, Link_getState(s->inf.net->stats) == 1, "%lld per second", opackets);
+                                        }
                                 }
                                 break;
 
