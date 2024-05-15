@@ -28,11 +28,15 @@
  *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
+ *
+ * Reference: https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-net
+ *
  * @file
  */
 
 
 static bool _update(T L, const char *interface) {
+        int  flags;
         char buf[STRLEN];
         char path[PATH_MAX];
         char name[STRLEN];
@@ -42,18 +46,18 @@ static bool _update(T L, const char *interface) {
         snprintf(name, sizeof(name), "%s", interface);
         Str_replaceChar(name, ':', 0);
         /*
-         * Get interface operation state (Optional: may not be present on older kernels).
-         * $ cat /sys/class/net/eth0/operstate
-         * up
+         * Get interface operation state
+         * $ cat /sys/class/net/eth0/flags
+         * 
          */
-        snprintf(path, sizeof(path), "/sys/class/net/%s/operstate", name);
+        snprintf(path, sizeof(path), "/sys/class/net/%s/flags", name);
         FILE *f = fopen(path, "r");
         if (f) {
-                if (fscanf(f, "%255s\n", buf) != 1) {
+                if (fscanf(f, "%x\n", &flags) != 1) {
                         fclose(f);
                         THROW(AssertException, "Cannot parse %s -- %s", path, System_getError(errno));
                 }
-                L->state = Str_isEqual(buf, "down") ? 0LL : 1LL;
+                L->state = (flags & 0x1) ? 1LL : 0LL; // IFF_UP
                 fclose(f);
         } else {
                 THROW(AssertException, "Cannot read %s -- %s", path, System_getError(errno));
@@ -74,6 +78,9 @@ static bool _update(T L, const char *interface) {
                 else
                         L->speed = -1LL;
                 fclose(f);
+        } else {
+                DEBUG("Cannot read %s -- %s\n", path, System_getError(errno));
+                L->speed = -1LL;
         }
         /*
          * Get interface full/half duplex status (Optional: may not be present on older kernels and readable for pseudo interface types).
@@ -91,9 +98,12 @@ static bool _update(T L, const char *interface) {
                 else
                         L->duplex = -1;
                 fclose(f);
+        } else {
+                DEBUG("Cannot read %s -- %s\n", path, System_getError(errno));
+                L->duplex = -1;
         }
         /*
-         * $ cat /sys/class/net/eth0/statistics/rx_bytes 
+         * $ cat /sys/class/net/eth0/statistics/rx_bytes (Optional: doesn't exist on WSL2)
          * 239426
          */
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/rx_bytes", name);
@@ -107,10 +117,11 @@ static bool _update(T L, const char *interface) {
                 _updateValue(&(L->ibytes), ibytes);
                 fclose(f);
         } else {
-                THROW(AssertException, "Cannot read %s -- %s", path, System_getError(errno));
+                DEBUG("Cannot read %s -- %s\n", path, System_getError(errno));
+                L->ibytes.available = false;
         }
         /*
-         * $ cat /sys/class/net/eth0/statistics/rx_packets 
+         * $ cat /sys/class/net/eth0/statistics/rx_packets (Optional: doesn't exist on WSL2)
          * 2706
          */
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/rx_packets", name);
@@ -124,10 +135,11 @@ static bool _update(T L, const char *interface) {
                 _updateValue(&(L->ipackets), ipackets);
                 fclose(f);
         } else {
-                THROW(AssertException, "Cannot read %s -- %s", path, System_getError(errno));
+                DEBUG("Cannot read %s -- %s\n", path, System_getError(errno));
+                L->ipackets.available = false;
         }
         /*
-         * $ cat /sys/class/net/eth0/statistics/rx_errors 
+         * $ cat /sys/class/net/eth0/statistics/rx_errors (Optional: doesn't exist on WSL2)
          * 0
          */
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/rx_errors", name);
@@ -141,10 +153,11 @@ static bool _update(T L, const char *interface) {
                 _updateValue(&(L->ierrors), ierrors);
                 fclose(f);
         } else {
-                THROW(AssertException, "Cannot read %s -- %s", path, System_getError(errno));
+                DEBUG("Cannot read %s -- %s\n", path, System_getError(errno));
+                L->ierrors.available = false;
         }
         /*
-         * $ cat /sys/class/net/eth0/statistics/tx_bytes 
+         * $ cat /sys/class/net/eth0/statistics/tx_bytes (Optional: doesn't exist on WSL2)
          * 410775
          */
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/tx_bytes", name);
@@ -158,10 +171,11 @@ static bool _update(T L, const char *interface) {
                 _updateValue(&(L->obytes), obytes);
                 fclose(f);
         } else {
-                THROW(AssertException, "Cannot read %s -- %s", path, System_getError(errno));
+                DEBUG("Cannot read %s -- %s\n", path, System_getError(errno));
+                L->obytes.available = false;
         }
         /*
-         * $ cat /sys/class/net/eth0/statistics/tx_packets 
+         * $ cat /sys/class/net/eth0/statistics/tx_packets (Optional: doesn't exist on WSL2)
          * 1649
          */
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/tx_packets", name);
@@ -175,10 +189,11 @@ static bool _update(T L, const char *interface) {
                 _updateValue(&(L->opackets), opackets);
                 fclose(f);
         } else {
-                THROW(AssertException, "Cannot read %s -- %s", path, System_getError(errno));
+                DEBUG("Cannot read %s -- %s\n", path, System_getError(errno));
+                L->opackets.available = false;
         }
         /*
-         * $ cat /sys/class/net/eth0/statistics/tx_errors  
+         * $ cat /sys/class/net/eth0/statistics/tx_errors  (Optional: doesn't exist on WSL2)
          * 0
          */
         snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/tx_errors", name);
@@ -192,7 +207,8 @@ static bool _update(T L, const char *interface) {
                 _updateValue(&(L->oerrors), oerrors);
                 fclose(f);
         } else {
-                THROW(AssertException, "Cannot read %s -- %s", path, System_getError(errno));
+                DEBUG("Cannot read %s -- %s\n", path, System_getError(errno));
+                L->oerrors.available = false;
         }
         L->timestamp.last = L->timestamp.now;
         L->timestamp.now = Time_milli();
