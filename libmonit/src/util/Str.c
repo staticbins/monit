@@ -439,7 +439,6 @@ int Str_cmp(const void *x, const void *y) {
 bool Str_authcmp(const char *a, const char *b) {
         if (!a || !b)
                 return false;
-        // Warning: When 'a' or 'b' is fixed size hash, strlen is no problem, otherwise a this function would be vilnerable to timing attack => DO NOT USE FOR COMPARING NON-HASHED STRINGS
         size_t al = strlen(a);
         size_t bl = strlen(b);
         size_t length = (al > bl) ? al : bl;

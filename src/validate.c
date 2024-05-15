@@ -2117,21 +2117,25 @@ State_Type check_net(Service_T s) {
 
                 // Link errors
                 long long oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
-                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                        if (oerrors > 0) {
-                                rv = State_Failed;
-                                Event_post(s, Event_Link, State_Failed, link->action, "%lld upload errors detected", oerrors);
-                        } else {
-                                Event_post(s, Event_Link, State_Succeeded, link->action, "upload errors check succeeded");
+                if (oerrors >= 0) {
+                        for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                                if (oerrors > 0) {
+                                        rv = State_Failed;
+                                        Event_post(s, Event_Link, State_Failed, link->action, "%lld upload errors detected", oerrors);
+                                } else {
+                                        Event_post(s, Event_Link, State_Succeeded, link->action, "upload errors check succeeded");
+                                }
                         }
                 }
                 long long ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
-                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                        if (ierrors > 0) {
-                                rv = State_Failed;
-                                Event_post(s, Event_Link, State_Failed, link->action, "%lld download errors detected", ierrors);
-                        } else {
-                                Event_post(s, Event_Link, State_Succeeded, link->action, "download errors check succeeded");
+                if (ierrors >= 0) {
+                        for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                                if (ierrors > 0) {
+                                        rv = State_Failed;
+                                        Event_post(s, Event_Link, State_Failed, link->action, "%lld download errors detected", ierrors);
+                                } else {
+                                        Event_post(s, Event_Link, State_Succeeded, link->action, "download errors check succeeded");
+                                }
                         }
                 }
         }
