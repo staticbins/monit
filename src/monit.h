@@ -409,7 +409,6 @@ typedef enum {
 #define LIMIT_EXECTIMEOUT       0           /* Unlimited timeout */
 
 
-
 /** ------------------------------------------------- Special purpose macros */
 
 
