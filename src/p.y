@@ -4416,10 +4416,12 @@ static void addmatchpath(Match_T ms, Action_Type actionnumber) {
  */
 static void addoutputchange(bool check_invers, Action_Type failed, Action_Type succeeded) {
         OutputChange_T outputchange;
+
         NEW(outputchange);
         addeventaction(&(outputchange->action), failed, succeeded);
         outputchange->previous = NULL;
         outputchange->check_invers = check_invers;
+
         outputchange->next = current->outputchangelist;
         current->outputchangelist = outputchange;
 }
@@ -4602,7 +4604,7 @@ static void addgeneric(Port_T port, char *send, char *expect) {
  * Add the current command object to the current service object's
  * start or stop program.
  */
-static void addcommand(int what, unsigned int timeout) {
+static void addcommand(int what, unsigned int cmdtimeout) {
 
         switch (what) {
                 case START:   current->start = command; break;
@@ -4610,7 +4612,7 @@ static void addcommand(int what, unsigned int timeout) {
                 case RESTART: current->restart = command; break;
         }
 
-        command->timeout = timeout;
+        command->timeout = cmdtimeout;
 
         command = NULL;
 
@@ -4875,6 +4877,8 @@ static void setidfile(char *idfile) {
         }
         Run.files.id = idfile;
 }
+
+
 /*
  * Reset the statefile if changed
  */
@@ -5004,13 +5008,6 @@ static bool addcredentials(char *uname, char *passwd, Digest_Type dtype, bool re
 
         assert(uname);
         assert(passwd);
-
-        if (strlen(passwd) > Str_compareConstantTimeStringLength) {
-                yyerror2("Password for user %s is too long, maximum %d allowed", uname, Str_compareConstantTimeStringLength);
-                FREE(uname);
-                FREE(passwd);
-                return false;
-        }
 
         if (! Run.httpd.credentials) {
                 NEW(Run.httpd.credentials);

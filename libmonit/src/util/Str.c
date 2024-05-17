@@ -53,9 +53,6 @@
  */
 
 
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-
-
 /* -------------------------------------------------------- Public Methods */
 
 
@@ -194,9 +191,9 @@ char *Str_replaceChar(char *s, char o, char n) {
 
 
 bool Str_startsWith(const char *a, const char *b) {
-	if (a && b) {
-	        do {
-	                if (toupper(*a) != toupper(*b))
+        if (a && b) {
+                do {
+                        if (toupper(*a) != toupper(*b))
                                 return false;
                         if (*a++ == 0 || *b++ == 0)
                                 break;
@@ -290,13 +287,13 @@ bool Str_isByteEqual(const char *a, const char *b) {
 
 
 char *Str_copy(char *dest, const char *src, int n) {
-	if (src && dest && (n > 0)) {
-        	char *t = dest;
-	        while (*src && n--)
-        		*t++ = *src++;
-        	*t = 0;
-	} else if (dest)
-	        *dest = 0;
+        if (src && dest && (n > 0)) {
+                char *t = dest;
+                while (*src && n--)
+                        *t++ = *src++;
+                *t = 0;
+        } else if (dest)
+                *dest = 0;
         return dest;
 }
 
@@ -306,7 +303,7 @@ char *Str_dup(const char *s) {
         char *t = NULL;
         if (s) {
                 size_t n = strlen(s) + 1;
-                t = ALLOC(n);
+                t = CALLOC(1, n);
                 memcpy(t, s, n);
         }
         return t;
@@ -319,7 +316,7 @@ char *Str_ndup(const char *s, long n) {
         if (s) {
                 long l = (long)strlen(s);
                 n = l < n ? l : n; // Use the actual length of s if shorter than n
-                t = ALLOC(n + 1);
+                t = CALLOC(1, n + 1);
                 memcpy(t, s, n);
                 t[n] = 0;
         }
@@ -359,7 +356,7 @@ char *Str_vcat(const char *s, va_list ap) {
                 va_copy(ap_copy, ap);
                 int size = vsnprintf(t, 0, s, ap_copy) + 1;
                 va_end(ap_copy);
-                t = ALLOC(size);
+                t = CALLOC(1, size);
                 va_copy(ap_copy, ap);
                 vsnprintf(t, size, s, ap_copy);
                 va_end(ap_copy);
@@ -439,15 +436,17 @@ int Str_cmp(const void *x, const void *y) {
 }
 
 
-int Str_compareConstantTime(const void *x, const void *y) {
-        // Copy input to zero initialized buffers of fixed size, to prevent string length timing attack (handle NULL input as well). If some string exceeds hardcoded buffer size, error is returned.
-        char _x[Str_compareConstantTimeStringLength + 1] = {};
-        char _y[Str_compareConstantTimeStringLength + 1] = {};
-        if (snprintf(_x, sizeof(_x), "%s", x ? (const char *)x : "") > Str_compareConstantTimeStringLength || snprintf(_y, sizeof(_y), "%s", y ? (const char *)y : "") > Str_compareConstantTimeStringLength)
-                return 1;
-        int rv = 0;
-        for (size_t i = 0; i < sizeof(_x); i++)
-                rv |= _x[i] ^ _y[i];
-        return rv;
+bool Str_authcmp(const char *a, const char *b) {
+        if (!a || !b)
+                return false;
+        size_t al = strlen(a);
+        size_t bl = strlen(b);
+        size_t length = (al > bl) ? al : bl;
+        volatile int rv = 0;
+        for (size_t i = 0; i < length; i++) {
+                char _a = (i < al) ? a[i] : 0;
+                char _b = (i < bl) ? b[i] : 0;
+                rv |= _a ^ _b;
+        }
+        return rv == 0;
 }
-

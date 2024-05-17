@@ -594,7 +594,7 @@ Process_T Command_execute(T C) {
                 }
         }
         Process_T P = _Process_new();
-        int descriptors = System_getDescriptorsGuarded(1024);
+        int descriptors = System_descriptors(1024);
         _createPipes(P);
         if ((P->pid = fork()) < 0) {
                 ERROR("Command: fork failed -- %s\n", System_getLastError());

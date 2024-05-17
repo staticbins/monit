@@ -52,9 +52,9 @@ int main(void) {
 
         printf("=> Test1: \n");
         {
-                assert(System_getDescriptorsGuarded(65) == 65);
-                assert(System_getDescriptorsGuarded(0) > 65);
-                printf("\tMaximum file descriptors for process: %d\n", System_getDescriptorsGuarded(0));
+                assert(System_descriptors(65) == 65);
+                assert(System_descriptors(0) > 65);
+                printf("\tMaximum file descriptors for process: %d\n", System_descriptors(0));
         }
         printf("=> Test1: OK\n\n");
 

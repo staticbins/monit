@@ -1457,7 +1457,7 @@ char *Util_urlEncode(const char *string, bool isParameterValue) {
                 for (n = i = 0; string[i]; i++)
                         if (unsafe[(unsigned char)(string[i])])
                                 n += 2;
-                p = escaped = ALLOC(i + n + 1);
+                p = escaped = CALLOC(1, i + n + 1);
                 for (; *string; string++, p++) {
                         if (unsafe[(unsigned char)(*p = *string)]) {
                                 *p++ = '%';
@@ -1521,7 +1521,7 @@ void Util_redirectStdFds(void) {
 
 
 void Util_closeFds(void) {
-        for (int i = 3, descriptors = System_getDescriptorsGuarded(1024); i < descriptors; i++) {
+        for (int i = 3, descriptors = System_descriptors(1024); i < descriptors; i++) {
                 close(i);
         }
         errno = 0;
@@ -1602,9 +1602,7 @@ bool Util_checkCredentials(char *uname, char *outside) {
                         Log_error("Unknown password digestion method.\n");
                         return false;
         }
-        if (Str_compareConstantTime(outside_crypt, c->passwd) == 0)
-                return true;
-        return false;
+        return Str_authcmp(outside_crypt, c->passwd);
 }
 
 

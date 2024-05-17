@@ -89,7 +89,7 @@ void System_debug(const char *d, ...) __attribute__((format (printf, 1, 2)));
  * as reported by the system
  * @return A guarded number of available file descriptors for a process
  */
-int System_getDescriptorsGuarded(int guard);
+int System_descriptors(int guard);
 
 
 /**

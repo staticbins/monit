@@ -83,7 +83,7 @@ static inline T _ctor(int hint) {
         NEW(S);
         S->used = 0;
         S->length = hint;
-        S->buffer = ALLOC(hint);
+        S->buffer = CALLOC(1, hint);
         *S->buffer = 0;
         return S;
 }
