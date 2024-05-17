@@ -81,15 +81,13 @@
  */
 void daemonize(void) {
         pid_t pid;
-        /*
-         * Become a session leader to lose our controlling terminal
-         */
         if ((pid = fork ()) < 0) {
                 Log_error("Cannot fork a new process\n");
                 exit (1);
         } else if (pid != 0) {
                 _exit(0);
         }
+        // Become a session leader to lose our controlling terminal
         setsid();
         if ((pid = fork ()) < 0) {
                 Log_error("Cannot fork a new process\n");
@@ -97,16 +95,12 @@ void daemonize(void) {
         } else if (pid != 0) {
                 _exit(0);
         }
-        /*
-         * Change current directory to the root so that other file systems can be unmounted while we're running
-         */
+        // Change current directory to the root so that other file systems can be unmounted while we're running
         if (chdir("/") < 0) {
                 Log_error("Cannot chdir to / -- %s\n", STRERROR);
                 exit(1);
         }
-        /*
-         * Attach standard descriptors to /dev/null. Other descriptors should be closed in env.c
-         */
+        // Redirect standard descriptors to /dev/null. Other descriptors should be closed in env.c
         Util_redirectStdFds();
 }
 
@@ -137,13 +131,13 @@ bool kill_daemon(int sig) {
 
 /**
  * @return true (i.e. the daemons pid) if a daemon process is running,
- * otherwise false
+ * otherwise false (0)
  */
-int exist_daemon(void) {
+pid_t exist_daemon(void) {
         errno = 0;
-        pid_t pid;
-        if ((pid = Util_getPid(Run.files.pid)) && (getpgid(pid) > -1 || errno == EPERM))
-                return (int)pid;
+        pid_t pid = Util_getPid(Run.files.pid);
+        if (pid && (getpgid(pid) > -1 || errno == EPERM))
+                return pid;
         return 0;
 }
 
