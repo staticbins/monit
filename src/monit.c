@@ -272,7 +272,7 @@ static void do_init(void) {
          * Register no interest for the SIGPIPE signal,
          */
         signal(SIGPIPE, SIG_IGN);
-        
+
         /*
          * Initialize the random number generator
          */
