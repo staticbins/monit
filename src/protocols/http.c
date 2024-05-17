@@ -235,7 +235,7 @@ static void _processStatus(Socket_T socket, Port_T P) {
 
 
 static void _processHeaders(Socket_T socket, void (**processBody)(Socket_T socket, Port_T P, char **data, int *contentLength, ChecksumContext_T context), int *contentLength) {
-        char buf[8192] = {};
+        char buf[8193] = {};
         *processBody = _processBodyUntilEOF;
 
         while (Socket_readLine(socket, buf, sizeof(buf))) {
