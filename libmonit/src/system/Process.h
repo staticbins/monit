@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -30,14 +30,14 @@
 #include "io/OutputStream.h"
 
 /**
- * A <b>Process</b> represent an operating system process. A new Process 
- * object is created via Command_execute(). 
- * 
- * The sub-process represented by this Process does not have its own terminal 
- * or console. All its standard I/O (i.e. stdin, stdout, stderr) operations 
- * will be redirected to the parent process where they can be accessed using 
- * the streams obtained using the methods Process_getOutputStream(), 
- * Process_getInputStream(), and Process_getErrorStream(). Your program can 
+ * A <b>Process</b> represent an operating system process. A new Process
+ * object is created via Command_execute().
+ *
+ * The sub-process represented by this Process does not have its own terminal
+ * or console. All its standard I/O (i.e. stdin, stdout, stderr) operations
+ * will be redirected to the parent process where they can be accessed using
+ * the streams obtained using the methods Process_getOutputStream(),
+ * Process_getInputStream(), and Process_getErrorStream(). Your program can
  * then use these streams to feed input to and get output from the sub-process.
  *
  * If the sub-process is a daemon process, you might want to call
@@ -107,19 +107,19 @@ pid_t Process_pid(T P);
  * Causes the current thread to wait, if necessary, until the sub-process
  * represented by this Process object has terminated. This method returns
  * immediately if the sub-process has already terminated. If the sub-process
- * has not yet terminated, the calling thread will be blocked until the 
+ * has not yet terminated, the calling thread will be blocked until the
  * sub-process exits. By convention, the value 0 indicates normal termination.
  * @param P A Process object
- * @return The exit status of the sub-process or -1 if an error occur. 
+ * @return The exit status of the sub-process or -1 if an error occur.
  * Investigate errno for a description of the error
  */
 int Process_waitFor(T P);
 
 
 /**
- * Returns the Process exit status. If the sub-process is still running, this 
- * method returns -1, otherwise the sub-process exit status. By convention, 
- * the value 0 indicates normal termination. 
+ * Returns the Process exit status. If the sub-process is still running, this
+ * method returns -1, otherwise the sub-process exit status. By convention,
+ * the value 0 indicates normal termination.
  * @param P A Process object
  * @return The exit status of the sub-process or -1 if the sub-process is still
  * running.
@@ -129,7 +129,7 @@ int Process_exitStatus(T P);
 
 /**
  * Set the Process exit status. Normally, Process_exitStatus() collects
- * its own exit status. However, if the status has already been collected 
+ * its own exit status. However, if the status has already been collected
  * elsewhere (e.g., from a signal handler), use this method to set the exit
  * status for the Process.
  * @param P A Process object
@@ -148,7 +148,7 @@ bool Process_isRunning(T P);
 
 /**
  * Returns the output stream connected to the normal input of the sub-process.
- * Output to the stream is piped into the standard input of the process 
+ * Output to the stream is piped into the standard input of the process
  * represented by this Process object.
  * @param P A Process object
  * @return The output stream connected to the normal input of the sub-process.
@@ -157,8 +157,8 @@ OutputStream_T Process_outputStream(T P);
 
 
 /**
- * Returns the input stream connected to the normal output of the sub-process. 
- * The stream obtains data piped from the standard output of the process 
+ * Returns the input stream connected to the normal output of the sub-process.
+ * The stream obtains data piped from the standard output of the process
  * represented by this Process object.
  * @param P A Process object
  * @return The input stream connected to the normal output of the sub-process.
@@ -167,8 +167,8 @@ InputStream_T Process_inputStream(T P);
 
 
 /**
- * Returns the input stream connected to the error output of the sub-process. 
- * The stream obtains data piped from the error output of the process 
+ * Returns the input stream connected to the error output of the sub-process.
+ * The stream obtains data piped from the error output of the process
  * represented by this Process object.
  * @param P A Process object
  * @return The input stream connected to the error output of the sub-process.

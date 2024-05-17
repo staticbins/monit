@@ -14,7 +14,7 @@
 #include "Dir.h"
 
 /**
- * Dir.c unity tests. 
+ * Dir.c unity tests.
  */
 
 

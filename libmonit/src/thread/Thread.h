@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -35,7 +35,7 @@
 
 /**
  * General purpose <b>Thread</b> abstractions. This interface  defines object
- * types and methods for handling threads, synchronization and semaphores. 
+ * types and methods for handling threads, synchronization and semaphores.
  *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
@@ -60,7 +60,7 @@
  * Semaphore object type
  * @hideinitializer
  */
-#define Sem_T   pthread_cond_t			  
+#define Sem_T   pthread_cond_t
 /**
  * Mutex object type
  * @hideinitializer
@@ -272,7 +272,7 @@
 /** @name Thread data methods */
 //@{
 /**
- * Creates a thread-specific data key. 
+ * Creates a thread-specific data key.
  * @param key The ThreadData_T key to create
  * @exception AssertException If thread data creation failed
  * @hideinitializer

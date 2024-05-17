@@ -24,7 +24,7 @@ int main(void) {
         //       by localtime_r(). The test may fail though, if it is executed on machine, which is not in CET timezone.
         //setenv("TZ", "CET", 1);
         //tzset();
-        
+
         Bootstrap(); // Need to initialize library
 
         printf("============> Start Time Tests\n\n");

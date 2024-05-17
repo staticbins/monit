@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -142,7 +142,7 @@ static void _updateValue(LinkData_T *data, unsigned long long raw) {
         if (raw < data->raw)
                 value = data->now + ULONG_MAX + 1ULL - data->raw + raw; // Counter wrapped
         else
-                value = data->now + raw - data->raw; 
+                value = data->now + raw - data->raw;
        data->raw = raw;
 #endif
        data->last = data->now;

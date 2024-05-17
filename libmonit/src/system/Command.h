@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -109,7 +109,7 @@ void Command_setUid(T C, uid_t uid);
 
 
 /**
- * Returns the uid the sub-process should switch to on exec. 
+ * Returns the uid the sub-process should switch to on exec.
  * @param C A Command object
  * @return The user id the sub-process should use. Returns 0
  * if not set, meaning the sub-process will run with the same
@@ -119,7 +119,7 @@ uid_t Command_uid(T C);
 
 
 /**
- * Set the group id the sub-process should switch to on exec. If not set, 
+ * Set the group id the sub-process should switch to on exec. If not set,
  * the gid of the calling process is used. Note that this process must run
  * with super-user privileges for the sub-process to be able to switch gid
  * @param C A Command object
@@ -131,7 +131,7 @@ void Command_setGid(T C, gid_t gid);
 
 
 /**
- * Returns the group id the Command should switch to on exec. 
+ * Returns the group id the Command should switch to on exec.
  * @param C A Command object
  * @return The group id the sub-process should use. Returns 0
  * if not set, meaning the sub-process will run with the same
@@ -174,7 +174,7 @@ void Command_setDir(T C, const char *dir);
  * set, the returned value is NULL, meaning the calling process's current
  * directory
  * @param C A Command object
- * @return The working directory for the sub-process or NULL meaning the 
+ * @return The working directory for the sub-process or NULL meaning the
  * calling process's current directory
  */
 const char *Command_dir(T C);
@@ -182,7 +182,7 @@ const char *Command_dir(T C);
 
 /**
  * Set or replace the environment variable identified by <code>name</code>.
- * The sub-process initially inherits the environment from the calling 
+ * The sub-process initially inherits the environment from the calling
  * process. Environment variables set with this method does not affect the
  * parent process and only apply to the sub-process.
  * @param C A Command object
@@ -194,7 +194,7 @@ void Command_setEnv(T C, const char *name, const char *value);
 
 /**
  * Set or replace the environment variable identified by <code>name</code>.
- * The sub-process initially inherits the environment from the calling 
+ * The sub-process initially inherits the environment from the calling
  * process. Environment variables set with this method does not affect the
  * parent process and only apply to the sub-process. Example:
  *<pre>
@@ -208,8 +208,8 @@ void Command_vSetEnv(T C, const char *name, const char *value, ...) __attribute_
 
 
 /**
- * Returns the value of the environment variable identified by 
- * <code>name</code>. 
+ * Returns the value of the environment variable identified by
+ * <code>name</code>.
  * @param C A Command object
  * @param name The environment variable to get the value of
  * @return The value for name or NULL if name was not found
@@ -218,12 +218,12 @@ const char *Command_env(T C, const char *name);
 
 
 /**
- * Returns the operating system program with arguments to be executed by 
+ * Returns the operating system program with arguments to be executed by
  * this Command. The first element in the list is the path to the program
- * and subsequent elements are arguments to the program. Elements in the 
- * list are C-strings. 
+ * and subsequent elements are arguments to the program. Elements in the
+ * list are C-strings.
  * @param C A Command object
- * @return A list with the operating system program with arguments to 
+ * @return A list with the operating system program with arguments to
  * execute. The first element in the list is the program.
  */
 List_T Command_command(T C);
@@ -231,11 +231,11 @@ List_T Command_command(T C);
 //@}
 
 
-/** 
+/**
  * Create a new sub-process using the attributes of this Command object.
- * The new sub-process will execute the command and arguments given in 
+ * The new sub-process will execute the command and arguments given in
  * Command_new(). The caller is responsible for releasing the returned
- * Process_T object by calling Process_free(). If creating the new 
+ * Process_T object by calling Process_free(). If creating the new
  * sub-process failed, NULL is returned and errno is set to indicate the
  * error. Use e.g. System_lastError() to get a description of the error
  * that occurred.

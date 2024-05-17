@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -76,7 +76,7 @@ void Mem_free(void *ptr, __attribute__ ((unused)) const char *func, __attribute_
 void *Mem_resize(void *ptr, long nbytes, const char *func, const char *file, int line) {
 	assert(nbytes > 0);
         if (! ptr)
-                return Mem_alloc(nbytes, func, file, line); 
+                return Mem_alloc(nbytes, func, file, line);
 	ptr = realloc(ptr, nbytes);
 	if (ptr == NULL)
                 Exception_throw(&(MemoryException), func, file, line, System_lastError());

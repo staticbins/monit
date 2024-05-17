@@ -329,7 +329,7 @@ static void do_init(void) {
          * Initialize Runtime file variables
          */
         file_init();
-        
+
         /*
          * Create the global Process_Table
          */

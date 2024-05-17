@@ -20,7 +20,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -38,11 +38,11 @@
 
 
 /**
- * Implementation of the Exception interface. This implementation 
+ * Implementation of the Exception interface. This implementation
  * defines the Thread local Exception stack and all Exceptions used
  * in the system. New Exceptions should also be defined in this class.
  *
- * This implementation is a minor modification of the Except code found 
+ * This implementation is a minor modification of the Except code found
  * in David R. Hanson's excellent book "C Interfaces and Implementations".
  * See http://www.cs.princeton.edu/software/cii/
  *
@@ -94,7 +94,7 @@ void Exception_throw(const T *e, const char *func, const char *file, int line, c
                         vsnprintf(p->message, EXCEPTION_MESSAGE_LENGTH, cause, ap);
                         va_end(ap);
                 }
-                pop_exception_stack;	
+                pop_exception_stack;
                 longjmp(p->env, Exception_thrown);
         } else if (cause) {
                 char message[EXCEPTION_MESSAGE_LENGTH + 1] = "?";

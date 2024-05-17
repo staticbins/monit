@@ -51,7 +51,7 @@ typedef struct spawn_args_t {
 /// @param args A struct with information on how to create the process.
 /// @return If creating the process failed, -1 is returned and errno set to
 /// indicate the error that occured. On success the process identification
-/// number (pid) of the new process is returned. 
+/// number (pid) of the new process is returned.
 pid_t spawn(spawn_args_t args);
 
 

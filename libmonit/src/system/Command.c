@@ -789,7 +789,7 @@ static void Process_ctrl(Process_T P, int *status) {
 
 /*
  The Execute function.
- 
+
  We do not use posix_spawn(2) because it's not well suited for creating
  long-running daemon processes. Although posix_spawn is more efficient, its
  limitations makes it problematic for our use. Specifically:

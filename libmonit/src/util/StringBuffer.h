@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -27,9 +27,9 @@
 #define STRINGBUFFER_INCLUDED
 
 
-/** 
- * A <b>StringBuffer</b> implements a mutable sequence of characters. 
- * Indexing starts at 0 and it is a checked runtime error to access 
+/**
+ * A <b>StringBuffer</b> implements a mutable sequence of characters.
+ * Indexing starts at 0 and it is a checked runtime error to access
  * index out of the range.
  *
  * This class is reentrant but not thread-safe
@@ -45,9 +45,9 @@ typedef struct T *T;
 
 
 /**
- * Constructs a string buffer so that it represents the same sequence of 
- * characters as the string argument; in other  words, the initial contents 
- * of the string buffer is a copy of the argument string. 
+ * Constructs a string buffer so that it represents the same sequence of
+ * characters as the string argument; in other  words, the initial contents
+ * of the string buffer is a copy of the argument string.
  * @param s the initial contents of the buffer
  * @return A new StringBuffer object
  * @exception MemoryException if allocation failed
@@ -73,9 +73,9 @@ void StringBuffer_free(T *S);
 
 
 /**
- * The characters of the String argument are appended, in order, to the 
- * contents of this string buffer, increasing the length of this string 
- * buffer by the length of the argument. 
+ * The characters of the String argument are appended, in order, to the
+ * contents of this string buffer, increasing the length of this string
+ * buffer by the length of the argument.
  * @param S StringBuffer object
  * @param s A string with optional var args
  * @return a reference to this StringBuffer
@@ -85,9 +85,9 @@ T StringBuffer_append(T S, const char *s, ...) __attribute__((format (printf, 2,
 
 
 /**
- * The characters of the String argument are appended, in order, to the 
- * contents of this string buffer, increasing the length of this string 
- * buffer by the length of the arguments. 
+ * The characters of the String argument are appended, in order, to the
+ * contents of this string buffer, increasing the length of this string
+ * buffer by the length of the arguments.
  * @param S StringBuffer object
  * @param s A string with optional var args
  * @param ap A variable argument list
@@ -100,7 +100,7 @@ T StringBuffer_vappend(T S, const char *s, va_list ap) __attribute__((format (pr
 /**
  * Replace all occurrences of <code>a</code> with <code>b</code>. Example:
  * <pre>
- * StringBuffer_T b = StringBuffer_new("foo bar baz foo foo bar baz"); 
+ * StringBuffer_T b = StringBuffer_new("foo bar baz foo foo bar baz");
  * StringBuffer_replace(b, "baz", "bar") -> "foo bar bar foo foo bar bar"
  * StringBuffer_replace(b, "foo bar ", "") -> "bar foo bar"
  * </pre>
@@ -116,7 +116,7 @@ int StringBuffer_replace(T S, const char *a, const char *b);
 /**
  * Remove (any) leading and trailing white space [ \\t\\r\\n]. Example
  * <pre>
- * StringBuffer_T b = StringBuffer_new("\t 'foo bar' \n"); 
+ * StringBuffer_T b = StringBuffer_new("\t 'foo bar' \n");
  * StringBuffer_trim(b) -> "'foo bar'"
  * </pre>
  * @param S StringBuffer object
@@ -126,12 +126,12 @@ T StringBuffer_trim(T S);
 
 
 /**
- * Remove all characters from the given <code>index</code> position and 
- * to the end of the StringBuffer. The index parameter must be greater 
+ * Remove all characters from the given <code>index</code> position and
+ * to the end of the StringBuffer. The index parameter must be greater
  * than or equal to 0 and less than the length of the StringBuffer.
  * @param S StringBuffer object
  * @param index The position of the buffer to start truncating
- * @exception AssertException if the index parameter is negative 
+ * @exception AssertException if the index parameter is negative
  * or greater than or equal to the StringBuffer length.
  * @return a reference to this StringBuffer
  */
@@ -139,7 +139,7 @@ T StringBuffer_delete(T S, int index);
 
 
 /**
- * Locate the first occurrence of the string <code>s</code> 
+ * Locate the first occurrence of the string <code>s</code>
  * in the StringBuffer. Example:
  * <pre>
  * StringBuffer_T b = StringBuffer_new("foo bar");
@@ -157,7 +157,7 @@ int StringBuffer_indexOf(T S, const char *s);
 
 
 /**
- * Locate the last occurrence of the string <code>s</code> 
+ * Locate the last occurrence of the string <code>s</code>
  * in the StringBuffer.
  * @param S StringBuffer object
  * @param s The string to search for in the buffer
@@ -168,23 +168,23 @@ int StringBuffer_lastIndexOf(T S, const char *s);
 
 
 /**
- * Returns a substring of characters currently contained in this character 
+ * Returns a substring of characters currently contained in this character
  * sequence. The substring begins at the specified index and extends to the
  * end of this sequence
  * @param S StringBuffer object
  * @param index The start index of the substring
  * @return A substring of StringBuffer
- * @exception AssertException if the index parameter is negative 
+ * @exception AssertException if the index parameter is negative
  * or greater than or equal to the StringBuffer length.
  */
 const char *StringBuffer_substring(T S, int index);
 
 
 /**
- * Returns the length (character count) of this string buffer <i>not 
+ * Returns the length (character count) of this string buffer <i>not
  * including the last '\\0' char used to terminate a C-string</i>.
  * @param S StringBuffer object
- * @return the length of the sequence of characters currently represented 
+ * @return the length of the sequence of characters currently represented
  * by this string buffer <i>not including the last NUL character</i>.
  */
 int StringBuffer_length(T S);
@@ -201,7 +201,7 @@ T StringBuffer_clear(T S);
 /**
  * Returns a string representing the data in this string buffer.
  * @param S StringBuffer object
- * @return a string representation of the string buffer 
+ * @return a string representation of the string buffer
  */
 const char *StringBuffer_toString(T S);
 

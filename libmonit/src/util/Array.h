@@ -36,7 +36,7 @@
  * to estimate the initial array size for efficient storage based on
  * the expected number of elements.
  *
- * Performance: Average time complexity for insertion, lookup, and 
+ * Performance: Average time complexity for insertion, lookup, and
  * deletion is generally O(1), assuming a well-distributed key space
  * and a reasonable load factor.
  *
@@ -134,16 +134,16 @@ void Array_map(T S, void apply(int key, void **value, void *ap), void *ap);
 
 /**
  * Search the Array for a particular value using a <code>predicate</code>
- * function and a needle. If the predicate function returns true for a 
+ * function and a needle. If the predicate function returns true for a
  * value, that value is returned. If no matching value is found, the
  * function returns NULL. The average time complexity is O(n), assuming
  * uniform key distribution.
  * @param S A Sparse Array object
- * @param predicate The predicate function used for comparison. It should 
+ * @param predicate The predicate function used for comparison. It should
  * return true if a value in the array matches the needle, otherwise false.
  * @param needle A pointer to a search term used by the predicate function
  * to compare with a value in the array.
- * @return A pointer to the value in the Sparse Array that satisfies the 
+ * @return A pointer to the value in the Sparse Array that satisfies the
  * predicate, or NULL if no such value is found.
  * @exception AssertException if <code>predicate</code> changes the Array
  */

@@ -20,7 +20,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -30,19 +30,19 @@
 
 
 /**
- * An <b>Exception</b> indicate an error condition from which recovery may 
+ * An <b>Exception</b> indicate an error condition from which recovery may
  * be possible. The Library <i>raise</i> exceptions, which can be handled by
  * recovery code, if recovery is possible. When an exception is raised, it is
  * handled by the handler that was most recently instantiated. If no handlers
- * are defined an exception will cause the library to call its abort handler 
- * to abort with an error message. 
+ * are defined an exception will cause the library to call its abort handler
+ * to abort with an error message.
  *
  * <p>
- * Handlers are instantiated by the TRY-CATCH and TRY-FINALLY statements, 
- * which are implemented as macros in this interface. These statements handle 
- * nested exceptions and manage exception-state data. The syntax of the 
+ * Handlers are instantiated by the TRY-CATCH and TRY-FINALLY statements,
+ * which are implemented as macros in this interface. These statements handle
+ * nested exceptions and manage exception-state data. The syntax of the
  * TRY-CATCH statement is,
- * 
+ *
  * <pre>
  * TRY
  *      <b>S</b>
@@ -55,32 +55,32 @@
  *      Sn
  * END_TRY;
  * </pre>
- * 
- * The TRY-CATCH statement establish handlers for the exceptions named 
+ *
+ * The TRY-CATCH statement establish handlers for the exceptions named
  * <code>e1, e2,.., en</code> and execute the statements <b>S</b>.
- * If no exceptions are raised by <b>S</b>, the handlers are dismantled and 
+ * If no exceptions are raised by <b>S</b>, the handlers are dismantled and
  * execution continues at the statement after the END_TRY. If <b>S</b> raises
  * an exception <code>e</code> which is one of <i>e1..en</i> the execution
- * of <b>S</b> is interrupted and control transfers immediately to the 
- * statements following the relevant CATCH clause. If <b>S</b> raises an 
+ * of <b>S</b> is interrupted and control transfers immediately to the
+ * statements following the relevant CATCH clause. If <b>S</b> raises an
  * exception that is <i>not</i> one of <i>e1..en</i>, the exception will raise
- * up the call-stack and unless a previous installed handler catch the 
+ * up the call-stack and unless a previous installed handler catch the
  * exception, it will cause the application to abort.
  *
  * <p>
  * Here's a concrete example calling a method in the zild API which may throw
- * an exception. If the method Connection_execute() fails it will throw an 
- * SQLException. The CATCH statement will catch this exception, if thrown, 
+ * an exception. If the method Connection_execute() fails it will throw an
+ * SQLException. The CATCH statement will catch this exception, if thrown,
  * and log an error message
  * <pre>
  * TRY
  *      [...]
  *      Connection_execute(c, sql);
  * CATCH(SQLException)
- *      log("SQL error: %s\n", Connection_getLastError(c)); 
+ *      log("SQL error: %s\n", Connection_getLastError(c));
  * END_TRY;
  * </pre>
- * 
+ *
  * The TRY-FINALLY statement is similar to TRY-CATCH but in addition
  * adds a FINALLY clausal which is always executed, regardless if an exception
  * was raised or not. The syntax of the TRY-FINALLY statement is,
@@ -100,8 +100,8 @@
  * </pre>
  * <p>
  * Note that <code>Sf</code> is executed whether <b>S</b> raise an exception
- * or not. One purpose of the TRY-FINALLY statement is to give clients an 
- * opportunity to "clean up" when an exception occurs. For example,  
+ * or not. One purpose of the TRY-FINALLY statement is to give clients an
+ * opportunity to "clean up" when an exception occurs. For example,
  * <pre>
  * TRY
  *      [...]
@@ -113,45 +113,45 @@
  * END_TRY;
  * </pre>
  * closes the database Connection regardless if an exception
- * was thrown or not by the code in the TRY-block. 
+ * was thrown or not by the code in the TRY-block.
  *
  * Finally, the RETURN statement, defined in this interface, must be used
  * instead of C return statements inside a try-block. If any of the
  * statements in a try-block must do a return, they <b>must</b>
- * do so with this macro instead of the usual C return statement. 
+ * do so with this macro instead of the usual C return statement.
  *
  * <h3>Exception details</h3>
  * Inside an exception handler, details about an exception is
  * available in the variable <code>Exception_frame</code>. The
- * following demonstrate how to use this variable to provide detailed 
- * logging of an exception. 
+ * following demonstrate how to use this variable to provide detailed
+ * logging of an exception.
  *
  * <pre>
- * TRY 
+ * TRY
  * {
  *      code that can throw an exception
  * }
- * ELSE  
+ * ELSE
  * {
  *      fprintf(stderr, "%s: %s raised in %s at %s:%d\n",
- *              Exception_frame.exception->name, 
- *              Exception_frame.message, 
- *              Exception_frame.func, 
+ *              Exception_frame.exception->name,
+ *              Exception_frame.message,
+ *              Exception_frame.func,
  *              Exception_frame.file,
  *              Exception_frame.line);
  *      ....
  * }
  * END_TRY;
  * </pre>
- * 
+ *
  * <p>The Exception stack is stored in a thread-specific variable so Exceptions
  * are made thread-safe. <i>This means that Exceptions are thread local and an
  * Exception thrown in one thread cannot be caught in another thread</i>.
- * This also means that clients must handle Exceptions per thread and cannot 
+ * This also means that clients must handle Exceptions per thread and cannot
  * use one TRY-ELSE block in the main program to catch all Exceptions. This is
- * only possible if no threads were started. 
+ * only possible if no threads were started.
  * <p><small>This implementation of Exception is a minor modification of code
- * found in <a href="http://www.drhanson.net/">David R. Hanson's</a> excellent 
+ * found in <a href="http://www.drhanson.net/">David R. Hanson's</a> excellent
  * book <a href="http://www.cs.princeton.edu/software/cii/">C Interfaces and
  * Implementations</a>.</small>
  * @see SQLException.h IOException.h AssertException.h NumberFormatException.h
@@ -203,9 +203,9 @@ void Exception_throw(const T *e, const char *func, const char *file, int line, c
 
 
 /**
- * Throws an exception. 
+ * Throws an exception.
  * @param e The Exception to throw
- * @param cause The cause. A NULL value is permitted, and 
+ * @param cause The cause. A NULL value is permitted, and
  * indicates that the cause is unknown.
  * @hideinitializer
  */
@@ -245,7 +245,7 @@ void Exception_throw(const T *e, const char *func, const char *file, int line, c
 
 
 /**
- * Defines a block containing code for handling an exception thrown in 
+ * Defines a block containing code for handling an exception thrown in
  * the TRY block.
  * @param e The Exception to handle
  * @hideinitializer
@@ -253,12 +253,12 @@ void Exception_throw(const T *e, const char *func, const char *file, int line, c
 #define CATCH(e) \
                 if (Exception_flag == Exception_entered) pop_exception_stack; \
         } else if (Exception_frame.exception == &(e)) { \
-                Exception_flag = Exception_handled; 
+                Exception_flag = Exception_handled;
 
 
 /**
- * Defines a block containing code for handling any exception thrown in 
- * the TRY block. An ELSE block catches any exception type not already 
+ * Defines a block containing code for handling any exception thrown in
+ * the TRY block. An ELSE block catches any exception type not already
  * caught in a previous CATCH block.
  * @hideinitializer
  */
@@ -269,7 +269,7 @@ void Exception_throw(const T *e, const char *func, const char *file, int line, c
 
 
 /**
- * Defines a block of code that is subsequently executed whether an 
+ * Defines a block of code that is subsequently executed whether an
  * exception is thrown or not
  * @hideinitializer
  */

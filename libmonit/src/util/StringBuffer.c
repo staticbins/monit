@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 #include "Config.h"
@@ -38,7 +38,7 @@
 
 
 /**
- * Implementation of the StringBuffer interface. 
+ * Implementation of the StringBuffer interface.
  *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
@@ -166,7 +166,7 @@ int StringBuffer_replace(T S, const char *a, const char *b) {
                                         do
                                                 if (! a[++j]) {
                                                         memmove(S->buffer + i + bl, S->buffer + i + j, (S->used - (i + j)));
-                                                        memcpy(S->buffer + i, b, bl); 
+                                                        memcpy(S->buffer + i, b, bl);
                                                         S->used += diff;
                                                         i += bl - 1;
                                                         m--;
@@ -185,7 +185,7 @@ int StringBuffer_replace(T S, const char *a, const char *b) {
 T StringBuffer_trim(T S) {
         assert(S);
         // Right trim
-        while (S->used && isspace(S->buffer[S->used - 1])) 
+        while (S->used && isspace(S->buffer[S->used - 1]))
                 S->buffer[--S->used] = 0;
         // Left trim
         if (isspace(*S->buffer)) {

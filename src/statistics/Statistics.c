@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -52,7 +52,7 @@ void Statistics_update(T S, unsigned long long time, unsigned long long value) {
         if (value < S->raw)
                 _value = S->current.value + ULONG_MAX + 1ULL - S->raw + value; // Counter wrapped
         else
-                _value = S->current.value + value - S->raw; 
+                _value = S->current.value + value - S->raw;
         S->raw = value;
 #endif
         S->last.time = S->current.time;

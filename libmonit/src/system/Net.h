@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -100,7 +100,7 @@ ssize_t Net_read(int socket, void *buffer, size_t size, time_t timeout);
 
 /**
  * Write <code>size</code> bytes from the <code>buffer</code> to the
- * <code>socket</code> 
+ * <code>socket</code>
  * @param socket the Socket to write to
  * @param buffer The buffer to write
  * @param size Number of bytes to send

@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -44,14 +44,14 @@ void Bootstrap(void);
 
 
 /**
- * Set the function to call if a fatal error occurs in the library. In 
+ * Set the function to call if a fatal error occurs in the library. In
  * practice this means Out-Of-Memory errors or uncatched exceptions.
  * Clients may optionally provide this function. If not provided
- * the library will call <code>abort(3)</code> upon encountering a 
- * fatal error. This method provide clients with means to close down 
- * execution gracefully. It is an unchecked runtime error to continue 
+ * the library will call <code>abort(3)</code> upon encountering a
+ * fatal error. This method provide clients with means to close down
+ * execution gracefully. It is an unchecked runtime error to continue
  * using the library after the <code>abortHandler</code> was called.
- * @param abortHandler The handler function to call should a fatal 
+ * @param abortHandler The handler function to call should a fatal
  * error occur in the library. An explanatory error message is
  * passed to the handler function in the string <code>error</code>
  * @see Exception.h

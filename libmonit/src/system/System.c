@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -62,20 +62,20 @@ extern void(*_DebugHandler)(const char *info, va_list ap);
 /* ---------------------------------------------------------------- Public */
 
 
-const char *System_lastError(void) { 
-        return strerror(errno); 
+const char *System_lastError(void) {
+        return strerror(errno);
 }
 
 
-const char *System_getError(int error) { 
-        return strerror(error); 
+const char *System_getError(int error) {
+        return strerror(error);
 }
 
 
 void System_abort(const char *e, ...) {
         va_list ap;
         va_start(ap, e);
-        if (_AbortHandler) 
+        if (_AbortHandler)
                 _AbortHandler(e, ap);
         else {
                 vfprintf(stderr, e, ap);

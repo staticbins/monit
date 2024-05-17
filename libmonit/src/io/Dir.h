@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -41,9 +41,9 @@
 
 
 /**
- * Creates the directory named by this absolute pathname. The optional 
+ * Creates the directory named by this absolute pathname. The optional
  * <code>perm</code> parameter specify the permission for the created
- * directory. If perm is 0 the directory is created with standard 
+ * directory. If perm is 0 the directory is created with standard
  * permission as modified by the process umask.
  * @param dir An absolute directory path
  * @param perm An octal number specifying a permission bit pattern, e.g. 0775
@@ -66,7 +66,7 @@ bool Dir_delete(const char *dir);
 
 
 /**
- * Changes the current working directory of the process to the given 
+ * Changes the current working directory of the process to the given
  * <code>path</code>.
  * @param path An absolute directory path
  * @return true if success otherwise false and System_lastError() can be
@@ -77,7 +77,7 @@ bool Dir_chdir(const char *path);
 
 /**
  * Returns the current working directory of the process.
- * @param result A buffer to write the result to. 
+ * @param result A buffer to write the result to.
  * @param length The length of the result buffer
  * @return A pointer to the result buffer or NULL in case of error
  */
