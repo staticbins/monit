@@ -91,7 +91,7 @@ extern const char *PATH_SEPARATOR;
  * @param file An absolute file path
  * @param mode the file access mode
  * @return A file descriptor or -1 if the file cannot be opened. Use 
- * System_getLastError() to get a description of the error that occurred
+ * System_lastError() to get a description of the error that occurred
  */
 int File_open(const char *file, const char *mode);
 

@@ -48,7 +48,7 @@
  * @param dir An absolute directory path
  * @param perm An octal number specifying a permission bit pattern, e.g. 0775
  * or 0 for the default.
- * @return true if success otherwise false, System_getLastError() can be
+ * @return true if success otherwise false, System_lastError() can be
  * used to get a description of the error that occurred
  * @see File_umask()
  */
@@ -59,7 +59,7 @@ bool Dir_mkdir(const char *dir, int perm);
  * Delete the directory named by this absolute pathname. This method
  * fails if the directory <code>dir</code> is not empty.
  * @param dir An absolute  directory path
- * @return true if success otherwise false and System_getLastError() can be
+ * @return true if success otherwise false and System_lastError() can be
  * used to get a description of the error that occurred
  */
 bool Dir_delete(const char *dir);
@@ -69,7 +69,7 @@ bool Dir_delete(const char *dir);
  * Changes the current working directory of the process to the given 
  * <code>path</code>.
  * @param path An absolute directory path
- * @return true if success otherwise false and System_getLastError() can be
+ * @return true if success otherwise false and System_lastError() can be
  * used to get a description of the error that occurred
  */
 bool Dir_chdir(const char *path);

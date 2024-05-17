@@ -237,7 +237,7 @@ List_T Command_command(T C);
  * Command_new(). The caller is responsible for releasing the returned
  * Process_T object by calling Process_free(). If creating the new 
  * sub-process failed, NULL is returned and errno is set to indicate the
- * error. Use e.g. System_getLastError() to get a description of the error
+ * error. Use e.g. System_lastError() to get a description of the error
  * that occurred.
  * @param C A Command object
  * @return A new Process_T object representing the sub-process or NULL
