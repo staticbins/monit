@@ -57,7 +57,7 @@ int main(void) {
         printf("=> Test4: Str_cat & Str_vcat\n");
         {
                 char *s6;
-                s6 = Str_cat("%s://%s%s?%s", "https", "foo.bar", 
+                s6 = Str_cat("%s://%s%s?%s", "https", "foo.bar",
                                    "/uri", "abc=123");
                 printf("\tResult: %s\n", s6);
                 assert(Str_isEqual(s6, "https://foo.bar/uri?abc=123"));
@@ -473,7 +473,7 @@ int main(void) {
 
         printf("=> Test21: Str_has\n");
         {
-                char *foo = "'bar' (baz)"; 
+                char *foo = "'bar' (baz)";
                 assert(Str_has("(')", foo));
                 assert(! Str_has(",;", foo));
         }
@@ -481,7 +481,7 @@ int main(void) {
 
         printf("=> Test22: Str_curtail\n");
         {
-                char s[] = "<text>Hello World</text>"; 
+                char s[] = "<text>Hello World</text>";
                 assert(Str_isByteEqual(Str_curtail(s, "</text>"), "<text>Hello World"));
                 assert(Str_isByteEqual(Str_curtail(s, ">"), "<text"));
                 assert(Str_isByteEqual(Str_curtail(s, "@"), "<text"));

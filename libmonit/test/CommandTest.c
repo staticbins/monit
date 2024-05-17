@@ -190,7 +190,7 @@ int main(void) {
                 assert(!c);
         }
         printf("=> Test5: OK\n\n");
-        
+
         printf("=> Test6: Append arguments\n");
         {
                 Command_T c = Command_new("/bin/ls", NULL);
@@ -208,7 +208,7 @@ int main(void) {
                 assert(!c);
         }
         printf("=> Test6: OK\n\n");
-        
+
         printf("=> Test7: execute invalid program\n");
         {
                 // Program producing error
@@ -263,7 +263,7 @@ int main(void) {
                 assert(!c);
         }
         printf("=> Test10: OK\n\n");
-        
+
         printf("=> Test11: environment in sub-process\n");
         {
                 Command_T c = Command_new("/bin/sh", "-c", "echo $SULT", NULL);
@@ -275,7 +275,7 @@ int main(void) {
                 assert(!c);
         }
         printf("=> Test11: OK\n\n");
-        
+
 #if 0
         /* FIXME: MONIT-35: fork() doesn't share memory, so the current implementation of Command_execute() cannot pass the execve() error to parent. Disable the unit test for now. */
         printf("=> Test12: on execute error\n");

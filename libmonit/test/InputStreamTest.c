@@ -15,7 +15,7 @@
 #include "system/System.h"
 
 /**
- * InputStream.c unit tests. 
+ * InputStream.c unit tests.
  */
 
 #define DATA    "./data/stream.data"
@@ -117,7 +117,7 @@ int main(void) {
                         File_close(fd);
                         InputStream_free(&in);
                         FREE(bigarray);
-                } else 
+                } else
                         ERROR("\t/usr/share/dict/words not available -- skipping test\n");
         }
         printf("=> Test5: OK\n\n");

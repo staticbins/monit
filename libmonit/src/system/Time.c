@@ -202,7 +202,7 @@ struct tm *Time_toDateTime(const char *s, struct tm *t) {
                         THROW(AssertException, "Invalid date or time");
                 }
                 token = cursor;
-                
+
 {
         unsigned char yych;
         unsigned int yyaccept = 0;
@@ -1486,7 +1486,7 @@ parse:
         if (YYCURSOR >= YYLIMIT)
                 return found == 5;
         YYTOKEN = YYCURSOR;
-        
+
 {
 	unsigned char yych;
 	yych = *YYCURSOR;

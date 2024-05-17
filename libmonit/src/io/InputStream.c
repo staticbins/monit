@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -39,7 +39,7 @@
 
 
 /**
- * Implementation of the InputStream interface. 
+ * Implementation of the InputStream interface.
  *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
@@ -166,10 +166,10 @@ int InputStream_read(T S) {
 }
 
 
-char *InputStream_readLine(T S, char *s, int size) { 
+char *InputStream_readLine(T S, char *s, int size) {
         assert(S);
         assert(s);
-        uchar_t *p = (uchar_t *)s; 
+        uchar_t *p = (uchar_t *)s;
         for (int c = 0; (--size > 0) && ((c = read_byte(S)) > 0);) { // Stop if \0 is read or no more data
                 *p++ = c;
                 if (c == '\n')

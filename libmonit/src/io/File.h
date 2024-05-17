@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -30,7 +30,7 @@
 
 /**
  * A set of low-level class methods for operating on a file.
- * 
+ *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
  * @file
@@ -65,32 +65,32 @@ extern const char *PATH_SEPARATOR;
 
 
 /**
- * Open <code>file</code> and return its file descriptor. The file is 
+ * Open <code>file</code> and return its file descriptor. The file is
  * opened in non-blocking mode, meaning that read and write operations
  * will usually not block. Clients can pass the descriptor to an Input-
  * and/or an OutputStream for reading/writing to the file. The mode
  * parameter is used to specify the access requested for the file. The
  * mode may be one of
  * <ol>
- * <li>"r" Open for reading. The stream is positioned at the beginning 
+ * <li>"r" Open for reading. The stream is positioned at the beginning
  * of the file</li>
  * <li>"w" Open for writing. If the file does not exist it will be
- * created, if it exist it is truncated to length 0. The stream is 
+ * created, if it exist it is truncated to length 0. The stream is
  * positioned at the beginning of the file</li>
- * <li>"r+" Open for reading and writing. The stream is positioned 
+ * <li>"r+" Open for reading and writing. The stream is positioned
  * at the beginning of the file</li>
- * <li>"w+" Open for reading and writing. If the file does not exist it 
- * will be created, if it exist it is truncated to length 0. The stream is 
+ * <li>"w+" Open for reading and writing. If the file does not exist it
+ * will be created, if it exist it is truncated to length 0. The stream is
  * positioned at the beginning of the file</li>
  * <li>"a" Open for writing at the end of the file (appending). If the
  * file does not exist it will be created. The stream is positioned at
  * the end of the file</li>
- * <li>"a+" Open for reading and writing. If the file does not exist it 
+ * <li>"a+" Open for reading and writing. If the file does not exist it
  * will be created. The stream is positioned at the end of the file</li>
  *</ol>
  * @param file An absolute file path
  * @param mode the file access mode
- * @return A file descriptor or -1 if the file cannot be opened. Use 
+ * @return A file descriptor or -1 if the file cannot be opened. Use
  * System_lastError() to get a description of the error that occurred
  */
 int File_open(const char *file, const char *mode);
@@ -114,7 +114,7 @@ bool File_rewind(int fd);
 
 
 /**
- * Returns the last modified time stamp for the given <code>file</code>. 
+ * Returns the last modified time stamp for the given <code>file</code>.
  * A file's mtime is changed by a file write operation
  * @param file An absolute file path
  * @return the last modified time stamp or -1 if the file was not found.
@@ -123,16 +123,16 @@ time_t File_mtime(const char *file);
 
 
 /**
- * Returns the time when the <code>file</code> status was last changed. 
+ * Returns the time when the <code>file</code> status was last changed.
  * A file ctime is changed by a file write, chmod, chown, rename, etc.
  * @param file An absolute file path
- * @return the last changed time stamp or -1 if the file was not found 
+ * @return the last changed time stamp or -1 if the file was not found
  */
 time_t File_ctime(const char *file);
 
 
 /**
- * Returns the time when <code>file</code> data was last accessed. 
+ * Returns the time when <code>file</code> data was last accessed.
  * A file atime is changed by a file read operation
  * @param file An absolute file path
  * @return the last accessed time stamp or -1 if the file was not found.
@@ -155,7 +155,7 @@ bool File_isFile(const char *file);
  */
 bool File_isSocket(const char *file);
 
-        
+
 /**
  * Check if <code>file</code> is a directory
  * @param file An absolute file path
@@ -199,9 +199,9 @@ off_t File_size(const char *file);
 
 
 /**
- * Changes permission bits on the <code>file</code> to the bit pattern 
- * represented by <code>perm</code>. On POSIX systems, see chmod(1) for 
- * details. Example, <code>File_chmod(file, 0644);</code> sets read and 
+ * Changes permission bits on the <code>file</code> to the bit pattern
+ * represented by <code>perm</code>. On POSIX systems, see chmod(1) for
+ * details. Example, <code>File_chmod(file, 0644);</code> sets read and
  * write permission for the File owner and read-only permission for others.
  * @param file An absolute file path
  * @param perm An octal number specifying a permission bit pattern.
@@ -216,21 +216,21 @@ bool File_chmod(const char *file, mode_t perm);
  * File_chmod().
  * @param file An absolute file path
  * @return An octal number specifying the permission set for this file
- * or -1 if the file does not exist 
+ * or -1 if the file does not exist
  */
 int File_mod(const char *file);
 
 
 /**
- * Returns the current umask value for this process. Umask values are 
- * subtracted from the default permissions. Files and directories 
+ * Returns the current umask value for this process. Umask values are
+ * subtracted from the default permissions. Files and directories
  * are created with default permission set to 0666 and 0777 respectively.
- * 
- * Simply put, the umask value is a set of permission bits to turn back off 
+ *
+ * Simply put, the umask value is a set of permission bits to turn back off
  * a file creation mode. When a file or directory is created, the permission
  * bits specified are <i>anded</i> with the complement of the umask value to
- * determine the actual bits that will be set. For instance, when a file is 
- * created with File_open() the permission for the new file is set 
+ * determine the actual bits that will be set. For instance, when a file is
+ * created with File_open() the permission for the new file is set
  * according to
  * <pre>
  * 0666 & ~File_umask(). If File_umask() is 022 then; 0666 & ~022 = 0644
@@ -243,7 +243,7 @@ int File_mod(const char *file);
  * Here is a ruby on-liner to play with, to see how umask modifies default
  * permissions
  * <pre>
- * ruby -e 'printf("%#o\n", (0666 & ~0022))' 
+ * ruby -e 'printf("%#o\n", (0666 & ~0022))'
  * </pre>
  * See also http://en.wikipedia.org/wiki/Umask and umask(2) on Unix
  * @return An octal number representing the umask value for this process
@@ -261,7 +261,7 @@ mode_t File_setUmask(mode_t mask);
 
 
 /**
- * Check if the <code>file</code> is readable for the real user id (uid) of 
+ * Check if the <code>file</code> is readable for the real user id (uid) of
  * this process
  * @param file An absolute path
  * @return true if the file is readable, otherwise false
@@ -270,7 +270,7 @@ bool File_isReadable(const char *file);
 
 
 /**
- * Check if the <code>file</code> is writable for the real user id (uid) of 
+ * Check if the <code>file</code> is writable for the real user id (uid) of
  * this process
  * @param file An absolute path
  * @return true if the file is writable, otherwise false
@@ -279,7 +279,7 @@ bool File_isWritable(const char *file);
 
 
 /**
- * Check if the <code>file</code> is executable for the real user id (uid) of 
+ * Check if the <code>file</code> is executable for the real user id (uid) of
  * this process
  * @param file An absolute path
  * @return true if the file is executable, otherwise false
@@ -299,7 +299,7 @@ bool File_delete(const char *file);
  * Renames the given <code>file</code> to the new <code>name</code>
  * Both <code>file</code> and <code>name</code> should contain a full path.
  * @param file The name of the file to be renamed
- * @param name The new name for the file. 
+ * @param name The new name for the file.
  * @return true if success otherwise false
  */
 bool File_rename(const char *file, const char *name);
@@ -316,8 +316,8 @@ const char *File_basename(const char *path);
 
 /**
  * Strip the filename and return only the path, including the last path
- * separator. The path parameter is modified so if you need to preserve 
- * the path string, copy the string before it is passed to this function. 
+ * separator. The path parameter is modified so if you need to preserve
+ * the path string, copy the string before it is passed to this function.
  * If no file separator can be found in the given path the following string
  * is returned "." meaning the current directory.
  * @param path A file path string
@@ -329,9 +329,9 @@ char *File_dirname(char *path);
 /**
  * Returns only the file extension from the <code>path</code>. This
  * function does not modify the path string. For instance given
- * the file path: <code>zild/webapps/ROOT/hello.html</code> this method 
- * returns a pointer to the sub-string <code>html</code>. If the 
- * <code>path</code> string does not contain an extension this 
+ * the file path: <code>zild/webapps/ROOT/hello.html</code> this method
+ * returns a pointer to the sub-string <code>html</code>. If the
+ * <code>path</code> string does not contain an extension this
  * method returns NULL.
  * @param path A file path string
  * @return A pointer to the file extension in the <code>path</code>

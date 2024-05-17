@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -56,7 +56,7 @@
 
 
 /**
- * Set <code>a</code> to <code>b</code> if and only if a != b. 
+ * Set <code>a</code> to <code>b</code> if and only if a != b.
  * Deallocate the previous value of a and copy b as the new value
  * of a. If a == b, this function leaves a as it was. The string
  * <code>a</code> <b>must</b> be of a heap allocated <code>char *
@@ -87,7 +87,7 @@ char *Str_trim(char *s);
 
 
 /**
- * Remove leading white space [ \\t\\r\\n] from the string. 
+ * Remove leading white space [ \\t\\r\\n] from the string.
  * @param s A string
  * @return s with leading spaces removed
  */
@@ -155,7 +155,7 @@ long long Str_parseLLong(const char *s);
 
 
 /**
- * Parses the string argument as a double. 
+ * Parses the string argument as a double.
  * @param s A string
  * @return The double represented by the string argument.
  * @exception NumberFormatException If the String does not contain a
@@ -176,11 +176,11 @@ char *Str_replaceChar(char *s, char o, char n);
 
 
 /**
- * Returns true if <i>a</i> starts with <i>b</i>. The test is 
+ * Returns true if <i>a</i> starts with <i>b</i>. The test is
  * <i>case-insensitive</i> but depends on that all characters
- * in the two strings can be translated in the current locale. 
+ * in the two strings can be translated in the current locale.
  * <code>b</code> is assumed to be the substring of <code>a</code>.
- * This means that if <code>a</code> is shorter than <code>b</code>, 
+ * This means that if <code>a</code> is shorter than <code>b</code>,
  * this method returns false
  * @param a The string to search for b in
  * @param b The sub-string to test a against
@@ -190,7 +190,7 @@ bool Str_startsWith(const char *a, const char *b);
 
 
 /**
- * Returns true if <i>a</i> ends with <i>b</i>. The test is 
+ * Returns true if <i>a</i> ends with <i>b</i>. The test is
  * <i>case-insensitive</i> but depends on that all characters
  * in the two strings can be translated in the current locale.
  * @param a The string to search for b in
@@ -202,7 +202,7 @@ bool Str_endsWith(const char *a, const char *b);
 
 /**
  * Returns the first substring of <i>a</i> that match the string <code>b</code>.
- * If any of the parameters are NULL or <code>b</code> is an empty string, 
+ * If any of the parameters are NULL or <code>b</code> is an empty string,
  * NULL is returned. The test is <i>case-insensitive</i>.
  * Example:
  * <pre>
@@ -213,17 +213,17 @@ bool Str_endsWith(const char *a, const char *b);
  * </pre>
  * @param a The string to search for b in
  * @param b The sub-string to search for in a
- * @return A pointer to the start of the substring in a that contains b, 
+ * @return A pointer to the start of the substring in a that contains b,
  * otherwise NULL
  */
 char *Str_sub(const char *a, const char *b);
 
 
 /**
- * Returns true if <i>s</i> contains any characters in the 
- * <code>charset</code>. Example: 
+ * Returns true if <i>s</i> contains any characters in the
+ * <code>charset</code>. Example:
  * <pre>
- * char *foo = "'bar' (baz)"; 
+ * char *foo = "'bar' (baz)";
  * Str_has("(')", foo) -> true
  * Str_has(",;", foo) -> false
  * Str_has(",;", NULL) -> false
@@ -236,15 +236,15 @@ bool Str_has(const char *charset, const char *s);
 
 
 /**
- * Unescape all characters in <code>s</code> which are in the 
+ * Unescape all characters in <code>s</code> which are in the
  * <code>charset</code> and return <code>s</code> modified.
  * Example:
  * <pre>
  * char s[] = "foo\'ba\"r\}baz";
  * Str_unescape("\"'", s) -> foo'ba"r\}baz
  * </pre>
- * @param charset The characters to test <code>s</code> against. 
- * A character is unescaped in <code>s</code> if it is in the 
+ * @param charset The characters to test <code>s</code> against.
+ * A character is unescaped in <code>s</code> if it is in the
  * charset and is preceded with '\'.
  * @param s The string to unescape
  * @return A pointer to s
@@ -253,7 +253,7 @@ char *Str_unescape(const char *charset, char *s);
 
 
 /**
- * Returns true if <i>a</i> equals <i>b</i>. The test is 
+ * Returns true if <i>a</i> equals <i>b</i>. The test is
  * <i>case-insensitive</i> but depends on that all characters
  * in the two strings can be translated in the current locale.
  * @param a The string to test for equality with <code>b</code>
@@ -265,7 +265,7 @@ bool Str_isEqual(const char *a, const char *b);
 
 /**
  * Returns true if <i>a</i> equals <i>b</i>. The
- * test is <i>case-sensitive</i> and compares byte by byte 
+ * test is <i>case-sensitive</i> and compares byte by byte
  * @param a The string to test for equality with <code>b</code>
  * @param b The string to test for equality with <code>a</code>
  * @return true if a equals b, otherwise false
@@ -296,8 +296,8 @@ char *Str_dup(const char *s);
 
 
 /**
- * Strdup that duplicates only n char from the given string The caller 
- * must free the returned String. If s is shorter than n characters long, 
+ * Strdup that duplicates only n char from the given string The caller
+ * must free the returned String. If s is shorter than n characters long,
  * all characters of s are copied. I.e. the same as calling Str_dup(s).
  * @param s A string to duplicate
  * @param n The number of bytes to copy from s
@@ -309,9 +309,9 @@ char *Str_ndup(const char *s, long n);
 
 
 /**
- * Copy <code>n</code> bytes from a variable number of strings. The 
+ * Copy <code>n</code> bytes from a variable number of strings. The
  * destination string, <code>dest</code>, is 0 terminated at length
- * <code>n</code> or if number of bytes to copy is shorter than 
+ * <code>n</code> or if number of bytes to copy is shorter than
  * <code>n</code> at the combined length of the given strings.
  * Example:
  * <pre>
@@ -321,7 +321,7 @@ char *Str_ndup(const char *s, long n);
  * Str_join(dest, 4, "a", "b", "cd", "ghi", "jklmnopq") -> "abcd"
  * Str_join(dest, 10) -> ""
  * </pre>
- * <i><small>It is an unchecked runtime error not to provide at least one 
+ * <i><small>It is an unchecked runtime error not to provide at least one
  * parameter in a variable argument list. This macro for the _Str_join()
  * function ensures that at least one parameter exist in the argument list
  * and its last parameter is NULL. </small></i>
@@ -329,7 +329,7 @@ char *Str_ndup(const char *s, long n);
  * @param n The number of bytes to copy
  * @return A pointer to dest
  * @exception AssertException if <code>dest</code> is null
- * @hideinitializer 
+ * @hideinitializer
  */
 #define Str_join(dest, n, ...) _Str_join((dest), (n), ##__VA_ARGS__, NULL)
 /** Internal function. Use the Str_join() macro */
@@ -379,13 +379,13 @@ char *Str_trunc(char *s, int n);
 
 /**
  * Cut string <code>s</code> short at <code>t</code>. That is,
- * remove all bytes in <code>s</code> from and including 
+ * remove all bytes in <code>s</code> from and including
  * <code>t</code> to the end of the string. If <code>t</code>
  * is not found in <code>s</code>, <code>s</code> is not modified.
  * <pre>
- * Example: 
+ * Example:
  *  char s[] = "<text>Hello World</text>";
- *  Str_curtail(s, "</text>"); -> "<text>Hello World" 
+ *  Str_curtail(s, "</text>"); -> "<text>Hello World"
  *  Str_curtail(s, ">"); -> "<text"
  *  Str_curtail(s, "@"); -> "<text"
  * </pre>
@@ -409,25 +409,25 @@ bool Str_lim(const char *s, int limit);
 
 /**
  * Returns true if the regular expression <code>pattern</code> match
- * the <code>subject</code> string, otherwise false. This function 
+ * the <code>subject</code> string, otherwise false. This function
  * supports POSIX regular expression for <code>pattern</code>. See
  * re_format(7) for details. For example, to test for a valid email
- * address, 
+ * address,
  * <pre>
  * Str_match("^[^@ ]+@([-a-zA-Z0-9]+\\.)+[a-zA-Z]{2,}$", "foo@bar.baz") -> true
  * </pre>
  * @param pattern the regular expression
  * @param subject the string to match against pattern
  * @return true if subject match pattern, otherwise false
- * @exception AssertException if pattern is invalid or cannot be 
- * compiled. 
+ * @exception AssertException if pattern is invalid or cannot be
+ * compiled.
  */
 bool Str_match(const char *pattern, const char *subject);
 
 
 /**
  * UNIX ELF hash algorithm. May be used as the <code>hash</code>
- * function in a Table or a Set. 
+ * function in a Table or a Set.
  * @param x A String
  * @return A hash value for the String
  * @see Table.h and Set.h

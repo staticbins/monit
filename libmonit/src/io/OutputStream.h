@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -30,14 +30,14 @@
 
 /**
  * An <b>OutputStream</b> can be used for writing text or binary
- * data (8 bits) to a descriptor. 
+ * data (8 bits) to a descriptor.
  *
  * The method OutputStream_isClosed() can be used to test the
  * underlying descriptor for an error, a write timeout or for EOF.
- * 
- * Clients can use this stream in a non-blocking manner by setting 
+ *
+ * Clients can use this stream in a non-blocking manner by setting
  * OutputStream_setTimeout() to 0.
- * 
+ *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
  * @file
@@ -72,7 +72,7 @@ void OutputStream_free(T *S);
 /**
  * Returns the underlying descriptor for this stream
  * @param S An OutputStream object
- * @return The descriptor for this stream 
+ * @return The descriptor for this stream
  */
 int OutputStream_getDescriptor(T S);
 
@@ -98,7 +98,7 @@ void OutputStream_setTimeout(T S, time_t timeout);
 
 
 /**
- * Get the write timeout in milliseconds. 
+ * Get the write timeout in milliseconds.
  * @param S An OutputStream object
  * @return The timeout value in milliseconds
  */
@@ -128,20 +128,20 @@ long long OutputStream_getBytesWritten(T S);
  * Writes a character string. Use this function to send text
  * based data to the underlying descriptor.
  * @param S An OutputStream object
- * @param s A String to send to the client. The string may contain 
+ * @param s A String to send to the client. The string may contain
  * format specifiers similar to the ones used by printf(3). The format
  * specifiers supported are:
  * <ul>
  * <li><b>%s, %c</b> - Prints a string (s) or a single char (c)
- * <li><b>%d, %i, %u, %o, %x</b> - The int argument is printed as a 
- * signed decimal (d or i), unsigned decimal (u), unsigned octal (o) or 
+ * <li><b>%d, %i, %u, %o, %x</b> - The int argument is printed as a
+ * signed decimal (d or i), unsigned decimal (u), unsigned octal (o) or
  * unsigned hexadecimal (x), respectively. An optional length modifier,
  * 'l' can be used to prefix d, i, n, o, u or x to specify a long argument
- * instead of an int argument. 
+ * instead of an int argument.
  * <li><b>%e, %f, %g</b> - Prints a real number (see printf(3) for details)
  * <li><b>%p</b> - The void * pointer argument is printed in hexadecimal
  * </ul>
- * @return The number of bytes written or -1 if an error occurred. If the 
+ * @return The number of bytes written or -1 if an error occurred. If the
  * stream uses non-blocking I/O, i.e. timeout is 0, then 0 is also returned
  * if a write would block, indicating that the caller should try again later.
  * @exception AssertException if an unknown format specifier is used in s.
@@ -150,12 +150,12 @@ int OutputStream_print(T S, const char *s, ...) __attribute__((format (printf, 2
 
 
 /**
- * Writes a character string with a variable argument list. 
+ * Writes a character string with a variable argument list.
  * @param S An OutputStream object
- * @param s A String to send to the client. The string may contain 
+ * @param s A String to send to the client. The string may contain
  * format specifiers similar to the ones used by printf(3).
  * @param ap A variable argument lists
- * @return The number of bytes written or -1 if an error occurred. If the 
+ * @return The number of bytes written or -1 if an error occurred. If the
  * stream uses non-blocking I/O, i.e. timeout is 0, then 0 is also returned
  * if a write would block, indicating that the caller should try again later.
  * @exception AssertException if an unknown format specifier is used in s.
@@ -168,7 +168,7 @@ int OutputStream_vprint(T S, const char *s, va_list ap);
  * @param S An OutputStream object
  * @param b The data to be written
  * @param size The size of the data in b
- * @return The number of bytes written or -1 if an error occurred. If the 
+ * @return The number of bytes written or -1 if an error occurred. If the
  * stream uses non-blocking I/O, i.e. timeout is 0, then 0 is also returned
  * if a write would block, indicating that the caller should try again later.
 */
@@ -176,9 +176,9 @@ int OutputStream_write(T S, const void *b, int size);
 
 
 /**
- * Flushes this output stream and write any buffered output bytes. 
+ * Flushes this output stream and write any buffered output bytes.
  * @param S An OutputStream object
- * @return The number of bytes written or -1 if an error occurred. If the 
+ * @return The number of bytes written or -1 if an error occurred. If the
  * stream uses non-blocking I/O, i.e. timeout is 0, then 0 is also returned
  * if a write would block, indicating that the caller should try again later.
  */

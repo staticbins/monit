@@ -14,7 +14,7 @@
 #include "Str.h"
 
 /**
- * OutputStream.c unit tests. 
+ * OutputStream.c unit tests.
  */
 
 #define STDOUT  1
@@ -106,7 +106,7 @@ int main(void) {
                 assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%lx", 32767L) == 4); //7fff
                 assert(OutputStream_print(out, "\n") == 1);
-                // Test width and precision 
+                // Test width and precision
                 assert(OutputStream_print(out, "%16.16s\n%16.16s\n", "hello", "world") == 34);
                 assert(OutputStream_print(out, "\n") == 1);
                 assert(OutputStream_print(out, "%-16.16s\n%-16.16s\n", "hello", "world") == 34);

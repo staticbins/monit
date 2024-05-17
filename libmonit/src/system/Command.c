@@ -563,7 +563,7 @@ List_T Command_getCommand(T C) {
 
 
 /* The Execute function.
- 
+
  Note: For possible better error reporting, set exec_error to an enum of possible
  errors and exit with that error. Return Process_T regardless and introduce a
  char *Process_getError() which uses waitpid() to get the error status from child exit.

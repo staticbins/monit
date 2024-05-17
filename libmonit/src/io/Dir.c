@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -78,12 +78,12 @@ bool Dir_delete(const char *dir) {
         if (dir)
                 return File_delete(dir);
         errno = EINVAL;
-        return false;        
+        return false;
 }
 
 
 bool Dir_chdir(const char *path) {
-        if (path) 
+        if (path)
                 return (chdir(path)==0);
         errno = EINVAL;
         return false;
@@ -91,7 +91,7 @@ bool Dir_chdir(const char *path) {
 
 
 const char *Dir_cwd(char *result, int length) {
-        if (result) 
+        if (result)
                 return getcwd(result, length);
         errno = EINVAL;
         return result;

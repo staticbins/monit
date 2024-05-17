@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -100,7 +100,7 @@ ssize_t Net_read(int socket, void *buffer, size_t size, time_t timeout);
 
 /**
  * Write <code>size</code> bytes from the <code>buffer</code> to the
- * <code>socket</code> 
+ * <code>socket</code>
  * @param socket the Socket to write to
  * @param buffer The buffer to write
  * @param size Number of bytes to send
@@ -112,8 +112,8 @@ ssize_t Net_write(int socket, const void *buffer, size_t size, time_t timeout);
 
 /**
  * Aborts a TCP a connection. That is, TCP discards any data still remaining
- * in the socket send buffer and sends an RST to the peer, not the normal 
- * four-packet connection termination sequence. See "UNIX Network Programming" 
+ * in the socket send buffer and sends an RST to the peer, not the normal
+ * four-packet connection termination sequence. See "UNIX Network Programming"
  * third edition ch 7.5. Generic Socket Options
  * @param socket The socket connection to abort and close
  * @return true if success otherwise false

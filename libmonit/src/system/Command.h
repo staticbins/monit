@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -56,8 +56,8 @@ typedef struct T *T;
  * arguments to execute. The <code>arg0</code> argument is the first argument
  * in a sequence of arguments to the program. The arguments list can be thought
  * of as arg0, arg1, ..., argn. Together they describe a list of one or more
- * pointers to null-terminated strings that represent the argument list 
- * available to the executed program specified in <code>path</code>. The 
+ * pointers to null-terminated strings that represent the argument list
+ * available to the executed program specified in <code>path</code>. The
  * list of arguments <em style="color:red">must</em> be terminated by a
  * NULL pointer. Example:
  * <pre>
@@ -96,7 +96,7 @@ void Command_appendArgument(T C, const char *argument);
 
 
 /**
- * Set the user id the sub-process should switch to on exec. If not set, the uid of 
+ * Set the user id the sub-process should switch to on exec. If not set, the uid of
  * the calling process is used. Note that this process must run with super-user
  * privileges for the sub-process to be able to switch uid
  * @param C A Command object
@@ -106,7 +106,7 @@ void Command_setUid(T C, uid_t uid);
 
 
 /**
- * Returns the uid the sub-process should switch to on exec. 
+ * Returns the uid the sub-process should switch to on exec.
  * @param C A Command object
  * @return The user id the sub-process should use. Returns 0
  * if not set, meaning the sub-process will run with the same
@@ -116,7 +116,7 @@ uid_t Command_getUid(T C);
 
 
 /**
- * Set the group id the sub-process should switch to on exec. If not set, the gid of 
+ * Set the group id the sub-process should switch to on exec. If not set, the gid of
  * the calling process is used. Note that this process must run with super-user
  * privileges for the sub-process to be able to switch gid
  * @param C A Command object
@@ -126,7 +126,7 @@ void Command_setGid(T C, gid_t gid);
 
 
 /**
- * Returns the group id the Command should switch to on exec. 
+ * Returns the group id the Command should switch to on exec.
  * @param C A Command object
  * @return The group id the sub-process should use. Returns 0
  * if not set, meaning the sub-process will run with the same
@@ -184,8 +184,8 @@ void Command_vSetEnv(T C, const char *name, const char *value, ...) __attribute_
 
 
 /**
- * Returns the value of the environment variable identified by 
- * <code>name</code>. 
+ * Returns the value of the environment variable identified by
+ * <code>name</code>.
  * @param C A Command object
  * @param name The environment variable to get the value of
  * @return The value for name or NULL if name was not found
@@ -195,12 +195,12 @@ const char *Command_getEnv(T C, const char *name);
 
 
 /**
- * Returns the operating system program with arguments to be executed by 
+ * Returns the operating system program with arguments to be executed by
  * this Command. The first element in the list is the path to the program
- * and subsequent elements are arguments to the program. Elements in the 
- * list are C-strings. 
+ * and subsequent elements are arguments to the program. Elements in the
+ * list are C-strings.
  * @param C A Command object
- * @return A list with the operating system program with arguments to 
+ * @return A list with the operating system program with arguments to
  * execute. The first element in the list is the program.
  */
 List_T Command_getCommand(T C);
@@ -209,11 +209,11 @@ List_T Command_getCommand(T C);
 //@}
 
 
-/** 
+/**
  * Create a new sub-process using the attributes of this Command object.
- * The new sub-process will execute the command and arguments given in 
+ * The new sub-process will execute the command and arguments given in
  * Command_new(). The caller is responsible for releasing the returned
- * Process_T object by calling Process_free(). If creating the new 
+ * Process_T object by calling Process_free(). If creating the new
  * sub-process failed, NULL is returned and errno is set to indicate the
  * error. Use e.g. System_lastError() to get a description of the error
  * that occurred.

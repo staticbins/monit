@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -80,7 +80,7 @@ void Link_reset(T L);
 /**
  * Update network statistics for object.
  * @param L A Link object
- * @exception AssertException If statistics cannot be gathered or 
+ * @exception AssertException If statistics cannot be gathered or
  * the address/interface is invalid.
  */
 void Link_update(T L);
@@ -97,7 +97,7 @@ long long Link_getBytesInPerSecond(T L);
 /**
  * Get incoming bytes per minute.
  * @param L A Link object
- * @param count Number of minutes, the returned number will be for the 
+ * @param count Number of minutes, the returned number will be for the
  * range given by 'now - count' (count max = 60m)
  * @return Incoming bytes per minute or -1 if not available.
  */
@@ -123,7 +123,7 @@ double Link_getSaturationInPerSecond(T L);
 /**
  * Get incoming bytes per hour.
  * @param L A Link object
- * @param count Number of hours, the returned number will be for 
+ * @param count Number of hours, the returned number will be for
  * range given by 'now - count' (count max = 24h)
  * @return Incoming bytes per hour or -1 if not available.
  */
@@ -141,7 +141,7 @@ long long Link_getPacketsInPerSecond(T L);
 /**
  * Get incoming packets per minute.
  * @param L A  object
- * @param count Number of minutes, the returned statistics will be for 
+ * @param count Number of minutes, the returned statistics will be for
  * the range given by 'now - count' (count max = 60m)
  * @return Incoming packets per minute statistics or -1 if not available.
  */
@@ -151,7 +151,7 @@ long long Link_getPacketsInPerMinute(T L, int count);
 /**
  * Get incoming packets per hour statistics.
  * @param L A Link object
- * @param count Number of hours, the returned statistics will be for 
+ * @param count Number of hours, the returned statistics will be for
  * the range given by 'now - count' (count max = 24h)
  * @return Incoming packets per hour statistics or -1 if not available.
  */
@@ -187,7 +187,7 @@ long long Link_getErrorsInPerMinute(T L, int count);
 /**
  * Get incoming errors per hour.
  * @param L A Link object
- * @param count Number of hours, the returned statistics will be for 
+ * @param count Number of hours, the returned statistics will be for
  * the range given by 'now - count' (count max = 24h)
  * @return Incoming errors per hour or -1 if not available.
  */
@@ -223,7 +223,7 @@ long long Link_getBytesOutPerMinute(T L, int count);
 /**
  * Get outgoing bytes per hour.
  * @param L A Link object
- * @param count Number of hours, the returned statistics will be for 
+ * @param count Number of hours, the returned statistics will be for
  * the range given by 'now - count' (count max = 24h)
  * @return Outgoing bytes per hour or -1 if not available.
  */
@@ -257,7 +257,7 @@ long long Link_getPacketsOutPerSecond(T L);
 /**
  * Get outgoing packets per minute.
  * @param L A Link object
- * @param count Number of minutes, the returned statistics will be for 
+ * @param count Number of minutes, the returned statistics will be for
  * the range given by 'now - count' (count max = 60m)
  * @return Outgoing packets per minute or -1 if not available.
  */

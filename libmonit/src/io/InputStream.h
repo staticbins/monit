@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -30,14 +30,14 @@
 
 /**
  * An <b>InputStream</b> can be used for reading text or binary
- * data (8 bits) from a descriptor. 
+ * data (8 bits) from a descriptor.
  *
  * The method InputStream_isClosed() can be used to test the
  * underlying descriptor for an error, a read timeout or for EOF.
- * 
- * Clients can use this stream in a non-blocking manner by setting 
+ *
+ * Clients can use this stream in a non-blocking manner by setting
  * InputStream_setTimeout() to 0.
- * 
+ *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
  * @file
@@ -57,7 +57,7 @@ T InputStream_new(int descriptor);
 
 
 /**
- * Destroy an InputStream object and release allocated resources. 
+ * Destroy an InputStream object and release allocated resources.
  * Call this method to release an InputStream object allocated with
  * InputStream_new()
  * @param S An InputStream object reference
@@ -72,7 +72,7 @@ void InputStream_free(T *S);
 /**
  * Returns the underlying descriptor for this stream
  * @param S An InputStream object
- * @return The descriptor for this stream 
+ * @return The descriptor for this stream
  */
 int InputStream_getDescriptor(T S);
 
@@ -89,7 +89,7 @@ void InputStream_setTimeout(T S, time_t timeout);
 
 
 /**
- * Get the read timeout in milliseconds. 
+ * Get the read timeout in milliseconds.
  * @param S An InputStream object
  * @return The timeout value in milliseconds
  */
@@ -106,7 +106,7 @@ bool InputStream_isClosed(T S);
 
 
 /**
- * Returns the number of bytes in the InputStream's cache buffer. 
+ * Returns the number of bytes in the InputStream's cache buffer.
  * I.e. bytes that are cached in the stream's internal buffer
  * @param S An InputStream object
  * @return Number of input bytes cached
@@ -145,7 +145,7 @@ char *InputStream_readLine(T S, char *s, int size);
 /**
  * Reads size <code>bytes</code> and stores them into the byte buffer
  * pointed to by <code>b</code>. Reading stops when size bytes are read
- * or if no more data is available. The buffer is <b>not</b> NUL terminated. 
+ * or if no more data is available. The buffer is <b>not</b> NUL terminated.
  * @param S An InputStream object
  * @param b A Byte buffer
  * @param size The size of the buffer b

@@ -20,7 +20,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -94,8 +94,8 @@ static int flush(T S) {
                 }
                 S->length -= n;
         } else if (n < 0) {
-                n = -1; 
-                S->isclosed = true; 
+                n = -1;
+                S->isclosed = true;
         } else if (! (errno == EAGAIN || errno == EWOULDBLOCK)) // peer closed connection
                 n = -1;
         return n;
@@ -168,7 +168,7 @@ static void putd(T S, const char *str, int len, unsigned char flags[], int width
                 for (int i = 0; i < len; i++)
                         write_byte(S, (uchar_t)*str++);
                 if (flags['-'])
-                        pad(width - n, ' '); 
+                        pad(width - n, ' ');
         }
 }
 
