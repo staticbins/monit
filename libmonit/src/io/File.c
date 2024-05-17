@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -41,7 +41,7 @@
 
 
 /**
- * Implementation of the File Facade for Unix systems. 
+ * Implementation of the File Facade for Unix systems.
  *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/
@@ -72,12 +72,12 @@ int File_open(const char *file, const char *mode) {
                                         case '+': return open(file, O_RDWR|O_NONBLOCK);
                                         default:  return open(file, O_RDONLY|O_NONBLOCK);
                                 }
-                        case 'w':  
+                        case 'w':
                                 switch (mode[1]) {
                                         case '+': return open(file, O_CREAT|O_RDWR|O_TRUNC|O_NONBLOCK, DEFAULT_PERM);
                                         default:  return open(file, O_CREAT|O_WRONLY|O_TRUNC|O_NONBLOCK, DEFAULT_PERM);
                                 }
-                        case 'a':  
+                        case 'a':
                                 switch (mode[1]) {
                                         case '+': return open(file, O_CREAT|O_RDWR|O_APPEND|O_NONBLOCK, DEFAULT_PERM);
                                         default:  return open(file, O_CREAT|O_WRONLY|O_APPEND|O_NONBLOCK, DEFAULT_PERM);
@@ -219,32 +219,32 @@ int File_mod(const char *file) {
 int File_umask(void) {
         mode_t omask = umask(0);
         umask(omask);
-        return omask;        
+        return omask;
 }
 
 
 mode_t File_setUmask(mode_t mask) {
         mode_t omask = umask(mask);
-        return omask;        
+        return omask;
 }
 
 
 bool File_isReadable(const char *file) {
-        if (file) 
+        if (file)
                 return (access(file, R_OK) == 0);
         return false;
 }
 
 
 bool File_isWritable(const char *file) {
-        if (file) 
+        if (file)
                 return (access(file, W_OK) == 0);
         return false;
 }
 
 
 bool File_isExecutable(const char *file) {
-        if (file) 
+        if (file)
                 return (access(file, X_OK) == 0);
         return false;
 }
@@ -259,7 +259,7 @@ bool File_delete(const char *file) {
 
 
 bool File_rename(const char *file, const char *name) {
-        if (file)                
+        if (file)
                 return (rename(file, name) == 0);
         errno = ENOENT;
         return false;
@@ -278,10 +278,10 @@ const char *File_basename(const char *path) {
 char *File_dirname(char *path) {
         if ((STR_DEF(path))) {
                 char *d = strrchr(path, SEPARATOR_CHAR);
-                if (d) 
+                if (d)
                         *(d + 1) = 0; /* Keep last separator */
                 else {
-                        path[0] = '.'; 
+                        path[0] = '.';
                         path[1] = 0;
                 }
         }
@@ -302,7 +302,7 @@ char *File_removeTrailingSeparator(char *path) {
         if (STR_DEF(path)) {
                 char *p;
                 for (p = path; *p; p++);
-                do 
+                do
                         *(p--) = 0;
                 while ((p > path) && (isspace(*p) || *p == SEPARATOR_CHAR));
         }

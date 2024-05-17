@@ -157,7 +157,7 @@ int main(void) {
                 assert(File_realPath("/././tmp/../tmp", s) != NULL);
 #ifdef DARWIN
                 /* On Darwin /tmp is a link to /private/tmp */
-                assert(Str_isEqual(s, "/private/tmp")); 
+                assert(Str_isEqual(s, "/private/tmp"));
 #else
                 assert(Str_isEqual(s, "/tmp"));
 #endif

@@ -20,7 +20,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -30,10 +30,10 @@
 /**
  * The assert() macro tests the given expression and if it is false, raise
  * an AssertException. Unless a previous installed exception handler catch
- * the exception, it will cause the application to abort. If expression is 
+ * the exception, it will cause the application to abort. If expression is
  * true, the assert() macro does nothing. The assert macro can be removed
  * at compile time by defining NDEBUG which is the case for optimised build
- * @see AssertException.h 
+ * @see AssertException.h
  *
  * @author http://www.tildeslash.com/
  * @see http://www.mmonit.com/

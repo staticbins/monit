@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -30,17 +30,17 @@
 /**
  * A <b>List</b> is a sequence of zero or more elements. A List can be used
  * as a LIFO (last in, first out) stack by using List_push() and List_pop()
- * or as a FIFO (first in, first out) queue by using List_append() and 
+ * or as a FIFO (first in, first out) queue by using List_append() and
  * List_pop(). These operations takes constant time.
  *
  * The List ADT representation is revealed in this interface for easy access
- * by clients. The representation is trivial; a structure with two fields. 
+ * by clients. The representation is trivial; a structure with two fields.
  * The first field, <code>e</code>, is a pointer to an element added to the
  * list and <code>next</code> points to the next node in the List or to NULL
  * if there are no more nodes. In addition, the two variables <code>head</code>
  * and <code>tail</code> are pointers to respectively the first and last node
  * in the List. The variable <code>freelist</code> is used to retain popped
- * _list_t nodes for reuse. 
+ * _list_t nodes for reuse.
  *
  * This class is reentrant but not thread-safe
  *
@@ -113,15 +113,15 @@ void List_append(T L, void *e);
  * Remove the first occurrence of the element <code>e</code> from the List
  * @param L A List object
  * @param e The element to remove from the list
- * @return The element removed from the List or NULL if <code>e</code> 
+ * @return The element removed from the List or NULL if <code>e</code>
  * was not found in the List
  */
 void *List_remove(T L, void *e);
 
 
 /**
- * Concatenate <code>list</code> with this List. All nodes in 
- * <code>list</code> are appended to L. <code>list</code> 
+ * Concatenate <code>list</code> with this List. All nodes in
+ * <code>list</code> are appended to L. <code>list</code>
  * is not changed
  * @param L A List object
  * @param list A List to append to the end of this List
@@ -146,14 +146,14 @@ int List_length(T L);
 
 /**
  * Clear this List so it contains no elements. The List will be empty after
- * this call. 
+ * this call.
  * @param L A List object
  */
 void List_clear(T L);
 
 
 /**
- * Creates a N + 1 length array containing all the elements 
+ * Creates a N + 1 length array containing all the elements
  * in this List. The last element in the array is NULL. The
  * caller is responsible for deallocating the array.
  * @param L A List object

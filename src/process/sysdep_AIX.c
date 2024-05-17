@@ -178,7 +178,7 @@ int getloadavg_sysdep (double *loadv, int nelem) {
 
 /**
  * Read all processes to initialize the process tree
- * @param reference  a process_t reference 
+ * @param reference  a process_t reference
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0.
  */

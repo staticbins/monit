@@ -1546,18 +1546,18 @@ static bool _doScheduledAction(Service_T s) {
 int validate(void) {
         Run.handler_flag = Handler_Succeeded;
         Event_queue_process();
-        
+
         SystemInfo_update();
         ProcessTable_update(Process_Table);
         gettimeofday(&System_Info.collected, NULL);
-        
+
         /* In the case that at least one action is pending, perform quick loop to handle the actions ASAP */
         if (Run.flags & Run_ActionPending) {
                 Run.flags &= ~Run_ActionPending;
                 for (Service_T s = Service_List; s; s = s->next)
                         _doScheduledAction(s);
         }
-        
+
         int errors = 0;
         /* Check the services */
         for (Service_T s = Service_List; s && ! Monit_isInterrupted(); s = s->next) {
@@ -1989,6 +1989,22 @@ Check_State check_program(Service_T s) {
                         else
                                 Event_post(s, Event_Content, Check_ChangedNot, ml->action,  "content doesn't match on program output:\n%s", lastOutput);
                 }
+
+                // Check if the program output content changed
+                for (OutputChange_T oc = s->outputchangelist; oc; oc = oc->next) {
+                        if (!oc->previous) {
+                                oc->previous = Str_dup(lastOutput);
+                        } else if (strcmp(oc->previous, lastOutput) == 0) {
+                                Event_post(s, Event_Content, oc->check_invers ? Check_Failed : Check_Succeeded, oc->action,
+                                           "content remained the same:\n<<<<<<< Begin\n%s\n>>>>>>> End", lastOutput);
+                        } else {
+                                Event_post(s, Event_Content, oc->check_invers ? Check_Succeeded : Check_Failed, oc->action,
+                                           "content changed:\n<<<<<<< Begin previous\n%s\n======= End previous - Begin current\n%s\n>>>>>>> End current", oc->previous, lastOutput);
+                                FREE(oc->previous);
+                                oc->previous = Str_dup(lastOutput);
+                        }
+                }
+
                 ProcessTable_removeProcess(Process_Table, Process_pid(P));
                 Process_free(&P);
         } else {
@@ -2128,21 +2144,25 @@ Check_State check_net(Service_T s) {
 
                 // Link errors
                 long long oerrors = Link_getErrorsOutPerSecond(s->inf.net->stats);
-                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                        if (oerrors > 0) {
-                                rv = Check_Failed;
-                                Event_post(s, Event_Link, Check_Failed, link->action, "%lld upload errors detected", oerrors);
-                        } else {
-                                Event_post(s, Event_Link, Check_Succeeded, link->action, "upload errors check succeeded");
+                if (oerrors >= 0) {
+                        for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                                if (oerrors > 0) {
+                                        rv = Check_Failed;
+                                        Event_post(s, Event_Link, Check_Failed, link->action, "%lld upload errors detected", oerrors);
+                                } else {
+                                        Event_post(s, Event_Link, Check_Succeeded, link->action, "upload errors check succeeded");
+                                }
                         }
                 }
                 long long ierrors = Link_getErrorsInPerSecond(s->inf.net->stats);
-                for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
-                        if (ierrors > 0) {
-                                rv = Check_Failed;
-                                Event_post(s, Event_Link, Check_Failed, link->action, "%lld download errors detected", ierrors);
-                        } else {
-                                Event_post(s, Event_Link, Check_Succeeded, link->action, "download errors check succeeded");
+                if (ierrors >= 0) {
+                        for (LinkStatus_T link = s->linkstatuslist; link; link = link->next) {
+                                if (ierrors > 0) {
+                                        rv = Check_Failed;
+                                        Event_post(s, Event_Link, Check_Failed, link->action, "%lld download errors detected", ierrors);
+                                } else {
+                                        Event_post(s, Event_Link, Check_Succeeded, link->action, "download errors check succeeded");
+                                }
                         }
                 }
         }

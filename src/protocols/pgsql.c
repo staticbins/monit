@@ -199,7 +199,7 @@ typedef struct postgresql_t {
 static void _getMd5Hash(const char *s1, int s1Length, const char *s2, int s2Length, MD_T result) {
         MD_T digest;
         md5_context_t ctx;
-        
+
         md5_init(&ctx);
         md5_append(&ctx, (const md5_byte_t *)s1, s1Length);
         md5_append(&ctx, (const md5_byte_t *)s2, s2Length);
@@ -341,7 +341,7 @@ static void _handleError(postgresql_t postgresql, postgresql_response_t response
                 }
         }
         if (! postgresql->port->parameters.postgresql.username && ! postgresql->port->parameters.postgresql.database) {
-                // Backward compatibility: Monit < 5.29.0 used a hardcoded user and database, hence it interpreted the error as a sign that the server is able to respond (regardless of result). 
+                // Backward compatibility: Monit < 5.29.0 used a hardcoded user and database, hence it interpreted the error as a sign that the server is able to respond (regardless of result).
                 // Monit > 5.29.0 allows to set custom user and database, hence we expect successful response here and will throw error.
                 DEBUG("PGSQL: DEBUG: error message received, but as no custom user or database is set, accept it for backward compatibility with Monit < 5.29.0 -- Severity=%s, Code=%s, Message=%s\n", PGERROR(errorSeverity), PGERROR(errorCode), PGERROR(errorMessage));
         } else {

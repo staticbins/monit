@@ -11,7 +11,7 @@
 #include "StringBuffer.h"
 
 /**
- * StringBuffer.c unity tests. 
+ * StringBuffer.c unity tests.
  */
 
 

@@ -98,7 +98,7 @@ void daemonize(void) {
         } else if (pid != 0) {
                 _exit(0);
         }
-         // Change current directory to the root so that other file systems can be unmounted while we're running
+        // Change current directory to the root so that other file systems can be unmounted while we're running
         if (chdir("/") < 0) {
                 Log_error("Cannot chdir to / -- %s\n", System_lastError());
                 exit(1);

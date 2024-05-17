@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -29,8 +29,8 @@
 
 
 /**
- * Thrown to indicate that a memory allocation failed. Every class that 
- * expose methods for object allocation may throw a MemoryException if 
+ * Thrown to indicate that a memory allocation failed. Every class that
+ * expose methods for object allocation may throw a MemoryException if
  * the underlying allocator failed.
  * @see Exception.h
  *

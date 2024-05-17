@@ -44,7 +44,7 @@ T SslServer_new(int socket, SslOptions_T options);
 
 /**
  * Delete an SSL server connection
- * @param S An SSL server object 
+ * @param S An SSL server object
  */
 void SslServer_free(T *S);
 
@@ -59,7 +59,7 @@ Ssl_T SslServer_newConnection(T S);
 
 /**
  * Close and free an accepted SSL server connection and remove it from the connection list
- * @param S An SSL server object 
+ * @param S An SSL server object
  * @param C An SSL connection object reference
  */
 void SslServer_freeConnection(T S, Ssl_T *C);
@@ -67,7 +67,7 @@ void SslServer_freeConnection(T S, Ssl_T *C);
 
 /**
  * Embed an accepted socket in an existing SSL connection
- * @param C An SSL connection object 
+ * @param C An SSL connection object
  * @param socket An accepted socket
  * @param timeout Milliseconds to wait for connection to be established
  * @return true if succeeded or false if failed

@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -69,7 +69,7 @@ typedef struct T *T;
  * @param printHeader true if the header should be printed otherwise false
  * @return A new terminal table object
  */
-T TextBox_new(StringBuffer_T b, int columnsCount, TextBoxColumn_T *columns, bool printHeader); 
+T TextBox_new(StringBuffer_T b, int columnsCount, TextBoxColumn_T *columns, bool printHeader);
 
 
 /**

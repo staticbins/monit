@@ -44,7 +44,7 @@ int init_systeminfo_sysdep(void) {
 /**
  * THIS IS JUST A DUMMY!!!
  *
- * @param reference a process_t reference 
+ * @param reference a process_t reference
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */

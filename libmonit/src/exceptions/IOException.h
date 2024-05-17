@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -29,8 +29,8 @@
 
 
 /**
- * Signals that an I/O exception of some sort has occurred. This class 
- * is the general class of exceptions produced by failed I/O operations. 
+ * Signals that an I/O exception of some sort has occurred. This class
+ * is the general class of exceptions produced by failed I/O operations.
  * @see Exception.h
  *
  * @author http://www.tildeslash.com/

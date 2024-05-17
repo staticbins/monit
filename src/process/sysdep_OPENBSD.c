@@ -137,7 +137,7 @@ bool init_systeminfo_sysdep(void) {
 
 /**
  * Read all processes to initialize the information tree.
- * @param reference a process_t reference 
+ * @param reference a process_t reference
  * @param pflags Process engine flags
  * @return treesize > 0 if succeeded otherwise 0
  */

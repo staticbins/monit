@@ -19,7 +19,7 @@
  * including the two.
  *
  * You must obey the GNU Affero General Public License in all respects
- * for all of the code used other than OpenSSL.  
+ * for all of the code used other than OpenSSL.
  */
 
 
@@ -52,8 +52,8 @@ const char *System_getError(int error);
 
 
 /**
- * Prints the given error message to <code>stderr</code> and 
- * <code>abort(3)</code> the application. If an AbortHandler callback 
+ * Prints the given error message to <code>stderr</code> and
+ * <code>abort(3)</code> the application. If an AbortHandler callback
  * function is defined for the library, this function is called instead.
  * @param e A formatted (printf-style) message string
  */

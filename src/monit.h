@@ -424,6 +424,13 @@ typedef enum {
 #define LIMIT_EXECTIMEOUT       0           /* Unlimited timeout */
 
 
+/** ------------------------------------------------- Special purpose macros */
+
+
+/* Replace the standard signal function with a more reliable using
+ * sigaction. Taken from Stevens APUE book. */
+sig_t signal(int signo, sig_t func);
+
 
 /** ------------------------------------------------- General purpose macros */
 
@@ -959,6 +966,7 @@ typedef struct Perm_T {
         EventAction_T action; /**< Description of the action upon event occurrence */
 } *Perm_T;
 
+
 /** Defines match object */
 typedef struct Match_T {
         bool ignore;                                        /**< Ignore match */
@@ -972,6 +980,17 @@ typedef struct Match_T {
         /** For internal use */
         struct Match_T *next;                             /**< next match in chain */
 } *Match_T;
+
+
+/** Defines output change object */
+typedef struct OutputChange_T {
+        char *previous;        /**< previous output (truncated to `programOutput`) */
+        bool check_invers;                      /**< Whether to alert on no change */
+        EventAction_T action; /**< Description of the action upon event occurrence */
+
+        /** For internal use */
+        struct OutputChange_T *next;
+} *OutputChange_T;
 
 
 /** Defines uid object */
@@ -1245,6 +1264,7 @@ typedef struct Service_T {
         Uptime_T    uptimelist;                             /**< Uptime check list */
         Match_T     matchlist;                             /**< Content Match list */
         Match_T     matchignorelist;                /**< Content Match ignore list */
+        OutputChange_T outputchangelist;             /**< Output change check list */
         Timestamp_T timestamplist;                       /**< Timestamp check list */
         Pid_T       pidlist;                                   /**< Pid check list */
         Pid_T       ppidlist;                                 /**< PPid check list */

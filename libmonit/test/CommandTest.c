@@ -181,7 +181,7 @@ int main(void) {
                 Command_free(&c);
         }
         printf("=> Test5: OK\n\n");
-        
+
         printf("=> Test6: Append arguments\n");
         {
                 Command_T c = Command_new("/bin/ls");
@@ -197,7 +197,7 @@ int main(void) {
                 Command_free(&c);
         }
         printf("=> Test6: OK\n\n");
-        
+
         printf("=> Test7: execute invalid program\n");
         {
                 // Program producing error
@@ -240,7 +240,7 @@ int main(void) {
                 Command_free(&c);
         }
         printf("=> Test10: OK\n\n");
-        
+
         printf("=> Test11: environment in sub-process\n");
         {
                 Command_T c = Command_new("/bin/sh", "-c", "echo $SULT");
@@ -250,7 +250,7 @@ int main(void) {
                 Command_free(&c);
         }
         printf("=> Test11: OK\n\n");
-        
+
         printf("=> Test12: on execve(2) error\n");
         {
                 // Executing a directory should produce an execve error

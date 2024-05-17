@@ -301,6 +301,7 @@ set httpd port 2812 and
 #
 #  check program myscript with path /usr/local/bin/myscript.sh
 #    if status != 0 then alert
+#    if content changed then alert
 #
 #
 ###############################################################################

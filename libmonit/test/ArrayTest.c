@@ -119,7 +119,7 @@ int main(void) {
                 assert(T == NULL);
         }
         printf("=> Test6: OK\n\n");
-        
+
         printf("=> Test7: sparseness()\n");
         {
                 T = Array_new(4);
