@@ -40,7 +40,7 @@
  * Returns a String describing the last system error
  * @return The last error message
  */
-const char *System_getLastError(void);
+const char *System_lastError(void);
 
 
 /**

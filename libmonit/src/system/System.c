@@ -62,7 +62,7 @@ extern void(*_DebugHandler)(const char *info, va_list ap);
 /* ---------------------------------------------------------------- Public */
 
 
-const char *System_getLastError(void) { 
+const char *System_lastError(void) { 
         return strerror(errno); 
 }
 

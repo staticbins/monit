@@ -238,7 +238,7 @@ int main(void) {
                 if (p)
                         onExec(p);
                 else
-                        ERROR("Command_execute error: %s\n", System_getLastError());
+                        ERROR("Command_execute error: %s\n", System_lastError());
                 Command_free(&c);
                 assert(!c);
         }
@@ -286,7 +286,7 @@ int main(void) {
                 Process_T p = Command_execute(c);
                 assert(! p);
                 Command_free(&c);
-                printf("\tOK, got execute error -- %s\n", System_getLastError());
+                printf("\tOK, got execute error -- %s\n", System_lastError());
                 assert(!c);
         }
         printf("=> Test12: OK\n\n");

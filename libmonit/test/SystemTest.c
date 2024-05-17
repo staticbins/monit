@@ -45,7 +45,7 @@ int main(void) {
                 assert(error != NULL);
                 printf("\tEINVAL description: %s\n", error);
                 errno = EINVAL;
-                assert(Str_isEqual(System_getLastError(), error));
+                assert(Str_isEqual(System_lastError(), error));
 
         }
         printf("=> Test0: OK\n\n");

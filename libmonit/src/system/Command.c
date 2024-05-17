@@ -166,7 +166,7 @@ static inline char **_env(T C) {
 /* Create stdio pipes for communication between parent and child process */
 static void _createPipes(Process_T P) {
         if (pipe(P->stdin_pipe) < 0 || pipe(P->stdout_pipe) < 0 || pipe(P->stderr_pipe) < 0) {
-                ERROR("Command pipe(2): Bad file descriptors -- %s", System_getLastError());
+                ERROR("Command pipe(2): Bad file descriptors -- %s", System_lastError());
         }
 }
 
@@ -176,19 +176,19 @@ static void _setupChildPipes(Process_T P) {
         close(P->stdin_pipe[1]);   // close write end
         if (P->stdin_pipe[0] != STDIN_FILENO) {
                 if (dup2(P->stdin_pipe[0],  STDIN_FILENO) != STDIN_FILENO)
-                        ERROR("Command: dup2(stdin) -- %s\n", System_getLastError());
+                        ERROR("Command: dup2(stdin) -- %s\n", System_lastError());
                 close(P->stdin_pipe[0]);
         }
         close(P->stdout_pipe[0]);  // close read end
         if (P->stdout_pipe[1] != STDOUT_FILENO) {
                 if (dup2(P->stdout_pipe[1], STDOUT_FILENO) != STDOUT_FILENO)
-                        ERROR("Command: dup2(stdout) -- %s\n", System_getLastError());
+                        ERROR("Command: dup2(stdout) -- %s\n", System_lastError());
                 close(P->stdout_pipe[1]);
         }
         close(P->stderr_pipe[0]);  // close read end
         if (P->stderr_pipe[1] != STDERR_FILENO) {
                 if (dup2(P->stderr_pipe[1], STDERR_FILENO) != STDERR_FILENO)
-                        ERROR("Command: dup2(stderr) -- %s\n", System_getLastError());
+                        ERROR("Command: dup2(stderr) -- %s\n", System_lastError());
                 close(P->stderr_pipe[1]);
         }
 }
@@ -578,7 +578,7 @@ Process_T Command_execute(T C) {
         if (C->uid) {
                 struct passwd *user = getpwuid(C->uid);
                 if (!user) {
-                        ERROR("Command: uid %d not found on the system -- %s\n", C->uid, System_getLastError());
+                        ERROR("Command: uid %d not found on the system -- %s\n", C->uid, System_lastError());
                         return NULL;
                 }
                 Command_setEnv(C, "HOME", user->pw_dir);
@@ -589,7 +589,7 @@ Process_T Command_execute(T C) {
                                  ug.groups,
 #endif
                                  &ug.ngroups) == -1) {
-                        ERROR("Command: getgrouplist for uid %d -- %s\n", C->uid, System_getLastError());
+                        ERROR("Command: getgrouplist for uid %d -- %s\n", C->uid, System_lastError());
                         return NULL;
                 }
         }
@@ -597,7 +597,7 @@ Process_T Command_execute(T C) {
         int descriptors = System_descriptors(1024);
         _createPipes(P);
         if ((P->pid = fork()) < 0) {
-                ERROR("Command: fork failed -- %s\n", System_getLastError());
+                ERROR("Command: fork failed -- %s\n", System_lastError());
                 Process_free(&P);
                 return NULL;
         } else if (P->pid == 0) {
