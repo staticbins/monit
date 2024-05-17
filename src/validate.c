@@ -1544,18 +1544,18 @@ static bool _doScheduledAction(Service_T s) {
 int validate(void) {
         Run.handler_flag = Handler_Succeeded;
         Event_queue_process();
-        
+
         SystemInfo_update();
         ProcessTable_update(Process_Table);
         gettimeofday(&System_Info.collected, NULL);
-        
+
         /* In the case that at least one action is pending, perform quick loop to handle the actions ASAP */
         if (Run.flags & Run_ActionPending) {
                 Run.flags &= ~Run_ActionPending;
                 for (Service_T s = Service_List; s; s = s->next)
                         _doScheduledAction(s);
         }
-        
+
         int errors = 0;
         /* Check the services */
         for (Service_T s = Service_List; s && ! interrupt(); s = s->next) {
