@@ -701,7 +701,7 @@ static void handle_options(int argc, char **argv, List_T arguments) {
                                                 FREE(Run.files.control);
                                         }
                                         if (f[0] != SEPARATOR_CHAR)
-                                                f = File_getRealPath(optarg, realpath);
+                                                f = File_realPath(optarg, realpath);
                                         if (! f)
                                                 THROW(AssertException, "The control file '%s' does not exist at %s", Str_trunc(optarg, 80), Dir_cwd((char[STRLEN]){}, STRLEN));
                                         if (! File_isFile(f))
