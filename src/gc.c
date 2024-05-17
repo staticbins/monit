@@ -246,10 +246,10 @@ static void _gc_service(Service_T *s) {
                 _gcbandwidth(&(*s)->downloadpacketslist);
         if ((*s)->matchlist)
                 _gcmatch(&(*s)->matchlist);
-        if ((*s)->outputchangelist)
-                _gcoutputchange(&(*s)->outputchangelist);
         if ((*s)->matchignorelist)
                 _gcmatch(&(*s)->matchignorelist);
+        if ((*s)->outputchangelist)
+                _gcoutputchange(&(*s)->outputchangelist);
         if ((*s)->checksum)
                 _gcchecksum(&(*s)->checksum);
         if ((*s)->perm)
