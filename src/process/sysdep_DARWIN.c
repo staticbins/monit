@@ -261,7 +261,7 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
         FREE(pinfo);
 
         *reference = pt;
-        
+
         return (int)treesize;
 }
 

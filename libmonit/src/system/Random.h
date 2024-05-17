@@ -7,7 +7,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -22,16 +22,34 @@
  * for all of the code used other than OpenSSL.
  */
 
-#ifndef MONIT_PROCESS_SYSDEP_H
-#define MONIT_PROCESS_SYSDEP_H
 
-bool init_systeminfo_sysdep(void);
-int  init_proc_info_sysdep(void);
-int  getloadavg_sysdep (double *, int);
-bool used_system_memory_sysdep(SystemInfo_T *);
-bool used_system_cpu_sysdep(SystemInfo_T *);
-bool used_system_filedescriptors_sysdep(SystemInfo_T *);
-bool available_statistics(SystemInfo_T *);
-int init_processtree_sysdep(ProcessTree_T **, ProcessEngine_Flags);
+#ifndef RANDOM_INCLUDED
+#define RANDOM_INCLUDED
 
-#endif
+
+/**
+ * Random routines
+ *  
+ * @author http://www.tildeslash.com/
+ * @see http://www.mmonit.com/
+ * @file
+ */
+
+
+/**
+ * Initialize the buf of size nbytes with random data.
+ * @param buf The target buffer
+ * @param nbtyes The target buffer size in bytes
+ * @return true on success, otherwise false
+ */
+bool Random_bytes(void *buf, size_t nbytes);
+
+
+/**
+ * Get a random number
+ * @return random number
+ */
+unsigned long long Random_number(void);
+
+
+#endif /* Random_h */

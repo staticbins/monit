@@ -501,8 +501,8 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                 Log_error("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
                 return 0;
         }
-        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), globbuf.gl_pathc);
 
+        ProcessTree_T *pt = CALLOC(sizeof(ProcessTree_T), globbuf.gl_pathc);
 
         int count = 0;
         struct Proc_T proc = {

@@ -6,6 +6,7 @@ AM_CPPFLAGS = -I../src/ -I../src/util -I../src/net -I../src/io -I../src/exceptio
 noinst_PROGRAMS = StrTest \
                   FmtTest \
                   SystemTest \
+                  RandomTest \
                   ListTest \
                   DirTest \
                   StringBufferTest \
@@ -21,6 +22,7 @@ StrTest_SOURCES = StrTest.c
 FmtTest_SOURCES = FmtTest.c
 CommandTest_SOURCES = CommandTest.c
 SystemTest_SOURCES = SystemTest.c
+RandomTest_SOURCES = RandomTest.c
 ListTest_SOURCES = ListTest.c
 DirTest_SOURCES = DirTest.c
 StringBufferTest_SOURCES = StringBufferTest.c

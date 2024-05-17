@@ -124,6 +124,7 @@
 #include "io/File.h"
 #include "util/Fmt.h"
 #include "system/Time.h"
+#include "system/Random.h"
 #include "exceptions/AssertException.h"
 #include "exceptions/IOException.h"
 
@@ -1365,7 +1366,7 @@ char *Util_getToken(MD_T token) {
         md5_context_t ctx;
         char buf[STRLEN] = {};
         MD_T digest;
-        System_random(buf, sizeof(buf));
+        Random_bytes(buf, sizeof(buf));
         md5_init(&ctx);
         md5_append(&ctx, (const md5_byte_t *)buf, STRLEN - 1);
         md5_finish(&ctx, (md5_byte_t *)digest);
