@@ -109,31 +109,30 @@
 /* -------------------------------------------------------------- Prototypes */
 
 
-static void  do_init(void);                   /* Initialize this application */
-static void  do_reinit(bool full);  /* Re-initialize the runtime application */
-static void  do_action(List_T);          /* Dispatch to the submitted action */
-static void  do_exit(bool);                           /* Finalize monit */
-static void  do_default(void);                          /* Do default action */
-static void  handle_options(int, char **, List_T); /* Handle program options */
-static void  help(void);             /* Print program help message to stdout */
-static void  version(void);                     /* Print version information */
-static void *heartbeat(void *args);              /* M/Monit heartbeat thread */
-static void do_reload(int);             /* Signalhandler for a daemon reload */
-static void do_destroy(int);         /* Signalhandler for monit finalization */
-static void do_wakeup(int);        /* Signalhandler for a daemon wakeup call */
+static void do_init(void);                    /* Initialize this application */
+static void do_reinit(bool full);   /* Re-initialize the runtime application */
+static void do_action(List_T);           /* Dispatch to the submitted action */
+static void do_exit(bool);                                 /* Finalize monit */
+static void do_default(void);                           /* Do default action */
+static void do_options(int, char **, List_T);      /* Handle program options */
+static void *do_heartbeat(void *args);           /* M/Monit heartbeat thread */
+static void help(void);              /* Print program help message to stdout */
+static void version(void);                      /* Print version information */
+static void handle_reload(int);         /* Signalhandler for a daemon reload */
+static void handle_stop(int);        /* Signalhandler for monit finalization */
+static void handle_wakeup(int);    /* Signalhandler for a daemon wakeup call */
 static void waitforchildren(void); /* Wait for any child process not running */
-
 
 
 /* ------------------------------------------------------------------ Global */
 
 
-const char *Prog;                              /**< The Name of this Program */
-struct Run_T Run;                      /**< Struct holding runtime constants */
-Service_T Service_List;                /**< The service list (created in p.y) */
-Service_T Service_List_Conf;   /**< The service list in conf file (c. in p.y) */
+const char *Prog;                                /**< The Name of this Program */
+struct Run_T Run;                        /**< Struct holding runtime constants */
+Service_T Service_List;                 /**< The service list (created in p.y) */
+Service_T Service_List_Conf;    /**< The service list in conf file (c. in p.y) */
 ServiceGroup_T Service_Group_List;/**< The service group list (created in p.y) */
-SystemInfo_T System_Info;                             /**< System information */
+SystemInfo_T System_Info;                              /**< System information */
 
 Thread_T Heartbeat_Thread;
 Sem_T    Heartbeat_Cond;
@@ -173,7 +172,7 @@ int main(int argc, char **argv) {
         List_T arguments = List_new();
         TRY
         {
-                handle_options(argc, argv, arguments);
+                do_options(argc, argv, arguments);
         }
         ELSE
         {
@@ -185,7 +184,6 @@ int main(int argc, char **argv) {
         do_action(arguments);
         List_free(&arguments);
         do_exit(false);
-        return 0;
 }
 
 
@@ -236,14 +234,14 @@ static void do_init(void) {
          * in case we run in daemon mode this signal
          * will terminate a running daemon.
          */
-        signal(SIGTERM, do_destroy);
+        signal(SIGTERM, handle_stop);
 
         /*
          * Register interest for the SIGUSER1 signal,
          * in case we run in daemon mode this signal
          * will wakeup a sleeping daemon.
          */
-        signal(SIGUSR1, do_wakeup);
+        signal(SIGUSR1, handle_wakeup);
 
         /*
          * Register interest for the SIGINT signal,
@@ -251,14 +249,14 @@ static void do_init(void) {
          * we need to catch this signal if the user pressed
          * CTRL^C in the terminal
          */
-        signal(SIGINT, do_destroy);
+        signal(SIGINT, handle_stop);
 
         /*
          * Register interest for the SIGHUP signal,
          * in case we run in daemon mode this signal
          * will reload the configuration.
          */
-        signal(SIGHUP, do_reload);
+        signal(SIGHUP, handle_reload);
 
         /*
          * Register no interest for the SIGPIPE signal,
@@ -292,8 +290,9 @@ static void do_init(void) {
         /*
          * Initialize the system information data collecting interface
          */
-        if (SystemInfo_init())
+        if (SystemInfo_init()) {
                 Run.flags |= Run_ProcessEngineEnabled;
+        }
 
         /*
          * Start the Parser and create the service list. This will also set
@@ -411,7 +410,7 @@ static void do_reinit(bool full) {
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit reloaded");
 
                 if (Run.mmonits) {
-                        Thread_create(Heartbeat_Thread, heartbeat, NULL);
+                        Thread_create(Heartbeat_Thread, do_heartbeat, NULL);
                         isHeartbeatRunning = true;
                 }
         }
@@ -626,7 +625,7 @@ reload:
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
 
                 if (Run.mmonits) {
-                        Thread_create(Heartbeat_Thread, heartbeat, NULL);
+                        Thread_create(Heartbeat_Thread, do_heartbeat, NULL);
                         isHeartbeatRunning = true;
                 }
 
@@ -660,7 +659,7 @@ reload:
  * Handle program options - Options set from the commandline
  * takes precedence over those found in the control file
  */
-static void handle_options(int argc, char **argv, List_T arguments) {
+static void do_options(int argc, char **argv, List_T arguments) {
         int opt;
         int deferred_opt = 0;
         opterr = 0;
@@ -949,10 +948,8 @@ static void version(void) {
 }
 
 
-/**
- * M/Monit heartbeat thread
- */
-static void *heartbeat(__attribute__ ((unused)) void *args) {
+// M/Monit heartbeat thread
+static void *do_heartbeat(__attribute__ ((unused)) void *args) {
         set_signal_block();
         Log_info("M/Monit heartbeat started\n");
         LOCK(Heartbeat_Mutex)
@@ -972,26 +969,20 @@ static void *heartbeat(__attribute__ ((unused)) void *args) {
 }
 
 
-/**
- * Signalhandler for a daemon reload call
- */
-static void do_reload(__attribute__ ((unused)) int sig) {
+// Signal handler for a daemon reload call
+static void handle_reload(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoReload;
 }
 
 
-/**
- * Signalhandler for monit finalization
- */
-static void do_destroy(__attribute__ ((unused)) int sig) {
+// Signal handler for monit finalization
+static void handle_stop(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_Stopped;
 }
 
 
-/**
- * Signalhandler for a daemon wakeup call
- */
-static void do_wakeup(__attribute__ ((unused)) int sig) {
+// Signal handler for a daemon wakeup call
+static void handle_wakeup(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoWakeup;
 }
 

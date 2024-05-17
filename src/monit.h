@@ -1468,7 +1468,7 @@ void gc_mail_list(Mail_T *);
 void gccmd(command_t *);
 void gc_event(Event_T *e);
 bool kill_daemon(int);
-int  exist_daemon(void);
+pid_t exist_daemon(void);
 bool sendmail(Mail_T);
 void init_env(void);
 void monit_http(Httpd_Action);
