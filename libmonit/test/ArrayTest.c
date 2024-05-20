@@ -77,7 +77,7 @@ int main(void) {
         printf("=> Test3: Array_remove()\n");
         {
                 value_t save;
-                assert((save = Array_remove(T, 10)));
+                assert((save = Array_remove(T, 10)) != 0);
                 assert(save->key == 10);
                 assert(Array_get(T, 10) == NULL);
                 assert(Array_length(T) == 19);
