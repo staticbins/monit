@@ -164,7 +164,7 @@ static bool _doStart(Service_T s) {
                 if (s->start) {
                         if (s->type != Service_Process || ! ProcessTable_findServiceProcess(s)) {
                                 Log_info("'%s' start: '%s'\n", s->name, Util_commandDescription(s->start, (char[STRLEN]){}));
-                                char msg[1024];
+                                char msg[1024] = {};
                                 long long timeout = s->start->timeout * USEC_PER_MSEC;
                                 pid_t status = spawn(&(struct spawn_args_t){
                                         .S = s,
