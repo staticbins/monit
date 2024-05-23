@@ -55,13 +55,17 @@
 /* ----------------------------------------------------------- Definitions */
 
 
+#if ! defined HAVE_ARC4RANDOM_BUF
 static pthread_once_t once_control = PTHREAD_ONCE_INIT;
+#endif
 
 
 /* --------------------------------------------------------------- Private */
 
 
+#if ! defined HAVE_ARC4RANDOM_BUF
 static void _seed_once(void) { srandom((unsigned)(Time_now() + getpid())); }
+#endif
 
 
 /* ---------------------------------------------------------------- Public */
