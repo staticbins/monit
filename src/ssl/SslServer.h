@@ -59,10 +59,9 @@ Ssl_T SslServer_newConnection(T S);
 
 /**
  * Close and free an accepted SSL server connection and remove it from the connection list
- * @param S An SSL server object
  * @param C An SSL connection object reference
  */
-void SslServer_freeConnection(T S, Ssl_T *C);
+void SslServer_freeConnection(Ssl_T *C);
 
 
 /**

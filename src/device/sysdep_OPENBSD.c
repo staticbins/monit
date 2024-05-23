@@ -250,7 +250,6 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                 FREE(mnt);
         }
         Log_error("Lookup for '%s' filesystem failed\n", path);
-error:
         inf->filesystem->object.mounted = false;
         return false;
 }

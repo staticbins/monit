@@ -103,7 +103,7 @@ static void __attribute__ ((destructor)) _destructor() {
 
 // Parse the device path like /dev/sd0a -> sd0
 static bool _parseDevice(const char *path, Device_T device) {
-        const unsigned char *base = File_basename(path);
+        const char *base = File_basename(path);
         for (int len = strlen(base), i = len - 1; i >= 0; i--) {
                 if (isdigit(*(base + i))) {
                         unsigned index = i + 1;
@@ -269,7 +269,6 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                 FREE(mnt);
         }
         Log_error("Lookup for '%s' filesystem failed\n", path);
-error:
         inf->filesystem->object.mounted = false;
         return false;
 }

@@ -437,7 +437,7 @@ void Socket_free(T *S) {
                         Ssl_close((*S)->ssl);
                         Ssl_free(&((*S)->ssl));
                 } else if ((*S)->connection_type == Connection_Server && (*S)->sslserver) {
-                        SslServer_freeConnection((*S)->sslserver, &((*S)->ssl));
+                        SslServer_freeConnection(&((*S)->ssl));
                 }
         }
         else
