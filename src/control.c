@@ -96,7 +96,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
         assert(c);
         assert(msg);
         msg[0] = 0;
-        int status = -1;
+        volatile int status = -1;
         Command_T C = NULL;
         TRY
         {
