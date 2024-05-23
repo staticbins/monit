@@ -1054,8 +1054,7 @@ T SslServer_newConnection(SslServer_T S) {
 }
 
 
-void SslServer_freeConnection(SslServer_T S, T *C) {
-        assert(S);
+void SslServer_freeConnection(T *C) {
         assert(C && *C);
         Ssl_close(*C);
         Ssl_free(C);
