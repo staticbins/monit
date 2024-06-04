@@ -18,7 +18,6 @@ New: Monit Poll cycles has been replaced with Monit Check interval
 New: Validate Once has been removed. When Monit now start, it runs
      as a server, continously.
      
-New: 
 
 
 Version 5.34.0
