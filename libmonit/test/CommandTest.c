@@ -283,7 +283,7 @@ int main(void) {
 
         printf("=> Test14: detach\n");
         {
-                Command_T c = Command_new("/bin/sh", "-c", "read msg; echo \"write will fail but should not exit the script\"; echo \"$$ still alive\" > /tmp/ondetach; exit 0;");
+                Command_T c = Command_new("/bin/sh", "-c", "read msg; echo \"this write will fail but should not exit the script\"; echo \"$$ still alive\" > /tmp/ondetach; exit 0;");
                 onDetach(Command_execute(c));
                 Command_free(&c);
         }

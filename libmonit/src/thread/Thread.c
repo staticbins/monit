@@ -66,6 +66,7 @@ static void _once(void) {
 // Automatically set active state to false on thread exit
 static void *_atomicWrapper(void *arg) {
         AtomicThread_T *thread = (AtomicThread_T *)arg;
+        atomic_store(&thread->active, true);
         thread->threadFunc(thread->threadArgs);
         atomic_store(&thread->active, false);
         return NULL;
@@ -99,7 +100,6 @@ void AtomicThread_create(AtomicThread_T *thread, void *(*threadFunc)(void *threa
         assert(atomic_load(&thread->active) == false);
         thread->threadFunc = threadFunc;
         thread->threadArgs = threadArgs;
-        atomic_store(&thread->active, true);
         Thread_create(thread->value, _atomicWrapper, thread);
 }
 
@@ -109,7 +109,6 @@ void AtomicThread_createDetached(AtomicThread_T *thread, void *(*threadFunc)(voi
         assert(atomic_load(&thread->active) == false);
         thread->threadFunc = threadFunc;
         thread->threadArgs = threadArgs;
-        atomic_store(&thread->active, true);
         Thread_createDetached(&thread->value, _atomicWrapper, thread);
 }
 
