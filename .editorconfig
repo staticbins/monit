@@ -1,0 +1,18 @@
+# Top-most EditorConfig file
+root = true
+
+# Default settings (apply to all files)
+[*]
+indent_style = space
+indent_size = 4
+tab_width = 4
+max_line_length = 120
+trim_trailing_whitespace = true
+
+[Makefile.am]
+indent_style = tab
+
+# Override for C source files
+[*.{c,re,y,l}]
+indent_size = 8
+tab_width = 8
