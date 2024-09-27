@@ -439,16 +439,16 @@ typedef char MD_T[MD_SIZE];
 
 /** Defines monit limits object */
 typedef struct Limits_T {
-        int      programOutput;           /**< Program output truncate limit [B] */
         size_t   fileContentBuffer;  /**< Maximum tested file content length [B] */
-        uint32_t sendExpectBuffer;  /**< Maximum send/expect response length [B] */
-        uint32_t httpContentBuffer;  /**< Maximum tested HTTP content length [B] */
-        uint32_t networkTimeout;               /**< Default network timeout [ms] */
-        uint32_t programTimeout;               /**< Default program timeout [ms] */
-        uint32_t stopTimeout;                     /**< Default stop timeout [ms] */
-        uint32_t startTimeout;                   /**< Default start timeout [ms] */
-        uint32_t restartTimeout;               /**< Default restart timeout [ms] */
-        uint32_t execTimeout;         /**< Default test action exec timeout [ms] */
+        uint64_t programOutput;           /**< Program output truncate limit [B] */
+        uint64_t sendExpectBuffer;  /**< Maximum send/expect response length [B] */
+        uint64_t httpContentBuffer;  /**< Maximum tested HTTP content length [B] */
+        uint64_t networkTimeout;               /**< Default network timeout [ms] */
+        uint64_t programTimeout;               /**< Default program timeout [ms] */
+        uint64_t stopTimeout;                     /**< Default stop timeout [ms] */
+        uint64_t startTimeout;                   /**< Default start timeout [ms] */
+        uint64_t restartTimeout;               /**< Default restart timeout [ms] */
+        uint64_t execTimeout;         /**< Default test action exec timeout [ms] */
 } Limits_T;
 
 
