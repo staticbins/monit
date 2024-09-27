@@ -335,11 +335,12 @@ static void _sanityCheckEveryStatement(Service_T s);
 %}
 
 %union {
-        URL_T url;
+        URL_T     url;
         Address_T address;
-        float real;
-        int   number;
-        char *string;
+        float     real;
+        int       number;
+        int64_t   number64;
+        char     *string;
 }
 
 %token IF ELSE THEN FAILED
@@ -706,16 +707,16 @@ limitlist       : /* EMPTY */
                 ;
 
 limit           : SENDEXPECTBUFFER ':' NUMBER unit {
-                        Run.limits.sendExpectBuffer = $3 * $<number>4;
+                        Run.limits.sendExpectBuffer = $3 * $<number64>4;
                   }
                 | FILECONTENTBUFFER ':' NUMBER unit {
-                        Run.limits.fileContentBuffer = $3 * $<number>4;
+                        Run.limits.fileContentBuffer = $3 * $<number64>4;
                   }
                 | HTTPCONTENTBUFFER ':' NUMBER unit {
-                        Run.limits.httpContentBuffer = $3 * $<number>4;
+                        Run.limits.httpContentBuffer = $3 * $<number64>4;
                   }
                 | PROGRAMOUTPUT ':' NUMBER unit {
-                        Run.limits.programOutput = $3 * $<number>4;
+                        Run.limits.programOutput = $3 * $<number64>4;
                   }
                 | NETWORKTIMEOUT ':' NUMBER MILLISECOND {
                         Run.limits.networkTimeout = $3;
@@ -2980,11 +2981,11 @@ fsflag          : IF CHANGED FSFLAG rate1 THEN action1 {
                   }
                 ;
 
-unit            : /* empty */  { $<number>$ = Unit_Byte; }
-                | BYTE         { $<number>$ = Unit_Byte; }
-                | KILOBYTE     { $<number>$ = Unit_Kilobyte; }
-                | MEGABYTE     { $<number>$ = Unit_Megabyte; }
-                | GIGABYTE     { $<number>$ = Unit_Gigabyte; }
+unit            : /* empty */  { $<number64>$ = Unit_Byte; }
+                | BYTE         { $<number64>$ = Unit_Byte; }
+                | KILOBYTE     { $<number64>$ = Unit_Kilobyte; }
+                | MEGABYTE     { $<number64>$ = Unit_Megabyte; }
+                | GIGABYTE     { $<number64>$ = Unit_Gigabyte; }
                 ;
 
 permission      : IF FAILED PERMISSION NUMBER rate1 THEN action1 recovery_success {
