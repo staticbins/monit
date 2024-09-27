@@ -4630,12 +4630,13 @@ static void addargument(char *argument) {
                 NEW(command);
         }
 
-        command->arg[command->length++] = argument;
-        command->arg[command->length] = NULL;
-
-        if (command->length >= ARGMAX)
+        if (command->length + 1 >= ARGMAX) {
                 yyerror("Exceeded maximum number of program arguments");
-
+                FREE(argument);
+        } else {
+                command->arg[command->length++] = argument;
+                command->arg[command->length] = NULL;
+        }
 }
 
 
