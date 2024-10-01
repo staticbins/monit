@@ -33,7 +33,7 @@
  * is the general class of exceptions produced by failed I/O operations.
  * @see Exception.h
  *
- * @author http://www.tildeslash.com/
+ * @author https://tildeslash.com
  * @see https://mmonit.com
  * @file
  */

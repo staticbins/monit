@@ -32,7 +32,7 @@
  * as the number of seconds and microseconds since the epoch, <i>January 1,
  * 1970 00:00 UTC</i>.
  *
- * @author http://www.tildeslash.com/
+ * @author https://tildeslash.com
  * @see https://mmonit.com
  * @file
  */

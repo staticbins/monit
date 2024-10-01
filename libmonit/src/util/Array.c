@@ -37,7 +37,7 @@
  * implementation is a general Hash Table, while this implementation
  * is a Sparse Array based on a hash table core.
  *
- * @author http://www.tildeslash.com/
+ * @author https://tildeslash.com
  * @see https://mmonit.com/
  * @file
  */

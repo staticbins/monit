@@ -26,7 +26,7 @@
 /**
  * Implementation of the Network Statistics for OpenBSD.
  *
- * @author http://www.tildeslash.com/
+ * @author https://tildeslash.com
  * @see https://mmonit.com
  * @file
  */

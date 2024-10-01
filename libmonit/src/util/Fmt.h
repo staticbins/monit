@@ -29,7 +29,7 @@
 /**
  * General purpose value units string <b>Format</b> <b>class methods</b>.
  *
- * @author http://www.tildeslash.com/
+ * @author https://tildeslash.com
  * @see https://mmonit.com
  * @file
  */

@@ -157,7 +157,7 @@
  * @see SQLException.h IOException.h AssertException.h NumberFormatException.h
  * MemoryException.h
  *
- * @author http://www.tildeslash.com/
+ * @author https://tildeslash.com
  * @see https://mmonit.com
  * @file
  */

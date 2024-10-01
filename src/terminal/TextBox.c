@@ -41,7 +41,7 @@
  * Implementation of the Terminal table interface using UTF-8 box:
  * http://www.unicode.org/charts/PDF/U2500.pdf
  *
- * @author http://www.tildeslash.com/
+ * @author https://tildeslash.com
  * @see https://mmonit.com
  * @file
  */

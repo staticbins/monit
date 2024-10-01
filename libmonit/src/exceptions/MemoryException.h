@@ -34,7 +34,7 @@
  * the underlying allocator failed.
  * @see Exception.h
  *
- * @author http://www.tildeslash.com/
+ * @author https://tildeslash.com
  * @see https://mmonit.com
  * @file
  */

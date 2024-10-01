@@ -35,7 +35,7 @@
  * at compile time by defining NDEBUG which is the case for optimised build
  * @see AssertException.h
  *
- * @author http://www.tildeslash.com/
+ * @author https://tildeslash.com
  * @see https://mmonit.com
  * @file
  */

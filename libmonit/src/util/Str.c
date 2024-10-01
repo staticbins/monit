@@ -47,7 +47,7 @@
 /**
  * Implementation of the Str interface
  *
- * @author http://www.tildeslash.com/
+ * @author https://tildeslash.com
  * @see https://mmonit.com
  * @file
  */

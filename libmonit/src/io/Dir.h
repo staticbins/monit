@@ -30,7 +30,7 @@
 /**
  * A collection of class methods for operating on a dir
  *
- * @author http://www.tildeslash.com/
+ * @author https://tildeslash.com
  * @see https://mmonit.com
  * @file
  */
