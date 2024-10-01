@@ -42,7 +42,7 @@
  * http://www.unicode.org/charts/PDF/U2500.pdf
  *
  * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @see https://mmonit.com
  * @file
  */
 

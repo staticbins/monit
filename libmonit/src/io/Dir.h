@@ -31,7 +31,7 @@
  * A collection of class methods for operating on a dir
  *
  * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @see https://mmonit.com
  * @file
  */
 

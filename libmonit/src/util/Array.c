@@ -38,7 +38,7 @@
  * is a Sparse Array based on a hash table core.
  *
  * @author http://www.tildeslash.com/
- * @see https://www.mmonit.com/
+ * @see https://mmonit.com/
  * @file
  */
 

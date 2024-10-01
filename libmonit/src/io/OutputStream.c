@@ -45,7 +45,7 @@
  * based on "Fmt" from David Hanson's excellent CII library.
  *
  * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @see https://mmonit.com
  * @file
  */
 

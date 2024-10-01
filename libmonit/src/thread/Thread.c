@@ -35,7 +35,7 @@
  * Implementation of the Thread.h interface
  *
  * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @see https://mmonit.com
  * @file
  */
 

@@ -31,7 +31,7 @@
  * Class for terminal table output.
  *
  * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @see https://mmonit.com
  * @file
  */
 

@@ -36,7 +36,7 @@
  * Process releated methods which utilize the Process Table
  *
  * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @see https://mmonit.com
  * @file
  */
 
