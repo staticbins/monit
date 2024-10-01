@@ -142,7 +142,7 @@ gid_t Command_gid(T C);
 
 /**
  * Set the umask value for the sub-process. The default value if not set
- * is 022. See also http://en.wikipedia.org/wiki/Umask and man umask(2)
+ * is 022. See also https://en.wikipedia.org/wiki/Umask and man umask(2)
  * @param C A Command object
  * @param umask The new umask value, as a 3 digit octal number, e.g. 002
  */

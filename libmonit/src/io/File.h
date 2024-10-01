@@ -245,7 +245,7 @@ int File_mod(const char *file);
  * <pre>
  * ruby -e 'printf("%#o\n", (0666 & ~0022))'
  * </pre>
- * See also http://en.wikipedia.org/wiki/Umask and umask(2) on Unix
+ * See also https://en.wikipedia.org/wiki/Umask and umask(2) on Unix
  * @return An octal number representing the umask value for this process
  */
 int File_umask(void);

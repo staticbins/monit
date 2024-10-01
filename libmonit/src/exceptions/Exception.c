@@ -44,7 +44,7 @@
  *
  * This implementation is a minor modification of the Except code found
  * in David R. Hanson's excellent book "C Interfaces and Implementations".
- * See http://www.cs.princeton.edu/software/cii/
+ * See https://drh.github.io/cii/
  *
  * @author https://tildeslash.com
  * @see https://mmonit.com

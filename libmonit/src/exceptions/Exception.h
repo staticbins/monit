@@ -151,9 +151,8 @@
  * use one TRY-ELSE block in the main program to catch all Exceptions. This is
  * only possible if no threads were started.
  * <p><small>This implementation of Exception is a minor modification of code
- * found in <a href="http://www.drhanson.net/">David R. Hanson's</a> excellent
- * book <a href="http://www.cs.princeton.edu/software/cii/">C Interfaces and
- * Implementations</a>.</small>
+ * found in David R. Hanson's excellent book
+ * <a href="https://drh.github.io/cii/">C Interfaces and Implementations</a>.</small>
  * @see SQLException.h IOException.h AssertException.h NumberFormatException.h
  * MemoryException.h
  *
