@@ -35,7 +35,7 @@
 #include "exceptions/ProtocolException.h"
 
 /**
- *  Check gpsd (http://www.catb.org/gpsd/) status.
+ *  Check gpsd (https://gpsd.gitlab.io/gpsd/) status.
  *
  *  @file
  */

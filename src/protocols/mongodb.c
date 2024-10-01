@@ -144,7 +144,8 @@ static void _pong(Socket_T socket) {
  *     1. send a {ping:1} request to "admin.$cmd"
  *     2. expect a {ok:1} response
  *
- * @see http://docs.mongodb.org/meta-driver/latest/legacy/mongodb-wire-protocol/ and http://bsonspec.org/spec.html
+ * @see https://www.mongodb.com/docs/manual/reference/mongodb-wire-protocol/
+ * @see https://bsonspec.org/spec.html
  *
  * @file
  */

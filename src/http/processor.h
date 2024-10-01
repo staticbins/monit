@@ -35,7 +35,7 @@
 /* Server masquerade */
 #define SERVER_NAME        "monit"
 #define SERVER_VERSION     VERSION
-#define SERVER_URL         "http://mmonit.com/monit/"
+#define SERVER_URL         "https://mmonit.com/monit/"
 #define SERVER_PROTOCOL    "HTTP/1.0"
 #define DATEFMT             "%a, %d %b %Y %H:%M:%S GMT"
 
