@@ -32,13 +32,13 @@
 
 
 /**
- * Implementation of the Spare Array interface. Based on the "Table"
+ * Implementation of the Sparse Array interface. Based on the "Table"
  * implementation from David Hanson's excellent CII library. Hanson's
  * implementation is a general Hash Table, while this implementation
  * is a Sparse Array based on a hash table core.
  *
  * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @see https://www.mmonit.com/
  * @file
  */
 
