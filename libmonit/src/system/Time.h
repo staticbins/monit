@@ -343,18 +343,19 @@ int Time_incron(const char *cron, time_t time);
 
 
 /**
- * Suspends the calling process or thread for the specified 
+ * Suspends the calling process or thread for the specified
  * duration in microseconds. If sleep is interrupted by a signal,
- * the function aborts sleep and returns -1.
+ * the function aborts sleep and returns the number of remaining
+ * microseconds.
  * @param microseconds The duration of the sleep in microseconds.
- * @return 0 if sleep was completed, -1 if sleep was interrupted
- * by a signal.
+ * @return 0 if sleep was completed, number of remaining microseconds
+ * if sleep was interrupted by a signal.
  */
-int Time_usleep(long long microseconds);
+long long Time_usleep(long long microseconds);
 
 
 /**
- * Suspends the calling process or thread for the specified 
+ * Suspends the calling process or thread for the specified
  * duration in microseconds. Unlike Time_usleep, this function is
  * resilient to interruptions by signals. If a signal interrupts
  * sleep, the function will continue to sleep for the remainder
@@ -365,12 +366,12 @@ void Time_usleepComplete(long long microseconds);
 
 
 /**
- * Executes a predicate function with exponential backoff, retrying 
+ * Executes a predicate function with exponential backoff, retrying
  * up to 10 times with increasing wait intervals. Initially, minimal
  * wait times are applied for quick retries, with subsequent wait times
  * growing exponentially. The total worst-case wait time is approximately
  * 5 seconds, optimizing between retry speed and recovery time.
- * @param predicate The predicate function to be executed, returning true 
+ * @param predicate The predicate function to be executed, returning true
  * on success.
  * @param args Optional arguments for the predicate, or NULL if not needed.
  * @return True if the predicate succeeds within the retries, otherwise false.
