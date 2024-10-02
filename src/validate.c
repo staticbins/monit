@@ -931,7 +931,7 @@ static State_Type _checkTimestamp(Service_T s, Timestamp_T t, time_t timestamp) 
                 } else {
                         if (t->lastTimestamp != timestamp) {
                                 rv = State_Changed;
-                                Event_post(s, Event_Timestamp, State_Changed, t->action, "%s for %s changed from %s to %s", Timestamp_Names[t->type], s->path, t->lastTimestamp ? Time_string(t->lastTimestamp, (char[26]){}) : "N/A", Time_string(timestamp, (char[26]){}));
+                                Event_post(s, Event_Timestamp, State_Changed, t->action, "%s for %s changed from %s to %s", Timestamp_Names[t->type], s->path, t->lastTimestamp ? Time_localStr(t->lastTimestamp, (char[26]){}) : "N/A", Time_localStr(timestamp, (char[26]){}));
                                 t->lastTimestamp = timestamp; // reset expected value for next cycle
                         } else {
                                 Event_post(s, Event_Timestamp, State_ChangedNot, t->action, "%s was not changed for %s", Timestamp_Names[t->type], s->path);
@@ -941,9 +941,9 @@ static State_Type _checkTimestamp(Service_T s, Timestamp_T t, time_t timestamp) 
                 /* we are testing constant value for failed or succeeded state */
                 if (Util_evalQExpression(t->operator, Time_now() - timestamp, t->time)) {
                         rv = State_Failed;
-                        Event_post(s, Event_Timestamp, State_Failed, t->action, "%s for %s failed -- current %s is %s", Timestamp_Names[t->type], s->path, Timestamp_Names[t->type], Time_string(timestamp, (char[26]){}));
+                        Event_post(s, Event_Timestamp, State_Failed, t->action, "%s for %s failed -- current %s is %s", Timestamp_Names[t->type], s->path, Timestamp_Names[t->type], Time_localStr(timestamp, (char[26]){}));
                 } else {
-                        Event_post(s, Event_Timestamp, State_Succeeded, t->action, "%s test succeeded for %s [current %s is %s]", Timestamp_Names[t->type], s->path, Timestamp_Names[t->type], Time_string(timestamp, (char[26]){}));
+                        Event_post(s, Event_Timestamp, State_Succeeded, t->action, "%s test succeeded for %s [current %s is %s]", Timestamp_Names[t->type], s->path, Timestamp_Names[t->type], Time_localStr(timestamp, (char[26]){}));
                 }
         }
         return rv;
@@ -1924,7 +1924,7 @@ State_Type check_program(Service_T s) {
                                 return State_Init;
                         }
                 }
-                s->program->exitStatus = Process_exitStatus(P); // Save exit status for web-view display
+                s->program->exitStatus = Process_exitStatus(P); // Copy exit status to the Program object for status display (CLI, http API), as the Process will be freed
                 StringBuffer_trim(s->program->inprogressOutput);
                 // Swap program output (instance finished)
                 const char *lastOutput = StringBuffer_toString(s->program->inprogressOutput);

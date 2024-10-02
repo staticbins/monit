@@ -78,6 +78,7 @@ void set_signal_block(void) {
         sigset_t mask;
         sigemptyset(&mask);
         sigaddset(&mask, SIGHUP);
+        sigaddset(&mask, SIGCHLD);
         sigaddset(&mask, SIGPIPE);
         sigaddset(&mask, SIGINT);
         sigaddset(&mask, SIGUSR1);

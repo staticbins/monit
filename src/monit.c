@@ -259,7 +259,7 @@ static void do_init(void) {
         signal(SIGHUP, handle_reload);
 
         /*
-         * Register no interest for the SIGPIPE signal,
+         * Register no interest for the SIGPIPE signal
          */
         signal(SIGPIPE, SIG_IGN);
 
@@ -597,21 +597,16 @@ static void do_default(void) {
 reload:
                 if (Run.startdelay) {
                         if (State_reboot()) {
-                                time_t now = Time_monotonic();
-                                time_t delay = now + Run.startdelay;
+                                Log_info("Monit will delay for %d seconds on first start after reboot ...\n", Run.startdelay);
 
-                                Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
-
-                                /* sleep can be interrupted by signal => make sure we paused long enough */
-                                while (now < delay) {
-                                        sleep((unsigned int)(delay - now));
+                                // Sleep, unless there is a pending action or monit was stopped/reloaded (sleep can be interrupted by signal)
+                                for (long long remaining = Run.startdelay * USEC_PER_SEC; remaining; remaining = Time_usleep(remaining)) {
                                         if (Run.flags & Run_Stopped) {
                                                 do_exit(false);
                                         } else if (Run.flags & Run_DoReload) {
                                                 do_reinit(false);
                                                 goto reload;
                                         }
-                                        now = Time_monotonic();
                                 }
                         } else {
                                 DEBUG("Monit delay %ds skipped -- the system boot time has not changed since last Monit start\n", Run.startdelay);
@@ -632,9 +627,10 @@ reload:
                 while (true) {
                         validate();
 
-                        /* In the case that there is no pending action then sleep */
-                        if (! (Run.flags & Run_ActionPending) && ! interrupt())
-                                sleep(Run.polltime);
+                        // Sleep, unless there is a pending action or monit was stopped/reloaded (sleep can be interrupted by signal)
+                        for (long long remaining = Run.polltime * USEC_PER_SEC; remaining; remaining = Time_usleep(remaining))
+                                if ((Run.flags & Run_ActionPending) || interrupt())
+                                        break;
 
                         if (Run.flags & Run_DoWakeup) {
                                 Run.flags &= ~Run_DoWakeup;

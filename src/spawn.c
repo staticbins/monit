@@ -178,7 +178,7 @@ void spawn(Service_T S, command_t C, Event_T E) {
         sigaddset(&mask, SIGCHLD);
         pthread_sigmask(SIG_BLOCK, &mask, &save);
 
-        Time_string(Time_now(), date);
+        Time_localStr(Time_now(), date);
         pid = fork();
         if (pid < 0) {
                 Log_error("Cannot fork a new process -- %s\n", STRERROR);
@@ -235,6 +235,7 @@ void spawn(Service_T S, command_t C, Event_T E) {
                         pthread_sigmask(SIG_SETMASK, &mask, NULL);
                         signal(SIGINT, SIG_DFL);
                         signal(SIGHUP, SIG_DFL);
+                        signal(SIGCHLD, SIG_DFL);
                         signal(SIGTERM, SIG_DFL);
                         signal(SIGUSR1, SIG_DFL);
                         signal(SIGPIPE, SIG_DFL);

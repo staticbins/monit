@@ -23,13 +23,14 @@ libmonit_la_SOURCES = \
                   src/io/OutputStream.c \
                   src/system/Mem.c \
                   src/system/Net.c \
-                  src/system/Time.c \
                   src/system/Command.c \
-                  src/system/System.c \
                   src/system/Random.c \
+                  src/system/System.c \
+                  src/system/Time.c \
+                  src/util/Fmt.c \
+                  src/util/Array.c \
                   src/util/List.c \
                   src/util/Str.c \
-                  src/util/Fmt.c \
                   src/util/StringBuffer.c \
                   src/thread/Thread.c
 

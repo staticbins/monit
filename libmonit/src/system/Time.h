@@ -10,7 +10,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -32,14 +32,28 @@
  * as the number of seconds and microseconds since the epoch, <i>January 1,
  * 1970 00:00 UTC</i>.
  *
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://tildeslash.com
+ * @see https://mmonit.com
  * @file
  */
 
 
 /** @name class methods */
 //@{
+
+/**
+ * Factory method for building a specific time in UTC (GMT).
+ * @param year the year ~ (1970..2037) for this time
+ * @param month the month (January=1..December=12)
+ * @param day the day of the month (1..31)
+ * @param hour the hour (0..23)
+ * @param min the minutes (0..59)
+ * @param sec the seconds of the minute (0..61). Yes, seconds can range
+ * from 0 to 61. This allows the system to inject leap seconds.
+ * @return A time_t representing the specified time in UTC
+ * @exception AssertException If a parameter is outside the valid range
+ */
+time_t Time_build(int year, int month, int day, int hour, int min, int sec);
 
 
 /**
@@ -90,22 +104,6 @@ struct tm *Time_toDateTime(const char *s, struct tm *t);
 
 
 /**
- * Factory method for building a specific time. Time is normalized and
- * built in the local time zone.
- * @param year the year ~ (1970..2037) for this time
- * @param month the month (January=1..December=12)
- * @param day the day of the month (1..31)
- * @param hour the hour (0..23)
- * @param min the minutes (0..59)
- * @param sec the seconds of the minute (0..61). Yes, seconds can range
- * from 0 to 61. This allows the system to inject leap seconds.
- * @return A time_t representing the specified time
- * @exception AssertException If a parameter is outside the valid range
- */
-time_t Time_build(int year, int month, int day, int hour, int min, int sec);
-
-
-/**
  * Returns the time since the epoch measured in seconds.
  * @return A time_t representing the systems notion of seconds since the
  * <strong>epoch</strong> (January 1, 1970, 00:00:00 GMT) in Coordinated
@@ -113,16 +111,6 @@ time_t Time_build(int year, int month, int day, int hour, int min, int sec);
  * @exception AssertException If time could not be obtained
  */
 time_t Time_now(void);
-
-
-/**
- * Returns the monotonic time since some unspecified starting point. This
- * clock is not affected by NTP time jumps, but may change in frequency
- * on platforms that don't support CLOCK_MONOTONIC_RAW.
- * @return A time_t representing the number of seconds since clock start.
- * @exception AssertException If time could not be obtained
- */
-time_t Time_monotonic(void);
 
 
 /**
@@ -146,87 +134,115 @@ long long Time_micro(void);
 
 
 /**
+ * Returns a monotonic time at some unspecified starting point as a
+ * structure with various temporal resolution of the <b>same</b> time.
+ * This time is not affected by NTP time jumps, but may change in
+ * frequency on platforms that don't support CLOCK_MONOTONIC_RAW.
+ * @return A time_monotonic_t structure with various resolutions of the
+ * same time since the clock started.
+ * @exception AssertException If time could not be obtained
+ */
+struct time_monotonic_t {
+    time_t seconds;
+    long long milliseconds;
+    long long microseconds;
+    long long nanoseconds;
+} Time_monotonic(void);
+
+
+/**
  * Returns the second of the minute for time.
- * @param time Number of seconds since the EPOCH
- * @return The second of the minute (0..61)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The second of the minute (0..61) in local time
  */
 int Time_seconds(time_t time);
 
 
 /**
  * Returns the minute of the hour for time.
- * @param time Number of seconds since the EPOCH
- * @return The minute of the hour (0..59)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The minute of the hour (0..59) in local time
  */
 int Time_minutes(time_t time);
 
 
 /**
  * Returns the hour of the day for time.
- * @param time Number of seconds since the EPOCH
- * @return The hour of the day (0..23)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The hour of the day (0..23) in local time
  */
 int Time_hour(time_t time);
 
 
 /**
  * Returns the day of week expressed as number of days since Sunday.
- * @param time Number of seconds since the EPOCH
- * @return The day of the week (Sunday=0..Saturday=6)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The day of the week (Sunday=0..Saturday=6) in local time
  */
 int Time_weekday(time_t time);
 
 
 /**
  * Returns the day of the month for time.
- * @param time Number of seconds since the EPOCH
- * @return The day of the month (1..31)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The day of the month (1..31) in local time
  */
 int Time_day(time_t time);
 
 
 /**
  * Returns the month of the year.
- * @param time Number of seconds since the EPOCH
- * @return The month of the year (January=1..December=12)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The month of the year (January=1..December=12) in local time
  */
 int Time_month(time_t time);
 
 
 /**
  * Returns the year of time.
- * @param time Number of seconds since the EPOCH
- * @return The year of time in the range ~ (1970..2037)
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return The year of time in the range ~ (1970..2037) in local time
  */
 int Time_year(time_t time);
 
 
 /**
- * Returns a RFC1123 date string for the given UTC time. The returned string
- * is computed in the local timezone. The result buffer must be large enough
- * to hold at least 26 bytes. Example:
+ * Returns a RFC1123 formated date string minus the timezone for the given
+ * time. The returned string is computed in the local timezone. The result
+ * buffer must be large enough to hold at least 26 bytes. Example:
  * <pre>
- *  Time_string(1253052085, buf) -> "Wed, 16 Sep 2009 12:01:25"
+ * Tue, 15 Sep 2009 22:01:25
  * </pre>
- * @param time Number of time seconds since the EPOCH in UTC
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
  * @param result The buffer to write the date string too
- * @return a pointer to the result buffer
+ * @return a pointer to the result buffer or NULL if <code>result</code>
+ * was NULL
  */
-char *Time_string(time_t time, char result[static 26]);
+char *Time_localStr(time_t time, char result[static 26]);
 
 
 /**
- * Returns a RFC1123 date string for the given UTC time. The returned string
- * represent the specified time in GMT timezone. The submitted result buffer
- * must be large enough to hold at least 30 bytes. Example:
+ * Returns a RFC1123 formated date string for the given GMT time. The returned
+ * string represent the specified time in UTC. The submitted result buffer must
+ * be large enough to hold at least 30 bytes. Result example:
  * <pre>
- *  Time_gmtstring(1253052085, buf) -> "Tue, 15 Sep 2009 22:01:25 GMT"
+ * Tue, 15 Sep 2009 21:01:25 GMT
  * </pre>
- * @param time Number of time seconds since the EPOCH in UTC
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
  * @param result The buffer to write the date string too
- * @return a pointer to the result buffer
+ * @return a pointer to the result buffer or NULL if <code>result</code>
+ * was NULL
  */
-char *Time_gmtstring(time_t time, char result[static 30]);
+char *Time_str(time_t time, char result[static 30]);
 
 
 /**
@@ -239,7 +255,8 @@ char *Time_gmtstring(time_t time, char result[static 30]);
  * @param result The buffer to write the date string too
  * @param size Size of the result buffer
  * @param format A <code>strftime</code> format string
- * @param time seconds since ephoc to convert to a date string
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
  * @return A pointer to the result buffer
  * @exception AssertException If <code>format</code> or <code>result</code>
  * is NULL
@@ -258,7 +275,7 @@ char *Time_fmt(char *result, int size, const char *format, time_t time);
  * @return a pointer to the result buffer or NULL if <code>result</code>
  * was NULL
  */
-char *Time_uptime(time_t sec, char result[static 24]);
+char *Time_uptime(long sec, char result[static 24]);
 
 
 /**
@@ -326,11 +343,41 @@ int Time_incron(const char *cron, time_t time);
 
 
 /**
- * This method suspend the calling process or Thread for
- * <code>u</code> micro seconds.
- * @param u Micro seconds to sleep
+ * Suspends the calling process or thread for the specified
+ * duration in microseconds. If sleep is interrupted by a signal,
+ * the function aborts sleep and returns the number of remaining
+ * microseconds.
+ * @param microseconds The duration of the sleep in microseconds.
+ * @return 0 if sleep was completed, number of remaining microseconds
+ * if sleep was interrupted by a signal.
  */
-void Time_usleep(long u);
+long long Time_usleep(long long microseconds);
+
+
+/**
+ * Suspends the calling process or thread for the specified
+ * duration in microseconds. Unlike Time_usleep, this function is
+ * resilient to interruptions by signals. If a signal interrupts
+ * sleep, the function will continue to sleep for the remainder
+ * of the specified duration after handling of the signal.
+ * @param microseconds The duration of the sleep in microseconds.
+ */
+void Time_usleepComplete(long long microseconds);
+
+
+/**
+ * Executes a predicate function with exponential backoff, retrying
+ * up to 10 times with increasing wait intervals. Initially, minimal
+ * wait times are applied for quick retries, with subsequent wait times
+ * growing exponentially. The total worst-case wait time is approximately
+ * 5 seconds, optimizing between retry speed and recovery time.
+ * @param predicate The predicate function to be executed, returning true
+ * on success.
+ * @param args Optional arguments for the predicate, or NULL if not needed.
+ * @return True if the predicate succeeds within the retries, otherwise false.
+ */
+bool Time_backoff(bool predicate(void *args), void *args);
+
 
 //@}
 

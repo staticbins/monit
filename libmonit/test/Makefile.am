@@ -7,6 +7,7 @@ noinst_PROGRAMS = StrTest \
                   FmtTest \
                   SystemTest \
                   RandomTest \
+                  ArrayTest \
                   ListTest \
                   DirTest \
                   StringBufferTest \
@@ -24,6 +25,7 @@ CommandTest_SOURCES = CommandTest.c
 SystemTest_SOURCES = SystemTest.c
 RandomTest_SOURCES = RandomTest.c
 ListTest_SOURCES = ListTest.c
+ArrayTest_SOURCES = ArrayTest.c
 DirTest_SOURCES = DirTest.c
 StringBufferTest_SOURCES = StringBufferTest.c
 InputStreamTest_SOURCES = InputStreamTest.c

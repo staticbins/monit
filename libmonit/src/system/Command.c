@@ -45,6 +45,7 @@
 #include "Dir.h"
 #include "File.h"
 #include "List.h"
+#include "Array.h"
 #include "system/Net.h"
 #include "StringBuffer.h"
 
@@ -97,6 +98,59 @@ struct _usergroups {
         int ngroups;
         gid_t groups[NGROUPS_MAX];
 };
+
+
+/* --------------------------------------- Static constructor and destructor */
+
+
+static Array_T _hashTable = NULL;
+
+
+static void _childSignal(int how) {
+        sigset_t mask;
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGCHLD);
+        pthread_sigmask(how, &mask, NULL);
+}
+
+
+// Signal handler for children exit
+static void handle_children(__attribute__ ((unused)) int sig) {
+        pid_t pid;
+        int status;
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+                Process_T P = Array_get(_hashTable, pid);
+                if (P) {
+                        if (WIFEXITED(status))
+                                P->status = WEXITSTATUS(status);
+                        else if (WIFSIGNALED(P->status))
+                                P->status = WTERMSIG(status);
+                        else if (WIFSTOPPED(P->status))
+                                P->status = WSTOPSIG(status);
+                }
+        }
+}
+
+
+static void __attribute__ ((constructor)) _constructor(void) {
+        _hashTable = Array_new(20);
+
+        struct sigaction act = {
+                .sa_handler = handle_children,
+                .sa_flags = SA_RESTART
+        };
+        sigemptyset(&act.sa_mask);
+        if (sigaction(SIGCHLD, &act, NULL))
+                ERROR("Command SIGCHLD handler failed: %s", System_lastError());
+}
+
+
+static void __attribute__ ((destructor)) _destructor(void) {
+        _childSignal(SIG_BLOCK);
+
+        // No need to free the table entries - Process members are freed explicitly, just drop the table
+        Array_free(&_hashTable);
+}
 
 
 /* --------------------------------------------------------------- Private */
@@ -293,16 +347,6 @@ error4:
 /* -------------------------------------------------------------- Process_T */
 
 
-static inline void _setstatus(Process_T P) {
-        if (WIFEXITED(P->status))
-                P->status = WEXITSTATUS(P->status);
-        else if (WIFSIGNALED(P->status))
-                P->status = WTERMSIG(P->status);
-        else if (WIFSTOPPED(P->status))
-                P->status = WSTOPSIG(P->status);
-}
-
-
 static Process_T _Process_new(void) {
         Process_T P;
         NEW(P);
@@ -320,6 +364,11 @@ void Process_free(Process_T *P) {
         }
         _closeParentPipes(*P);
         _closeStreams(*P);
+
+        _childSignal(SIG_BLOCK);
+        Array_remove(_hashTable, (*P)->pid);
+        _childSignal(SIG_UNBLOCK);
+
         FREE(*P);
 }
 
@@ -354,32 +403,14 @@ pid_t Process_getPid(Process_T P) {
 
 int Process_waitFor(Process_T P) {
         assert(P);
-        if (P->status < 0) {
-                int r;
-                do
-                        r = waitpid(P->pid, &P->status, 0); // Wait blocking
-                while (r == -1 && errno == EINTR);
-                if (r != P->pid)
-                        P->status = -1;
-                else
-                        _setstatus(P);
-        }
+        while (P->status < 0)
+                Time_usleep(100);
         return P->status;
 }
 
 
 int Process_exitStatus(Process_T P) {
         assert(P);
-        if (P->status < 0) {
-                int r;
-                do
-                        r = waitpid(P->pid, &P->status, WNOHANG); // Wait non-blocking
-                while (r == -1 && errno == EINTR);
-                if (r == 0) // Process is still running
-                        P->status = -1;
-                else
-                        _setstatus(P);
-        }
         return P->status;
 }
 
@@ -562,13 +593,12 @@ List_T Command_getCommand(T C) {
 }
 
 
-/* The Execute function.
-
- Note: For possible better error reporting, set exec_error to an enum of possible
- errors and exit with that error. Return Process_T regardless and introduce a
- char *Process_getError() which uses waitpid() to get the error status from child exit.
- I.e. similar to what we do with spawn.c
- */
+// The Execute function.
+//
+// FIXME: For possible better error reporting, set exec_error to an enum of possible
+// errors and exit with that error. Return Process_T regardless and introduce a
+// char *Process_getError() which returns the error status based on child exit code
+// I.e. similar to what we do with spawn.c
 Process_T Command_execute(T C) {
         assert(C);
         assert(_env(C));
@@ -596,9 +626,15 @@ Process_T Command_execute(T C) {
         Process_T P = _Process_new();
         int descriptors = System_descriptors(1024);
         _createPipes(P);
+
+        // Critical section start: Block SIGCHLD before starting the child, so we can reliably update the _hashTable in the parent, before the child exit can be signalized and
+        //                         the handler would try to access the _hashTable to update the process state.
+        _childSignal(SIG_BLOCK);
+
         if ((P->pid = fork()) < 0) {
                 ERROR("Command: fork failed -- %s\n", System_lastError());
                 Process_free(&P);
+                _childSignal(SIG_UNBLOCK);
                 return NULL;
         } else if (P->pid == 0) {
                 // Child
@@ -634,7 +670,7 @@ Process_T Command_execute(T C) {
                         exec_error = errno;
                         _exit(errno);
                 }
-                // Unblock any signals and reset signal handlers
+                // Unblock any signals in the child and reset signal handlers
                 sigset_t mask;
                 sigemptyset(&mask);
                 pthread_sigmask(SIG_SETMASK, &mask, NULL);
@@ -651,11 +687,22 @@ Process_T Command_execute(T C) {
                 exec_error = errno;
                 _exit(errno);
         }
+
         // Parent
         _setupParentPipes(P);
-        if (exec_error != 0)
+        if (exec_error != 0) {
                 Process_free(&P);
+        } else {
+                // Add Process to the hash table indexed by PID. The table is used by the async event handler to find the Process object and update the status
+                Array_put(_hashTable, P->pid, P);
+        }
+
+        // Critical section end: Unblock SIGCHLD (the async signal handler can now find the process in the _hashTable)
+        _childSignal(SIG_UNBLOCK);
+
+        // Restore the errno value
         errno = exec_error;
+
         return P;
 }
 
