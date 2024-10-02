@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -97,7 +97,7 @@
 #endif
 
 #include <stdbool.h>
-
+#include <stdatomic.h>
 
 #include "Ssl.h"
 #include "Address.h"
@@ -106,16 +106,17 @@
 #include "net/Link.h"
 
 // libmonit
+#include "system/Mem.h"
+#include "system/System.h"
 #include "system/Command.h"
 #include "system/Process.h"
 #include "util/Str.h"
 #include "util/StringBuffer.h"
 #include "thread/Thread.h"
 
-
+#define MONIT              "monit"
 #define MONITRC            "monitrc"
 #define TIMEFORMAT         "%FT%T%z"
-#define STRERROR            strerror(errno)
 #define STRLEN             256
 #ifndef USEC_PER_SEC
 #define USEC_PER_SEC       1000000L
@@ -139,37 +140,38 @@
 #define SSL_TIMEOUT        15000
 #define SMTP_TIMEOUT       30000
 
+// The default service check interval unless specified with
+// 'set interval n' is 5 seconds
+#define DEFAULT_CHECK_INTERVAL   5
 
-//FIXME: refactor Run_Flags to bit field
+
 typedef enum {
-        Run_Once                 = 0x1,                   /**< Run Monit only once */
-        Run_Foreground           = 0x2,                 /**< Don't daemonize Monit */ //FIXME: cleanup: Run_Foreground and Run_Daemon are mutually exclusive => no need for 2 flags
-        Run_Daemon               = 0x4,                       /**< Daemonize Monit */ //FIXME: cleanup: Run_Foreground and Run_Daemon are mutually exclusive => no need for 2 flags
-        Run_Log                  = 0x8,                           /**< Log enabled */
-        Run_UseSyslog            = 0x10,                           /**< Use syslog */ //FIXME: cleanup: no need for standalone flag ... if syslog is enabled, don't set Run.files.log, then (Run.flags&Run_Log && ! Run.files.log => syslog)
-        Run_FipsEnabled          = 0x20,                 /** FIPS-140 mode enabled */
-        Run_HandlerInit          = 0x40,    /**< The handlers queue initialization */
-        Run_ProcessEngineEnabled = 0x80,    /**< Process monitoring engine enabled */
-        Run_ActionPending        = 0x100,              /**< Service action pending */
-        Run_MmonitCredentials    = 0x200,      /**< Should set M/Monit credentials */
-        Run_Stopped              = 0x400,                          /**< Stop Monit */
-        Run_DoReload             = 0x800,                        /**< Reload Monit */
-        Run_DoWakeup             = 0x1000,                       /**< Wakeup Monit */
-        Run_DoChild              = 0x2000,                     /**< Handle SIGCHLD */
-        Run_Batch                = 0x4000                      /**< CLI batch mode */
-} __attribute__((__packed__)) Run_Flags;
-
+        Run_Daemon               = 0x1,    /**< Daemonize Monit */
+        Run_Foreground           = 0x2,    /**< Don't daemonize Monit. NB. We need both this flag and Run_Daemon */
+        Run_Log                  = 0x4,    /**< Log enabled */
+        Run_UseSyslog            = 0x8,    /**< Use syslog */
+        Run_FipsEnabled          = 0x10,   /**< FIPS-140 mode enabled */
+        Run_HandlerInit          = 0x20,   /**< The handlers queue initialization */
+        Run_ProcessEngineEnabled = 0x40,   /**< Process monitoring engine enabled */
+        Run_ActionPending        = 0x80,   /**< Service action pending */
+        Run_MmonitCredentials    = 0x100,  /**< Should set M/Monit credentials */
+        Run_Stopped              = 0x200,  /**< Stop Monit */
+        Run_DoReload             = 0x400,  /**< Reload Monit */
+        Run_DoWakeup             = 0x800,  /**< Wakeup Monit */
+        Run_DoReap               = 0x1000, /**< Handle SIGCHLD */
+        Run_Batch                = 0x2000  /**< CLI batch mode */
+} Run_Flags;
 
 typedef enum {
         ProcessEngine_None               = 0x0,
         ProcessEngine_CollectCommandLine = 0x1
-} __attribute__((__packed__)) ProcessEngine_Flags;
+} ProcessEngine_Flags;
 
 
 typedef enum {
         Httpd_Start = 1,
         Httpd_Stop
-} __attribute__((__packed__)) Httpd_Action;
+} Httpd_Action;
 
 
 typedef enum {
@@ -178,17 +180,31 @@ typedef enum {
         Every_SkipCycles,
         Every_Cron,
         Every_NotInCron
-} __attribute__((__packed__)) Every_Type;
+} Every_Type;
+
+
+// Service State-machine states
+typedef enum {
+    ServiceState_Idle,
+    ServiceState_Starting,
+    ServiceState_Started,
+    ServiceState_Restarting,
+    ServiceState_Stopping,
+    ServiceState_Stopped,
+    ServiceState_Error,
+    ServiceState_Check,
+    ServiceState_Unmonitored
+} ServiceState_Type;
 
 
 typedef enum {
-        State_Succeeded  = 0x0,
-        State_Failed     = 0x1,
-        State_Changed    = 0x2,
-        State_ChangedNot = 0x4,
-        State_Init       = 0x8,
-        State_None       = State_Init // Alias
-} __attribute__((__packed__)) State_Type;
+        Check_Succeeded  = 0x0,
+        Check_Failed     = 0x1,
+        Check_Changed    = 0x2,
+        Check_ChangedNot = 0x4,
+        Check_Init       = 0x8,
+        Check_None       = Check_Init // Alias
+} Check_State;
 
 
 typedef enum {
@@ -199,7 +215,7 @@ typedef enum {
         Operator_Equal,
         Operator_NotEqual,
         Operator_Changed
-} __attribute__((__packed__)) Operator_Type;
+} Operator_Type;
 
 
 typedef enum {
@@ -207,7 +223,7 @@ typedef enum {
         Timestamp_Access,
         Timestamp_Change,
         Timestamp_Modification
-} __attribute__((__packed__)) Timestamp_Type;
+} Timestamp_Type;
 
 
 typedef enum {
@@ -218,13 +234,13 @@ typedef enum {
         Httpd_UnixGid                     = 0x8,  // Unix socket: override GID
         Httpd_UnixPermission              = 0x10, // Unix socket: override permissions
         Httpd_Signature                   = 0x20  // Server Signature enabled
-} __attribute__((__packed__)) Httpd_Flags;
+} Httpd_Flags;
 
 
 typedef enum {
         Http_Head = 1,
         Http_Get
-} __attribute__((__packed__)) Http_Method;
+} Http_Method;
 
 
 typedef enum {
@@ -233,7 +249,7 @@ typedef enum {
         Time_Hour   = 3600,
         Time_Day    = 86400,
         Time_Month  = 2678400
-} __attribute__((__packed__)) Time_Type;
+} Time_Type;
 
 
 typedef enum {
@@ -245,20 +261,20 @@ typedef enum {
         Action_Unmonitor,
         Action_Start,
         Action_Monitor
-} __attribute__((__packed__)) Action_Type;
+} Action_Type;
 
 
 typedef enum {
         Monitor_Active = 0,
         Monitor_Passive
-} __attribute__((__packed__)) Monitor_Mode;
+} Monitor_Mode;
 
 
 typedef enum {
         Onreboot_Start = 0,
         Onreboot_Nostart,
         Onreboot_Laststate
-} __attribute__((__packed__)) Onreboot_Type;
+} Onreboot_Type;
 
 
 typedef enum {
@@ -266,14 +282,14 @@ typedef enum {
         Monitor_Yes     = 0x1,
         Monitor_Init    = 0x2,
         Monitor_Waiting = 0x4
-} __attribute__((__packed__)) Monitor_State;
+} Monitor_State;
 
 
 typedef enum {
         Connection_Failed = 0,
         Connection_Ok,
         Connection_Init
-} __attribute__((__packed__)) Connection_State;
+} Connection_State;
 
 
 typedef enum {
@@ -287,7 +303,7 @@ typedef enum {
         Service_Program,
         Service_Net,
         Service_Last = Service_Net
-} __attribute__((__packed__)) Service_Type;
+} Service_Type;
 
 
 typedef enum {
@@ -328,8 +344,7 @@ typedef enum {
         Resource_LoadAveragePerCore5m,
         Resource_LoadAveragePerCore15m,
         Resource_HardLink                   // Used by check file, fifo and directory
-} __attribute__((__packed__)) Resource_Type;
-
+} Resource_Type;
 
 
 typedef enum {
@@ -337,7 +352,7 @@ typedef enum {
         Digest_Crypt,
         Digest_Md5,
         Digest_Pam
-} __attribute__((__packed__)) Digest_Type;
+} Digest_Type;
 
 
 typedef enum {
@@ -345,7 +360,7 @@ typedef enum {
         Unit_Kilobyte = 1024,
         Unit_Megabyte = 1048576,
         Unit_Gigabyte = 1073741824
-} __attribute__((__packed__)) Unit_Type;
+} Unit_Type;
 
 
 typedef enum {
@@ -353,7 +368,7 @@ typedef enum {
         Hash_Md5,
         Hash_Sha1,
         Hash_Default = Hash_Md5
-} __attribute__((__packed__)) Hash_Type;
+} Hash_Type;
 
 
 typedef enum {
@@ -361,14 +376,14 @@ typedef enum {
         Handler_Alert     = 0x1,
         Handler_Mmonit    = 0x2,
         Handler_Max       = Handler_Mmonit
-} __attribute__((__packed__)) Handler_Type;
+} Handler_Type;
 
 
 typedef enum {
         MmonitCompress_Init = 0,
         MmonitCompress_No,
         MmonitCompress_Yes
-} __attribute__((__packed__)) MmonitCompress_Type;
+} MmonitCompress_Type;
 
 
 typedef enum {
@@ -384,7 +399,7 @@ typedef enum {
         Statistics_FiledescriptorsPerSystem     = 0x200,
         Statistics_FiledescriptorsPerProcess    = 0x400,
         Statistics_FiledescriptorsPerProcessMax = 0x800
-} __attribute__((__packed__)) Statistics_Flags;
+} Statistics_Flags;
 
 
 /* Length of the longest message digest in bytes */
@@ -1210,12 +1225,12 @@ typedef union Info_T {
 /** Defines service data */
 //FIXME: use union for type-specific rules
 typedef struct Service_T {
-
+        ServiceState_Type service_state;
         /** Common parameters */
         char *name;                                  /**< Service descriptive name */
         char *name_urlescaped;                       /**< Service name URL escaped */
         StringBuffer_T name_htmlescaped;            /**< Service name HTML escaped */
-        State_Type (*check)(struct Service_T *);/**< Service verification function */
+        Check_State (*check)(struct Service_T *);/**< Service verification function */
         bool onrebootRestored;
         bool visited; /**< Service visited flag, set if dependencies are used */
         bool inverseStatus;
@@ -1294,7 +1309,7 @@ typedef struct Service_T {
                 struct Service_T *source;                              /**< Event source */
                 Monitor_Mode      mode;             /**< Monitoring mode for the service */
                 Service_Type      type;                      /**< Monitored service type */
-                State_Type        state;                                 /**< Test state */
+                Check_State        state;                                 /**< Test state */
                 bool         state_changed;              /**< true if state changed */
                 Handler_Type      flag;                     /**< The handlers state flag */
                 unsigned long long state_map;          /**< Event bitmap for last cycles */
@@ -1400,16 +1415,20 @@ struct Run_T {
 };
 
 
+#include "util.h"
+#include "file.h"
+#include "log.h"
+#include "ProcessTable.h"
+
+
 /* -------------------------------------------------------- Global variables */
 
 
-extern const char    *Prog;
 extern struct Run_T   Run;
 extern Service_T      Service_List;
 extern Service_T      Service_List_Conf;
 extern ServiceGroup_T Service_Group_List;
 extern SystemInfo_T   System_Info;
-#include "ProcessTable.h"
 extern ProcessTable_T Process_Table;
 
 extern const char *Action_Names[];
@@ -1425,67 +1444,8 @@ extern const char *Socket_Names[];
 extern const char *Timestamp_Names[];
 extern const char *Httpmethod_Names[];
 
-
-/* ------------------------------------------------------- Public prototypes */
-
-#include "util.h"
-#include "file.h"
-
-// libmonit
-#include "system/Mem.h"
-
-
-/* FIXME: move remaining prototypes into separate header-files */
-
-bool parse(char *);
-bool control_service(const char *, Action_Type);
-bool control_service_string(List_T, const char *);
-bool Log_init(void);
-void Log_emergency(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_alert(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_critical(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_error(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_warning(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_notice(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_info(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_debug(const char *, ...) __attribute__((format (printf, 1, 2)));
-void Log_vemergency(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_valert(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_vcritical(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_verror(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_vwarning(const char *,va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_vnotice(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_vinfo(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_vdebug(const char *, va_list ap) __attribute__((format (printf, 1, 0)));
-void Log_abort_handler(const char *s, va_list ap) __attribute__((format (printf, 1, 0))) __attribute__((noreturn));
-void Log_close(void);
-void validate_init(void);
-int  validate(void);
-void daemonize(void);
-void gc(void);
-void gc_mail_list(Mail_T *);
-void gccmd(command_t *);
-void gc_event(Event_T *e);
-bool kill_daemon(int);
-pid_t exist_daemon(void);
-bool sendmail(Mail_T);
-void init_env(void);
-void monit_http(Httpd_Action);
-bool can_http(void);
-void set_signal_block(void);
-State_Type check_process(Service_T);
-State_Type check_filesystem(Service_T);
-State_Type check_file(Service_T);
-State_Type check_directory(Service_T);
-State_Type check_remote_host(Service_T);
-State_Type check_system(Service_T);
-State_Type check_fifo(Service_T);
-State_Type check_program(Service_T);
-State_Type check_net(Service_T);
-int  check_URL(Service_T s);
-void status_xml(StringBuffer_T, Event_T, int, const char *, Mmonit_T);
-bool  do_wakeupcall(void);
-bool interrupt(void);
-void do_children(void);
+// Monit functions
+bool Monit_wakeup(void);
+bool Monit_isInterrupted(void);
 
 #endif

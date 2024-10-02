@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -36,7 +36,7 @@
 
 
 /**
- *  A simple 'SSH protocol version exchange' implementation based on RFC (http://www.openssh.com/txt/draft-ietf-secsh-transport-14.txt)
+ *  A simple 'SSH protocol version exchange' implementation based on RFC (https://www.openssh.com/txt/draft-ietf-secsh-transport-14.txt)
  *
  *  @file
  */
@@ -47,14 +47,14 @@ void check_ssh(Socket_T socket) {
         assert(socket);
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "SSH: error receiving identification string -- %s", STRERROR);
+                THROW(IOException, "SSH: error receiving identification string -- %s", System_lastError());
 
         if (! Str_startsWith(buf, "SSH-"))
                 THROW(ProtocolException, "SSH: protocol error %s", buf);
 
         /* send identification string back to server */
         if (Socket_write(socket, buf, strlen(buf)) <= 0)
-                THROW(IOException, "SSH: error sending identification string -- %s", STRERROR);
+                THROW(IOException, "SSH: error sending identification string -- %s", System_lastError());
 
         /* Read one extra line to prevent the "Read from socket failed" warning */
         Socket_readLine(socket, buf, sizeof(buf));

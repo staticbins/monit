@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -528,7 +528,7 @@ static void send_response(HttpRequest req, HttpResponse res) {
                 Socket_print(S, "\r\n");
                 if (bodyLength)
                         if(Socket_write(S, body, bodyLength) < 0)
-                                Log_error("Http: Cannot send the response -- %s\n", STRERROR);
+                                Log_error("Http: Cannot send the response -- %s\n", System_lastError());
                 FREE(headers);
         }
 }

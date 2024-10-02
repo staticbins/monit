@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -45,7 +45,7 @@ void check_default(Socket_T socket) {
                 if (Net_read(s, token, 1, 1200) < 0) {
                         switch (errno) {
                                 case ECONNREFUSED:
-                                        THROW(IOException, "%s", STRERROR);
+                                        THROW(IOException, "%s", System_lastError());
                                         break;
                                 default:
                                         break;

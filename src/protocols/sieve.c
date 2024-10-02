@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -51,13 +51,13 @@ void check_sieve(Socket_T socket) {
         char buf[STRLEN];
         do {
                 if (! Socket_readLine(socket, buf, STRLEN))
-                        THROW(IOException, "SIEVE: error receiving server capabilities -- %s", STRERROR);
+                        THROW(IOException, "SIEVE: error receiving server capabilities -- %s", System_lastError());
                 Str_chomp(buf);
                 if (Str_startsWith(buf, "OK")) {
                         if (Socket_print(socket, "LOGOUT\r\n") < 0)
-                                THROW(ProtocolException, "SIEVE: error sending LOGOUT command  -- %s", STRERROR);
+                                THROW(ProtocolException, "SIEVE: error sending LOGOUT command  -- %s", System_lastError());
                         if (! Socket_readLine(socket, buf, STRLEN))
-                                THROW(IOException, "SIEVE: error receiving LOGOUT response -- %s", STRERROR);
+                                THROW(IOException, "SIEVE: error receiving LOGOUT response -- %s", System_lastError());
                         Str_chomp(buf);
                         if (! Str_startsWith(buf, "OK"))
                                 THROW(ProtocolException, "SIEVE: invalid LOGOUT response -- %s", buf);

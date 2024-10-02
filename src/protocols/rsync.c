@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -51,7 +51,7 @@ void check_rsync(Socket_T socket) {
 
         /* Read and check the greeting */
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "RSYNC: did not see server greeting  -- %s", STRERROR);
+                THROW(IOException, "RSYNC: did not see server greeting  -- %s", System_lastError());
         Str_chomp(buf);
         rc = sscanf(buf, "%10s %d.%d", header, &version_major, &version_minor);
         if ((rc == EOF) || (rc != 3))
@@ -61,16 +61,16 @@ void check_rsync(Socket_T socket) {
 
         /* Send back the greeting */
         if (Socket_print(socket, "%s\n", buf) <= 0)
-                THROW(IOException, "RSYNC: identification string send failed -- %s", STRERROR);
+                THROW(IOException, "RSYNC: identification string send failed -- %s", System_lastError());
 
         /* Send #list command */
         if (Socket_print(socket, "#list\n") < 0)
-                THROW(IOException, "RSYNC: #list command failed -- %s", STRERROR);
+                THROW(IOException, "RSYNC: #list command failed -- %s", System_lastError());
 
         /* Read response: discard list output and check that we've received successful exit */
         do {
                 if (! Socket_readLine(socket, buf, sizeof(buf)))
-                        THROW(IOException, "RSYNC: error receiving data -- %s", STRERROR);
+                        THROW(IOException, "RSYNC: error receiving data -- %s", System_lastError());
                 Str_chomp(buf);
         } while (strncasecmp(buf, rsyncd, strlen(rsyncd)));
         if (strncasecmp(buf, rsyncd_exit, strlen(rsyncd_exit)) != 0)

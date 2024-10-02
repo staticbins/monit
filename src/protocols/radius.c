@@ -11,7 +11,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -133,11 +133,11 @@ void check_radius(Socket_T socket) {
         Checksum_hmacMD5(request, sizeof(request), (const unsigned char *)secret, secret_len, request + 22);
 
         if (Socket_write(socket, (unsigned char *)request, sizeof(request)) < 0)
-                THROW(IOException, "RADIUS: error sending query -- %s", STRERROR);
+                THROW(IOException, "RADIUS: error sending query -- %s", System_lastError());
 
         /* the response should have at least 20 bytes */
         if ((length = Socket_read(socket, (unsigned char *)response, sizeof(response))) < 20)
-                THROW(IOException, "RADIUS: error receiving response -- %s", STRERROR);
+                THROW(IOException, "RADIUS: error receiving response -- %s", System_lastError());
 
         /* compare the response code (should be Access-Accept or Accounting-Response) */
         if ((response[0] != 2) && (response[0] != 5))

@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -77,7 +77,7 @@ void check_memcache(Socket_T socket) {
         assert(socket);
 
         if (Socket_write(socket, (unsigned char *)request, sizeof(request)) <= 0)
-                THROW(IOException, "MEMCACHE: error sending data -- %s", STRERROR);
+                THROW(IOException, "MEMCACHE: error sending data -- %s", System_lastError());
 
         /* Response should have at least MEMCACHELEN bytes */
         length = Socket_read(socket, (unsigned char *)response, sizeof(response));

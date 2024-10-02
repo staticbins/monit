@@ -10,7 +10,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -31,8 +31,8 @@
 /**
  * A set of low-level class methods for operating on a file.
  *
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://tildeslash.com
+ * @see https://mmonit.com
  * @file
  */
 
@@ -245,7 +245,7 @@ int File_mod(const char *file);
  * <pre>
  * ruby -e 'printf("%#o\n", (0666 & ~0022))'
  * </pre>
- * See also http://en.wikipedia.org/wiki/Umask and umask(2) on Unix
+ * See also https://en.wikipedia.org/wiki/Umask and umask(2) on Unix
  * @return An octal number representing the umask value for this process
  */
 int File_umask(void);

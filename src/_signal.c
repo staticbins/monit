@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -32,7 +32,7 @@
 #include <signal.h>
 #endif
 
-#include "monit.h"
+#include "_signal.h"
 
 /**
  *  Signal handling routines.
@@ -45,10 +45,6 @@
 
 
 #if ! defined HAVE_ASAN && ! defined FREEBSD
-
-// Replace the standard signal() function, with a more reliable
-// using sigaction. From W. Richard Stevens' "Advanced Programming
-// in the UNIX Environment"
 sig_t signal(int signo, sig_t func) {
         struct sigaction act, oact;
         act.sa_handler = func;
@@ -70,8 +66,7 @@ sig_t signal(int signo, sig_t func) {
 #endif
 
 
-// Set a collective thread signal block for signals relevant for Monit
-void set_signal_block(void) {
+void signal_block(void) {
         sigset_t mask;
         sigemptyset(&mask);
         sigaddset(&mask, SIGHUP);

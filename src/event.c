@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -63,6 +63,7 @@
 #include "event.h"
 #include "state.h"
 #include "MMonit.h"
+#include "control.h"
 
 // libmonit
 #include "io/File.h"
@@ -78,46 +79,46 @@
 /* ------------------------------------------------------------- Definitions */
 
 EventTable_T Event_Table[] = {
-        {Event_Action,     "Action done",               "Action done",                "Action done",              "Action done",                  State_None},
-        {Event_ByteIn,     "Download bytes exceeded",   "Download bytes ok",          "Download bytes changed",   "Download bytes not changed",   State_None},
-        {Event_ByteOut,    "Upload bytes exceeded",     "Upload bytes ok",            "Upload bytes changed",     "Upload bytes not changed",     State_None},
-        {Event_Checksum,   "Checksum failed",           "Checksum succeeded",         "Checksum changed",         "Checksum not changed",         State_None},
-        {Event_Connection, "Connection failed",         "Connection succeeded",       "Connection changed",       "Connection not changed",       State_Changed},
-        {Event_Content,    "Content failed",            "Content succeeded",          "Content match",            "Content doesn't match",        State_Changed},
-        {Event_Data,       "Data access error",         "Data access succeeded",      "Data access changed",      "Data access not changed",      State_None},
-        {Event_Exec,       "Execution failed",          "Execution succeeded",        "Execution changed",        "Execution not changed",        State_None},
-        {Event_FsFlag,     "Filesystem flags failed",   "Filesystem flags succeeded", "Filesystem flags changed", "Filesystem flags not changed", State_None},
-        {Event_Gid,        "GID failed",                "GID succeeded",              "GID changed",              "GID not changed",              State_None},
-        {Event_Heartbeat,  "Heartbeat failed",          "Heartbeat succeeded",        "Heartbeat changed",        "Heartbeat not changed",        State_None},
-        {Event_Icmp,       "ICMP failed",               "ICMP succeeded",             "ICMP changed",             "ICMP not changed",             State_None},
-        {Event_Instance,   "Monit instance failed",     "Monit instance succeeded",   "Monit instance changed",   "Monit instance not changed",   State_None},
-        {Event_Invalid,    "Invalid type",              "Type succeeded",             "Type changed",             "Type not changed",             State_None},
-        {Event_Link,       "Link down",                 "Link up",                    "Link changed",             "Link not changed",             State_None},
-        {Event_NonExist,   "Does not exist",            "Exists",                     "Existence changed",        "Existence not changed",        State_None},
-        {Event_PacketIn,   "Download packets exceeded", "Download packets ok",        "Download packets changed", "Download packets not changed", State_None},
-        {Event_PacketOut,  "Upload packets exceeded",   "Upload packets ok",          "Upload packets changed",   "Upload packets not changed",   State_None},
-        {Event_Permission, "Permission failed",         "Permission succeeded",       "Permission changed",       "Permission not changed",       State_None},
-        {Event_Pid,        "PID failed",                "PID succeeded",              "PID changed",              "PID not changed",              State_None},
-        {Event_PPid,       "PPID failed",               "PPID succeeded",             "PPID changed",             "PPID not changed",             State_None},
-        {Event_Resource,   "Resource limit matched",    "Resource limit succeeded",   "Resource limit changed",   "Resource limit not changed",   State_None},
-        {Event_Saturation, "Saturation exceeded",       "Saturation ok",              "Saturation changed",       "Saturation not changed",       State_None},
-        {Event_Size,       "Size failed",               "Size succeeded",             "Size changed",             "Size not changed",             State_Changed},
-        {Event_Speed,      "Speed failed",              "Speed ok",                   "Speed changed",            "Speed not changed",            State_Changed},
-        {Event_Status,     "Status failed",             "Status succeeded",           "Status changed",           "Status not changed",           State_None},
-        {Event_Timeout,    "Timeout",                   "Timeout recovery",           "Timeout changed",          "Timeout not changed",          State_None},
-        {Event_Timestamp,  "Timestamp failed",          "Timestamp succeeded",        "Timestamp changed",        "Timestamp not changed",        State_Changed},
-        {Event_Uid,        "UID failed",                "UID succeeded",              "UID changed",              "UID not changed",              State_None},
-        {Event_Uptime,     "Uptime failed",             "Uptime succeeded",           "Uptime changed",           "Uptime not changed",           State_None},
-        {Event_Exist,      "Does exist",                "Exists not",                 "Existence changed",        "Existence not changed",        State_None},
+        {Event_Action,     "Action done",               "Action done",                "Action done",              "Action done",                  Check_None},
+        {Event_ByteIn,     "Download bytes exceeded",   "Download bytes ok",          "Download bytes changed",   "Download bytes not changed",   Check_None},
+        {Event_ByteOut,    "Upload bytes exceeded",     "Upload bytes ok",            "Upload bytes changed",     "Upload bytes not changed",     Check_None},
+        {Event_Checksum,   "Checksum failed",           "Checksum succeeded",         "Checksum changed",         "Checksum not changed",         Check_None},
+        {Event_Connection, "Connection failed",         "Connection succeeded",       "Connection changed",       "Connection not changed",       Check_Changed},
+        {Event_Content,    "Content failed",            "Content succeeded",          "Content match",            "Content doesn't match",        Check_Changed},
+        {Event_Data,       "Data access error",         "Data access succeeded",      "Data access changed",      "Data access not changed",      Check_None},
+        {Event_Exec,       "Execution failed",          "Execution succeeded",        "Execution changed",        "Execution not changed",        Check_None},
+        {Event_FsFlag,     "Filesystem flags failed",   "Filesystem flags succeeded", "Filesystem flags changed", "Filesystem flags not changed", Check_None},
+        {Event_Gid,        "GID failed",                "GID succeeded",              "GID changed",              "GID not changed",              Check_None},
+        {Event_Heartbeat,  "Heartbeat failed",          "Heartbeat succeeded",        "Heartbeat changed",        "Heartbeat not changed",        Check_None},
+        {Event_Icmp,       "ICMP failed",               "ICMP succeeded",             "ICMP changed",             "ICMP not changed",             Check_None},
+        {Event_Instance,   "Monit instance failed",     "Monit instance succeeded",   "Monit instance changed",   "Monit instance not changed",   Check_None},
+        {Event_Invalid,    "Invalid type",              "Type succeeded",             "Type changed",             "Type not changed",             Check_None},
+        {Event_Link,       "Link down",                 "Link up",                    "Link changed",             "Link not changed",             Check_None},
+        {Event_NonExist,   "Does not exist",            "Exists",                     "Existence changed",        "Existence not changed",        Check_None},
+        {Event_PacketIn,   "Download packets exceeded", "Download packets ok",        "Download packets changed", "Download packets not changed", Check_None},
+        {Event_PacketOut,  "Upload packets exceeded",   "Upload packets ok",          "Upload packets changed",   "Upload packets not changed",   Check_None},
+        {Event_Permission, "Permission failed",         "Permission succeeded",       "Permission changed",       "Permission not changed",       Check_None},
+        {Event_Pid,        "PID failed",                "PID succeeded",              "PID changed",              "PID not changed",              Check_None},
+        {Event_PPid,       "PPID failed",               "PPID succeeded",             "PPID changed",             "PPID not changed",             Check_None},
+        {Event_Resource,   "Resource limit matched",    "Resource limit succeeded",   "Resource limit changed",   "Resource limit not changed",   Check_None},
+        {Event_Saturation, "Saturation exceeded",       "Saturation ok",              "Saturation changed",       "Saturation not changed",       Check_None},
+        {Event_Size,       "Size failed",               "Size succeeded",             "Size changed",             "Size not changed",             Check_Changed},
+        {Event_Speed,      "Speed failed",              "Speed ok",                   "Speed changed",            "Speed not changed",            Check_Changed},
+        {Event_Status,     "Status failed",             "Status succeeded",           "Status changed",           "Status not changed",           Check_None},
+        {Event_Timeout,    "Timeout",                   "Timeout recovery",           "Timeout changed",          "Timeout not changed",          Check_None},
+        {Event_Timestamp,  "Timestamp failed",          "Timestamp succeeded",        "Timestamp changed",        "Timestamp not changed",        Check_Changed},
+        {Event_Uid,        "UID failed",                "UID succeeded",              "UID changed",              "UID not changed",              Check_None},
+        {Event_Uptime,     "Uptime failed",             "Uptime succeeded",           "Uptime changed",           "Uptime not changed",           Check_None},
+        {Event_Exist,      "Does exist",                "Exists not",                 "Existence changed",        "Existence not changed",        Check_None},
         /* Virtual events */
-        {Event_Null,       "No Event",                  "No Event",                   "No Event",                 "No Event",                     State_None}
+        {Event_Null,       "No Event",                  "No Event",                   "No Event",                 "No Event",                     Check_None}
 };
 
 
 /* ----------------------------------------------------------------- Private */
 
 
-static void _saveState(long id, State_Type state) {
+static void _saveState(long id, Check_State state) {
         EventTable_T *et = Event_Table;
         while ((*et).id) {
                 if ((*et).id == id) {
@@ -137,13 +138,13 @@ static void _saveState(long id, State_Type state) {
  * @param S Actual posted state
  * @return The event state
  */
-static bool _checkState(Event_T E, State_Type S) {
+static bool _checkState(Event_T E, Check_State S) {
         assert(E);
         int count = 0;
-        State_Type state = (S == State_Succeeded || S == State_ChangedNot) ? State_Succeeded : State_Failed; /* translate to 0/1 class */
+        Check_State state = (S == Check_Succeeded || S == Check_ChangedNot) ? Check_Succeeded : Check_Failed; /* translate to 0/1 class */
 
         /* Only failed/changed state condition can change the initial state */
-        if (! state && E->state == State_Init && ! (E->source->error & E->id))
+        if (! state && E->state == Check_Init && ! (E->source->error & E->id))
                 return false;
 
         Action_T action = ! state ? E->action->succeeded : E->action->failed;
@@ -151,7 +152,7 @@ static bool _checkState(Event_T E, State_Type S) {
         /* Compare as many bits as cycles able to trigger the action */
         for (int i = 0; i < action->cycles; i++) {
                 /* Check the state of the particular cycle given by the bit position */
-                State_Type flag = (E->state_map >> i) & 0x1;
+                Check_State flag = (E->state_map >> i) & 0x1;
 
                 /* Count occurrences of the posted state */
                 if (flag == state)
@@ -159,7 +160,7 @@ static bool _checkState(Event_T E, State_Type S) {
         }
 
         /* the internal instance and action events are handled as changed any time since we need to deliver alert whenever it occurs */
-        if (E->id == Event_Instance || E->id == Event_Action || (count >= action->count && (S != E->state || S == State_Changed))) {
+        if (E->id == Event_Instance || E->id == Event_Action || (count >= action->count && (S != E->state || S == Check_Changed))) {
                 memset(&(E->state_map), state, sizeof(E->state_map)); // Restart state map on state change, so we'll not flicker on multiple-failures condition (next state change requires full number of cycles to pass)
                 return true;
         }
@@ -194,7 +195,7 @@ static void _queueAdd(Event_T E) {
 
         FILE *file = fopen(file_name, "w");
         if (! file) {
-                Log_error("Aborting event - cannot create event file %s -- %s\n", file_name, STRERROR);
+                Log_error("Aborting event - cannot create event file %s -- %s\n", file_name, System_lastError());
                 return;
         }
 
@@ -227,7 +228,7 @@ error:
         if (! rv) {
                 Log_error("Aborting event - unable to save event information to %s\n",  file_name);
                 if (unlink(file_name) < 0)
-                        Log_error("Failed to remove event file '%s' -- %s\n", file_name, STRERROR);
+                        Log_error("Failed to remove event file '%s' -- %s\n", file_name, System_lastError());
         } else {
                 if (! (Run.flags & Run_HandlerInit) && E->flag & Handler_Alert)
                         Run.handler_queue[Handler_Alert]++;
@@ -259,7 +260,7 @@ static void _queueUpdate(Event_T E, const char *file_name) {
 
         FILE *file = fopen(file_name, "w");
         if (! file) {
-                Log_error("Aborting event - cannot open the event file %s -- %s\n", file_name, STRERROR);
+                Log_error("Aborting event - cannot open the event file %s -- %s\n", file_name, System_lastError());
                 return;
         }
 
@@ -288,7 +289,7 @@ error:
         if (! rv) {
                 Log_error("Aborting event - unable to update event information in '%s'\n", file_name);
                 if (unlink(file_name) < 0)
-                        Log_error("Failed to remove event file '%s' -- %s\n", file_name, STRERROR);
+                        Log_error("Failed to remove event file '%s' -- %s\n", file_name, System_lastError());
         }
 }
 
@@ -346,7 +347,7 @@ static void _handleEvent(Service_T S, Event_T E) {
         /* We will handle only first succeeded event, recurrent succeeded events
          * or insufficient succeeded events during failed service state are
          * ignored. Failed events are handled each time. */
-        if (! E->state_changed && (E->state == State_Succeeded || E->state == State_ChangedNot || ((E->state_map & 0x1) ^ 0x1))) {
+        if (! E->state_changed && (E->state == Check_Succeeded || E->state == Check_ChangedNot || ((E->state_map & 0x1) ^ 0x1))) {
                 DEBUG("'%s' %s\n", S->name, E->message);
                 return;
         }
@@ -355,7 +356,7 @@ static void _handleEvent(Service_T S, Event_T E) {
                 if (E->id == Event_Instance || E->id == Event_Action) {
                         // Instance and action events are logged always with priority info
                         Log_info("'%s' %s\n", S->name, E->message);
-                } else if (E->state == State_Succeeded || E->state == State_ChangedNot) {
+                } else if (E->state == Check_Succeeded || E->state == Check_ChangedNot) {
                         if (E->state_map & 0x1) {
                                 // Failure, but didn't reach the error threshold yet
                                 Log_warning("'%s' %s\n", S->name, E->message);
@@ -363,7 +364,7 @@ static void _handleEvent(Service_T S, Event_T E) {
                                 // Success
                                 Log_info("'%s' %s\n", S->name, E->message);
                         }
-                } else if (E->state == State_Init) {
+                } else if (E->state == Check_Init) {
                         if (E->state_map & 0x1) {
                                 // Log error which occur while the service is initializing as warnings, success is not logged in the initializing state
                                 Log_warning("'%s' %s\n", S->name, E->message);
@@ -374,11 +375,11 @@ static void _handleEvent(Service_T S, Event_T E) {
                 }
         }
 
-        if (E->state == State_Failed || E->state == State_Changed) {
+        if (E->state == Check_Failed || E->state == Check_Changed) {
                 if (E->id != Event_Instance && E->id != Event_Action) { // We are not interested in setting error flag for instance and action events
                         S->error |= E->id;
                         /* The error hint provides second dimension for error bitmap and differentiates between failed/changed event states (failed=0, changed=1) */
-                        if (E->state == State_Changed)
+                        if (E->state == Check_Changed)
                                 S->error_hint |= E->id;
                         else
                                 S->error_hint &= ~E->id;
@@ -412,11 +413,11 @@ static unsigned long long left_shift(unsigned long long v) {
  * @param action Description of the event action
  * @param s Optional message describing the event
  */
-void Event_post(Service_T service, long id, State_Type state, EventAction_T action, const char *s, ...) {
+void Event_post(Service_T service, long id, Check_State state, EventAction_T action, const char *s, ...) {
         assert(service);
         assert(action);
         assert(s);
-        assert(state == State_Failed || state == State_Succeeded || state == State_Changed || state == State_ChangedNot);
+        assert(state == Check_Failed || state == Check_Succeeded || state == Check_Changed || state == Check_ChangedNot);
 
         _saveState(id, state);
 
@@ -432,7 +433,7 @@ void Event_post(Service_T service, long id, State_Type state, EventAction_T acti
 
                         /* Shift the existing event flags to the left and set the first bit based on actual state */
                         e->state_map = left_shift(e->state_map);
-                        e->state_map |= ((state == State_Succeeded || state == State_ChangedNot) ? 0 : 1);
+                        e->state_map |= ((state == Check_Succeeded || state == Check_ChangedNot) ? 0 : 1);
 
                         /* Update the message */
                         FREE(e->message);
@@ -443,7 +444,7 @@ void Event_post(Service_T service, long id, State_Type state, EventAction_T acti
         }
         if (! e) {
                 /* Only first failed/changed event can initialize the queue for given event type, thus succeeded events are ignored until first error. */
-                if (state == State_Succeeded || state == State_ChangedNot) {
+                if (state == Check_Succeeded || state == Check_ChangedNot) {
                         DEBUG("'%s' %s\n", service->name, message);
                         FREE(message);
                         return;
@@ -456,7 +457,7 @@ void Event_post(Service_T service, long id, State_Type state, EventAction_T acti
                 e->source = service;
                 e->mode = service->mode;
                 e->type = service->type;
-                e->state = State_Init;
+                e->state = Check_Init;
                 e->state_map = 1;
                 e->action = action;
                 e->message = message;
@@ -487,15 +488,15 @@ const char *Event_get_description(Event_T E) {
         while ((*et).id) {
                 if (E->id == (*et).id) {
                         switch (E->state) {
-                                case State_Succeeded:
+                                case Check_Succeeded:
                                         return (*et).description_succeeded;
-                                case State_Failed:
+                                case Check_Failed:
                                         return (*et).description_failed;
-                                case State_Init:
+                                case Check_Init:
                                         return (*et).description_failed;
-                                case State_Changed:
+                                case Check_Changed:
                                         return (*et).description_changed;
-                                case State_ChangedNot:
+                                case Check_ChangedNot:
                                         return (*et).description_changednot;
                                 default:
                                         break;
@@ -516,13 +517,13 @@ Action_Type Event_get_action(Event_T E) {
         assert(E);
         Action_T A = NULL;
         switch (E->state) {
-                case State_Succeeded:
-                case State_ChangedNot:
+                case Check_Succeeded:
+                case Check_ChangedNot:
                         A = E->action->succeeded;
                         break;
-                case State_Failed:
-                case State_Changed:
-                case State_Init:
+                case Check_Failed:
+                case Check_Changed:
+                case Check_Init:
                         A = E->action->failed;
                         break;
                 default:
@@ -563,7 +564,7 @@ void Event_queue_process(void) {
         DIR *dir = opendir(Run.eventlist_dir);
         if (! dir) {
                 if (errno != ENOENT)
-                        Log_error("Cannot open the directory %s -- %s\n", Run.eventlist_dir, STRERROR);
+                        Log_error("Cannot open the directory %s -- %s\n", Run.eventlist_dir, System_lastError());
                 return;
         }
 
@@ -592,7 +593,7 @@ void Event_queue_process(void) {
 
                         FILE *file = fopen(file_name, "r");
                         if (! file) {
-                                Log_error("Queued event processing failed - cannot open the file '%s' -- %s\n", file_name, STRERROR);
+                                Log_error("Queued event processing failed - cannot open the file '%s' -- %s\n", file_name, System_lastError());
                                 goto error1;
                         }
 
@@ -643,13 +644,13 @@ void Event_queue_process(void) {
                                 goto error6;
                         a->id = *action;
                         switch (e->state) {
-                                case State_Succeeded:
-                                case State_ChangedNot:
+                                case Check_Succeeded:
+                                case Check_ChangedNot:
                                         ea->succeeded = a;
                                         break;
-                                case State_Failed:
-                                case State_Changed:
-                                case State_Init:
+                                case Check_Failed:
+                                case Check_Changed:
+                                case Check_Init:
                                         ea->failed = a;
                                         break;
                                 default:
@@ -696,7 +697,7 @@ void Event_queue_process(void) {
                         if (e->flag == Handler_Succeeded) {
                                 DEBUG("Removing queued event %s\n", file_name);
                                 if (unlink(file_name) < 0)
-                                        Log_error("Failed to remove queued event file '%s' -- %s\n", file_name, STRERROR);
+                                        Log_error("Failed to remove queued event file '%s' -- %s\n", file_name, System_lastError());
                         } else if (handlers_passed > 0) {
                                 DEBUG("Updating queued event %s (some handlers passed)\n", file_name);
                                 _queueUpdate(e, file_name);

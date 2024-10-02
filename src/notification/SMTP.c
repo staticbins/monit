@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -88,7 +88,7 @@ typedef enum {
         MTA_StartTLS  = 0x1,
         MTA_AuthPlain = 0x2,
         MTA_AuthLogin = 0x4
-} __attribute__((__packed__)) MTA_Flags;
+} MTA_Flags;
 
 
 typedef enum {
@@ -102,7 +102,7 @@ typedef enum {
         SMTP_DataBegin,
         SMTP_DataCommit,
         SMTP_Quit
-} __attribute__((__packed__)) SMTP_State;
+} SMTP_State;
 
 
 #define T SMTP_T
@@ -140,7 +140,7 @@ __attribute__((format (printf, 2, 3))) static void _send(T S, const char *data, 
         int rv = Socket_write(S->socket, msg, strlen(msg));
         FREE(msg);
         if (rv <= 0)
-                THROW(IOException, "Error sending data to the mailserver -- %s", STRERROR);
+                THROW(IOException, "Error sending data to the mailserver -- %s", System_lastError());
 }
 
 
@@ -149,7 +149,7 @@ static void _receive(T S, int code, void (*callback)(T S, const char *line)) {
         char line[STRLEN];
         do {
                 if (! Socket_readLine(S->socket, line, sizeof(line)))
-                        THROW(IOException, "Error receiving data from the mailserver -- %s", STRERROR);
+                        THROW(IOException, "Error receiving data from the mailserver -- %s", System_lastError());
                 Str_chomp(line);
                 DEBUG("SMTP <- %s\n", line);
                 if (strlen(line) < 4 || sscanf(line, "%d", &status) != 1 || status != code)

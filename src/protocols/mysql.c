@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -185,13 +185,13 @@ typedef enum {
         MySQL_AuthSwitch,
         MySQL_Ok,
         MySQL_Error
-} __attribute__((__packed__)) mysql_state_t;
+} mysql_state_t;
 
 
 typedef enum {
         Auth_Native = 0,
         Auth_CachingSha2
-} __attribute__((__packed__)) mysql_authentication_t;
+} mysql_authentication_t;
 
 
 typedef struct mysql_t {
@@ -492,7 +492,7 @@ static void _readResponse(mysql_t *mysql) {
         mysql->response.limit = mysql->response.buf + sizeof(mysql->response.buf);
         // Read the packet length
         if (Socket_read(mysql->socket, mysql->response.cursor, 4) < 4)
-                THROW(IOException, "Error receiving server response -- %s", STRERROR);
+                THROW(IOException, "Error receiving server response -- %s", System_lastError());
         mysql->response.len = _getUInt3(&mysql->response);
         mysql->response.seq = _getUInt1(&mysql->response);
         if (mysql->state == MySQL_Init) {
@@ -508,7 +508,7 @@ static void _readResponse(mysql_t *mysql) {
         mysql->response.len = mysql->response.len > MYSQL_RESPONSE_BUFFER ? MYSQL_RESPONSE_BUFFER : mysql->response.len; // Adjust packet length for this buffer
         // Read payload
         if (Socket_read(mysql->socket, mysql->response.cursor, mysql->response.len) != mysql->response.len)
-                THROW(IOException, "Error receiving server response -- %s", STRERROR);
+                THROW(IOException, "Error receiving server response -- %s", System_lastError());
         // Packet type router
         mysql->response.header = _getUInt1(&mysql->response);
         switch (mysql->response.header) {
@@ -549,7 +549,7 @@ static void _sendRequest(mysql_t *mysql, mysql_state_t targetState) {
         mysql->request.len = (uint32_t)(mysql->request.cursor - mysql->request.buf);
         // Send request
         if (Socket_write(mysql->socket, &mysql->request, mysql->request.len + 4) < 0) // Note: mysql->request.len value is just payload size + need to add 4 bytes for the header itself (len + seq)
-                THROW(IOException, "Cannot send handshake response -- %s", STRERROR);
+                THROW(IOException, "Cannot send handshake response -- %s", System_lastError());
         mysql->state = targetState;
 }
 

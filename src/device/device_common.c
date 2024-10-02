@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -73,7 +73,7 @@ bool filesystem_usage(Service_T s) {
                         // Symbolic link: dereference
                         char buf[PATH_MAX] = {};
                         if (! realpath(s->path, buf)) {
-                                Log_error("Cannot dereference filesystem '%s' (symlink) -- %s\n", s->path, STRERROR);
+                                Log_error("Cannot dereference filesystem '%s' (symlink) -- %s\n", s->path, System_lastError());
                                 return false;
                         }
                         st = stat(buf, &sb);

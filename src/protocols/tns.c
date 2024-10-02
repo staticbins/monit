@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -85,11 +85,11 @@ void check_tns(Socket_T socket) {
         assert(socket);
 
         if (Socket_write(socket, (unsigned char *)requestPing, sizeof(requestPing)) < 0)
-                THROW(IOException, "TNS: error sending ping -- %s", STRERROR);
+                THROW(IOException, "TNS: error sending ping -- %s", System_lastError());
 
         /* read just first few bytes which contains enough information */
         if (Socket_read(socket, (unsigned char *)buf, 5) < 5)
-                THROW(IOException, "TNS: error receiving ping response -- %s", STRERROR);
+                THROW(IOException, "TNS: error receiving ping response -- %s", System_lastError());
 
         /* compare packet type */
         if (buf[4] != TNS_TYPE_REFUSED)

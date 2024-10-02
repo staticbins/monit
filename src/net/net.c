@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -220,7 +220,7 @@ int create_server_socket_tcp(const char *address, int port, Socket_Family family
         snprintf(_port, sizeof(_port), "%d", port);
         int status = getaddrinfo(address, _port, &hints, &result);
         if (status) {
-                snprintf(error, STRLEN, "Cannot translate %s socket [%s]:%d -- %s", Socket_Names[family], NVLSTR(address), port, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                snprintf(error, STRLEN, "Cannot translate %s socket [%s]:%d -- %s", Socket_Names[family], NVLSTR(address), port, status == EAI_SYSTEM ? System_lastError() : gai_strerror(status));
                 return -1;
         }
         int flag = 1;
@@ -236,27 +236,27 @@ int create_server_socket_tcp(const char *address, int port, Socket_Family family
                                                                         freeaddrinfo(result);
                                                                         return s;
                                                                 } else {
-                                                                        snprintf(error, STRLEN, "Cannot listen: %s", STRERROR);
+                                                                        snprintf(error, STRLEN, "Cannot listen: %s", System_lastError());
                                                                 }
                                                         } else {
-                                                                snprintf(error, STRLEN, "Cannot bind: %s", STRERROR);
+                                                                snprintf(error, STRLEN, "Cannot bind: %s", System_lastError());
                                                         }
                                                 } else {
-                                                        snprintf(error, STRLEN, "Cannot set IPV6_V6ONLY option: %s", STRERROR);
+                                                        snprintf(error, STRLEN, "Cannot set IPV6_V6ONLY option: %s", System_lastError());
                                                 }
                                         } else {
-                                                snprintf(error, STRLEN, "Cannot set close on exec option: %s", STRERROR);
+                                                snprintf(error, STRLEN, "Cannot set close on exec option: %s", System_lastError());
                                         }
                                 } else {
-                                        snprintf(error, STRLEN, "Cannot set nonblocking socket: %s", STRERROR);
+                                        snprintf(error, STRLEN, "Cannot set nonblocking socket: %s", System_lastError());
                                 }
                         } else {
-                                snprintf(error, STRLEN, "Cannot set reuseaddr option: %s", STRERROR);
+                                snprintf(error, STRLEN, "Cannot set reuseaddr option: %s", System_lastError());
                         }
                         if (close(s) < 0)
-                                Log_error("Server socket %d close failed: %s\n", s, STRERROR);
+                                Log_error("Server socket %d close failed: %s\n", s, System_lastError());
                 } else {
-                        snprintf(error, STRLEN, "Cannot create socket: %s", STRERROR);
+                        snprintf(error, STRLEN, "Cannot create socket: %s", System_lastError());
                 }
         }
         freeaddrinfo(result);
@@ -267,7 +267,7 @@ int create_server_socket_tcp(const char *address, int port, Socket_Family family
 int create_server_socket_unix(const char *path, int backlog, char error[STRLEN]) {
         int s = socket(AF_UNIX, SOCK_STREAM, 0);
         if (s < 0) {
-                snprintf(error, STRLEN, "Cannot create socket -- %s", STRERROR);
+                snprintf(error, STRLEN, "Cannot create socket -- %s", System_lastError());
                 return -1;
         }
         struct sockaddr_un addr = {
@@ -280,19 +280,19 @@ int create_server_socket_unix(const char *path, int backlog, char error[STRLEN])
                                 if (listen(s, backlog) == 0) {
                                         return s;
                                 } else {
-                                        snprintf(error, STRLEN, "Cannot listen -- %s", STRERROR);
+                                        snprintf(error, STRLEN, "Cannot listen -- %s", System_lastError());
                                 }
                         } else {
-                                snprintf(error, STRLEN, "Cannot bind -- %s", STRERROR);
+                                snprintf(error, STRLEN, "Cannot bind -- %s", System_lastError());
                         }
                 } else {
-                        snprintf(error, STRLEN, "Cannot set close on exec option -- %s", STRERROR);
+                        snprintf(error, STRLEN, "Cannot set close on exec option -- %s", System_lastError());
                 }
         } else {
-                snprintf(error, STRLEN, "Cannot set nonblocking socket: %s", STRERROR);
+                snprintf(error, STRLEN, "Cannot set nonblocking socket: %s", System_lastError());
         }
         if (close(s) < 0)
-                Log_error("Socket %d close failed -- %s\n", s, STRERROR);
+                Log_error("Socket %d close failed -- %s\n", s, System_lastError());
         return -1;
 }
 
@@ -374,7 +374,7 @@ static bool _sendPing(const char *hostname, int socket, struct addrinfo *addr, i
                 n = sendto(socket, out_icmp, out_len, 0, addr->ai_addr, addr->ai_addrlen);
         } while (n == -1 && errno == EINTR);
         if (n < 0) {
-                _log_warningOrError(retry, maxretries, "Ping request for %s %d/%d failed -- %s\n", hostname, retry, maxretries, STRERROR);
+                _log_warningOrError(retry, maxretries, "Ping request for %s %d/%d failed -- %s\n", hostname, retry, maxretries, System_lastError());
                 return false;
         }
         return true;
@@ -416,7 +416,7 @@ static double _receivePing(const char *hostname, int socket, struct addrinfo *ad
                         n = recvfrom(socket, buf, sizeof(buf), 0, (struct sockaddr *)&in_addr, &addrlen);
                 } while (n == -1 && errno == EINTR);
                 if (n < 0) {
-                        _log_warningOrError(retry, maxretries, "Ping response from %s %d/%d failed -- %s\n", hostname, retry, maxretries, STRERROR);
+                        _log_warningOrError(retry, maxretries, "Ping response from %s %d/%d failed -- %s\n", hostname, retry, maxretries, System_lastError());
                         return -1.;
                 } else if (n >= in_len) {
                         /* read from raw socket via recvfrom() provides messages regardless of origin, we have to check the IP and skip responses belonging to other conversations or different ICMP types (n < in_len) */
@@ -491,7 +491,7 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
         }
         int status = getaddrinfo(hostname, NULL, &hints, &result);
         if (status) {
-                Log_error("Ping for %s -- getaddrinfo failed: %s\n", hostname, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                Log_error("Ping for %s -- getaddrinfo failed: %s\n", hostname, status == EAI_SYSTEM ? System_lastError() : gai_strerror(status));
                 return -1.;
         }
         int s = -1;
@@ -512,7 +512,7 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
                         }
                         if (s >= 0) {
                                 if (outgoing->ip && bind(s, (struct sockaddr *)&(outgoing->addr), outgoing->addrlen) < 0) {
-                                        Log_error("Cannot bind to outgoing address -- %s\n", STRERROR);
+                                        Log_error("Cannot bind to outgoing address -- %s\n", System_lastError());
                                 } else {
                                         _setPingOptions(s, addr);
                                         uint16_t id = getpid() & 0xFFFF;
@@ -528,10 +528,10 @@ double icmp_echo(const char *hostname, Socket_Family family, Outgoing_T *outgoin
                         } else {
                                 // Cannot create a socket -> return error
                                 if (errno == EACCES || errno == EPERM) {
-                                        DEBUG("Ping for %s -- cannot create socket: %s\n", hostname, STRERROR);
+                                        DEBUG("Ping for %s -- cannot create socket: %s\n", hostname, System_lastError());
                                         response = -2.;
                                 } else {
-                                        Log_error("Ping for %s -- cannot create socket: %s\n", hostname, STRERROR);
+                                        Log_error("Ping for %s -- cannot create socket: %s\n", hostname, System_lastError());
                                 }
                                 goto error;
                         }

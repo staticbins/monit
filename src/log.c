@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -114,11 +114,11 @@ static struct mylogpriority {
  */
 static bool _open(void) {
         if (Run.flags & Run_UseSyslog) {
-                openlog(Prog, LOG_PID, Run.facility);
+                openlog(MONIT, LOG_PID, Run.facility);
         } else {
                 _LOG = fopen(Run.files.log, "a");
                 if (! _LOG) {
-                        Log_error("Error opening the log file '%s' for writing -- %s\n", Run.files.log, STRERROR);
+                        Log_error("Error opening the log file '%s' for writing -- %s\n", Run.files.log, System_lastError());
                         return false;
                 }
                 /* Set logger in unbuffered mode */
@@ -157,7 +157,6 @@ static void _log(int priority, const char *s, va_list ap) {
         va_list ap_copy;
         LOCK(_mutex)
         {
-
                 FILE *output = priority < LOG_INFO ? stderr : stdout;
                 va_copy(ap_copy, ap);
                 vfprintf(output, s, ap_copy);
@@ -483,7 +482,7 @@ void Log_close(void) {
                 closelog();
         }
         if (_LOG  && (0 != fclose(_LOG))) {
-                Log_error("Error closing the log file -- %s\n", STRERROR);
+                Log_error("Error closing the log file -- %s\n", System_lastError());
         }
         _LOG = NULL;
 }

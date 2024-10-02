@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -119,15 +119,15 @@ void check_ldap2(Socket_T socket) {
 
 
         if (Socket_write(socket, (unsigned char *)request, sizeof(request)) < 0)
-                THROW(IOException, "LDAP: error sending data -- %s", STRERROR);
+                THROW(IOException, "LDAP: error sending data -- %s", System_lastError());
 
         if (Socket_read(socket, (unsigned char *)buf, sizeof(response)) <= 0)
-                THROW(IOException, "LDAP: error receiving data -- %s", STRERROR);
+                THROW(IOException, "LDAP: error receiving data -- %s", System_lastError());
 
         if (memcmp((unsigned char *)buf, (unsigned char *)response, sizeof(response)))
                 THROW(ProtocolException, "LDAP: anonymous bind failed");
 
         if (Socket_write(socket, (unsigned char *)unbind, sizeof(unbind)) < 0)
-                THROW(IOException, "LDAP: error sending data -- %s", STRERROR);
+                THROW(IOException, "LDAP: error sending data -- %s", System_lastError());
 }
 

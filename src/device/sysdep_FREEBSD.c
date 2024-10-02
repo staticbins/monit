@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -210,7 +210,7 @@ static unsigned long _mibGetValueByNameUlong(const char *name) {
         long long value = 0LL;
         size_t valueLength = sizeof(value);
         if (sysctlbyname(name, &value, &valueLength, NULL, 0)) {
-                Log_error("system statistics error -- cannot get %s value: %s\n", name, STRERROR);
+                Log_error("system statistics error -- cannot get %s value: %s\n", name, System_lastError());
                 return -1;
         }
         return value;
@@ -258,7 +258,7 @@ static bool _getZfsObjsetId(Info_T inf) {
         int    mibZfsStatsRootOid[CTL_MAXNAME] = {};
         size_t mibZfsStatsRootOidLength = sizeof(mibZfsStatsRootOid);
         if (sysctl(mibZfsStatsQueryOid, mibZfsStatsQueryOidLength, mibZfsStatsRootOid, &mibZfsStatsRootOidLength, mibZfsStatsName, strlen(mibZfsStatsName)) == -1) {
-                Log_error("system statistics error -- sysctl for %s -> OID failed: %s\n", mibZfsStatsName, STRERROR);
+                Log_error("system statistics error -- sysctl for %s -> OID failed: %s\n", mibZfsStatsName, System_lastError());
                 return false;
         }
         mibZfsStatsRootOidLength /= sizeof(int);
@@ -283,7 +283,7 @@ static bool _getZfsObjsetId(Info_T inf) {
                 // Get next object
                 if (sysctl(mibZfsStatsQueryOid, mibZfsStatsQueryOidLength, mibZfsStatsMemberOid, &mibZfsStatsMemberOidLength, 0, 0) == -1) {
                         if (errno != ENOENT)
-                                Log_error("system statistics error -- sysctl for next %s object failed: %s\n", mibZfsStatsName, STRERROR);
+                                Log_error("system statistics error -- sysctl for next %s object failed: %s\n", mibZfsStatsName, System_lastError());
                         else
                                 break; // No more objects under kstat.zfs.<zpool>.dataset.* tree
                 }
@@ -314,7 +314,7 @@ static bool _getZfsObjsetId(Info_T inf) {
                 char   objsetName[PATH_MAX] = {};
                 size_t objsetNameLength = sizeof(objsetName);
                 if (sysctl(mibZfsStatsQueryName, mibZfsStatsQueryNameLength, objsetName, &objsetNameLength, 0, 0) == -1 || objsetNameLength <= 0)
-                        Log_error("system statistics error -- sysctl for OID -> name failed: %s\n", STRERROR);
+                        Log_error("system statistics error -- sysctl for OID -> name failed: %s\n", System_lastError());
 
                 // Process the given objset ID data
                 snprintf(mibZfsStatsName, sizeof(mibZfsStatsName), "kstat.zfs.%.256s.dataset.objset-0x", inf->filesystem->object.key);
@@ -373,7 +373,7 @@ static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statfs usage;
         if (statfs(inf->filesystem->object.mountpoint, &usage) != 0) {
-                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
+                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, System_lastError());
                 return false;
         }
         inf->filesystem->f_bsize = usage.f_bsize;
@@ -485,7 +485,6 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                 FREE(mnt);
         }
         Log_error("Lookup for '%s' filesystem failed\n", path);
-error:
         inf->filesystem->object.mounted = false;
         return false;
 }

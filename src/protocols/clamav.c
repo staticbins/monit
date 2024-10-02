@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -44,12 +44,12 @@ void check_clamav(Socket_T socket) {
 
         // Send PING
         if (Socket_print(socket, "PING\r\n") < 0)
-                THROW(IOException, "CLAMAV: PING command error -- %s", STRERROR);
+                THROW(IOException, "CLAMAV: PING command error -- %s", System_lastError());
 
         // Read and check PONG
         char buf[STRLEN];
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "CLAMAV: PONG read error -- %s", STRERROR);
+                THROW(IOException, "CLAMAV: PONG read error -- %s", System_lastError());
         Str_chomp(buf);
         if (strncasecmp(buf, "PONG", 4) != 0)
                 THROW(ProtocolException, "CLAMAV: invalid PONG response -- %s", buf);

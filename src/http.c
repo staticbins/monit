@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -57,7 +57,9 @@
 #endif
 
 #include "monit.h"
+#include "_signal.h"
 #include "engine.h"
+#include "http.h"
 
 // libmonit
 #include "exceptions/AssertException.h"
@@ -91,7 +93,7 @@ static volatile bool running = false;
 bool can_http(void) {
         if ((Run.httpd.flags & Httpd_Net || Run.httpd.flags & Httpd_Unix) && (Run.flags & Run_Daemon)) {
                 if (! Engine_hasAllow() && ! Run.httpd.credentials && ! ((Run.httpd.socket.net.ssl.flags & SSL_Enabled) && (Run.httpd.flags & Httpd_Net) && Run.httpd.socket.net.ssl.clientpemfile)) {
-                        Log_error("%s: monit httpd not started since no connections are allowed\n", Prog);
+                        Log_error("monit httpd not started since no connections are allowed\n");
                         return false;
 
                 }
@@ -137,7 +139,7 @@ void monit_http(Httpd_Action action) {
 
 
 static void *thread_wrapper(__attribute__ ((unused)) void *arg) {
-        set_signal_block();
+        signal_block();
         Engine_start();
 #ifdef HAVE_OPENSSL
         Ssl_threadCleanup();

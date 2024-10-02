@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -38,7 +38,7 @@
 /**
  *  A WebSocket test.
  *
- *  http://tools.ietf.org/html/rfc6455
+ *  https://datatracker.ietf.org/doc/html/rfc6455
  *
  *  Establish websocket connection, send ping and close.
  *
@@ -55,7 +55,7 @@ static void read_response(Socket_T socket, int opcode) {
                 char buf[STRLEN];
                 // Read frame header
                 if ((n = Socket_read(socket, buf, 2)) != 2)
-                        THROW(IOException, "WEBSOCKET: response 0x%x: header read error -- %s", opcode, STRERROR);
+                        THROW(IOException, "WEBSOCKET: response 0x%x: header read error -- %s", opcode, System_lastError());
                 /*
                  * As we don't know the specific protocol used by this websocket server, the pipeline
                  * may contain some frames sent by server before the response we're waiting for (such
@@ -106,12 +106,12 @@ void check_websocket(Socket_T socket) {
                          P->parameters.websocket.request ? P->parameters.websocket.request : "/",
                          P->parameters.websocket.host ? P->parameters.websocket.host : Util_getHTTPHostHeader(socket, buf, sizeof(buf)),
                          P->parameters.websocket.version,
-                         P->parameters.websocket.origin ? P->parameters.websocket.origin : "http://www.mmonit.com") < 0)
+                         P->parameters.websocket.origin ? P->parameters.websocket.origin : "https://mmonit.com") < 0)
         {
-                THROW(IOException, "WEBSOCKET: error sending data -- %s", STRERROR);
+                THROW(IOException, "WEBSOCKET: error sending data -- %s", System_lastError());
         }
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "WEBSOCKET: error receiving data -- %s", STRERROR);
+                THROW(IOException, "WEBSOCKET: error receiving data -- %s", System_lastError());
         int status;
         if (! sscanf(buf, "%*s %d", &status) || (status != 101))
                 THROW(ProtocolException, "WEBSOCKET: error -- %s", buf);
@@ -125,7 +125,7 @@ void check_websocket(Socket_T socket) {
                 0x5b, 0x63, 0x68, 0x84 // Key
         };
         if (Socket_write(socket, ping, sizeof(ping)) < 0)
-                THROW(IOException, "WEBSOCKET: error sending ping -- %s", STRERROR);
+                THROW(IOException, "WEBSOCKET: error sending ping -- %s", System_lastError());
 
         // Pong: verify response opcode is Pong (0xA)
         read_response(socket, 0xA);
@@ -137,7 +137,7 @@ void check_websocket(Socket_T socket) {
                 0x5b, 0x63, 0x68, 0x84 // Key
         };
         if (Socket_write(socket, close_request, sizeof(close_request)) < 0)
-                THROW(IOException, "WEBSOCKET: error sending close -- %s", STRERROR);
+                THROW(IOException, "WEBSOCKET: error sending close -- %s", System_lastError());
 
         // Close response (0x8)
         read_response(socket, 0x8);

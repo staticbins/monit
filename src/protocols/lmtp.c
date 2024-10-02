@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -39,7 +39,7 @@
 
 static void say(Socket_T socket, const char *msg) {
         if (Socket_write(socket, msg, strlen(msg)) < 0)
-                THROW(IOException, "LMTP: error sending data -- %s", STRERROR);
+                THROW(IOException, "LMTP: error sending data -- %s", System_lastError());
 }
 
 
@@ -48,7 +48,7 @@ static void expect(Socket_T socket, int expect) {
         char buf[STRLEN];
         do {
                 if (! Socket_readLine(socket, buf, STRLEN))
-                        THROW(IOException, "LMTP: error receiving data -- %s", STRERROR);
+                        THROW(IOException, "LMTP: error receiving data -- %s", System_lastError());
                 Str_chomp(buf);
         } while (buf[3] == '-'); // Discard multi-line response
         if (sscanf(buf, "%d", &status) != 1 || status != expect)

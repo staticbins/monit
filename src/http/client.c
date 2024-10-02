@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -58,6 +58,7 @@
 #include "TextBox.h"
 #include "httpstatus.h"
 #include "client.h"
+#include "daemonize.h"
 
 // libmonit
 #include "exceptions/AssertException.h"
@@ -99,7 +100,7 @@ static char *_getBasicAuthHeader(void) {
 static void _parseHttpResponse(Socket_T S) {
         char buf[1024];
         if (! Socket_readLine(S, buf, sizeof(buf)))
-                THROW(IOException, "Error receiving data -- %s", STRERROR);
+                THROW(IOException, "Error receiving data -- %s", System_lastError());
         Str_chomp(buf);
         int status;
         if (! sscanf(buf, "%*s %d", &status))
@@ -156,7 +157,7 @@ static void _send(Socket_T S, const char *request, StringBuffer_T data) {
                 StringBuffer_toString(data));
         FREE(_auth);
         if (rv < 0)
-                THROW(IOException, "Monit: cannot send command to the monit daemon -- %s", STRERROR);
+                THROW(IOException, "Monit: cannot send command to the monit daemon -- %s", System_lastError());
 }
 
 

@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -116,7 +116,7 @@ static unsigned int _getChunkSize(Socket_T socket) {
         char buf[9];
         unsigned int wantBytes = 0;
         if (! Socket_readLine(socket, buf, sizeof(buf))) {
-                THROW(IOException, "HTTP error: failed to read chunk size -- %s", STRERROR);
+                THROW(IOException, "HTTP error: failed to read chunk size -- %s", System_lastError());
         }
         if (sscanf(buf, "%x", &wantBytes) != 1) {
                 THROW(ProtocolException, "HTTP error: invalid chunk size: %s", buf);
@@ -130,7 +130,7 @@ static int _readDataFromSocket(Socket_T socket, char *data, int wantBytes) {
         do {
                 int n = Socket_read(socket, data + readBytes, wantBytes - readBytes);
                 if (n <= 0) {
-                        THROW(ProtocolException, "HTTP error: Receiving data -- %s", STRERROR);
+                        THROW(ProtocolException, "HTTP error: Receiving data -- %s", System_lastError());
                 }
                 readBytes += n;
         } while (readBytes < wantBytes);
@@ -215,7 +215,7 @@ static void _processBodyUntilEOF(Socket_T socket, Port_T P, char **data, __attri
                 }
         }
         if (readBytes < 0) {
-                THROW(ProtocolException, "HTTP error: Receiving data -- %s", STRERROR);
+                THROW(ProtocolException, "HTTP error: Receiving data -- %s", System_lastError());
         }
 }
 
@@ -225,7 +225,7 @@ static void _processStatus(Socket_T socket, Port_T P) {
         char buf[512] = {};
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "HTTP: Error receiving data -- %s", STRERROR);
+                THROW(IOException, "HTTP: Error receiving data -- %s", System_lastError());
         Str_chomp(buf);
         if (! sscanf(buf, "%*s %d", &status))
                 THROW(ProtocolException, "HTTP error: Cannot parse HTTP status in response: %s", buf);
@@ -339,7 +339,7 @@ static void _sendRequest(Socket_T socket, Port_T P) {
         int send_status = Socket_write(socket, StringBuffer_toString(sb), StringBuffer_length(sb));
         StringBuffer_free(&sb);
         if (send_status < 0)
-                THROW(IOException, "HTTP: error sending data -- %s", STRERROR);
+                THROW(IOException, "HTTP: error sending data -- %s", System_lastError());
 }
 
 

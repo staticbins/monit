@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -35,7 +35,7 @@
 /* Server masquerade */
 #define SERVER_NAME        "monit"
 #define SERVER_VERSION     VERSION
-#define SERVER_URL         "http://mmonit.com/monit/"
+#define SERVER_URL         "https://mmonit.com/monit/"
 #define SERVER_PROTOCOL    "HTTP/1.0"
 #define DATEFMT             "%a, %d %b %Y %H:%M:%S GMT"
 

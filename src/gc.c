@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -39,6 +39,7 @@
 #include "protocol.h"
 #include "ProcessTable.h"
 #include "engine.h"
+#include "gc.h"
 
 
 /* Private prototypes */
@@ -159,6 +160,9 @@ void gc_event(Event_T *e) {
 }
 
 
+/* ----------------------------------------------------------------- Private */
+
+
 static void _gc_hostgroups(List_T *hostgroups) {
         if (*hostgroups) {
                 char *hostgroup = NULL;
@@ -168,9 +172,6 @@ static void _gc_hostgroups(List_T *hostgroups) {
                 List_free(hostgroups);
         }
 }
-
-
-/* ----------------------------------------------------------------- Private */
 
 
 static void _gcssloptions(SslOptions_T o) {
