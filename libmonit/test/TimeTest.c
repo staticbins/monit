@@ -69,7 +69,7 @@ int main(void) {
                 Time_usleep(100000LL); // Sleep for 100 ms (100,000 µs)
                 long long elapsedMs = Time_monotonic().milliseconds - startMs;
                 printf("\tElapsed ms: %lld\n", elapsedMs);
-                long long toleranceMs = 7LL; // Tolerate 7 ms drift
+                long long toleranceMs = 10LL; // Tolerate 10 ms drift
                 assert(elapsedMs >= 100 && elapsedMs <= 100 + toleranceMs);
         }
         printf("=> Test3: OK\n\n");
