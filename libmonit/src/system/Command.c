@@ -123,9 +123,9 @@ static void handle_children(__attribute__ ((unused)) int sig) {
                 if (P) {
                         if (WIFEXITED(status))
                                 P->status = WEXITSTATUS(status);
-                        else if (WIFSIGNALED(P->status))
+                        else if (WIFSIGNALED(status))
                                 P->status = WTERMSIG(status);
-                        else if (WIFSTOPPED(P->status))
+                        else if (WIFSTOPPED(status))
                                 P->status = WSTOPSIG(status);
                 }
         }
