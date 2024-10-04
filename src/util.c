@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -119,6 +119,7 @@
 #include "state.h"
 #include "protocol.h"
 #include "checksum.h"
+#include "gc.h"
 
 // libmonit
 #include "io/File.h"
@@ -1382,7 +1383,7 @@ char *Util_monitId(char *idfile) {
                 // Generate the unique id
                 file = fopen(idfile, "w");
                 if (! file) {
-                        Log_error("Error opening the idfile '%s' -- %s\n", idfile, STRERROR);
+                        Log_error("Error opening the idfile '%s' -- %s\n", idfile, System_lastError());
                         return NULL;
                 }
                 fprintf(file, "%s", Util_getToken(Run.id));
@@ -1393,20 +1394,20 @@ char *Util_monitId(char *idfile) {
                         return NULL;
                 }
                 if ((file = fopen(idfile,"r")) == (FILE *)NULL) {
-                        Log_error("Error opening the idfile '%s' -- %s\n", idfile, STRERROR);
+                        Log_error("Error opening the idfile '%s' -- %s\n", idfile, System_lastError());
                         return NULL;
                 }
                 if (fscanf(file, "%64s", Run.id) != 1) {
                         Log_error("Error reading id from file '%s'\n", idfile);
                         if (fclose(file))
-                                Log_error("Error closing file '%s' -- %s\n", idfile, STRERROR);
+                                Log_error("Error closing file '%s' -- %s\n", idfile, System_lastError());
                         return NULL;
                 }
         }
         fflush(file);
         fsync(fileno(file));
         if (fclose(file))
-                Log_error("Error closing file '%s' -- %s\n", idfile, STRERROR);
+                Log_error("Error closing file '%s' -- %s\n", idfile, System_lastError());
 
         return Run.id;
 }
@@ -1425,17 +1426,17 @@ pid_t Util_getPid(char *pidfile) {
                 return -1;
         }
         if ((file = fopen(pidfile,"r")) == (FILE *)NULL) {
-                DEBUG("Error opening the pidfile '%s' -- %s\n", pidfile, STRERROR);
+                DEBUG("Error opening the pidfile '%s' -- %s\n", pidfile, System_lastError());
                 return -1;
         }
         if (fscanf(file, "%d", &pid) != 1) {
                 DEBUG("Error reading pid from file '%s'\n", pidfile);
                 if (fclose(file))
-                        DEBUG("Error closing file '%s' -- %s\n", pidfile, STRERROR);
+                        DEBUG("Error closing file '%s' -- %s\n", pidfile, System_lastError());
                 return -1;
         }
         if (fclose(file))
-                DEBUG("Error closing file '%s' -- %s\n", pidfile, STRERROR);
+                DEBUG("Error closing file '%s' -- %s\n", pidfile, System_lastError());
         return pid;
 }
 
@@ -1515,7 +1516,7 @@ char *Util_getBasicAuthHeader(char *username, char *password) {
 void Util_redirectStdFds(void) {
         for (int i = 0; i < 3; i++) {
                 if (close(i) == -1 || open("/dev/null", O_RDWR) != i) {
-                        Log_error("Cannot reopen standard file descriptor (%d) -- %s\n", i, STRERROR);
+                        Log_error("Cannot reopen standard file descriptor (%d) -- %s\n", i, System_lastError());
                 }
         }
 }

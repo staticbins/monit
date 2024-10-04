@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -130,7 +130,10 @@
 #include "md5.h"
 #include "sha1.h"
 #include "checksum.h"
+#include "validate.h"
 #include "process_sysdep.h"
+#include "gc.h"
+#include "p.h"
 
 // libmonit
 #include "io/File.h"
@@ -229,7 +232,7 @@ static void  preparse(void);
 static void  postparse(void);
 static bool _parseOutgoingAddress(char *ip, Outgoing_T *outgoing);
 static void  addmail(char *, Mail_T, Mail_T *);
-static Service_T createservice(Service_Type, char *, char *, State_Type (*)(Service_T));
+static Service_T createservice(Service_Type, char *, char *, Check_State (*)(Service_T));
 static void  addservice(Service_T);
 static void  adddependant(char *);
 static void  addservicegroup(char *);
@@ -332,15 +335,16 @@ static void _sanityCheckEveryStatement(Service_T s);
 %}
 
 %union {
-        URL_T url;
+        URL_T     url;
         Address_T address;
-        float real;
-        int   number;
-        char *string;
+        float     real;
+        int       number;
+        int64_t   number64;
+        char     *string;
 }
 
 %token IF ELSE THEN FAILED
-%token SET LOGFILE FACILITY DAEMON SYSLOG MAILSERVER HTTPD ALLOW REJECTOPT ADDRESS INIT TERMINAL BATCH
+%token SET LOGFILE FACILITY DAEMON INTERVAL SYSLOG MAILSERVER HTTPD ALLOW REJECTOPT ADDRESS INIT TERMINAL BATCH
 %token READONLY CLEARTEXT MD5HASH SHA1HASH CRYPT DELAY
 %token PEMFILE PEMKEY PEMCHAIN ENABLE DISABLE SSLTOKEN CIPHER CLIENTPEMFILE ALLOWSELFCERTIFICATION SELFSIGNED VERIFY CERTIFICATE CACERTIFICATEFILE CACERTIFICATEPATH VALID
 %token INTERFACE LINK PACKET BYTEIN BYTEOUT PACKETIN PACKETOUT SPEED SATURATION UPLOAD DOWNLOAD TOTAL UP DOWN
@@ -394,9 +398,9 @@ statement_list  : statement
                 | statement_list statement
                 ;
 
-statement       : setalert
+statement       : setdaemon | setinterval
+                | setalert
                 | setssl
-                | setdaemon
                 | setterminal
                 | setlog
                 | seteventqueue
@@ -638,7 +642,19 @@ setalert        : SET alertmail formatlist reminder {
                   }
                 ;
 
+setinterval     : SET INTERVAL NUMBER startdelay {
+                        if (! (Run.flags & Run_Daemon) || ihp.daemon) {
+                                ihp.daemon     = true;
+                                Run.flags      |= Run_Daemon;
+                                Run.polltime   = $3;
+                                Run.startdelay = $<number>4;
+                        }
+                  }
+                ;
+
+// Deprecated
 setdaemon       : SET DAEMON NUMBER startdelay {
+                        yywarning("The 'set daemon' statement is deprecated. Use 'set interval' instead.");
                         if (! (Run.flags & Run_Daemon) || ihp.daemon) {
                                 ihp.daemon     = true;
                                 Run.flags      |= Run_Daemon;
@@ -691,16 +707,16 @@ limitlist       : /* EMPTY */
                 ;
 
 limit           : SENDEXPECTBUFFER ':' NUMBER unit {
-                        Run.limits.sendExpectBuffer = $3 * $<number>4;
+                        Run.limits.sendExpectBuffer = $3 * $<number64>4;
                   }
                 | FILECONTENTBUFFER ':' NUMBER unit {
-                        Run.limits.fileContentBuffer = $3 * $<number>4;
+                        Run.limits.fileContentBuffer = $3 * $<number64>4;
                   }
                 | HTTPCONTENTBUFFER ':' NUMBER unit {
-                        Run.limits.httpContentBuffer = $3 * $<number>4;
+                        Run.limits.httpContentBuffer = $3 * $<number64>4;
                   }
                 | PROGRAMOUTPUT ':' NUMBER unit {
-                        Run.limits.programOutput = $3 * $<number>4;
+                        Run.limits.programOutput = $3 * $<number64>4;
                   }
                 | NETWORKTIMEOUT ':' NUMBER MILLISECOND {
                         Run.limits.networkTimeout = $3;
@@ -1361,7 +1377,7 @@ checksystem     : CHECKSYSTEM SERVICENAME {
                         if (Str_sub(servicename, "$HOST")) {
                                 char hostname[STRLEN];
                                 if (gethostname(hostname, sizeof(hostname))) {
-                                        Log_error("System hostname error -- %s\n", STRERROR);
+                                        Log_error("System hostname error -- %s\n", System_lastError());
                                         cfg_errflag++;
                                 } else {
                                         Util_replaceString(&servicename, "$HOST", hostname);
@@ -2965,11 +2981,11 @@ fsflag          : IF CHANGED FSFLAG rate1 THEN action1 {
                   }
                 ;
 
-unit            : /* empty */  { $<number>$ = Unit_Byte; }
-                | BYTE         { $<number>$ = Unit_Byte; }
-                | KILOBYTE     { $<number>$ = Unit_Kilobyte; }
-                | MEGABYTE     { $<number>$ = Unit_Megabyte; }
-                | GIGABYTE     { $<number>$ = Unit_Gigabyte; }
+unit            : /* empty */  { $<number64>$ = Unit_Byte; }
+                | BYTE         { $<number64>$ = Unit_Byte; }
+                | KILOBYTE     { $<number64>$ = Unit_Kilobyte; }
+                | MEGABYTE     { $<number64>$ = Unit_Megabyte; }
+                | GIGABYTE     { $<number64>$ = Unit_Gigabyte; }
                 ;
 
 permission      : IF FAILED PERMISSION NUMBER rate1 THEN action1 recovery_success {
@@ -3392,7 +3408,7 @@ bool parse(char *controlfile) {
         assert(controlfile);
 
         if ((yyin = fopen(controlfile,"r")) == (FILE *)NULL) {
-                Log_error("Cannot open the control file '%s' -- %s\n", controlfile, STRERROR);
+                Log_error("Cannot open the control file '%s' -- %s\n", controlfile, System_lastError());
                 return false;
         }
 
@@ -3521,9 +3537,10 @@ static void postparse(void) {
                 current = NULL;
         }
 
-        /* Check that we do not start monit in daemon mode without having a poll time */
-        if (! Run.polltime && ((Run.flags & Run_Daemon) || (Run.flags & Run_Foreground))) {
-                Log_error("Poll time is invalid or not defined. Please define poll time in the control file\nas a number (> 0)  or use the -d option when starting monit\n");
+        /* Check that we do not start monit without having an interval time */
+        if (Run.polltime <= 0) {
+                Run.polltime = DEFAULT_CHECK_INTERVAL;
+                Log_warning("Interval time is invalid or not defined. Setting default service check interval to 5 seconds\n");
                 cfg_errflag++;
         }
 
@@ -3588,7 +3605,7 @@ static bool _parseOutgoingAddress(char *ip, Outgoing_T *outgoing) {
                 freeaddrinfo(result);
                 return true;
         } else {
-                yyerror2("IP address parsing failed for %s -- %s", ip, status == EAI_SYSTEM ? STRERROR : gai_strerror(status));
+                yyerror2("IP address parsing failed for %s -- %s", ip, status == EAI_SYSTEM ? System_lastError() : gai_strerror(status));
         }
         return false;
 }
@@ -3598,7 +3615,7 @@ static bool _parseOutgoingAddress(char *ip, Outgoing_T *outgoing) {
  * Create a new service object and add any current objects to the
  * service list.
  */
-static Service_T createservice(Service_Type type, char *name, char *value, State_Type (*check)(Service_T s)) {
+static Service_T createservice(Service_Type type, char *name, char *value, Check_State (*check)(Service_T s)) {
         assert(name);
 
         check_name(name);
@@ -4630,12 +4647,13 @@ static void addargument(char *argument) {
                 NEW(command);
         }
 
-        command->arg[command->length++] = argument;
-        command->arg[command->length] = NULL;
-
-        if (command->length >= ARGMAX)
+        if (command->length + 1 >= ARGMAX) {
                 yyerror("Exceeded maximum number of program arguments");
-
+                FREE(argument);
+        } else {
+                command->arg[command->length++] = argument;
+                command->arg[command->length] = NULL;
+        }
 }
 
 

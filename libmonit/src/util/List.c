@@ -10,7 +10,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -37,8 +37,8 @@
  * Implementation of the List interface. A freelist is used to retain
  * deleted nodes for reuse.
  *
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://tildeslash.com
+ * @see https://mmonit.com
  * @file
  */
 

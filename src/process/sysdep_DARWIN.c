@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -126,28 +126,28 @@ bool init_systeminfo_sysdep(void) {
         _setOSInfo();
         size_t size = sizeof(System_Info.cpu.count);
         if (sysctlbyname("hw.logicalcpu", &System_Info.cpu.count, &size, NULL, 0) == -1) {
-                DEBUG("system statistics error -- sysctl hw.logicalcpu failed: %s\n", STRERROR);
+                DEBUG("system statistics error -- sysctl hw.logicalcpu failed: %s\n", System_lastError());
                 return false;
         }
         size = sizeof(System_Info.memory.size);
         if (sysctlbyname("hw.memsize", &System_Info.memory.size, &size, NULL, 0) == -1) {
-                DEBUG("system statistics error -- sysctl hw.memsize failed: %s\n", STRERROR);
+                DEBUG("system statistics error -- sysctl hw.memsize failed: %s\n", System_lastError());
                 return false;
         }
         size = sizeof(pagesize);
         if (sysctlbyname("hw.pagesize", &pagesize, &size, NULL, 0) == -1) {
-                DEBUG("system statistics error -- sysctl hw.pagesize failed: %s\n", STRERROR);
+                DEBUG("system statistics error -- sysctl hw.pagesize failed: %s\n", System_lastError());
                 return false;
         }
         size = sizeof(System_Info.argmax);
         if (sysctlbyname("kern.argmax", &System_Info.argmax, &size, NULL, 0) == -1) {
-                DEBUG("system statistics error -- sysctl kern.argmax failed: %s\n", STRERROR);
+                DEBUG("system statistics error -- sysctl kern.argmax failed: %s\n", System_lastError());
                 return false;
         }
         struct timeval booted;
         size = sizeof(booted);
         if (sysctlbyname("kern.boottime", &booted, &size, NULL, 0) == -1) {
-                DEBUG("system statistics error -- sysctl kern.boottime failed: %s\n", STRERROR);
+                DEBUG("system statistics error -- sysctl kern.boottime failed: %s\n", System_lastError());
                 return false;
         } else {
                 System_Info.booted = booted.tv_sec;
@@ -166,13 +166,13 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
         size_t pinfo_size = 0;
         int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
         if (sysctl(mib, 4, NULL, &pinfo_size, NULL, 0) < 0) {
-                Log_error("system statistic error -- sysctl failed: %s\n", STRERROR);
+                Log_error("system statistic error -- sysctl failed: %s\n", System_lastError());
                 return 0;
         }
         struct kinfo_proc *pinfo = CALLOC(1, pinfo_size);
         if (sysctl(mib, 4, pinfo, &pinfo_size, NULL, 0)) {
                 FREE(pinfo);
-                Log_error("system statistic error -- sysctl failed: %s\n", STRERROR);
+                Log_error("system statistic error -- sysctl failed: %s\n", System_lastError());
                 return 0;
         }
         size_t treesize = pinfo_size / sizeof(struct kinfo_proc);
@@ -237,7 +237,7 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
                         int rv = proc_pidinfo(pt[i].pid, PROC_PIDTASKINFO, 0, &tinfo, sizeof(tinfo)); // If the process is zombie, skip this
                         if (rv <= 0) {
                                 if (errno != EPERM)
-                                        DEBUG("proc_pidinfo for pid %d failed -- %s\n", pt[i].pid, STRERROR);
+                                        DEBUG("proc_pidinfo for pid %d failed -- %s\n", pt[i].pid, System_lastError());
                         } else if ((unsigned long)rv < sizeof(tinfo)) {
                                 Log_error("proc_pidinfo for pid %d -- invalid result size\n", pt[i].pid);
                         } else {
@@ -249,7 +249,7 @@ int init_processtree_sysdep(process_t *reference, ProcessEngine_Flags pflags) {
                         rusage_info_current rusage;
                         if (proc_pid_rusage(pt[i].pid, RUSAGE_INFO_CURRENT, (rusage_info_t *)&rusage) < 0) {
                                 if (errno != EPERM)
-                                        DEBUG("proc_pid_rusage for pid %d failed -- %s\n", pt[i].pid, STRERROR);
+                                        DEBUG("proc_pid_rusage for pid %d failed -- %s\n", pt[i].pid, System_lastError());
                         } else {
                                 pt[i].read.time = pt[i].write.time = Time_milli();
                                 pt[i].read.bytes = -1;
@@ -309,7 +309,7 @@ bool used_system_memory_sysdep(SystemInfo_T *si) {
         size_t len = sizeof(struct xsw_usage);
         struct xsw_usage swap;
         if (sysctl(mib, 2, &swap, &len, NULL, 0) == -1) {
-                DEBUG("system statistic error -- cannot get swap usage: %s\n", STRERROR);
+                DEBUG("system statistic error -- cannot get swap usage: %s\n", System_lastError());
                 si->swap.size = 0ULL;
                 return false;
         }
@@ -357,14 +357,14 @@ bool used_system_filedescriptors_sysdep(__attribute__ ((unused)) SystemInfo_T *s
         // Open files
         size_t len = sizeof(si->filedescriptors.allocated);
         if (sysctlbyname("kern.num_files", &si->filedescriptors.allocated, &len, NULL, 0) == -1) {
-                DEBUG("system statistics error -- sysctl kern.openfiles failed: %s\n", STRERROR);
+                DEBUG("system statistics error -- sysctl kern.openfiles failed: %s\n", System_lastError());
                 return false;
         }
         // Max files
         int mib[2] = {CTL_KERN, KERN_MAXFILES};
         len = sizeof(si->filedescriptors.maximum);
         if (sysctl(mib, 2, &si->filedescriptors.maximum, &len, NULL, 0) == -1) {
-                DEBUG("system statistics error -- sysctl kern.maxfiles failed: %s\n", STRERROR);
+                DEBUG("system statistics error -- sysctl kern.maxfiles failed: %s\n", System_lastError());
                 return false;
         }
         return true;

@@ -295,17 +295,31 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_C_CONST
 AC_C_BIGENDIAN
-# Define _GNU_SOURCE so we can have Posix headers etc included. We use the
-# -std=cXX compiler switch which only include a minimum of C headers
-CFLAGS="$CFLAGS -D_GNU_SOURCE"
+if test `uname` != "Darwin"
+then
+        # Define _GNU_SOURCE so we can have Posix headers etc included. We use the
+        # -std=cXX compiler switch which only include a minimum of C headers
+        CFLAGS="$CFLAGS -D_GNU_SOURCE"
+else
+        # Instead of -D_GNU_SOURCE, on Darwin use -D_DARWIN_C_SOURCE -D_POSIX_C_SOURCE=199506L
+        CFLAGS="$CFLAGS -D_DARWIN_C_SOURCE -D_POSIX_C_SOURCE=199506L"
+fi
 
 # Compiler; tune warnings
-CFLAGS="$CFLAGS -Wall -Wunused "
+CFLAGS="$CFLAGS -Wall -Wunused ";
 
-# Require at least C99 and use C11 if available
+# Require C11
 AC_COMPUTE_INT([STDC_VERSION],[__STDC_VERSION__],,[STDC_VERSION=0])
-AS_IF([test "$STDC_VERSION" -ge 201112],[CFLAGS="$CFLAGS -std=c11"],[CFLAGS="$CFLAGS -std=c99"])
+AS_IF([test "$STDC_VERSION" -ge 201112],
+        [CFLAGS="$CFLAGS -std=c11"],
+        [AC_MSG_ERROR([Your compiler does not support C11])]
+)
+
+# Check for C99 headers
 AC_CHECK_HEADERS([stdint.h stdbool.h], [], [AC_MSG_ERROR([toolchain does not have C99 headers])])
+
+# Check for C11 atomic operations support
+AC_CHECK_HEADERS([stdatomic.h], [], [AC_MSG_ERROR([toolchain does not support C11 atomic operations])])
 
 # ------------------------------------------------------------------------
 # IPv6 Support
@@ -372,7 +386,7 @@ if [[ $(uname) == "Darwin" ]]; then
     $CC -mmacosx-version-min=10.15 -o t t.c || AC_MSG_ERROR([Could not compile test program])
 
     # Extract the minos value using otool
-    min_macos_version=$(otool -l t | egrep minos | awk '{print $2}')
+    min_macos_version=$(otool -l t | awk '/minos/{print $2}')
 
     # Clean up the test files
     rm -f t.c t

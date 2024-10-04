@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -73,7 +73,7 @@ typedef struct myeventtable {
         const char *description_succeeded;
         const char *description_changed;
         const char *description_changednot;
-        State_Type saveState; // Bitmap of the event states that should trigger state file update
+        Check_State saveState; // Bitmap of the event states that should trigger state file update
 } EventTable_T;
 
 
@@ -102,7 +102,7 @@ extern EventTable_T Event_Table[];
  * @param action Description of the event action
  * @param s Optional message describing the event
  */
-void Event_post(Service_T service, long id, State_Type state, EventAction_T action, const char *s, ...) __attribute__((format (printf, 5, 6)));
+void Event_post(Service_T service, long id, Check_State state, EventAction_T action, const char *s, ...) __attribute__((format (printf, 5, 6)));
 
 
 /**

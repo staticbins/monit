@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -111,7 +111,7 @@ static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
         if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
-                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
+                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, System_lastError());
                 return false;
         }
         inf->filesystem->f_bsize = usage.f_frsize;
@@ -216,7 +216,7 @@ static bool _getZfsObjsetId(Info_T inf) {
         glob_t globbuf;
         int rv = glob(path, 0, NULL, &globbuf);
         if (rv) {
-                Log_error("system statistic error -- glob failed: %d (%s)\n", rv, STRERROR);
+                Log_error("system statistic error -- glob failed: %d (%s)\n", rv, System_lastError());
                 return false;
         }
 
@@ -276,7 +276,7 @@ static bool _updateZfsStatistics(Info_T inf) {
                         Log_error("filesystem statistic error: cannot parse ZFS statistics from %s\n", inf->filesystem->object.module);
                 }
         } else {
-                Log_error("filesystem statistic error: cannot read ZFS statistics from %s -- %s\n", inf->filesystem->object.module, STRERROR);
+                Log_error("filesystem statistic error: cannot read ZFS statistics from %s -- %s\n", inf->filesystem->object.module, System_lastError());
         }
         return false;
 }
@@ -331,7 +331,7 @@ static bool _getSysfsBlockDiskActivity(void *_inf) {
                 unsigned long long writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
                 if (fscanf(f, "%llu %*u %llu %llu %llu %*u %llu %llu", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
                         fclose(f);
-                        Log_error("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
+                        Log_error("filesystem statistic error: cannot parse %s -- %s\n", path, System_lastError());
                         return false;
                 }
                 Statistics_update(&(inf->filesystem->time.read), now, readTime);
@@ -343,7 +343,7 @@ static bool _getSysfsBlockDiskActivity(void *_inf) {
                 fclose(f);
                 return true;
         }
-        Log_error("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
+        Log_error("filesystem statistic error: cannot read %s -- %s\n", path, System_lastError());
         return false;
 }
 
@@ -377,7 +377,7 @@ static bool _getProcfsBlockDiskActivity(void *_inf) {
                 fclose(f);
                 return true;
         }
-        Log_error("filesystem statistic error: cannot read %s -- %s\n", DISKSTAT, STRERROR);
+        Log_error("filesystem statistic error: cannot read %s -- %s\n", DISKSTAT, System_lastError());
         return false;
 }
 
@@ -499,7 +499,7 @@ static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char 
                                 _statistics.generation++;
                         }
                 } else {
-                        Log_error("Mount table polling failed -- %s\n", STRERROR);
+                        Log_error("Mount table polling failed -- %s\n", System_lastError());
                 }
         }
         if (inf->filesystem->object.generation != _statistics.generation || _statistics.fd == -1) {

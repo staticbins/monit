@@ -68,11 +68,6 @@
 #include <ctype.h>
 #endif
 
-// libmonit
-#include "system/Time.h"
-#include "util/Fmt.h"
-#include "util/List.h"
-
 #include "monit.h"
 #include "cervlet.h"
 #include "engine.h"
@@ -85,10 +80,15 @@
 #include "protocol.h"
 #include "TextColor.h"
 #include "TextBox.h"
+#include "daemonize.h"
+#include "xml.h"
 
+// libmonit
+#include "system/Time.h"
+#include "util/Fmt.h"
+#include "util/List.h"
 
 #define ACTION(c) ! strncasecmp(req->url, c, sizeof(c))
-
 
 /* URL Commands supported */
 #define HOME        "/"
@@ -114,7 +114,7 @@
 typedef enum {
         TXT = 0,
         HTML
-} __attribute__((__packed__)) Output_Type;
+} Output_Type;
 
 
 typedef struct ServiceMap_T {
@@ -801,7 +801,7 @@ static void printFavicon(HttpResponse res) {
                 Socket_print(S, "Content-Type: image/x-icon\r\n");
                 Socket_print(S, "Connection: close\r\n\r\n");
                 if (Socket_write(S, favicon, l) < 0) {
-                        Log_error("Error sending favicon data -- %s\n", STRERROR);
+                        Log_error("Error sending favicon data -- %s\n", System_lastError());
                 }
         }
 }
@@ -1145,7 +1145,7 @@ static void do_viewlog(HttpRequest req, HttpResponse res) {
                         fclose(f);
                         StringBuffer_append(res->outputbuffer, "</textarea></form>");
                 } else {
-                        StringBuffer_append(res->outputbuffer, "Error opening logfile: %s", STRERROR);
+                        StringBuffer_append(res->outputbuffer, "Error opening logfile: %s", System_lastError());
                 }
         } else {
                 StringBuffer_append(res->outputbuffer,
@@ -1197,7 +1197,7 @@ static void handle_service_action(HttpRequest req, HttpResponse res) {
                                 }
                                 _serviceMapAction(s, &ap);
                                 Run.flags |= Run_ActionPending; /* set the global flag */
-                                do_wakeupcall();
+                                Monit_wakeup();
                                 do_service(req, res, s);
                         }
                 }
@@ -1228,7 +1228,7 @@ static void handle_doaction(HttpRequest req, HttpResponse res) {
                         }
                         if (ap.found > 0) {
                                 Run.flags |= Run_ActionPending;
-                                do_wakeupcall();
+                                Monit_wakeup();
                         }
                 }
         }
@@ -1251,7 +1251,7 @@ static void handle_runtime_action(HttpRequest req, HttpResponse res) {
                 }
                 if (IS(action, "validate")) {
                         Log_info("The Monit http server woke up on user request\n");
-                        do_wakeupcall();
+                        Monit_wakeup();
                 } else if (IS(action, "stop")) {
                         Log_info("The Monit http server stopped on user request\n");
                         send_error(req, res, SC_SERVICE_UNAVAILABLE, "The Monit http server is stopped");

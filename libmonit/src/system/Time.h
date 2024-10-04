@@ -10,7 +10,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -32,8 +32,8 @@
  * as the number of seconds and microseconds since the epoch, <i>January 1,
  * 1970 00:00 UTC</i>.
  *
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://tildeslash.com
+ * @see https://mmonit.com
  * @file
  */
 
@@ -114,16 +114,6 @@ time_t Time_now(void);
 
 
 /**
- * Returns the monotonic time since some unspecified starting point. This
- * clock is not affected by NTP time jumps, but may change in frequency
- * on platforms that don't support CLOCK_MONOTONIC_RAW.
- * @return A time_t representing the number of seconds since clock start.
- * @exception AssertException If time could not be obtained
- */
-time_t Time_monotonic(void);
-
-
-/**
  * Returns the time since the epoch measured in milliseconds.
  * @return A 64 bits long representing the systems notion of milliseconds
  * since the <strong>epoch</strong> (January 1, 1970, 00:00:00 GMT) in
@@ -141,6 +131,23 @@ long long Time_milli(void);
  * @exception AssertException If time could not be obtained
  */
 long long Time_micro(void);
+
+
+/**
+ * Returns a monotonic time at some unspecified starting point as a
+ * structure with various temporal resolution of the <b>same</b> time.
+ * This time is not affected by NTP time jumps, but may change in
+ * frequency on platforms that don't support CLOCK_MONOTONIC_RAW.
+ * @return A time_monotonic_t structure with various resolutions of the
+ * same time since the clock started.
+ * @exception AssertException If time could not be obtained
+ */
+struct time_monotonic_t {
+    time_t seconds;
+    long long milliseconds;
+    long long microseconds;
+    long long nanoseconds;
+} Time_monotonic(void);
 
 
 /**
@@ -336,11 +343,41 @@ int Time_incron(const char *cron, time_t time);
 
 
 /**
- * This method suspend the calling process or Thread for
- * <code>u</code> micro seconds.
- * @param u Micro seconds to sleep
+ * Suspends the calling process or thread for the specified
+ * duration in microseconds. If sleep is interrupted by a signal,
+ * the function aborts sleep and returns the number of remaining
+ * microseconds.
+ * @param microseconds The duration of the sleep in microseconds.
+ * @return 0 if sleep was completed, number of remaining microseconds
+ * if sleep was interrupted by a signal.
  */
-void Time_usleep(long u);
+long long Time_usleep(long long microseconds);
+
+
+/**
+ * Suspends the calling process or thread for the specified
+ * duration in microseconds. Unlike Time_usleep, this function is
+ * resilient to interruptions by signals. If a signal interrupts
+ * sleep, the function will continue to sleep for the remainder
+ * of the specified duration after handling of the signal.
+ * @param microseconds The duration of the sleep in microseconds.
+ */
+void Time_usleepComplete(long long microseconds);
+
+
+/**
+ * Executes a predicate function with exponential backoff, retrying
+ * up to 10 times with increasing wait intervals. Initially, minimal
+ * wait times are applied for quick retries, with subsequent wait times
+ * growing exponentially. The total worst-case wait time is approximately
+ * 5 seconds, optimizing between retry speed and recovery time.
+ * @param predicate The predicate function to be executed, returning true
+ * on success.
+ * @param args Optional arguments for the predicate, or NULL if not needed.
+ * @return True if the predicate succeeds within the retries, otherwise false.
+ */
+bool Time_backoff(bool predicate(void *args), void *args);
+
 
 //@}
 

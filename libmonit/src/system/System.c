@@ -10,7 +10,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -45,8 +45,8 @@
 /**
  * Implementation of the System Facade for Unix Systems.
  *
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://tildeslash.com
+ * @see https://mmonit.com
  * @file
  */
 
@@ -54,9 +54,9 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-extern void(*_AbortHandler)(const char *error, va_list ap);
-extern void(*_ErrorHandler)(const char *error, va_list ap);
-extern void(*_DebugHandler)(const char *info, va_list ap);
+extern void(*_abortHandler)(const char *error, va_list ap);
+extern void(*_errorHandler)(const char *error, va_list ap);
+extern void(*_debugHandler)(const char *info, va_list ap);
 
 
 /* ---------------------------------------------------------------- Public */
@@ -75,8 +75,8 @@ const char *System_getError(int error) {
 void System_abort(const char *e, ...) {
         va_list ap;
         va_start(ap, e);
-        if (_AbortHandler)
-                _AbortHandler(e, ap);
+        if (_abortHandler) 
+                _abortHandler(e, ap);
         else {
                 vfprintf(stderr, e, ap);
                 abort();
@@ -88,8 +88,8 @@ void System_abort(const char *e, ...) {
 void System_error(const char *e, ...) {
         va_list ap;
         va_start(ap, e);
-        if (_ErrorHandler)
-                _ErrorHandler(e, ap);
+        if (_errorHandler)
+                _errorHandler(e, ap);
         else
                 vfprintf(stderr, e, ap);
         va_end(ap);
@@ -97,10 +97,10 @@ void System_error(const char *e, ...) {
 
 
 void System_debug(const char *d, ...) {
-        if (_DebugHandler) {
+        if (_debugHandler) {
                 va_list ap;
                 va_start(ap, d);
-                _DebugHandler(d, ap);
+                _debugHandler(d, ap);
                 va_end(ap);
         }
 }

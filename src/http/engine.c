@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -405,7 +405,7 @@ static Socket_T _socketProducer(void) {
                         if (myServerSockets[i].revents & POLLIN) {
                                 int client = accept(myServerSockets[i].fd, data[i].addr, &(data[i].addrlen));
                                 if (client < 0) {
-                                        Log_error("HTTP server: cannot accept connection -- %s\n", stopped ? "service stopped" : STRERROR);
+                                        Log_error("HTTP server: cannot accept connection -- %s\n", stopped ? "service stopped" : System_lastError());
                                         return NULL;
                                 }
                                 if (!Net_setNonBlocking(client) || !Net_canRead(client, 500) || !Net_canWrite(client, 500) || ! _authenticateHost(data[i].addr)) {
@@ -450,19 +450,19 @@ static void _createUnixServer(char error[STRLEN]) {
         if (myServerSockets[myServerSocketsCount].fd != -1) {
                 if (Run.httpd.flags & Httpd_UnixPermission) {
                         if (chmod(Run.httpd.socket.unix.path, Run.httpd.socket.unix.permission) != 0) {
-                                snprintf(error, STRLEN, "Could not change unix socket permission -- %s", STRERROR);
+                                snprintf(error, STRLEN, "Could not change unix socket permission -- %s", System_lastError());
                                 goto error;
                         }
                 }
                 if (Run.httpd.flags & Httpd_UnixUid) {
                         if (chown(Run.httpd.socket.unix.path, Run.httpd.socket.unix.uid, -1) != 0) {
-                                snprintf(error, STRLEN, "Could not change unix socket uid -- %s", STRERROR);
+                                snprintf(error, STRLEN, "Could not change unix socket uid -- %s", System_lastError());
                                 goto error;
                         }
                 }
                 if (Run.httpd.flags & Httpd_UnixGid) {
                         if (chown(Run.httpd.socket.unix.path, -1, Run.httpd.socket.unix.gid) != 0) {
-                                snprintf(error, STRLEN, "Could not change unix socket gid -- %s", STRERROR);
+                                snprintf(error, STRLEN, "Could not change unix socket gid -- %s", System_lastError());
                                 goto error;
                         }
                 }

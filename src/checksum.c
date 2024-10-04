@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -204,7 +204,7 @@ void Checksum_printHash(char *file) {
         FILE *fhandle = NULL;
 
         if (! (fhandle = file ? fopen(file, "r") : stdin) || ! Checksum_getStreamDigests(fhandle, sha1, md5) || (file && fclose(fhandle))) {
-                printf("%s: %s\n", file, STRERROR);
+                printf("%s: %s\n", file, System_lastError());
                 exit(1);
         }
         printf("SHA1(%s) = %s\n", file ? file : "stdin", Checksum_digest2Bytes(sha1, 20, hash));
@@ -249,7 +249,7 @@ bool Checksum_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned lo
                         }
 
                         if (fclose(f))
-                                Log_error("checksum: error closing file '%s' -- %s\n", file, STRERROR);
+                                Log_error("checksum: error closing file '%s' -- %s\n", file, System_lastError());
 
                         if (! fresult) {
                                 Log_error("checksum: file %s stream error (0x%x)\n", file, fresult);
@@ -260,7 +260,7 @@ bool Checksum_getChecksum(char *file, Hash_Type hashtype, char *buf, unsigned lo
                         return true;
 
                 } else
-                        Log_error("checksum: failed to open file %s -- %s\n", file, STRERROR);
+                        Log_error("checksum: failed to open file %s -- %s\n", file, System_lastError());
         } else
                 Log_error("checksum: file %s is not regular file\n", file);
         return false;

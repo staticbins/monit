@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -174,7 +174,7 @@ static const char *keylogName = NULL;
 static void _keylogClose(void) {
         if (keylog) {
                 if (fclose(keylog) != 0)
-                        Log_error("Cannot close the key log file -- %s\n", STRERROR);
+                        Log_error("Cannot close the key log file -- %s\n", System_lastError());
         }
 }
 
@@ -192,7 +192,7 @@ static bool _keylogOpen(void) {
                 keylog = fopen(keylogName, "a");
                 umask(savemask);
                 if (! keylog) {
-                        Log_error("Cannot open the key log file '%s' -- %s\n", keylogName, STRERROR);
+                        Log_error("Cannot open the key log file '%s' -- %s\n", keylogName, System_lastError());
                         return false;
                 }
 
@@ -778,7 +778,7 @@ int Ssl_write(T C, const void *b, int size, int timeout) {
                                                 else if (n == 0)
                                                         Log_error("SSL: write error -- EOF\n");
                                                 else if (n == -1)
-                                                        Log_error("SSL: write I/O error -- %s\n", STRERROR);
+                                                        Log_error("SSL: write I/O error -- %s\n", System_lastError());
                                         }
                                         return -1;
                                 default:
@@ -820,7 +820,7 @@ int Ssl_read(T C, void *b, int size, int timeout) {
                                                 else if (n == 0)
                                                         Log_error("SSL: read error -- EOF\n");
                                                 else if (n == -1)
-                                                        Log_error("SSL: read I/O error -- %s\n", STRERROR);
+                                                        Log_error("SSL: read I/O error -- %s\n", System_lastError());
                                         }
                                         return -1;
                                 default:
@@ -1002,7 +1002,7 @@ SslServer_T SslServer_new(int socket, SslOptions_T options) {
         if (clientpemfile) {
                 struct stat sb;
                 if (stat(clientpemfile, &sb) == -1) {
-                        Log_error("SSL: client PEM file %s error -- %s\n", clientpemfile, STRERROR);
+                        Log_error("SSL: client PEM file %s error -- %s\n", clientpemfile, System_lastError());
                         goto sslerror;
                 }
                 if (! S_ISREG(sb.st_mode)) {
@@ -1054,8 +1054,7 @@ T SslServer_newConnection(SslServer_T S) {
 }
 
 
-void SslServer_freeConnection(SslServer_T S, T *C) {
-        assert(S);
+void SslServer_freeConnection(T *C) {
         assert(C && *C);
         Ssl_close(*C);
         Ssl_free(C);

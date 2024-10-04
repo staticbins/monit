@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -50,7 +50,7 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-// Message type (see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718021)
+// Message type (see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718021)
 typedef enum {
         MQTT_Type_ConnectRequest = 1,
         MQTT_Type_ConnectResponse,
@@ -66,19 +66,19 @@ typedef enum {
         MQTT_Type_PingRequest,
         MQTT_Type_PingResponse,
         MQTT_Type_Disconnect
-} __attribute__((__packed__)) MQTT_Type;
+} MQTT_Type;
 
 
-// Connect request flags (see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718030) - we use just subset for CONNECT and DISCONNECT
+// Connect request flags (see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718030) - we use just subset for CONNECT and DISCONNECT
 typedef enum {
         MQTT_ConnectRequest_None         = 0x00,
         MQTT_ConnectRequest_CleanSession = 0x02,
         MQTT_ConnectRequest_Password     = 0x40,
         MQTT_ConnectRequest_Username     = 0x80
-} __attribute__((__packed__)) MQTT_ConnectRequest_Flags;
+} MQTT_ConnectRequest_Flags;
 
 
-// Connect response flags (see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718035)
+// Connect response flags (see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718035)
 typedef enum {
         MQTT_ConnectResponse_Accepted = 0,
         MQTT_ConnectResponse_Refused_Protocol,
@@ -86,7 +86,7 @@ typedef enum {
         MQTT_ConnectResponse_Refused_ServiceUnavailable,
         MQTT_ConnectResponse_Refused_Credentials,
         MQTT_ConnectResponse_Refused_NotAuthorized
-} __attribute__((__packed__)) MQTT_ConnectResponse_Codes;
+} MQTT_ConnectResponse_Codes;
 
 
 /* -------------------------------------------------------------- Messages */
@@ -137,7 +137,7 @@ typedef enum {
         MQTT_Init = 0,
         MQTT_ConnectSent,
         MQTT_Connected
-} __attribute__((__packed__)) mqtt_state_t;
+} mqtt_state_t;
 
 
 typedef struct mqtt_t {
@@ -255,7 +255,7 @@ static void _connectRequest(mqtt_t *mqtt) {
         connect.header.messageLength += sizeof(mqtt_connect_request_t) - sizeof(mqtt_header_t) - sizeof(connect.data);
 
         if (Socket_write(mqtt->socket, &connect, sizeof(mqtt_header_t) + connect.header.messageLength) < 0) {
-                THROW(IOException, "Cannot connect -- %s\n", STRERROR);
+                THROW(IOException, "Cannot connect -- %s\n", System_lastError());
         }
         mqtt->state = MQTT_ConnectSent;
 }
@@ -264,7 +264,7 @@ static void _connectRequest(mqtt_t *mqtt) {
 static void _connectResponse(mqtt_t *mqtt) {
         mqtt_connect_response_t response = {};
         if ((long)Socket_read(mqtt->socket, &response, sizeof(mqtt_connect_response_t)) < (long)sizeof(mqtt_connect_response_t)) {
-                THROW(IOException, "Error receiving connection response -- %s", STRERROR);
+                THROW(IOException, "Error receiving connection response -- %s", System_lastError());
         }
         if (response.header.messageType != MQTT_Type_ConnectResponse) {
                 THROW(ProtocolException, "Unexpected connection response type -- %s (%d)", _describeType(response.header.messageType), response.header.messageType);
@@ -287,7 +287,7 @@ static void _disconnect(mqtt_t *mqtt) {
                         .header.messageLength = 0
                 };
                 if (Socket_write(mqtt->socket, &disconnect, sizeof(mqtt_disconnect_request_t)) < 0) {
-                        THROW(IOException, "Cannot disconnect -- %s\n", STRERROR);
+                        THROW(IOException, "Cannot disconnect -- %s\n", System_lastError());
                 }
         }
         mqtt->state = MQTT_Init;
@@ -300,7 +300,7 @@ static void _disconnect(mqtt_t *mqtt) {
 /**
  * MQTT test. Connect and disconnect.
  *
- *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
+ *  @see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
  */
 void check_mqtt(Socket_T socket) {
         assert(socket);

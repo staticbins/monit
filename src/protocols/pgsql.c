@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -59,7 +59,7 @@ typedef enum {
         PostgreSQL_AuthenticationOk,
         PostgreSQL_AuthenticationNeeded,
         PostgreSQL_AuthenticationNeededUnknownType
-} __attribute__((__packed__)) PostgreSQLState;
+} PostgreSQLState;
 
 
 typedef enum {
@@ -76,7 +76,7 @@ typedef enum {
         PostgreSQLPacket_Terminate        = 'X',
         PostgreSQLPacket_PasswordMessage  = 'p', //Note: also used for GSSResponse, SASLInitialResponse, SASLResponse
         PostgreSQLPacket_PortalSuspended  = 's'
-} __attribute__((__packed__)) PostgreSQLPacket;
+} PostgreSQLPacket;
 
 
 typedef enum {
@@ -98,7 +98,7 @@ typedef enum {
         PostgreSQLError_File              = 'F',
         PostgreSQLError_Line              = 'L',
         PostgreSQLError_Routine           = 'R'
-} __attribute__((__packed__)) PostgreSQLError;
+} PostgreSQLError;
 
 
 typedef enum {
@@ -122,7 +122,7 @@ typedef struct postgresql_startupmessage_t {
         uint32_t protocol_major : 16;
         uint32_t protocol_minor : 16;
         char parameters[1024];
-} __attribute__((__packed__)) *postgresql_startupmessage_t;
+} *postgresql_startupmessage_t;
 
 
 // See PasswordMessage at https://www.postgresql.org/docs/current/protocol-message-formats.html
@@ -130,14 +130,14 @@ typedef struct postgresql_passwordmessage_t {
         PostgreSQLPacket type;
         uint32_t length;
         char data[1024];
-} __attribute__((__packed__)) *postgresql_passwordmessage_t;
+} *postgresql_passwordmessage_t;
 
 
 // See Terminate at https://www.postgresql.org/docs/current/protocol-message-formats.html
 typedef struct postgresql_terminatemessage_t {
         PostgreSQLPacket type;
         uint32_t length;
-} __attribute__((__packed__)) *postgresql_terminatemessage_t;
+} *postgresql_terminatemessage_t;
 
 
 // https://www.postgresql.org/docs/current/protocol-message-formats.html: generic part which is common to all valid responses
@@ -145,18 +145,18 @@ typedef struct postgresql_terminatemessage_t {
 typedef struct postgresql_response_header_t {
         PostgreSQLPacket type;
         uint32_t length;
-} __attribute__((__packed__)) *postgresql_response_header_t;
+} *postgresql_response_header_t;
 
 
 typedef struct postgresql_error_t {
         PostgreSQLError type;
         char value[256];
-} __attribute__((__packed__)) *postgresql_error_t;
+} *postgresql_error_t;
 
 
 typedef struct postgresql_response_authentication_header_t {
         uint32_t length;
-} __attribute__((__packed__)) *postgresql_response_authentication_header_t;
+} *postgresql_response_authentication_header_t;
 
 
 typedef struct postgresql_response_authentication_t {
@@ -169,7 +169,7 @@ typedef struct postgresql_response_authentication_t {
                         char data[64];
                 } generic;
         } data;
-} __attribute__((__packed__)) *postgresql_response_authentication_t;
+} *postgresql_response_authentication_t;
 
 
 typedef struct postgresql_response_t {
@@ -178,7 +178,7 @@ typedef struct postgresql_response_t {
                 char                                        buffer[1024];
                 struct postgresql_response_authentication_t authentication;
         } data;
-} __attribute__((__packed__)) *postgresql_response_t;
+} *postgresql_response_t;
 
 
 typedef struct postgresql_t {
@@ -234,7 +234,7 @@ static void _authenticateMd5(postgresql_t postgresql) {
 
         // Send the password message
         if (Socket_write(postgresql->socket, (unsigned char *)&passwordMessage, length + 1) != length + 1)
-                THROW(IOException, "PGSQL: error sending clear text password message -- %s", STRERROR);
+                THROW(IOException, "PGSQL: error sending clear text password message -- %s", System_lastError());
 
         DEBUG("PGSQL: DEBUG: MD5 authentication message sent\n");
 }
@@ -258,7 +258,7 @@ static void _authenticateClearPassword(postgresql_t postgresql) {
 
         passwordMessage.length = htonl(length);
         if (Socket_write(postgresql->socket, (unsigned char *)&passwordMessage, length + 1) != length + 1)
-                THROW(IOException, "PGSQL: error sending clear text password message -- %s", STRERROR);
+                THROW(IOException, "PGSQL: error sending clear text password message -- %s", System_lastError());
 
         DEBUG("PGSQL: DEBUG: clear password authentication message sent\n");
 }
@@ -295,7 +295,7 @@ static void _requestStartup(postgresql_t postgresql) {
         startupMessage.length = htonl(length);
 
         if (Socket_write(postgresql->socket, (unsigned char *)&startupMessage, length) != length)
-                THROW(IOException, "PGSQL: error sending startup message -- %s", STRERROR);
+                THROW(IOException, "PGSQL: error sending startup message -- %s", System_lastError());
 
         DEBUG("PGSQL: DEBUG: startup message sent\n");
 }
@@ -307,7 +307,7 @@ static void _requestTerminate(postgresql_t postgresql) {
                 .length = htonl(4)
         };
         if (Socket_write(postgresql->socket, (unsigned char *)&terminateMessage, sizeof(struct postgresql_terminatemessage_t)) != sizeof(struct postgresql_terminatemessage_t))
-                THROW(IOException, "PGSQL: error sending terminate message -- %s", STRERROR);
+                THROW(IOException, "PGSQL: error sending terminate message -- %s", System_lastError());
 
         DEBUG("PGSQL: DEBUG: terminate message sent\n");
 }
@@ -385,7 +385,7 @@ static int _readResponse(postgresql_t postgresql, void *buffer, int length, cons
         if (rv == 0 && eofAllowed)
                 return 0;
         else if (rv < 0)
-                THROW(IOException, "PGSQL: response %s read error -- %s", description, STRERROR);
+                THROW(IOException, "PGSQL: response %s read error -- %s", description, System_lastError());
         else if (rv != length)
                 THROW(IOException, "PGSQL: response %s read error -- %d bytes expected, got %d bytes", description, length, rv);
         return rv;

@@ -11,7 +11,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -151,14 +151,13 @@
  * use one TRY-ELSE block in the main program to catch all Exceptions. This is
  * only possible if no threads were started.
  * <p><small>This implementation of Exception is a minor modification of code
- * found in <a href="http://www.drhanson.net/">David R. Hanson's</a> excellent
- * book <a href="http://www.cs.princeton.edu/software/cii/">C Interfaces and
- * Implementations</a>.</small>
+ * found in David R. Hanson's excellent book
+ * <a href="https://drh.github.io/cii/">C Interfaces and Implementations</a>.</small>
  * @see SQLException.h IOException.h AssertException.h NumberFormatException.h
  * MemoryException.h
  *
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://tildeslash.com
+ * @see https://mmonit.com
  * @file
  */
 

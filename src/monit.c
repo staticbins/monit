@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -83,9 +83,17 @@
 #include "engine.h"
 #include "client.h"
 #include "MMonit.h"
+#include "_signal.h"
 #include "md5.h"
 #include "sha1.h"
 #include "checksum.h"
+#include "validate.h"
+#include "daemonize.h"
+#include "control.h"
+#include "gc.h"
+#include "env.h"
+#include "http.h"
+#include "p.h"
 
 // libmonit
 #include "Bootstrap.h"
@@ -107,39 +115,16 @@
  */
 
 
-/* -------------------------------------------------------------- Prototypes */
+// -------------------------------------------------------------------- Globals
 
 
-static void do_init(void);                    /* Initialize this application */
-static void do_reinit(bool full);   /* Re-initialize the runtime application */
-static void do_action(List_T);           /* Dispatch to the submitted action */
-static void do_exit(bool);                                 /* Finalize monit */
-static void do_default(void);                           /* Do default action */
-static void do_options(int, char **, List_T);      /* Handle program options */
-static void *do_heartbeat(void *args);           /* M/Monit heartbeat thread */
-static void help(void);              /* Print program help message to stdout */
-static void version(void);                      /* Print version information */
-static void handle_reload(int);         /* Signalhandler for a daemon reload */
-static void handle_stop(int);        /* Signalhandler for monit finalization */
-static void handle_wakeup(int);    /* Signalhandler for a daemon wakeup call */
-static void handle_wait(int); /* Signalhandler for handling sub-process exit */
-
-
-/* ------------------------------------------------------------------ Global */
-
-
-const char *Prog;                                /**< The Name of this Program */
-struct Run_T Run;                        /**< Struct holding runtime constants */
-Service_T Service_List;                 /**< The service list (created in p.y) */
-Service_T Service_List_Conf;    /**< The service list in conf file (c. in p.y) */
-ServiceGroup_T Service_Group_List;/**< The service group list (created in p.y) */
-SystemInfo_T System_Info;                              /**< System information */
-ProcessTable_T Process_Table;                        /**< Shared Process Table */
-
-Thread_T Heartbeat_Thread;
-Sem_T    Heartbeat_Cond;
-Mutex_T  Heartbeat_Mutex;
-static volatile bool isHeartbeatRunning = false;
+struct Run_T Run;
+Service_T Service_List;
+Service_T Service_List_Conf;
+ServiceGroup_T Service_Group_List;
+SystemInfo_T System_Info;
+ProcessTable_T Process_Table;
+AtomicThread_T Heartbeat_Thread;
 
 const char *Action_Names[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
 const char *Mode_Names[] = {"active", "passive"};
@@ -155,284 +140,30 @@ const char *Timestamp_Names[] = {"modify/change time", "access time", "change ti
 const char *Httpmethod_Names[] = {"", "HEAD", "GET"};
 
 
-/* ------------------------------------------------------------------ Public */
+// --------------------------------------------------------------------- Public
 
 
-/**
- * The Prime mover
- */
-int main(int argc, char **argv) {
-        Bootstrap(); // Bootstrap libmonit
-        Bootstrap_setAbortHandler(Log_abort_handler);  // Abort Monit on exceptions thrown by libmonit
-        Bootstrap_setErrorHandler(Log_verror);
-        setlocale(LC_ALL, "C");
-        Prog = File_basename(argv[0]);
-#ifdef HAVE_OPENSSL
-        Ssl_start();
-#endif
-        init_env();
-        List_T arguments = List_new();
-        TRY
-        {
-                do_options(argc, argv, arguments);
-        }
-        ELSE
-        {
-                Log_error("%s\n", Exception_frame.message);
-                exit(1);
-        }
-        END_TRY;
-        do_init();
-        do_action(arguments);
-        List_free(&arguments);
-        do_exit(false);
-}
-
-
-/**
- * Wakeup a sleeping monit daemon.
- * Returns true on success otherwise false
- */
-bool do_wakeupcall(void) {
+/// Wakeup a sleeping monit daemon.
+/// Returns true on success otherwise false
+bool Monit_wakeup(void) {
         pid_t pid;
-
         if ((pid = exist_daemon()) > 0) {
                 kill(pid, SIGUSR1);
                 Log_info("Monit daemon with PID %d awakened\n", pid);
 
                 return true;
         }
-
         return false;
 }
 
 
-bool interrupt(void) {
+/// Returns true if the Monit Process was signaled and should stop or reload
+bool Monit_isInterrupted(void) {
         return Run.flags & Run_Stopped || Run.flags & Run_DoReload;
 }
 
 
-/* ----------------------------------------------------------------- Private */
-
-
-static void _validateOnce(void) {
-        if (State_open()) {
-                State_restore();
-                validate();
-                State_save();
-                State_close();
-        }
-}
-
-
-/**
- * Initialize this application - Register signal handlers,
- * Parse the control file and initialize the program's
- * datastructures and the log system.
- */
-static void do_init(void) {
-        /*
-         * Register interest for the SIGTERM signal,
-         * in case we run in daemon mode this signal
-         * will terminate a running daemon.
-         */
-        signal(SIGTERM, handle_stop);
-
-        /*
-         * Register interest for the SIGUSER1 signal,
-         * in case we run in daemon mode this signal
-         * will wakeup a sleeping daemon.
-         */
-        signal(SIGUSR1, handle_wakeup);
-
-        /*
-         * Register interest for the SIGINT signal,
-         * in case we run as a server but not as a daemon
-         * we need to catch this signal if the user pressed
-         * CTRL^C in the terminal
-         */
-        signal(SIGINT, handle_stop);
-
-        /*
-         * Register interest for the SIGHUP signal,
-         * in case we run in daemon mode this signal
-         * will reload the configuration.
-         */
-        signal(SIGHUP, handle_reload);
-
-        /*
-         * Register interest for the SIGCHLD signal.
-         * As a monitoring system we very much want
-         * to be notified and handle when a child-
-         * processes exit
-         */
-        signal(SIGCHLD, handle_wait);
-
-        /*
-         * Register no interest for the SIGPIPE signal,
-         */
-        signal(SIGPIPE, SIG_IGN);
-
-        /*
-         * Initialize the random number generator
-         */
-        srandom((unsigned)(Time_now() + getpid()));
-
-        /*
-         * Initialize the Runtime mutex. This mutex
-         * is used to synchronize handling of global
-         * service data
-         */
-        Mutex_init(Run.mutex);
-
-        /*
-         * Initialize heartbeat mutex and condition
-         */
-        Mutex_init(Heartbeat_Mutex);
-        Sem_init(Heartbeat_Cond);
-
-        /*
-         * Get the position of the control file
-         */
-        if (! Run.files.control)
-                Run.files.control = file_findControlFile();
-
-        /*
-         * Initialize the system information data collecting interface
-         */
-        if (SystemInfo_init()) {
-                Run.flags |= Run_ProcessEngineEnabled;
-        }
-
-        /*
-         * Start the Parser and create the service list. This will also set
-         * any Runtime constants defined in the controlfile.
-         */
-        if (! parse(Run.files.control))
-                exit(1);
-
-        /*
-         * Initialize the log system
-         */
-        if (! Log_init())
-                exit(1);
-
-        /*
-         * Did we find any service ?
-         */
-        if (! Service_List) {
-                Log_error("No service has been specified\n");
-                exit(0);
-        }
-
-        /*
-         * Initialize Runtime file variables
-         */
-        file_init();
-
-        /*
-         * Create the global Process_Table
-         */
-        Process_Table = ProcessTable_new();
-
-        /*
-         * Should we print debug information ?
-         */
-        if (Run.debug) {
-                Util_printRunList();
-                Util_printServiceList();
-        }
-}
-
-
-/**
- * Re-Initialize the application - called if a
- * monit daemon receives the SIGHUP signal.
- */
-static void do_reinit(bool full) {
-        Log_info("Reinitializing Monit -- control file '%s'\n", Run.files.control);
-
-        if (Run.mmonits && isHeartbeatRunning) {
-                Sem_signal(Heartbeat_Cond);
-                Thread_join(Heartbeat_Thread);
-                isHeartbeatRunning = false;
-        }
-
-        Run.flags &= ~Run_DoReload;
-
-        /* Stop http interface */
-        if (Run.httpd.flags & Httpd_Net || Run.httpd.flags & Httpd_Unix)
-                monit_http(Httpd_Stop);
-
-        /* Save the current state (no changes are possible now since the http thread is stopped) */
-        if (full)
-                State_save();
-        State_close();
-
-        /* Run the garbage collector */
-        gc();
-
-        if (! parse(Run.files.control)) {
-                Log_error("%s stopped -- error parsing configuration file\n", Prog);
-                exit(1);
-        }
-
-        /* Close the current log */
-        Log_close();
-
-        /* Reinstall the log system */
-        if (! Log_init())
-                exit(1);
-
-        /* Did we find any services ?  */
-        if (! Service_List) {
-                Log_error("No service has been specified\n");
-                exit(0);
-        }
-
-        /* Reinitialize Runtime file variables */
-        file_init();
-
-        if (! file_createPidFile(Run.files.pid)) {
-                Log_error("%s stopped -- cannot create a pid file\n", Prog);
-                exit(1);
-        }
-
-        /* Update service data from the state repository */
-        if (! State_open())
-                exit(1);
-        State_restore();
-
-        if (full) {
-                /* Start http interface */
-                if (can_http())
-                        monit_http(Httpd_Start);
-
-                /* send the monit startup notification */
-                Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit reloaded");
-
-                if (Run.mmonits) {
-                        Thread_create(Heartbeat_Thread, do_heartbeat, NULL);
-                        isHeartbeatRunning = true;
-                }
-        }
-}
-
-
-void do_children(void) {
-        if (Run.flags & Run_DoChild) {
-                Run.flags &= ~Run_DoChild;
-
-                pid_t pid;
-                int status;
-                while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-                        Process_T P = ProcessTable_getProcess(Process_Table, pid);
-                        if (P) {
-                                Process_setExitStatus(P, status);
-                        }
-                }
-        }
-}
+// -------------------------------------------------------------------- Helpers
 
 
 static bool _isMemberOfGroup(Service_T s, ServiceGroup_T g) {
@@ -455,13 +186,353 @@ static bool _hasParentInTheSameGroup(Service_T s, ServiceGroup_T g) {
 }
 
 
-/**
- * Dispatch to the submitted action - actions are program arguments
- */
+// ------------------------------------------------------------ Signal handlers
+
+
+/// Signal handler for a daemon reload call
+static void handle_reload(__attribute__ ((unused)) int sig) {
+        Run.flags |= Run_DoReload;
+}
+
+
+/// Signal handler for monit finalization
+static void handle_stop(__attribute__ ((unused)) int sig) {
+        Run.flags |= Run_Stopped;
+}
+
+
+/// Signal handler for a daemon wakeup call
+static void handle_wakeup(__attribute__ ((unused)) int sig) {
+        Run.flags |= Run_DoWakeup;
+}
+
+
+/// Signal handler for child processes exit
+static void handle_wait(__attribute__ ((unused)) int sig) {
+        Run.flags |= Run_DoReap;
+}
+
+
+// -------------------------------------------------------------------- Private
+
+
+/// M/Monit heartbeat thread
+static void *do_heartbeat(__attribute__ ((unused)) void *args) {
+        signal_block();
+        Log_info("M/Monit heartbeat started\n");
+        LOCK(Heartbeat_Thread.mutex)
+        {
+                while (! Monit_isInterrupted()) {
+                        MMonit_send(NULL);
+                        struct timespec wait = {.tv_sec = Time_now() + Run.polltime};
+                        Sem_timeWait(Heartbeat_Thread.sem, Heartbeat_Thread.mutex, wait);
+                }
+        }
+        END_LOCK;
+#ifdef HAVE_OPENSSL
+        Ssl_threadCleanup();
+#endif
+        Log_info("M/Monit heartbeat stopped\n");
+        return NULL;
+}
+
+
+
+/// Initialize this application - Register signal handlers,
+/// Parse the control file and initialize the program's
+/// datastructures and the log system.
+static void do_init(void) {
+        // Register interest for the SIGTERM signal,
+        // in case we run in daemon mode this signal
+        // will terminate a running daemon.
+        signal(SIGTERM, handle_stop);
+
+        // Register interest for the SIGUSER1 signal,
+        // in case we run in daemon mode this signal
+        // will wakeup a sleeping daemon.
+        signal(SIGUSR1, handle_wakeup);
+
+        // Register interest for the SIGINT signal,
+        // in case we run as a server but not as a daemon
+        // we need to catch this signal if the user pressed
+        // CTRL^C in the terminal
+        signal(SIGINT, handle_stop);
+
+        // Register interest for the SIGHUP signal,
+        // in case we run in daemon mode this signal
+        // will reload the configuration.
+        signal(SIGHUP, handle_reload);
+
+        // Register interest for the SIGCHLD signal.
+        // As a monitoring system we very much want
+        // to be notified and handle when a child-
+        // processes exit
+        signal(SIGCHLD, handle_wait);
+        
+        // Register no interest for the SIGPIPE signal,
+        signal(SIGPIPE, SIG_IGN);
+        
+        // Initialize the Runtime mutex. This mutex
+        // is used to synchronize handling of global
+        // service data
+        Mutex_init(Run.mutex);
+
+        // Initialize the Heartbeat Thread variable
+        AtomicThread_init(&Heartbeat_Thread);
+
+        // Get the position of the control file
+        if (! Run.files.control)
+                Run.files.control = file_findControlFile();
+
+        // Initialize the system information data collecting interface
+        if (SystemInfo_init()) {
+                Run.flags |= Run_ProcessEngineEnabled;
+        }
+
+        // Start the Parser and create the service list. This will also set
+        // any Runtime constants defined in the controlfile.
+        if (! parse(Run.files.control))
+                exit(1);
+        
+        // Initialize the log system
+        if (! Log_init())
+                exit(1);
+        
+        // Did we find any service ?
+        if (! Service_List) {
+                Log_error("No service has been specified\n");
+                exit(0);
+        }
+        
+        // Initialize Runtime file variables
+        file_init();
+                
+        // Create the global Process_Table
+        Process_Table = ProcessTable_new();
+        
+        // Should we print debug information ?
+        if (Run.debug) {
+                Util_printRunList();
+                Util_printServiceList();
+        }
+}
+
+
+/// Re-Initialize the application - called if a
+/// monit daemon receives the SIGHUP signal.
+static void do_reinit(void) {
+        Log_info("Reinitializing Monit -- control file '%s'\n", Run.files.control);
+        
+        if (AtomicThread_isActive(&Heartbeat_Thread)) {
+                Sem_signal(Heartbeat_Thread.sem);
+                Thread_join(Heartbeat_Thread.value);
+        }
+        
+        Run.flags &= ~Run_DoReload;
+        
+        // Stop http interface
+        if (Run.httpd.flags & Httpd_Net || Run.httpd.flags & Httpd_Unix)
+                monit_http(Httpd_Stop);
+        
+        // Save the current state (no changes are possible now since the http thread is stopped)
+        State_save();
+        State_close();
+        
+        // Run the "garbage collector"
+        gc();
+        
+        if (! parse(Run.files.control)) {
+                Log_error("monit stopped -- error parsing configuration file\n");
+                exit(1);
+        }
+        
+        // Close the current log
+        Log_close();
+        
+        // Reinstall the log system
+        if (! Log_init())
+                exit(1);
+        
+        // Did we find any services?
+        if (! Service_List) {
+                Log_error("No service has been specified\n");
+                exit(0);
+        }
+        
+        // Reinitialize Runtime file variables
+        file_init();
+        
+        if (! file_createPidFile(Run.files.pid)) {
+                Log_error("monit stopped -- cannot create a pid file\n");
+                exit(1);
+        }
+        
+        // Update service data from the state repository
+        if (! State_open())
+                exit(1);
+        State_restore();
+        
+        // Start http interface
+        if (can_http())
+                monit_http(Httpd_Start);
+        
+        // Post monit startup notification
+        Event_post(Run.system, Event_Instance, Check_Changed, Run.system->action_MONIT_START, "Monit reloaded");
+        
+        if (Run.mmonits) {
+                AtomicThread_create(&Heartbeat_Thread, do_heartbeat, NULL);
+        }
+}
+
+static void do_reap(void) {
+        pid_t pid;
+        int status;
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+                Process_T P = ProcessTable_getProcess(Process_Table, pid);
+                if (P) {
+                        Process_setExitStatus(P, status);
+                }
+        }
+}
+
+
+/// If the delta between the start time and now is less than a second,
+/// put the main thread to sleep for the remaining micro seconds
+/// - Parameter start: A monotonic start time to compare against now
+static void do_nap(const struct time_monotonic_t *start) {
+        const long long sleep_target_microseconds = 1000000LL; // Targeting 1 second interval
+        struct time_monotonic_t now = Time_monotonic();
+        long long elapsed_microseconds = now.microseconds - start->microseconds;
+        if (elapsed_microseconds < sleep_target_microseconds) {
+            long long sleep_microseconds = sleep_target_microseconds - elapsed_microseconds;
+            Time_usleep(sleep_microseconds);
+        }
+}
+
+
+/// Finalize monit
+static void do_exit(bool saveState) {
+        signal_block();
+        Run.flags |= Run_Stopped;
+        if (can_http())
+                monit_http(Httpd_Stop);
+        
+        if (AtomicThread_isActive(&Heartbeat_Thread)) {
+                Sem_signal(Heartbeat_Thread.sem);
+                Thread_join(Heartbeat_Thread.value);
+        }
+        AtomicThread_destroy(&Heartbeat_Thread);
+
+        Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
+        
+        // send the monit stop notification
+        Event_post(Run.system, Event_Instance, Check_Changed, Run.system->action_MONIT_STOP, "Monit %s stopped", VERSION);
+        if (saveState) {
+                State_save();
+        }
+        if (Process_Table)
+                ProcessTable_free(&Process_Table);
+        gc();
+#ifdef HAVE_OPENSSL
+        Ssl_stop();
+#endif
+        exit(0);
+}
+
+
+/// The validate loop drives the monit state-machine and run
+/// continously with sub-second resolution (optimally)
+static void do_validate(void) {
+        while (true) {
+                struct time_monotonic_t start = Time_monotonic();
+                if (Run.flags & Run_DoReap) {
+                        Run.flags &= ~Run_DoReap;
+                        do_reap();
+                }
+                if (Run.flags & Run_DoWakeup) {
+                        Run.flags &= ~Run_DoWakeup;
+                        Log_info("Awakened by User defined signal 1\n");
+                }
+                if (Run.flags & Run_Stopped) {
+                        do_exit(true);
+                } else if (Run.flags & Run_DoReload) {
+                        do_reinit();
+                } else {
+                        State_saveIfDirty(); // Saves state non-blocking in a separate thread
+                }
+                // TODO: validate should return possible sleep periode. I.e. if there is nothing to do
+                // for X seconds we should sleep, but allow interruption. The default check interval is
+                // 5 seconds unless configured otherwise. If we have every statements set with seconds
+                // resolution we cannot sleep for more than a second, otherwise we can probably sleep
+                // longer and spare the CPU
+                
+                validate();
+                do_nap(&start);
+        }
+}
+
+
+/// Default action - become a daemon if defined in the Run object and
+/// run validate(). Also, if specified, start the monit http server
+static void do_default(void) {
+        // Exit if monit is already running
+        if (exist_daemon())
+                exit(0);
+        
+        if (can_http()) {
+                if (Run.httpd.flags & Httpd_Net)
+                        Log_info("Starting Monit %s daemon with http interface at [%s]:%d\n", VERSION, Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "*", Run.httpd.socket.net.port);
+                else if (Run.httpd.flags & Httpd_Unix)
+                        Log_info("Starting Monit %s daemon with http interface at %s\n", VERSION, Run.httpd.socket.unix.path);
+        } else {
+                Log_info("Starting Monit %s daemon\n", VERSION);
+        }
+        
+        if (! (Run.flags & Run_Foreground)) {
+                if (getpid() == 1) {
+                        Log_warning("Monit is running as process 1 (init) and cannot daemonize\n"
+                                  "Please start monit with the -I option to avoid seeing this warning\n");
+                } else {
+                        daemonize();
+                }
+        }
+        
+        if (! file_createPidFile(Run.files.pid)) {
+                Log_error("Monit daemon died\n");
+                exit(1);
+        }
+        
+        if (! State_open())
+                exit(1);
+        State_restore();
+        
+        atexit(file_finalize);
+        
+        if (Run.startdelay) {
+                if (State_reboot()) {
+                        Log_info("Monit will delay for %d seconds on first start after reboot ...\n", Run.startdelay);
+                        Time_usleepComplete(Run.startdelay * USEC_PER_SEC);
+                } else {
+                        DEBUG("Monit delay %ds skipped -- the system boot time has not changed since last Monit start\n", Run.startdelay);
+                }
+        }
+        
+        if (can_http())
+                monit_http(Httpd_Start);
+        
+        Event_post(Run.system, Event_Instance, Check_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
+        
+        if (Run.mmonits) {
+                AtomicThread_create(&Heartbeat_Thread, do_heartbeat, NULL);
+        }
+        
+        do_validate();
+}
+
+
+/// Dispatch to the submitted action - actions are program arguments
 static void do_action(List_T arguments) {
         char *action = List_pop(arguments);
-
-        Run.flags |= Run_Once;
 
         if (! action) {
                 do_default();
@@ -508,7 +579,7 @@ static void do_action(List_T arguments) {
                         exit(1);
                 }
         } else if (IS(action, "reload")) {
-                Log_info("Reinitializing %s daemon\n", Prog);
+                Log_info("Reinitializing monit daemon\n");
                 kill_daemon(SIGHUP);
         } else if (IS(action, "status")) {
                 char *service = List_pop(arguments);
@@ -532,11 +603,9 @@ static void do_action(List_T arguments) {
         } else if (IS(action, "quit")) {
                 kill_daemon(SIGTERM);
         } else if (IS(action, "validate")) {
-                if (do_wakeupcall()) {
+                if (Monit_wakeup()) {
                         char *service = List_pop(arguments);
                         HttpClient_status(Run.mygroup, service);
-                } else {
-                        _validateOnce();
                 }
                 exit(1);
         } else {
@@ -546,147 +615,80 @@ static void do_action(List_T arguments) {
 }
 
 
-/**
- * Finalize monit
- */
-static void do_exit(bool saveState) {
-        set_signal_block();
-        Run.flags |= Run_Stopped;
-        if ((Run.flags & Run_Daemon) && ! (Run.flags & Run_Once)) {
-                if (can_http())
-                        monit_http(Httpd_Stop);
+/// Print the program's help message
+static void help(void) {
+        printf(
+               "Usage: monit [options]+ [command]\n"
+               "Options are as follows:\n"
+               " -c file       Use this control file\n"
+               " -d n          Run as a daemon with default check interval 'n' seconds\n"
+               " -g name       Set group name for monit commands\n"
+               " -l logfile    Print log information to this file\n"
+               " -p pidfile    Use this lock file in daemon mode\n"
+               " -s statefile  Set the file monit should write state information to\n"
+               " -I            Do not run in background (needed when run from init or as init)\n"
+               " --id          Print Monit's unique ID\n"
+               " --resetid     Reset Monit's unique ID. Use with caution\n"
+               " -B            Batch command line mode (do not output tables or colors)\n"
+               " -t            Run syntax check for the control file\n"
+               " -v            Verbose mode, work noisy (diagnostic output)\n"
+               " -vv           Very verbose mode, same as -v plus log stacktrace on error\n"
+               " -H [filename] Print SHA1 and MD5 hashes of the file or of stdin if the\n"
+               "               filename is omitted; monit will exit afterwards\n"
+               " -V            Print version number and patchlevel\n"
+               " -h            Print this text\n"
+               "Optional commands are as follows:\n"
+               " start all             - Start all services\n"
+               " start <name>          - Only start the named service\n"
+               " stop all              - Stop all services\n"
+               " stop <name>           - Stop the named service\n"
+               " restart all           - Stop and start all services\n"
+               " restart <name>        - Only restart the named service\n"
+               " monitor all           - Enable monitoring of all services\n"
+               " monitor <name>        - Only enable monitoring of the named service\n"
+               " unmonitor all         - Disable monitoring of all services\n"
+               " unmonitor <name>      - Only disable monitoring of the named service\n"
+               " reload                - Reinitialize monit\n"
+               " status [name]         - Print full status information for service(s)\n"
+               " summary [name]        - Print short status information for service(s)\n"
+               " report [up|down|..]   - Report state of services. See manual for options\n"
+               " quit                  - Kill the monit daemon process\n"
+               " validate              - Check all services and start if not running\n"
+               " procmatch <pattern>   - Test process matching pattern\n"
+               );
+}
 
-                if (Run.mmonits && isHeartbeatRunning) {
-                        Sem_signal(Heartbeat_Cond);
-                        Thread_join(Heartbeat_Thread);
-                        isHeartbeatRunning = false;
-                }
 
-                Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
-
-                /* send the monit stop notification */
-                Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_STOP, "Monit %s stopped", VERSION);
-        }
-        if (saveState) {
-                State_save();
-        }
-        if (Process_Table)
-                ProcessTable_free(&Process_Table);
-        gc();
-#ifdef HAVE_OPENSSL
-        Ssl_stop();
+/// Print version information
+static void version(void) {
+        printf("This is Monit version %s\n", VERSION);
+        printf("Built with");
+#ifndef HAVE_OPENSSL
+        printf("out");
 #endif
-        exit(0);
+        printf(" ssl, with");
+#ifndef HAVE_IPV6
+        printf("out");
+#endif
+        printf(" ipv6, with");
+#ifndef HAVE_LIBZ
+        printf("out");
+#endif
+        printf(" compression, with");
+#ifndef HAVE_LIBPAM
+        printf("out");
+#endif
+        printf(" pam and with");
+#ifndef HAVE_LARGEFILES
+        printf("out");
+#endif
+        printf(" large files\n");
+        printf("Copyright (C) 2001-2024 Tildeslash Ltd. All Rights Reserved.\n");
 }
 
 
-/**
- * Default action - become a daemon if defined in the Run object and
- * run validate() between sleeps. If not, just run validate() once.
- * Also, if specified, start the monit http server if in daemon mode.
- */
-static void do_default(void) {
-        if (Run.flags & Run_Daemon) {
-                if (do_wakeupcall())
-                        exit(0);
-
-                Run.flags &= ~Run_Once;
-                if (can_http()) {
-                        if (Run.httpd.flags & Httpd_Net)
-                                Log_info("Starting Monit %s daemon with http interface at [%s]:%d\n", VERSION, Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "*", Run.httpd.socket.net.port);
-                        else if (Run.httpd.flags & Httpd_Unix)
-                                Log_info("Starting Monit %s daemon with http interface at %s\n", VERSION, Run.httpd.socket.unix.path);
-                } else {
-                        Log_info("Starting Monit %s daemon\n", VERSION);
-                }
-
-                if (! (Run.flags & Run_Foreground)) {
-                        if (getpid() == 1) {
-                                Log_error("Error: Monit is running as process 1 (init) and cannot daemonize\n"
-                                          "Please start monit with the -I option to avoid seeing this error\n");
-                        } else {
-                                daemonize();
-                        }
-                }
-
-                if (! file_createPidFile(Run.files.pid)) {
-                        Log_error("Monit daemon died\n");
-                        exit(1);
-                }
-
-                if (! State_open())
-                        exit(1);
-                State_restore();
-
-                atexit(file_finalize);
-
-reload:
-                if (Run.startdelay) {
-                        if (State_reboot()) {
-                                time_t now = Time_monotonic();
-                                time_t delay = now + Run.startdelay;
-
-                                Log_info("Monit will delay for %ds on first start after reboot ...\n", Run.startdelay);
-
-                                /* sleep can be interrupted by signal => make sure we paused long enough */
-                                while (now < delay) {
-                                        sleep((unsigned int)(delay - now));
-                                        if (Run.flags & Run_Stopped) {
-                                                do_exit(false);
-                                        } else if (Run.flags & Run_DoReload) {
-                                                do_reinit(false);
-                                                goto reload;
-                                        }
-                                        now = Time_monotonic();
-                                }
-                        } else {
-                                DEBUG("Monit delay %ds skipped -- the system boot time has not changed since last Monit start\n", Run.startdelay);
-                        }
-                }
-
-                if (can_http())
-                        monit_http(Httpd_Start);
-
-                /* send the monit startup notification */
-                Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
-
-                if (Run.mmonits) {
-                        Thread_create(Heartbeat_Thread, do_heartbeat, NULL);
-                        isHeartbeatRunning = true;
-                }
-
-                while (true) {
-                        validate();
-
-                        /* In the case that there is no pending action then sleep */
-                        if (! (Run.flags & Run_ActionPending) && ! interrupt())
-                                sleep(Run.polltime);
-
-                        do_children();
-
-                        if (Run.flags & Run_DoWakeup) {
-                                Run.flags &= ~Run_DoWakeup;
-                                Log_info("Awakened by User defined signal 1\n");
-                        }
-
-                        if (Run.flags & Run_Stopped) {
-                                do_exit(true);
-                        } else if (Run.flags & Run_DoReload) {
-                                do_reinit(true);
-                        } else {
-                                State_saveIfDirty();
-                        }
-                }
-        } else {
-                _validateOnce();
-        }
-}
-
-
-/**
- * Handle program options - Options set from the commandline
- * takes precedence over those found in the control file
- */
+/// Handle program options - Options set from the commandline
+/// takes precedence over those found in the control file
 static void do_options(int argc, char **argv, List_T arguments) {
         int opt;
         int deferred_opt = 0;
@@ -901,121 +903,32 @@ static void do_options(int argc, char **argv, List_T arguments) {
 }
 
 
-/**
- * Print the program's help message
- */
-static void help(void) {
-        printf(
-               "Usage: %s [options]+ [command]\n"
-               "Options are as follows:\n"
-               " -c file       Use this control file\n"
-               " -d n          Run as a daemon once per n seconds\n"
-               " -g name       Set group name for monit commands\n"
-               " -l logfile    Print log information to this file\n"
-               " -p pidfile    Use this lock file in daemon mode\n"
-               " -s statefile  Set the file monit should write state information to\n"
-               " -I            Do not run in background (needed when run from init)\n"
-               " --id          Print Monit's unique ID\n"
-               " --resetid     Reset Monit's unique ID. Use with caution\n"
-               " -B            Batch command line mode (do not output tables or colors)\n"
-               " -t            Run syntax check for the control file\n"
-               " -v            Verbose mode, work noisy (diagnostic output)\n"
-               " -vv           Very verbose mode, same as -v plus log stacktrace on error\n"
-               " -H [filename] Print SHA1 and MD5 hashes of the file or of stdin if the\n"
-               "               filename is omitted; monit will exit afterwards\n"
-               " -V            Print version number and patchlevel\n"
-               " -h            Print this text\n"
-               "Optional commands are as follows:\n"
-               " start all             - Start all services\n"
-               " start <name>          - Only start the named service\n"
-               " stop all              - Stop all services\n"
-               " stop <name>           - Stop the named service\n"
-               " restart all           - Stop and start all services\n"
-               " restart <name>        - Only restart the named service\n"
-               " monitor all           - Enable monitoring of all services\n"
-               " monitor <name>        - Only enable monitoring of the named service\n"
-               " unmonitor all         - Disable monitoring of all services\n"
-               " unmonitor <name>      - Only disable monitoring of the named service\n"
-               " reload                - Reinitialize monit\n"
-               " status [name]         - Print full status information for service(s)\n"
-               " summary [name]        - Print short status information for service(s)\n"
-               " report [up|down|..]   - Report state of services. See manual for options\n"
-               " quit                  - Kill the monit daemon process\n"
-               " validate              - Check all services and start if not running\n"
-               " procmatch <pattern>   - Test process matching pattern\n",
-               Prog);
-}
-
-/**
- * Print version information
- */
-static void version(void) {
-        printf("This is Monit version %s\n", VERSION);
-        printf("Built with");
-#ifndef HAVE_OPENSSL
-        printf("out");
-#endif
-        printf(" ssl, with");
-#ifndef HAVE_IPV6
-        printf("out");
-#endif
-        printf(" ipv6, with");
-#ifndef HAVE_LIBZ
-        printf("out");
-#endif
-        printf(" compression, with");
-#ifndef HAVE_LIBPAM
-        printf("out");
-#endif
-        printf(" pam and with");
-#ifndef HAVE_LARGEFILES
-        printf("out");
-#endif
-        printf(" large files\n");
-        printf("Copyright (C) 2001-2024 Tildeslash Ltd. All Rights Reserved.\n");
-}
+// ----------------------------------------------------------------------------
 
 
-// M/Monit heartbeat thread
-static void *do_heartbeat(__attribute__ ((unused)) void *args) {
-        set_signal_block();
-        Log_info("M/Monit heartbeat started\n");
-        LOCK(Heartbeat_Mutex)
-        {
-                while (! interrupt()) {
-                        MMonit_send(NULL);
-                        struct timespec wait = {.tv_sec = Time_now() + Run.polltime};
-                        Sem_timeWait(Heartbeat_Cond, Heartbeat_Mutex, wait);
-                }
-        }
-        END_LOCK;
+int main(int argc, char **argv) {
+        Bootstrap(); // Bootstrap libmonit
+        Bootstrap_setAbortHandler(Log_abort_handler);  // Abort Monit on exceptions thrown by libmonit
+        Bootstrap_setErrorHandler(Log_verror);
+        setlocale(LC_ALL, "C");
 #ifdef HAVE_OPENSSL
-        Ssl_threadCleanup();
+        Ssl_start();
 #endif
-        Log_info("M/Monit heartbeat stopped\n");
-        return NULL;
+        init_env();
+        List_T arguments = List_new();
+        TRY
+        {
+                do_options(argc, argv, arguments);
+        }
+        ELSE
+        {
+                Log_error("%s\n", Exception_frame.message);
+                exit(1);
+        }
+        END_TRY;
+        do_init();
+        do_action(arguments);
+        List_free(&arguments);
+        do_exit(false);
 }
 
-
-// Signal handler for a daemon reload call
-static void handle_reload(__attribute__ ((unused)) int sig) {
-        Run.flags |= Run_DoReload;
-}
-
-
-// Signal handler for monit finalization
-static void handle_stop(__attribute__ ((unused)) int sig) {
-        Run.flags |= Run_Stopped;
-}
-
-
-// Signal handler for a daemon wakeup call
-static void handle_wakeup(__attribute__ ((unused)) int sig) {
-        Run.flags |= Run_DoWakeup;
-}
-
-
-// Signal handler for child processes exit
-static void handle_wait(__attribute__ ((unused)) int sig) {
-        Run.flags |= Run_DoChild;
-}

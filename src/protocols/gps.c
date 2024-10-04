@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -35,7 +35,7 @@
 #include "exceptions/ProtocolException.h"
 
 /**
- *  Check gpsd (http://www.catb.org/gpsd/) status.
+ *  Check gpsd (https://gpsd.gitlab.io/gpsd/) status.
  *
  *  @file
  */
@@ -48,10 +48,10 @@ void check_gps(Socket_T socket) {
         assert(socket);
 
         if (Socket_print(socket, "G\r\n") < 0)
-                THROW(IOException, "GPS: error sending data -- %s", STRERROR);
+                THROW(IOException, "GPS: error sending data -- %s", System_lastError());
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "GPS: error receiving data -- %s", STRERROR);
+                THROW(IOException, "GPS: error receiving data -- %s", System_lastError());
 
         Str_chomp(buf);
         if (strncasecmp(buf, ok_gps_device, strlen(ok_gps_device)) != 0)

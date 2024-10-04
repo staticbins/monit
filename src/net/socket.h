@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -30,7 +30,7 @@
 typedef enum {
         Socket_Tcp = SOCK_STREAM,
         Socket_Udp = SOCK_DGRAM
-} __attribute__((__packed__)) Socket_Type;
+} Socket_Type;
 
 
 typedef enum {
@@ -38,7 +38,7 @@ typedef enum {
         Socket_Ip,      // IP, version not specified (IPv4 or IPv6)
         Socket_Ip4,     // IPv4 only
         Socket_Ip6      // IPv6 only
-} __attribute__((__packed__)) Socket_Family;
+} Socket_Family;
 
 
 /**

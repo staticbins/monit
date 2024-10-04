@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -59,10 +59,9 @@ Ssl_T SslServer_newConnection(T S);
 
 /**
  * Close and free an accepted SSL server connection and remove it from the connection list
- * @param S An SSL server object
  * @param C An SSL connection object reference
  */
-void SslServer_freeConnection(T S, Ssl_T *C);
+void SslServer_freeConnection(Ssl_T *C);
 
 
 /**

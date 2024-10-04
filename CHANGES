@@ -1,6 +1,24 @@
-                     CHANGES version 5.34.0
+                     CHANGES version 6.0.0
 
            This file summarizes changes made since 5.0
+           
+Version 6.0.0
+
+New: Monit now runs continously with 1 second
+     resolution and no longer polls services.
+
+New: 'set daemon n' has been deprecated and replaced with
+     'set interval n'. The interval is the default interval in seconds
+     that services will be checked unless they have an every statement
+     associated in which case a service will be checked at the time or
+     interval specified in the every statement.
+
+New: Monit Poll cycles has been replaced with Monit Check interval
+
+New: Validate Once has been removed. When Monit now start, it runs
+     as a server, continously.
+     
+
 
 Version 5.34.0
 

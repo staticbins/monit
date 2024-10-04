@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -57,11 +57,12 @@
 #include "Proc.h"
 #include "event.h"
 #include "util.h"
-#include "system/Time.h"
+#include "control.h"
 
 // libmonit
 #include "io/File.h"
 #include "util/Fmt.h"
+#include "system/Time.h"
 #include "exceptions/AssertException.h"
 
 
@@ -72,13 +73,16 @@
  */
 
 
+// TODO: Refactor all attempts to wait on anything. Instead continous check
+// should be handled non-blocking in the validate state-machine
+
 /* ------------------------------------------------------------- Definitions */
 
 
 typedef enum {
         Process_Stopped = 0,
         Process_Started
-} __attribute__((__packed__)) Process_Status;
+} Process_Status;
 
 
 #define RETRY_INTERVAL 100000 // 100ms
@@ -87,7 +91,7 @@ typedef enum {
 /* ----------------------------------------------------------------- Private */
 
 
-// TODO: Remove If Command_execute returns a process it did start
+// TODO: Remove, will be replaced by state-machine
 static Process_Status _waitProcessStart(Service_T s, long long *timeout) {
         long wait = RETRY_INTERVAL;
         do {
@@ -105,6 +109,7 @@ static Process_Status _waitProcessStart(Service_T s, long long *timeout) {
 }
 
 
+// TODO: Remove, will be replaced by state-machine
 static Process_Status _waitProcessStop(int pid, long long *timeout) {
         do {
                 Time_usleep(RETRY_INTERVAL);
@@ -116,9 +121,10 @@ static Process_Status _waitProcessStop(int pid, long long *timeout) {
 }
 
 
-static State_Type _check(Service_T s) {
+// TODO: Remove, will be replaced by state-machine
+static Check_State _check(Service_T s) {
         assert(s);
-        State_Type rv = State_Succeeded;
+        Check_State rv = Check_Succeeded;
         // The check is performed in passive mode - we want to just check, nested start/stop/restart action is unwanted (alerts are allowed so the user will get feedback what's wrong)
         Monitor_Mode original = s->mode;
         s->mode = Monitor_Passive;
@@ -152,8 +158,8 @@ static bool _doStart(Service_T s) {
                 assert(parent);
                 if (parent->monitor != Monitor_Yes || parent->error) {
                         if (_doStart(parent)) {
-                                State_Type state = _check(parent);
-                                if (state != State_Failed && state != State_Init)
+                                Check_State state = _check(parent);
+                                if (state != Check_Failed && state != Check_Init)
                                         continue;
                         }
                         rv = false;
@@ -173,18 +179,18 @@ static bool _doStart(Service_T s) {
                                         .errlen = sizeof(msg)
                                 });
                                 if (status < 0 || (s->type == Service_Process && _waitProcessStart(s, &timeout) != Process_Started)) {
-                                        Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to start (exit status %d) -- %s", errno, *msg ? msg : "no output");
+                                        Event_post(s, Event_Exec, Check_Failed, s->action_EXEC, "failed to start (exit status %d) -- %s", errno, *msg ? msg : "no output");
                                         rv = false;
                                 } else {
-                                        Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "started (pid = %d)", status);
+                                        Event_post(s, Event_Exec, Check_Succeeded, s->action_EXEC, "started (pid = %d)", status);
                                 }
                         }
                 } else {
                         Log_debug("'%s' start method not defined\n", s->name);
-                        Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "monitoring enabled");
+                        Event_post(s, Event_Exec, Check_Succeeded, s->action_EXEC, "monitoring enabled");
                 }
         } else {
-                Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to start -- could not start required services: '%s'", StringBuffer_toString(sb));
+                Event_post(s, Event_Exec, Check_Failed, s->action_EXEC, "failed to start -- could not start required services: '%s'", StringBuffer_toString(sb));
                 s->doaction = Action_Start; // Retry the start next cycle
         }
         Util_monitorSet(s);
@@ -206,9 +212,9 @@ static int _executeStop(Service_T s, char *msg, int msglen, long long *timeout) 
 
 static void _evaluateStop(Service_T s, bool succeeded, int exitStatus, char *msg) {
         if (succeeded)
-                Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "stopped");
+                Event_post(s, Event_Exec, Check_Succeeded, s->action_EXEC, "stopped");
         else
-                Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to stop (exit status %d) -- %s", errno, *msg ? msg : "no output");
+                Event_post(s, Event_Exec, Check_Failed, s->action_EXEC, "failed to stop (exit status %d) -- %s", errno, *msg ? msg : "no output");
 }
 
 
@@ -272,9 +278,9 @@ static bool _doRestart(Service_T s) {
                 });
                 if (status < 0 || (s->type == Service_Process && _waitProcessStart(s, &timeout) != Process_Started)) {
                         rv = false;
-                        Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to restart (exit status %d) -- %s", status, msg);
+                        Event_post(s, Event_Exec, Check_Failed, s->action_EXEC, "failed to restart (exit status %d) -- %s", status, msg);
                 } else {
-                        Event_post(s, Event_Exec, State_Succeeded, s->action_EXEC, "restarted (pid=%d)", status);
+                        Event_post(s, Event_Exec, Check_Succeeded, s->action_EXEC, "restarted (pid=%d)", status);
                 }
         } else {
                 Log_debug("'%s' restart skipped -- method not defined\n", s->name);

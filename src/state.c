@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -54,6 +54,8 @@
 #include "state.h"
 
 // libmonit
+#include "system/Time.h"
+#include "thread/Thread.h"
 #include "exceptions/IOException.h"
 
 
@@ -231,6 +233,8 @@ typedef struct mystate0 {
 static int file = -1;
 static unsigned long long booted = 0ULL;
 static bool _stateDirty = false;
+// Initialise the Thread directly as we don't need its synchronization primitives
+static AtomicThread_T State_Thread = (AtomicThread_T){.active = false};
 
 
 /* ----------------------------------------------------------------- Private */
@@ -330,7 +334,7 @@ static void _restoreV4(void) {
         State4_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && service->type == state.type) {
+                if (service && (int32_t)service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         switch (service->type) {
@@ -377,7 +381,7 @@ static void _restoreV3(void) {
         State3_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && service->type == state.type) {
+                if (service && (int32_t)service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         switch (service->type) {
@@ -419,7 +423,7 @@ static void _restoreV2(void) {
         State2_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && service->type == state.type) {
+                if (service && (int32_t)service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         switch (service->type) {
@@ -461,7 +465,7 @@ static void _restoreV1(void) {
         State1_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && service->type == state.type) {
+                if (service && (int32_t)service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         if (service->type == Service_File)
@@ -488,13 +492,36 @@ static void _restoreV0(int services) {
 }
 
 
+static void *_saveThread(void *args) {
+        State_save();
+        return NULL;
+}
+
+
+static bool _isThreadInactive(void *args) {
+        return AtomicThread_isActive(&State_Thread) == false;
+}
+
+
+static void _waitOnSaveThread(void) {
+        if (AtomicThread_isActive(&State_Thread)) {
+                Log_info("Waiting on State file's save thread to finish..");
+                if (Time_backoff(_isThreadInactive, NULL)) {
+                        Log_info("done\n");
+                } else {
+                        THROW(IOException, "Aborting, saving State file timed out\n");
+                }
+        }
+}
+
+
 /* ------------------------------------------------------------------ Public */
 
 
 bool State_open(void) {
         State_close();
         if ((file = open(Run.files.state, O_RDWR | O_CREAT, 0600)) == -1) {
-                Log_error("State file '%s': cannot open for write -- %s\n", Run.files.state, STRERROR);
+                Log_error("State file '%s': cannot open for write -- %s\n", Run.files.state, System_lastError());
                 return false;
         }
         atexit(State_close);
@@ -503,9 +530,10 @@ bool State_open(void) {
 
 
 void State_close(void) {
+        _waitOnSaveThread();
         if (file != -1) {
                 if (close(file) == -1)
-                        Log_error("State file '%s': close error -- %s\n", Run.files.state, STRERROR);
+                        Log_error("State file '%s': close error -- %s\n", Run.files.state, System_lastError());
                 else
                         file = -1;
         }
@@ -586,7 +614,7 @@ void State_save(void) {
                         }
                 }
                 if (fsync(file)) {
-                        THROW(IOException, "Unable to sync -- %s", STRERROR);
+                        THROW(IOException, "Unable to sync -- %s", System_lastError());
                 }
                 _stateDirty = false;
         }
@@ -605,7 +633,10 @@ void State_dirty(void) {
 
 void State_saveIfDirty(void) {
         if (_stateDirty) {
-                State_save();
+                // Only start the Save/Sync thread if it's not already running
+                if (!AtomicThread_isActive(&State_Thread)) {
+                        AtomicThread_createDetached(&State_Thread, _saveThread, NULL);
+                }
         }
 }
 

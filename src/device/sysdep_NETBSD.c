@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -103,7 +103,7 @@ static void __attribute__ ((destructor)) _destructor() {
 
 // Parse the device path like /dev/sd0a -> sd0
 static bool _parseDevice(const char *path, Device_T device) {
-        const unsigned char *base = File_basename(path);
+        const char *base = File_basename(path);
         for (int len = strlen(base), i = len - 1; i >= 0; i--) {
                 if (isdigit(*(base + i))) {
                         unsigned index = i + 1;
@@ -121,7 +121,7 @@ static bool _getStatistics(unsigned long long now) {
                 size_t len = 0;
                 int mib[3] = {CTL_HW, HW_IOSTATS, sizeof(struct io_sysctl)};
                 if (sysctl(mib, 3, NULL, &len, NULL, 0) == -1) {
-                        Log_error("filesystem statistic error -- cannot get HW_IOSTATS size: %s\n", STRERROR);
+                        Log_error("filesystem statistic error -- cannot get HW_IOSTATS size: %s\n", System_lastError());
                         return false;
                 }
                 if (_statistics.diskLength != len) {
@@ -130,7 +130,7 @@ static bool _getStatistics(unsigned long long now) {
                         RESIZE(_statistics.disk, len);
                 }
                 if (sysctl(mib, 3, _statistics.disk, &(_statistics.diskLength), NULL, 0) == -1) {
-                        Log_error("filesystem statistic error -- cannot get HW_IOSTATS: %s\n", STRERROR);
+                        Log_error("filesystem statistic error -- cannot get HW_IOSTATS: %s\n", System_lastError());
                         return false;
                 }
                 _statistics.timestamp = now;
@@ -168,7 +168,7 @@ static bool _getDiskUsage(void *_inf) {
         Info_T inf = _inf;
         struct statvfs usage;
         if (statvfs(inf->filesystem->object.mountpoint, &usage) != 0) {
-                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, STRERROR);
+                Log_error("Error getting usage statistics for filesystem '%s' -- %s\n", inf->filesystem->object.mountpoint, System_lastError());
                 return false;
         }
         inf->filesystem->f_bsize = usage.f_frsize;
@@ -269,7 +269,6 @@ static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char 
                 FREE(mnt);
         }
         Log_error("Lookup for '%s' filesystem failed\n", path);
-error:
         inf->filesystem->object.mounted = false;
         return false;
 }

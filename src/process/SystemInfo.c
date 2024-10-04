@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -48,7 +48,7 @@ bool SystemInfo_init(void) {
         memset(&System_Info, 0, sizeof(SystemInfo_T));
         gettimeofday(&System_Info.collected, NULL);
         if (uname(&System_Info.uname) < 0) {
-                Log_error("'%s' resource monitoring initialization error -- uname failed: %s\n", Run.system->name, STRERROR);
+                Log_error("'%s' resource monitoring initialization error -- uname failed: %s\n", Run.system->name, System_lastError());
                 return false;
         }
         System_Info.cpu.usage.user = -1.;

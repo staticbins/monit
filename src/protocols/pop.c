@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -48,16 +48,16 @@ void check_pop(Socket_T socket) {
 
         // Read and check POP greeting
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "POP: greeting read error -- %s", errno ? STRERROR : "no data");
+                THROW(IOException, "POP: greeting read error -- %s", errno ? System_lastError() : "no data");
         Str_chomp(buf);
         if (strncasecmp(buf, ok, strlen(ok)) != 0)
                 THROW(ProtocolException, "POP: invalid greeting -- %s", buf);
 
         // QUIT and check response
         if (Socket_print(socket, "QUIT\r\n") < 0)
-                THROW(IOException, "POP: QUIT command error -- %s", STRERROR);
+                THROW(IOException, "POP: QUIT command error -- %s", System_lastError());
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "POP: QUIT response read error -- %s", errno ? STRERROR : "no data");
+                THROW(IOException, "POP: QUIT response read error -- %s", errno ? System_lastError() : "no data");
         Str_chomp(buf);
         if (strncasecmp(buf, ok, strlen(ok)) != 0)
                 THROW(ProtocolException, "POP: invalid QUIT response -- %s", buf);

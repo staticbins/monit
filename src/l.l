@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -75,19 +75,19 @@ char *currentfile = NULL;
 char *argcurrentfile = NULL;
 char *argyytext = NULL;
 typedef enum {
-        Proc_State,
-        File_State,
-        FileSys_State,
-        Dir_State,
-        Host_State,
-        System_State,
-        Fifo_State,
-        Program_State,
-        Net_State,
-        None_State
-} __attribute__((__packed__)) Check_State;
+        Proc_LState,
+        File_LState,
+        FileSys_LState,
+        Dir_LState,
+        Host_LState,
+        System_LState,
+        Fifo_LState,
+        Program_LState,
+        Net_LState,
+        None_LState
+} LexState;
 
-static Check_State check_state = None_State;
+static LexState check_state = None_LState;
 
 /* Prototypes */
 extern void yyerror(const char *,...);
@@ -200,7 +200,7 @@ disable[ \t]+ssl  {/* EMPTY */}
 {restartarg}      { BEGIN(ARGUMENT_COND); return RESTART; }
 {execarg}         { BEGIN(ARGUMENT_COND); return EXEC; }
 {pathtokarg}      {
-                        if (check_state == Program_State) {
+                        if (check_state == Program_LState) {
                                 BEGIN(ARGUMENT_COND); // Parse Path for program as arguments
                                 return PATHTOK;
                         } else {
@@ -225,6 +225,7 @@ cacertificatefile { return CACERTIFICATEFILE; }
 cacertificatepath { return CACERTIFICATEPATH; }
 set               { return SET; }
 daemon            { return DAEMON; }
+interval          { return INTERVAL; }
 delay             { return DELAY; }
 terminal          { return TERMINAL; }
 batch             { return BATCH; }
@@ -506,67 +507,67 @@ depend(s)?[ \t]+(on[ \t]*)? {
 
 check[ \t]+(process[ \t])? {
                     BEGIN(SERVICE_COND);
-                    check_state = Proc_State;
+                    check_state = Proc_LState;
                     return CHECKPROC;
                   }
 
 check[ \t]+(program[ \t])? {
                     BEGIN(SERVICE_COND);
-                    check_state = Program_State;
+                    check_state = Program_LState;
                     return CHECKPROGRAM;
                   }
 
 check[ \t]+device { /* Filesystem alias for backward compatibility  */
                     BEGIN(SERVICE_COND);
-                    check_state = FileSys_State;
+                    check_state = FileSys_LState;
                     return CHECKFILESYS;
                   }
 
 check[ \t]+filesystem {
                     BEGIN(SERVICE_COND);
-                    check_state = FileSys_State;
+                    check_state = FileSys_LState;
                     return CHECKFILESYS;
                   }
 
 check[ \t]+file   {
                     BEGIN(SERVICE_COND);
-                    check_state = File_State;
+                    check_state = File_LState;
                     return CHECKFILE;
                   }
 
 check[ \t]+directory {
                     BEGIN(SERVICE_COND);
-                    check_state = Dir_State;
+                    check_state = Dir_LState;
                     return CHECKDIR;
                   }
 
 check[ \t]+host   {
                     BEGIN(SERVICE_COND);
-                    check_state = Host_State;
+                    check_state = Host_LState;
                     return CHECKHOST;
                   }
 
 check[ \t]+network {
                     BEGIN(SERVICE_COND);
-                    check_state = Net_State;
+                    check_state = Net_LState;
                     return CHECKNET;
                   }
 
 check[ \t]+fifo   {
                     BEGIN(SERVICE_COND);
-                    check_state = Fifo_State;
+                    check_state = Fifo_LState;
                     return CHECKFIFO;
                   }
 
 check[ \t]+program   {
                     BEGIN(SERVICE_COND);
-                    check_state = Program_State;
+                    check_state = Program_LState;
                     return CHECKPROGRAM;
                   }
 
 check[ \t]+system {
                     BEGIN(SERVICE_COND);
-                    check_state = System_State;
+                    check_state = System_LState;
                     return CHECKSYSTEM;
                   }
 
@@ -1027,7 +1028,7 @@ group[ \t]+       {
 
 
 <INITIAL,ARGUMENT_COND,SERVICE_COND,DEPEND_COND,URL_COND,ADDRESS_COND,STRING_COND,HOSTGROUP_COND,EVERY_COND,HTTP_HEADER_COND>. {
-                      check_state = None_State;
+                      check_state = None_LState;
                       return yytext[0];
                   }
 
@@ -1061,7 +1062,7 @@ group[ \t]+       {
 <<EOF>>           {
 
                        BEGIN(INITIAL);
-                       check_state = None_State;
+                       check_state = None_LState;
                        if (! pop_buffer_state())
                                 yyterminate();
                   }
@@ -1106,7 +1107,7 @@ static void _include(const char *path) {
         }
         FILE *_yyin = fopen(path, "r");
         if (! _yyin)
-                yyerror("Cannot include file '%s' -- %s", path, STRERROR);
+                yyerror("Cannot include file '%s' -- %s", path, System_lastError());
         else
                 push_buffer_state(yy_create_buffer(_yyin, YY_BUF_SIZE), path);
 }
@@ -1124,7 +1125,7 @@ static void include_file(char *pattern) {
                 }
                 globfree(&globbuf);
         } else if (errno != 0) {
-                yywarning("Include failed -- %s", STRERROR);
+                yywarning("Include failed -- %s", System_lastError());
         } // else no include files found -- silently ignore
 }
 

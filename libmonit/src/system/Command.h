@@ -10,7 +10,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -43,8 +43,8 @@
  * This class is reentrant but not thread-safe
  *
  * @see Process.h
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://tildeslash.com
+ * @see https://mmonit.com
  * @file
  */
 
@@ -142,7 +142,7 @@ gid_t Command_gid(T C);
 
 /**
  * Set the umask value for the sub-process. The default value if not set
- * is 022. See also http://en.wikipedia.org/wiki/Umask and man umask(2)
+ * is 022. See also https://en.wikipedia.org/wiki/Umask and man umask(2)
  * @param C A Command object
  * @param umask The new umask value, as a 3 digit octal number, e.g. 002
  */

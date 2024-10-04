@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -47,15 +47,15 @@ void check_ftp(Socket_T socket) {
 
         do {
                 if (! Socket_readLine(socket, buf, STRLEN))
-                        THROW(IOException, "FTP: error receiving data -- %s", STRERROR);
+                        THROW(IOException, "FTP: error receiving data -- %s", System_lastError());
                 Str_chomp(buf);
         } while (buf[3] == '-'); // Discard multi-line response
         if (sscanf(buf, "%d", &status) != 1 || status != 220)
                 THROW(ProtocolException, "FTP greeting error: %s", buf);
         if (Socket_print(socket, "QUIT\r\n") < 0)
-                THROW(IOException, "FTP: error sending data -- %s", STRERROR);
+                THROW(IOException, "FTP: error sending data -- %s", System_lastError());
         if (! Socket_readLine(socket, buf, STRLEN))
-                THROW(IOException, "FTP: error receiving data -- %s", STRERROR);
+                THROW(IOException, "FTP: error receiving data -- %s", System_lastError());
         Str_chomp(buf);
         if (sscanf(buf, "%d", &status) != 1 || status != 221)
                 THROW(ProtocolException, "FTP quit error: %s", buf);

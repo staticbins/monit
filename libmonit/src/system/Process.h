@@ -10,7 +10,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -62,8 +62,8 @@
  * This class is reentrant but not thread-safe
  *
  * @see Command.h
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://tildeslash.com
+ * @see https://mmonit.com
  * @file
  */
 
@@ -219,8 +219,10 @@ void Process_detach(T P);
  * it a termination signal (SIGTERM). Note that SIGTERM can be ignored
  * or blocked by a process
  * @param P A Process object
+ * @return True if signaling the sub-process succeed, otherwise false
+ * and errno is set to indicate the error
  */
-void Process_terminate(T P);
+bool Process_terminate(T P);
 
 
 /**
@@ -228,8 +230,10 @@ void Process_terminate(T P);
  * it a termination signal (SIGKILL). While SIGTERM may be blocked
  * by a process, SIGKILL cannot be blocked and will kill the process
  * @param P A Process object
+ * @return True if signaling the sub-process succeed, otherwise false
+ * and errno is set to indicate the error
  */
-void Process_kill(T P);
+bool Process_kill(T P);
 
 
 #undef T

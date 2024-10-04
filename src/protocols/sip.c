@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -129,11 +129,11 @@ void check_sip(Socket_T socket) {
                          port,                         // contact port
                          VERSION                       // user agent
                          ) < 0) {
-                THROW(IOException, "SIP: error sending data -- %s", STRERROR);
+                THROW(IOException, "SIP: error sending data -- %s", System_lastError());
         }
 
         if (! Socket_readLine(socket, buf, sizeof(buf)))
-                THROW(IOException, "SIP: error receiving data -- %s", STRERROR);
+                THROW(IOException, "SIP: error receiving data -- %s", System_lastError());
 
         Str_chomp(buf);
 

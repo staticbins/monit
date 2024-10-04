@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -49,13 +49,14 @@
 #include <unistd.h>
 #endif
 
-// libmonit
-#include "util/List.h"
-#include "system/Time.h"
-
 #include "monit.h"
 #include "event.h"
 #include "protocol.h"
+#include "xml.h"
+
+// libmonit
+#include "util/List.h"
+#include "system/Time.h"
 
 
 /**
