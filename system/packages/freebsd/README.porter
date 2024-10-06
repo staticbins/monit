@@ -14,7 +14,10 @@
   cd /usr/ports/sysutils
   rm -rf monit-new
   cp -rp monit monit-new
-  perl -p -i -e 's/^PORTVERSION=.*/PORTVERSION=    <new_version>' monit-new/Makefile
+  # monit-new/Makefile changes:
+      - change DISTVERSION in monit-new/Makefile to the current monit version
+      - if PORTVERSION is set in the monit-new/Makefile, drop it
+      - more details if needed: https://docs.freebsd.org/en/books/porters-handbook/makefiles/
   make -C monit-new makesum
   rm -rf /tmp/monit_port
   mkdir /tmp/monit_port
