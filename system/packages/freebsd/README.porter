@@ -21,7 +21,7 @@
   make -C monit-new makesum
   rm -rf /tmp/monit_port
   mkdir /tmp/monit_port
-  diff -ruN monit monit-new > /tmp/monit_port/monit.patch
+  diff -ruN monit monit-new > /tmp/monit_port/monit.patch (FIXME: submit patches as produced by "git-format-patch" against the ports repository.  This format is much easier to process for committers.)
   cd monit-new
   portlint         > /tmp/monit_port/portlint.txt
   make check-plist > /tmp/monit_port/make_check-plist.txt
