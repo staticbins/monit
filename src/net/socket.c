@@ -203,7 +203,7 @@ static bool _doConnect(int s, const struct sockaddr *addr, socklen_t addrlen, in
         fds[0].events = POLLIN | POLLOUT;
         do {
                 rv = poll(fds, 1, timeout);
-        } while (n == -1 && errno == EINTR);
+        } while (rv == -1 && errno == EINTR);
         if (rv == 0) {
                 snprintf(error, errorlen, "Connection timed out");
                 return false;
