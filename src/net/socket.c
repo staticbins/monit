@@ -201,7 +201,9 @@ static bool _doConnect(int s, const struct sockaddr *addr, socklen_t addrlen, in
         struct pollfd fds[1];
         fds[0].fd = s;
         fds[0].events = POLLIN | POLLOUT;
-        rv = poll(fds, 1, timeout);
+        do {
+                rv = poll(fds, 1, timeout);
+        } while (n == -1 && errno == EINTR);
         if (rv == 0) {
                 snprintf(error, errorlen, "Connection timed out");
                 return false;
