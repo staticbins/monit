@@ -493,7 +493,10 @@ static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char 
         }
         if (_statistics.fd != -1) {
                 struct pollfd mountNotify = {.fd = _statistics.fd, .events = POLLPRI, .revents = 0};
-                if (poll(&mountNotify, 1, 0) != -1) {
+                do {
+                        rv = poll(&mountNotify, 1, 0);
+                } while (rv == -1 && errno == EINTR);
+                if (rv != -1) {
                         if (mountNotify.revents & POLLERR) {
                                 DEBUG("Mount table change detected\n");
                                 _statistics.generation++;
