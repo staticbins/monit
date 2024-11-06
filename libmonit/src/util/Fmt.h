@@ -35,23 +35,30 @@
  */
 
 
+/// Buffer size for bytes string representation
+#define FMT_BYTES_BUFSIZE 10
+
+/// Buffer size for time string representation
+#define FMT_TIME_BUFSIZE 11
+
+
 /**
  * Format the numeric bytes value to a string representation scaled to
  * human friendly storage unit [B, kB, MB, etc.].
  * @param bytes Byte value to convert
- * @param s A result buffer, must be large enough to hold 10 chars
+ * @param s A result buffer, must be large enough to hold FMT_BYTES_BUFSIZE chars
  * @return A pointer to s
  */
-char *Fmt_bytes2str(double bytes, char s[static 10]);
+char* Fmt_bytes2str(double bytes, char s[static FMT_BYTES_BUFSIZE]);
 
 
 /**
  * Format the time in milliseconds to human friendlier unit (ms/s/m/h/d/y).
  * @param milli The time value in milliseconds to present
- * @param s A result buffer, must be large enough to hold 11 chars
+ * @param s A result buffer, must be large enough to hold FMT_TIME_BUFSIZE chars
  * @return A pointer to s
  */
-char *Fmt_time2str(double milli, char s[static 11]);
+char* Fmt_time2str(double milli, char s[static FMT_TIME_BUFSIZE]);
 
 
 #endif
