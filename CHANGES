@@ -4,6 +4,10 @@
 
 Version 5.34.3
 
+Fixed: If the ping statement did not explicitly specify an outgoing address but a previous ping statement did, the same address was shared by both statements.
+
+Fixed: Monit may crash upon stopping if the ping statement is used in conjunction with the address option.
+
 
 Version 5.34.2
 
