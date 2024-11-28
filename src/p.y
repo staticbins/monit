@@ -5352,12 +5352,11 @@ static void reset_filesystemset(void) {
  * Reset the ICMP set to default values
  */
 static void reset_icmpset(void) {
+        memset(&icmpset, 0, sizeof(struct Icmp_T));
         icmpset.type = ICMP_ECHO;
         icmpset.size = ICMP_SIZE;
         icmpset.count = ICMP_ATTEMPT_COUNT;
         icmpset.timeout = Run.limits.networkTimeout;
-        icmpset.check_invers = false;
-        icmpset.action = NULL;
 }
 
 
