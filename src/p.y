@@ -4901,18 +4901,30 @@ static void setstatefile(char *statefile) {
  * Read a apache htpasswd file and add credentials found for username
  */
 static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) {
+        char *f = NULL;
         char *ht_username = NULL;
         char *ht_passwd = NULL;
         char buf[STRLEN];
         FILE *handle = NULL;
         int credentials_added = 0;
+        char realpath[PATH_MAX] = {};
 
         assert(filename);
 
-        handle = fopen(filename, "r");
+        // Check that the htpasswd is a real file and not e.g. a directory
+        if (filename[0] != SEPARATOR_CHAR) {
+                if (! File_realPath(filename, realpath)) {
+                        yyerror2("Error getting path for the htpasswd file '%s' -- %s\n", filename, STRERROR);
+                        return;
+                }
+        }
+        if (! File_isFile(f)) {
+                yyerror2("The htpasswd file '%s' is not a file", filename);
+                return;
+        }
 
-        if (handle == NULL) {
-                if (username != NULL)
+        if (! (handle = fopen(filename, "r"))) {
+                if (username)
                         yyerror2("Cannot read htpasswd (%s) for user %s", filename, username);
                 else
                         yyerror2("Cannot read htpasswd (%s)", filename);
