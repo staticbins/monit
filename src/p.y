@@ -693,52 +693,100 @@ limitlist       : /* EMPTY */
                 ;
 
 limit           : SENDEXPECTBUFFER ':' NUMBER unit {
-                        Run.limits.sendExpectBuffer = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The sendExpectBuffer value must be > 0");
+                        else
+                                Run.limits.sendExpectBuffer = $3 * $<number64>4;
                   }
                 | FILECONTENTBUFFER ':' NUMBER unit {
-                        Run.limits.fileContentBuffer = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The fileContentBuffer value must be > 0");
+                        else
+                                Run.limits.fileContentBuffer = $3 * $<number64>4;
                   }
                 | HTTPCONTENTBUFFER ':' NUMBER unit {
-                        Run.limits.httpContentBuffer = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The httpContentBuffer value must be > 0");
+                        else
+                                Run.limits.httpContentBuffer = $3 * $<number64>4;
                   }
                 | PROGRAMOUTPUT ':' NUMBER unit {
-                        Run.limits.programOutput = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The programOutput value must be > 0");
+                        else
+                                Run.limits.programOutput = $3 * $<number64>4;
                   }
                 | NETWORKTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.networkTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The networkTimeout value must be > 0");
+                        else
+                                Run.limits.networkTimeout = $3;
                   }
                 | NETWORKTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.networkTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The networkTimeout value must be > 0");
+                        else
+                                Run.limits.networkTimeout = $3 * 1000;
                   }
                 | PROGRAMTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.programTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The programTimeout value must be > 0");
+                        else
+                                Run.limits.programTimeout = $3;
                   }
                 | PROGRAMTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.programTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The programTimeout value must be > 0");
+                        else
+                                Run.limits.programTimeout = $3 * 1000;
                   }
                 | STOPTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.stopTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The stopTimeout value must be > 0");
+                        else
+                                Run.limits.stopTimeout = $3;
                   }
                 | STOPTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.stopTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The stopTimeout value must be > 0");
+                        else
+                                Run.limits.stopTimeout = $3 * 1000;
                   }
                 | STARTTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.startTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The startTimeout value must be > 0");
+                        else
+                                Run.limits.startTimeout = $3;
                   }
                 | STARTTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.startTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The startTimeout value must be > 0");
+                        else
+                                Run.limits.startTimeout = $3 * 1000;
                   }
                 | RESTARTTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.restartTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The restartTimeout value must be > 0");
+                        else
+                                Run.limits.restartTimeout = $3;
                   }
                 | RESTARTTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.restartTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The restartTimeout value must be > 0");
+                        else
+                                Run.limits.restartTimeout = $3 * 1000;
                   }
                 | EXECTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.execTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The execTimeout value must be > 0");
+                        else
+                                Run.limits.execTimeout = $3;
                   }
                 | EXECTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.execTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The execTimeout value must be > 0");
+                        else
+                                Run.limits.execTimeout = $3 * 1000;
                   }
                 ;
 
