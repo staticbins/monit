@@ -707,52 +707,100 @@ limitlist       : /* EMPTY */
                 ;
 
 limit           : SENDEXPECTBUFFER ':' NUMBER unit {
-                        Run.limits.sendExpectBuffer = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The sendExpectBuffer value must be > 0");
+                        else
+                                Run.limits.sendExpectBuffer = $3 * $<number64>4;
                   }
                 | FILECONTENTBUFFER ':' NUMBER unit {
-                        Run.limits.fileContentBuffer = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The fileContentBuffer value must be > 0");
+                        else
+                                Run.limits.fileContentBuffer = $3 * $<number64>4;
                   }
                 | HTTPCONTENTBUFFER ':' NUMBER unit {
-                        Run.limits.httpContentBuffer = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The httpContentBuffer value must be > 0");
+                        else
+                                Run.limits.httpContentBuffer = $3 * $<number64>4;
                   }
                 | PROGRAMOUTPUT ':' NUMBER unit {
-                        Run.limits.programOutput = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The programOutput value must be > 0");
+                        else
+                                Run.limits.programOutput = $3 * $<number64>4;
                   }
                 | NETWORKTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.networkTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The networkTimeout value must be > 0");
+                        else
+                                Run.limits.networkTimeout = $3;
                   }
                 | NETWORKTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.networkTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The networkTimeout value must be > 0");
+                        else
+                                Run.limits.networkTimeout = $3 * 1000;
                   }
                 | PROGRAMTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.programTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The programTimeout value must be > 0");
+                        else
+                                Run.limits.programTimeout = $3;
                   }
                 | PROGRAMTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.programTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The programTimeout value must be > 0");
+                        else
+                                Run.limits.programTimeout = $3 * 1000;
                   }
                 | STOPTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.stopTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The stopTimeout value must be > 0");
+                        else
+                                Run.limits.stopTimeout = $3;
                   }
                 | STOPTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.stopTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The stopTimeout value must be > 0");
+                        else
+                                Run.limits.stopTimeout = $3 * 1000;
                   }
                 | STARTTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.startTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The startTimeout value must be > 0");
+                        else
+                                Run.limits.startTimeout = $3;
                   }
                 | STARTTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.startTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The startTimeout value must be > 0");
+                        else
+                                Run.limits.startTimeout = $3 * 1000;
                   }
                 | RESTARTTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.restartTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The restartTimeout value must be > 0");
+                        else
+                                Run.limits.restartTimeout = $3;
                   }
                 | RESTARTTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.restartTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The restartTimeout value must be > 0");
+                        else
+                                Run.limits.restartTimeout = $3 * 1000;
                   }
                 | EXECTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.execTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The execTimeout value must be > 0");
+                        else
+                                Run.limits.execTimeout = $3;
                   }
                 | EXECTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.execTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The execTimeout value must be > 0");
+                        else
+                                Run.limits.execTimeout = $3 * 1000;
                   }
                 ;
 
@@ -4916,18 +4964,30 @@ static void setstatefile(char *statefile) {
  * Read a apache htpasswd file and add credentials found for username
  */
 static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) {
+        char *f = NULL;
         char *ht_username = NULL;
         char *ht_passwd = NULL;
         char buf[STRLEN];
         FILE *handle = NULL;
         int credentials_added = 0;
+        char realpath[PATH_MAX] = {};
 
         assert(filename);
 
-        handle = fopen(filename, "r");
+        // Check that the htpasswd is a real file and not e.g. a directory
+        if (filename[0] != SEPARATOR_CHAR) {
+                if (! File_realPath(filename, realpath)) {
+                        yyerror2("Error getting path for the htpasswd file '%s' -- %s\n", filename, System_lastError());
+                        return;
+                }
+        }
+        if (! File_isFile(f)) {
+                yyerror2("The htpasswd file '%s' is not a file", filename);
+                return;
+        }
 
-        if (handle == NULL) {
-                if (username != NULL)
+        if (! (handle = fopen(filename, "r"))) {
+                if (username)
                         yyerror2("Cannot read htpasswd (%s) for user %s", filename, username);
                 else
                         yyerror2("Cannot read htpasswd (%s)", filename);
