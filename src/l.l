@@ -832,7 +832,9 @@ group[ \t]+       {
 
   [:][^@ ]+[@]    {
                       yytext++;
-                      yylval.url->password = Str_ndup(yytext, strlen(yytext)-1);
+                      size_t length = strlen(yytext);
+                      if (length > 0)
+                                yylval.url->password = Str_ndup(yytext, length - 1);
                   }
 
   ([a-zA-Z0-9\-]+)([.]([a-zA-Z0-9\-]+))* {
