@@ -1091,7 +1091,8 @@ static void steplinenobycr(char *string) {
 static char *handle_quoted_string(char *string) {
         char *buf = Str_dup(string);
         Str_unquote(buf);
-        Util_handleEscapes(buf);
+        if (! Util_handleEscapes(buf))
+                yyerror("unbalanced escape sequence");
         return buf;
 }
 
