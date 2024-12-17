@@ -59,8 +59,9 @@ size_t Util_countWords(const char *s, const char *word);
 /**
  * Exchanges \escape sequences in a string
  * @param buf A string
+ * @return String, or NULL if unbalanced escape sequence was found
  */
-void Util_handleEscapes(char *buf);
+char *Util_handleEscapes(char *buf);
 
 
 /**
