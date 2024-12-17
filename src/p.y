@@ -136,6 +136,7 @@
 #include "p.h"
 
 // libmonit
+#include "system/Time.h"
 #include "io/File.h"
 #include "util/Str.h"
 #include "thread/Thread.h"
@@ -2378,11 +2379,15 @@ every           : EVERY NUMBER CYCLE {
                  }
                 | EVERY TIMESPEC {
                         _sanityCheckEveryStatement(current);
+                        if (Time_incron($2, Time_now()) < 0)
+                                yyerror2("Invalid cron specification");
                         current->every.type = Every_Cron;
                         current->every.spec.cron = $2;
                  }
                 | NOTEVERY TIMESPEC {
                         _sanityCheckEveryStatement(current);
+                        if (Time_incron($2, Time_now()) < 0)
+                                yyerror2("Invalid cron specification");
                         current->every.type = Every_NotInCron;
                         current->every.spec.cron = $2;
                  }
