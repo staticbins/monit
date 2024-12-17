@@ -23,12 +23,12 @@ Version 5.34.4
 
 Fixed: If the monitor configuration file contains a string with unbalanced escape sequences, Monit may crash upon startup.
 
-Fixed: If the password in the 'set mmonit' URL contains only binary characters, Monit fails to start and reports the following error:
+Fixed: If the password in the 'set mmonit' URL contains only binary characters, Monit aborts after start and reports following error:
         AssertException: n >= 0
          raised in Str_ndup at src/util/Str.c:315
         Aborted
 
-Fixed: If the "every <cron>" statement contained a syntax error, Monit terminated with the following error message:
+Fixed: If the "every <cron>" statement contained a syntax error, Monit aborts after start and reports following error:
         AssertException: n < 5 && n >= 0
          raised in Time_incron at src/system/Time.c:1566
         Aborted
