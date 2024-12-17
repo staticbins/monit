@@ -1495,7 +1495,7 @@ char *Time_uptime(long sec, char result[static 24]) {
 /*
  cron string is on format "minute hour day month wday"
  where fields may have a numeric type, an asterix, a
- sequence of numbers or a range
+ sequence of numbers or a range. Return -1 on parse error
  */
 int Time_incron(const char *cron, time_t time) {
         assert(cron);
@@ -1563,7 +1563,8 @@ yy59:
 	++YYCURSOR;
 	{
                 n--; // backtrack on fields advance
-                assert(n < 5 && n >= 0);
+                if (n < 0 || n >= 5)
+                        return -1;
                 goto parse;
         }
 yy61:

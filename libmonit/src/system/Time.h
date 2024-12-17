@@ -337,7 +337,7 @@ char *Time_uptime(long sec, char result[static 24]);
  * </ul>
  * @param cron A crontab format string. e.g. "* 8-9 * * *"
  * @param time The time to test if in range of the cron format
- * @return 1 if time is in cron range, otherwise 0.
+ * @return 1 if time is in cron range, 0 if not, -1 if parsing failed.
  */
 int Time_incron(const char *cron, time_t time);
 

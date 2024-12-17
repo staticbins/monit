@@ -1468,7 +1468,7 @@ static void _checkTimeout(Service_T s) {
 
 static bool _incron(Service_T s, time_t now) {
         if ((now - s->every.last_run) > 59) { // Minute is the lowest resolution, so only run once per minute
-                if (Time_incron(s->every.spec.cron, now)) {
+                if (Time_incron(s->every.spec.cron, now) == 1) {
                         s->every.last_run = now;
                         return true;
                 }
@@ -1495,7 +1495,7 @@ static bool _checkSkip(Service_T s) {
                 s->monitor |= Monitor_Waiting;
                 DEBUG("'%s' test skipped as current time (%lld) does not match every's cron spec \"%s\"\n", s->name, (long long)now, s->every.spec.cron);
                 return true;
-        } else if (s->every.type == Every_NotInCron && Time_incron(s->every.spec.cron, now)) {
+        } else if (s->every.type == Every_NotInCron && Time_incron(s->every.spec.cron, now) == 1) {
                 s->monitor |= Monitor_Waiting;
                 DEBUG("'%s' test skipped as current time (%lld) matches every's cron spec \"not %s\"\n", s->name, (long long)now, s->every.spec.cron);
                 return true;
