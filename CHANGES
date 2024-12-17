@@ -21,9 +21,9 @@ New: Validate Once has been removed. When Monit now start, it runs
 
 Version 5.34.4
 
-Fixed: If the monitor configuration file contains a string with unbalanced escape sequences, Monit may crash upon startup.
+Fixed: If the Monit configuration file contains a string with unbalanced escape sequences, Monit may crash upon startup.
 
-Fixed: If the password in the 'set mmonit' URL contains only binary characters, syntax check passed (-t), but Monit aborts after start and reports following error:
+Fixed: If the password in the "set mmonit" URL contains only binary characters, syntax check passed (-t), but Monit aborts after start and reports following error:
         AssertException: n >= 0
          raised in Str_ndup at src/util/Str.c:315
         Aborted
