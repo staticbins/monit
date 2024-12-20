@@ -197,7 +197,8 @@ enum {
 };
 extern pthread_key_t Exception_Stack;
 void Exception_init(void);
-void Exception_throw(const T *e, const char *func, const char *file, int line, const char *cause, ...) CLANG_ANALYZER_NORETURN;
+void Exception_vthrow(const T *e, const char *func, const char *file, int line, const char *cause, ...) CLANG_ANALYZER_NORETURN;
+void Exception_throw(const T *e, const char *func, const char *file, int line, const char *message) CLANG_ANALYZER_NORETURN;
 #define pop_exception_stack pthread_setspecific(Exception_Stack, ((Exception_Frame*)pthread_getspecific(Exception_Stack))->prev)
 /** @endcond */
 
@@ -210,7 +211,7 @@ void Exception_throw(const T *e, const char *func, const char *file, int line, c
  * @hideinitializer
  */
 #define THROW(e, cause, ...) \
-        Exception_throw(&(e), __func__, __FILE__, __LINE__, cause, ##__VA_ARGS__, 0)
+        Exception_vthrow(&(e), __func__, __FILE__, __LINE__, cause, ##__VA_ARGS__, NULL)
 
 
 /**

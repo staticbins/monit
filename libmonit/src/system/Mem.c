@@ -51,7 +51,7 @@ void *Mem_alloc(long nbytes, const char *func, const char *file, int line){
 	assert(nbytes > 0);
 	ptr = malloc(nbytes);
 	if (ptr == NULL)
-                Exception_throw(&(MemoryException), func, file, line, System_lastError());
+                Exception_vthrow(&(MemoryException), func, file, line, "%s", System_lastError());
 	return ptr;
 }
 
@@ -62,7 +62,7 @@ void *Mem_calloc(long count, long nbytes, const char *func, const char *file, in
 	assert(nbytes > 0);
 	ptr = calloc(count, nbytes);
 	if (ptr == NULL)
-                Exception_throw(&(MemoryException), func, file, line, System_lastError());
+                Exception_vthrow(&(MemoryException), func, file, line, "%s", System_lastError());
 	return ptr;
 }
 
@@ -79,6 +79,6 @@ void *Mem_resize(void *ptr, long nbytes, const char *func, const char *file, int
                 return Mem_alloc(nbytes, func, file, line);
 	ptr = realloc(ptr, nbytes);
 	if (ptr == NULL)
-                Exception_throw(&(MemoryException), func, file, line, System_lastError());
+                Exception_vthrow(&(MemoryException), func, file, line, "%s", System_lastError());
 	return ptr;
 }

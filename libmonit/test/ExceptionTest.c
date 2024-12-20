@@ -367,6 +367,68 @@ int main(void) {
         }
         printf("=> Test14: OK\n\n");
 
+        printf("=> Test15: 2nd level FINALLY rethrows exception from nested 1st level TRY with '%%n' characters in vararg string argument\n");
+        {
+                TRY
+                {
+                        TRY
+                        {
+                                TRY
+                                {
+                                        // Trigger exception
+                                        printf("\t1st level TRY: throw exception with string argument 'hello%%nelly'\n");
+                                        THROW(AssertException, "1st level TRY: %s", "hello%nelly");
+                                }
+                                END_TRY;
+                        }
+                        FINALLY
+                        {
+                                printf("\t2nd level TRY: FINALLY will rethrow the 1st level exception '%s'\n", Exception_frame.message);
+                                // The FINALLY will RETHROW the exception, which leads to Exception_throw()
+                        }
+                        END_TRY;
+                }
+                ELSE
+                {
+                        // Catch the exception
+                        printf("\t3nd level TRY: catch the 1st level exception '%s'\n", Exception_frame.message);
+                        assert(Str_isEqual(Exception_frame.message, "1st level TRY: hello%nelly"));
+                }
+                END_TRY;
+        }
+        printf("=> Test15: OK\n\n");
+
+        printf("=> Test16: 2nd level FINALLY rethrows exception from nested 1st level TRY with '%%s' characters in vararg string argument\n");
+        {
+                TRY
+                {
+                        TRY
+                        {
+                                TRY
+                                {
+                                        // Trigger exception
+                                        printf("\t1st level TRY: throw exception with string argument 'hello%%sally'\n");
+                                        THROW(AssertException, "1st level TRY: %s", "hello%sally");
+                                }
+                                END_TRY;
+                        }
+                        FINALLY
+                        {
+                                printf("\t2nd level TRY: FINALLY will rethrow the 1st level exception '%s'\n", Exception_frame.message);
+                                // The FINALLY will RETHROW the exception, which leads to Exception_throw()
+                        }
+                        END_TRY;
+                }
+                ELSE
+                {
+                        // Catch the exception
+                        printf("\t3nd level TRY: catch the 1st level exception '%s'\n", Exception_frame.message);
+                        assert(Str_isEqual(Exception_frame.message, "1st level TRY: hello%sally"));
+                }
+                END_TRY;
+        }
+        printf("=> Test16: OK\n\n");
+
         printf("============> Exception Tests: OK\n\n");
 
         return 0;
