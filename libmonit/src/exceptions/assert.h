@@ -46,7 +46,7 @@
 #else
 #include "AssertException.h"
 extern void assert(int e);
-#define assert(e) ((void)((e)||(Exception_throw(&(AssertException), __func__, __FILE__, __LINE__, #e),0)))
+#define assert(e) ((void)((e)||(Exception_vthrow(&(AssertException), __func__, __FILE__, __LINE__, #e),0)))
 #endif
 
 #endif
