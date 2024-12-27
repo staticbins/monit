@@ -32,6 +32,11 @@ Fixed: If the "every <cron>" statement contained a syntax error, syntax check pa
         AssertException: n < 5 && n >= 0
          raised in Time_incron at src/system/Time.c:1566
         Aborted
+
+Fixed: If the timeout option value was set to 0, the syntax check was successful (-t), but Monit aborts after starting and reports the following error:
+        AssertException: timeout > 0
+         raised in Socket_create at src/net/socket.c:319
+        Aborted
      
 
 Version 5.34.3

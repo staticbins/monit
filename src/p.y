@@ -889,7 +889,10 @@ mmonitoptlist : /* EMPTY */
                 ;
 
 mmonitopt       : TIMEOUT NUMBER SECOND {
-                        mmonitset.timeout = $<number>2 * 1000; // net timeout is in milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                mmonitset.timeout = $<number>2 * 1000; // net timeout is in milliseconds internally
                   }
                 | ssl
                 | sslchecksum
@@ -2217,7 +2220,10 @@ icmpsize        : SIZE NUMBER {
                 ;
 
 icmptimeout     : TIMEOUT NUMBER SECOND {
-                        icmpset.timeout = $<number>2 * 1000; // timeout is in milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                icmpset.timeout = $<number>2 * 1000; // timeout is in milliseconds internally
                     }
                   ;
 
@@ -2230,7 +2236,10 @@ stoptimeout     : /* EMPTY */ {
                         $<number>$ = Run.limits.stopTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                        $<number>$ = $2 * 1000; // milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
@@ -2238,7 +2247,10 @@ starttimeout    : /* EMPTY */ {
                         $<number>$ = Run.limits.startTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                        $<number>$ = $2 * 1000; // milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
@@ -2246,7 +2258,10 @@ restarttimeout  : /* EMPTY */ {
                         $<number>$ = Run.limits.restartTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                        $<number>$ = $2 * 1000; // milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
@@ -2254,7 +2269,10 @@ programtimeout  : /* EMPTY */ {
                         $<number>$ = Run.limits.programTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                        $<number>$ = $2 * 1000; // milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
@@ -2262,12 +2280,18 @@ nettimeout      : /* EMPTY */ {
                         $<number>$ = Run.limits.networkTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                        $<number>$ = $2 * 1000; // net timeout is in milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                $<number>$ = $2 * 1000; // net timeout is in milliseconds internally
                   }
                 ;
 
 connectiontimeout : TIMEOUT NUMBER SECOND {
-                        portset.timeout = $<number>2 * 1000; // timeout is in milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                portset.timeout = $<number>2 * 1000; // timeout is in milliseconds internally
                     }
                   ;
 
