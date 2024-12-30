@@ -4453,9 +4453,9 @@ static void addmatch(Match_T ms, int actionnumber, int linenumber) {
                 char errbuf[STRLEN];
                 regerror(reg_return, ms->regex_comp, errbuf, STRLEN);
                 if (m->match_path != NULL)
-                        yyerror2("Regex parsing error: %s on line %i of", errbuf, linenumber);
+                        yyerror("Regex '%s' parsing error: %s on line %i of", ms->match_string, errbuf, linenumber);
                 else
-                        yyerror2("Regex parsing error: %s", errbuf);
+                        yyerror("Regex '%s' parsing error: %s", ms->match_string, errbuf);
         }
         appendmatch(m->ignore ? &current->matchignorelist : &current->matchlist, m);
 }
