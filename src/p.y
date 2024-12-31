@@ -5177,6 +5177,8 @@ static void setsyslog(char *facility) {
                         Run.facility = LOG_LOCAL7;
                 else if (IS(facility, "log_daemon"))
                         Run.facility = LOG_DAEMON;
+                else if (IS(facility, "log_user"))
+                        Run.facility = LOG_USER;
                 else
                         yyerror2("Invalid syslog facility");
         } else {

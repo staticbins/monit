@@ -37,7 +37,9 @@ Fixed: If the timeout option value was set to 0, the syntax check was successful
         AssertException: timeout > 0
          raised in Socket_create at src/net/socket.c:319
         Aborted
-     
+
+Fixed: The "set syslog" statement's "facility" option did not permit the specification of the "log_user". Thanks to Lutz Mader for report.
+
 
 Version 5.34.3
 
