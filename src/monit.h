@@ -227,13 +227,13 @@ typedef enum {
 
 
 typedef enum {
-        Httpd_Disabled                    = 0x0,
-        Httpd_Net                         = 0x1,  // IP
-        Httpd_Unix                        = 0x2,  // Unix socket
-        Httpd_UnixUid                     = 0x4,  // Unix socket: override UID
-        Httpd_UnixGid                     = 0x8,  // Unix socket: override GID
-        Httpd_UnixPermission              = 0x10, // Unix socket: override permissions
-        Httpd_Signature                   = 0x20  // Server Signature enabled
+        Httpd_Disabled       = 0x0,
+        Httpd_Net            = 0x1,  // IP
+        Httpd_Unix           = 0x2,  // Unix socket
+        Httpd_UnixUid        = 0x4,  // Unix socket: override UID
+        Httpd_UnixGid        = 0x8,  // Unix socket: override GID
+        Httpd_UnixPermission = 0x10, // Unix socket: override permissions
+        Httpd_Signature      = 0x20  // Server Signature enabled
 } Httpd_Flags;
 
 
@@ -353,14 +353,6 @@ typedef enum {
         Digest_Md5,
         Digest_Pam
 } Digest_Type;
-
-
-typedef enum {
-        Unit_Byte     = 1,
-        Unit_Kilobyte = 1024,
-        Unit_Megabyte = 1048576,
-        Unit_Gigabyte = 1073741824
-} Unit_Type;
 
 
 typedef enum {
@@ -1221,6 +1213,27 @@ typedef union Info_T {
         ProcessInfo_T    process;
 } *Info_T;
 
+/// Event bitmap type 
+typedef unsigned long long Event_Type;
+
+typedef struct Event_T {
+        #define           EVENT_VERSION  4      /**< The event structure version */
+        Event_Type id;                             /**< The event identification */
+        struct timeval    collected;                /**< When the event occurred */
+        struct Service_T *source;                              /**< Event source */
+        Monitor_Mode      mode;             /**< Monitoring mode for the service */
+        Service_Type      type;                      /**< Monitored service type */
+        Check_State        state;                                /**< Test state */
+        bool         state_changed;                   /**< true if state changed */
+        Handler_Type      flag;                     /**< The handlers state flag */
+        Event_Type state_map;                  /**< Event bitmap for last cycles */
+        unsigned int      count;                             /**< The event rate */
+        char             *message;    /**< Optional message describing the event */
+        EventAction_T     action;           /**< Description of the event action */
+        /** For internal use */
+        struct Event_T   *next;                         /**< next event in chain */
+} *Event_T;                                             /**< Pending events list */
+
 
 /** Defines service data */
 //FIXME: use union for type-specific rules
@@ -1302,23 +1315,7 @@ typedef struct Service_T {
         struct timeval     collected;                /**< When were data collected */ //FIXME: replace with unsigned long long? (all places where timeval is used) ... Time_milli()?
 
         /** Events */
-        struct myevent {
-                #define           EVENT_VERSION  4      /**< The event structure version */
-                long              id;                      /**< The event identification */
-                struct timeval    collected;                /**< When the event occurred */
-                struct Service_T *source;                              /**< Event source */
-                Monitor_Mode      mode;             /**< Monitoring mode for the service */
-                Service_Type      type;                      /**< Monitored service type */
-                Check_State        state;                                 /**< Test state */
-                bool         state_changed;              /**< true if state changed */
-                Handler_Type      flag;                     /**< The handlers state flag */
-                unsigned long long state_map;          /**< Event bitmap for last cycles */
-                unsigned int      count;                             /**< The event rate */
-                char             *message;    /**< Optional message describing the event */
-                EventAction_T     action;           /**< Description of the event action */
-                /** For internal use */
-                struct myevent   *next;                         /**< next event in chain */
-        } *eventlist;                                     /**< Pending events list */
+        Event_T eventlist;
 
         /** Context specific parameters */
         char *path;  /**< Path to the filesys, file, directory or process pid file */
@@ -1329,9 +1326,6 @@ typedef struct Service_T {
         struct Service_T *next_conf;      /**< next service according to conf file */
         struct Service_T *next_depend;           /**< next depend service in chain */
 } *Service_T;
-
-
-typedef struct myevent *Event_T;
 
 
 typedef struct ServiceGroup_T {

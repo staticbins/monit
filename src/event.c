@@ -413,7 +413,7 @@ static unsigned long long left_shift(unsigned long long v) {
  * @param action Description of the event action
  * @param s Optional message describing the event
  */
-void Event_post(Service_T service, long id, Check_State state, EventAction_T action, const char *s, ...) {
+void Event_post(Service_T service, Event_Type id, Check_State state, EventAction_T action, const char *s, ...) {
         assert(service);
         assert(action);
         assert(s);
