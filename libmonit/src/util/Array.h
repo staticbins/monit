@@ -71,6 +71,14 @@ void Array_free(T *S);
 
 
 /**
+ * Clear this Array so it contains no elements. The Array will be empty after
+ * this call.
+ * @param S A Sparse Array object
+ */
+void Array_clear(T S);
+
+
+/**
  * Adds the key-value pair given by <code>key</code> and <code>value</code>
  * to Array. If the Array already holds <code>key</code>, <code>value</code>
  * overwrites the previous value, and returns the <i>previous</i> value.

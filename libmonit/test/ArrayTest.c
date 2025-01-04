@@ -120,7 +120,7 @@ int main(void) {
         }
         printf("=> Test6: OK\n\n");
 
-        printf("=> Test7: sparseness()\n");
+        printf("=> Test7: sparseness\n");
         {
                 T = Array_new(4);
                 int numbers[] = {0, 509, 1021, 2053, 4093, 8191, 16381, 32771, 65521, -INT_MAX, INT_MAX};
@@ -135,6 +135,23 @@ int main(void) {
                 Array_free(&T);
         }
         printf("=> Test7: OK\n\n");
+        
+        printf("=> Test8: clear\n");
+        {
+                T = Array_new(26);
+                char alphabet[] = {"abcdefghijklmnopqrstuvwxyz"};
+                assert(sizeof(alphabet) - 1 == 26);
+                for (int i = 0; i < sizeof(alphabet) - 1; i++)
+                        Array_put(T, i, &alphabet[i]);
+                assert(Array_length(T) == sizeof(alphabet) - 1);
+                assert(Array_get(T, 10) == &alphabet[10]);
+                Array_clear(T);
+                assert(Array_get(T, 10) == NULL);
+                assert(Array_length(T) == 0);
+                Array_free(&T);
+        }
+        printf("=> Test8: OK\n\n");
+
 
         printf("============> Array Tests: OK\n\n");
 }

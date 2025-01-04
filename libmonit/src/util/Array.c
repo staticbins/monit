@@ -81,15 +81,22 @@ T Array_new(int hint) {
 
 void Array_free(T *S) {
         assert(S && *S);
-        if ((*S)->length > 0) {
+        Array_clear(*S);
+        FREE(*S);
+}
+
+
+void Array_clear(T S) {
+        assert(S);
+        if (S->length > 0) {
                 struct binding *p, *q;
-                for (int i = 0; i < (*S)->size; i++)
-                        for (p = (*S)->buckets[i]; p; p = q) {
+                for (int i = 0; i < S->size; i++)
+                        for (p = S->buckets[i]; p; p = q) {
                                 q = p->link;
                                 FREE(p);
                         }
         }
-        FREE(*S);
+        S->length = 0;
 }
 
 
