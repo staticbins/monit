@@ -224,8 +224,7 @@ static void *do_heartbeat(__attribute__ ((unused)) void *args) {
         {
                 while (! Monit_isInterrupted()) {
                         MMonit_send(NULL);
-                        struct timespec wait = {.tv_sec = Time_now() + Run.polltime};
-                        Sem_timeWait(Heartbeat_Thread.sem, Heartbeat_Thread.mutex, wait);
+                        AtomicThread_wait(&Heartbeat_Thread, Time_now() + Run.polltime);
                 }
         }
         END_LOCK;
