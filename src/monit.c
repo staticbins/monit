@@ -224,7 +224,8 @@ static void *do_heartbeat(__attribute__ ((unused)) void *args) {
         {
                 while (! Monit_isInterrupted()) {
                         MMonit_send(NULL);
-                        AtomicThread_wait(&Heartbeat_Thread, Time_now() + Run.polltime);
+                        long waitsec = Time_now() + Run.polltime;
+                        AtomicThread_wait(&Heartbeat_Thread, waitsec * USEC_PER_SEC);
                 }
         }
         END_LOCK;
