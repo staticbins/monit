@@ -79,6 +79,22 @@ void Thread_init(void) { pthread_once(&once_control, _once); }
 
 /* ---------------------------------------------------------------- Public */
 
+int _Sem_timeWait(pthread_cond_t* cond, pthread_mutex_t* mutex, long usec) {
+        struct timespec ts;
+        struct timespec delta = {
+                .tv_sec = usec / USEC_PER_SEC,
+                .tv_nsec = (usec % USEC_PER_SEC) * 1000
+        };
+        clock_gettime(CLOCK_REALTIME, &ts);
+        ts.tv_sec += delta.tv_sec;
+        ts.tv_nsec += delta.tv_nsec;
+        if (ts.tv_nsec >= NSEC_PER_SEC) {
+            ts.tv_nsec -= NSEC_PER_SEC;
+            ts.tv_sec++;
+        }
+        return pthread_cond_timedwait(cond, mutex, &ts);
+}
+
 void Thread_createDetached(Thread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
         assert(thread);
         assert(threadFunc);
@@ -115,6 +131,16 @@ void AtomicThread_createDetached(AtomicThread_T *thread, void *(*threadFunc)(voi
 bool AtomicThread_isActive(AtomicThread_T *thread) {
         assert(thread);
         return atomic_load(&thread->active);
+}
+
+int AtomicThread_wait(AtomicThread_T *thread, long usec) {
+        assert(thread);
+        assert(pthread_mutex_trylock(&thread->mutex) == EBUSY);  // Contract: must be locked
+        int status = _Sem_timeWait(&thread->sem, &thread->mutex, usec);
+        if (! (status == 0 || status == ETIMEDOUT)) {
+                DEBUG("AtomicThread_wait failed -- %s\n", System_getError(status));
+        }
+        return status;
 }
 
 void AtomicThread_destroy(AtomicThread_T *thread) {

@@ -161,12 +161,14 @@
  * the mutex is unlocked and reacquired afterwards
  * @param sem The semaphore to wait on
  * @param mutex A mutex to unlock on wait
- * @param time time to wait
+ * @param time microseconds to wait.
  * @exception AssertException If the timed wait failed
  * @hideinitializer
  */
 #define Sem_timeWait(sem, mutex, time) \
-        __trapper(pthread_cond_timedwait(&sem, &(mutex), &time))
+        __trapper(_Sem_timeWait(&sem, &(mutex), time))
+// Private function. Use Sem_timeWait
+int _Sem_timeWait(Sem_T* cond, Mutex_T* mutex, long usec);
 //@}
 /** @name Mutex methods */
 //@{
@@ -377,6 +379,20 @@ void AtomicThread_createDetached(AtomicThread_T *thread, void *(*threadFunc)(voi
  * @return True if thread is active, otherwise false
  */
 bool AtomicThread_isActive(AtomicThread_T *thread);
+
+/**
+ * Wait on the AtomicThread's semaphore for a specific amount of time. During the wait
+ * the AtomicThread's mutex is unlocked and reacquired afterwards
+ * @param thread An Atomic thread
+ * @param time microseconds to wait.
+ * @pre Caller MUST lock thread->mutex before calling this method and it is
+ *      a checked runtime error if the mutex is not locked
+ * @note The mutex will be temporarily released while waiting and reacquired
+ *       before returning, regardless of whether a timeout occurred
+ * @post The mutex remains locked after return
+ * @return 0 on success, ETIMEDOUT on timeout, or error code
+ */
+int AtomicThread_wait(AtomicThread_T *thread, long usec);
 
 /**
  * Destroy the synchronization primitives in the Atomic Thread
