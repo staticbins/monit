@@ -141,7 +141,7 @@ int main(void) {
                 T = Array_new(26);
                 char alphabet[] = {"abcdefghijklmnopqrstuvwxyz"};
                 assert(sizeof(alphabet) - 1 == 26);
-                for (int i = 0; i < sizeof(alphabet) - 1; i++)
+                for (int i = 0; i < (int)sizeof(alphabet) - 1; i++)
                         Array_put(T, i, &alphabet[i]);
                 assert(Array_length(T) == sizeof(alphabet) - 1);
                 assert(Array_get(T, 10) == &alphabet[10]);
