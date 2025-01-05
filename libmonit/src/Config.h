@@ -86,6 +86,30 @@
  */
 #define STRLEN 256
 
+/**
+ * Microseconds per second
+ */
+#define USEC_PER_SEC            1000000LL
+#define FLOAT_USEC_PER_SEC      1000000.
+
+/**
+ * Microseconds per millisecond
+ */
+#define USEC_PER_MSEC           1000LL
+#define FLOAT_USEC_PER_MSEC     1000.
+
+/**
+ * Milliseconds per second
+ */
+#define MSEC_PER_SEC            1000LL
+#define FLOAT_MSEC_PER_SEC      1000.
+
+/**
+ * Nanoseconds per second
+ */
+#define NSEC_PER_SEC            1000000000LL
+#define FLOAT_NSEC_PER_MSEC     1000000000.
+
 
 /* ------------------------------------------------------ Type definitions */
 
