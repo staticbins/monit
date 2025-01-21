@@ -19,6 +19,11 @@ New: Validate Once has been removed. When Monit now start, it runs
      as a server, continously.
 
 
+Version 5.35.0
+
+Fixed: http password file check. Thanks to Francisco Javier Felix Belmonte.
+
+
 Version 5.34.4
 
 Fixed: If the Monit configuration file contains a string with unbalanced escape sequences, Monit may crash upon startup.
