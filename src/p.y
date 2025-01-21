@@ -4978,7 +4978,6 @@ static void setstatefile(char *statefile) {
  * Read a apache htpasswd file and add credentials found for username
  */
 static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) {
-        char *f = NULL;
         char *ht_username = NULL;
         char *ht_passwd = NULL;
         char buf[STRLEN];
@@ -4995,7 +4994,7 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
                         return;
                 }
         }
-        if (! File_isFile(f)) {
+        if (! File_isFile(filename)) {
                 yyerror2("The htpasswd file '%s' is not a file", filename);
                 return;
         }
