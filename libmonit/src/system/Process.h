@@ -184,8 +184,9 @@ void Process_terminate(T P);
  * it a termination signal (SIGKILL). While SIGTERM may be blocked
  * by a process, SIGKILL can not be blocked and will kill the process
  * @param P A Process object
+ * @return true if the process was killed, otherwise false.
  */
-void Process_kill(T P);
+bool Process_kill(T P);
 
 
 #undef T

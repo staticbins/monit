@@ -359,8 +359,8 @@ void Process_free(Process_T *P) {
         assert(P && *P);
         FREE((*P)->working_directory);
         if (Process_isRunning(*P)) {
-                Process_kill(*P);
-                Process_waitFor(*P);
+                if (Process_kill(*P))
+                        Process_waitFor(*P);
         }
         _closeParentPipes(*P);
         _closeStreams(*P);
@@ -451,10 +451,13 @@ void Process_terminate(Process_T P) {
 }
 
 
-void Process_kill(Process_T P) {
+bool Process_kill(Process_T P) {
         assert(P);
-        if (kill(P->pid, SIGKILL) != 0)
+        if (kill(P->pid, SIGKILL) != 0) {
                 ERROR("Process_kill: failed to kill pid %d -- %s\n", P->pid, System_lastError());
+                return false;
+        }
+        return true;
 }
 
 
