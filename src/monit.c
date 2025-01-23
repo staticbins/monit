@@ -532,7 +532,7 @@ static void do_action(List_T arguments) {
  * Finalize monit
  */
 static void do_exit(bool saveState) {
-        set_signal_block();
+        set_signal_block(true);
         Run.flags |= Run_Stopped;
         if ((Run.flags & Run_Daemon) && ! (Run.flags & Run_Once)) {
                 if (can_http())
@@ -946,7 +946,7 @@ static void version(void) {
 
 // M/Monit heartbeat thread
 static void *do_heartbeat(__attribute__ ((unused)) void *args) {
-        set_signal_block();
+        set_signal_block(false);
         Log_info("M/Monit heartbeat started\n");
         LOCK(Heartbeat_Mutex)
         {
