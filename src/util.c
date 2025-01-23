@@ -1472,7 +1472,7 @@ bool Util_isurlsafe(const char *url) {
 
 char *Util_urlEncode(const char *string, bool isParameterValue) {
         char *escaped = NULL;
-        if (string) {
+        if (STR_DEF(string)) {
                 char *p;
                 int i, n;
                 const unsigned char *unsafe = isParameterValue ? urlunsafeparameter : urlunsafe;
