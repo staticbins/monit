@@ -549,6 +549,15 @@ then
    CFLAGS="$CFLAGS -D _REENTRANT"
    AC_CHECK_LIB([devstat], [devstat_getnumdevs])
    AC_CHECK_LIB([kvm], [kvm_open])
+   AC_CHECK_LIB([execinfo], [backtrace],
+       [
+           AC_DEFINE([HAVE_BACKTRACE], [1], [Define if backtrace is available])
+           LIBS="-lexecinfo $LIBS"
+       ],
+       [
+           AC_MSG_WARN([backtrace function not found in libexecinfo])
+       ]
+   )
 elif test "$architecture" = "GNU/kFreeBSD"
 then
    ARCH="FREEBSD"
