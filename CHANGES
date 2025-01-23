@@ -25,6 +25,8 @@ Fixed: Monit HTTP interface didn't parse the password file (regression from moni
 
 Fixed: Monit may hang on exit, if a program executed by "check program" was pending while monit tried to quit (regression from Monit 5.34.1).
 
+Fixed: MacOS: When "check network" is used, but no network interfaces are found, monit terminates with "AssertException: count > 0  raised in Mem_calloc"
+
 
 Version 5.34.4
 
