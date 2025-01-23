@@ -174,10 +174,9 @@ void spawn(Service_T S, command_t C, Event_T E) {
         /*
          * Block SIGCHLD
          */
-printf("BUBU: spawn: SIG_BLOCK -> SIGCHLD\n"); fflush(stdout);
-        sigemptyset(&mask); //FIXME:  we're blocking SIGCHLD here ... maybe a race condition with child/parent?
+        sigemptyset(&mask);
         sigaddset(&mask, SIGCHLD);
-        pthread_sigmask(SIG_BLOCK, &mask, &save); //FIXME: we don't unblock the signal!!!!!!!!!!!!!!!!!! //FIXME: this is maybe not necessary ... this process is not being started via Process/Command interface, hence it won't be registered in the Array in Command.c anyway. Blocking here is not necessary 
+        pthread_sigmask(SIG_BLOCK, &mask, &save);
 
         Time_localStr(Time_now(), date);
         pid = fork();
@@ -236,8 +235,7 @@ printf("BUBU: spawn: SIG_BLOCK -> SIGCHLD\n"); fflush(stdout);
                         pthread_sigmask(SIG_SETMASK, &mask, NULL);
                         signal(SIGINT, SIG_DFL);
                         signal(SIGHUP, SIG_DFL);
-                        signal(SIGCHLD, SIG_DFL); //FIXME: maybe this causes problem? if called in main thread, it may stop the signal handler in Command.c?
-printf("BUBU: spawn: Reset all signals, so the spawned process is *not* created: SIG_DFL -> SIGCHLD\n"); fflush(stdout);
+                        signal(SIGCHLD, SIG_DFL);
                         signal(SIGTERM, SIG_DFL);
                         signal(SIGUSR1, SIG_DFL);
                         signal(SIGPIPE, SIG_DFL);
@@ -297,8 +295,7 @@ printf("BUBU: spawn: Reset all signals, so the spawned process is *not* created:
         /*
          * Restore the signal mask
          */
-printf("BUBU: spawn: pthread_sigmask(SIG_SETMASK, &save, NULL) ... does this unblock the SIGCHLD????\n"); fflush(stdout);
-        pthread_sigmask(SIG_SETMASK, &save, NULL); //FIXME: here we restore the mask?
+        pthread_sigmask(SIG_SETMASK, &save, NULL);
 
         /*
          * We do not need to wait for the second child since we forked twice,
