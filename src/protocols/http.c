@@ -28,6 +28,10 @@
 #include <string.h>
 #endif
 
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+
 #include "md5.h"
 #include "sha1.h"
 #include "base64.h"
@@ -168,7 +172,7 @@ static void _processBodyChunked(Socket_T socket, Port_T P, char **data, __attrib
         unsigned int haveBytes = 0;
         while ((wantBytes = _getChunkSize(socket)) && haveBytes < Run.limits.httpContentBuffer) {
                 if (haveBytes + wantBytes > Run.limits.httpContentBuffer) {
-                        DEBUG("HTTP: content buffer limit exceeded -- limiting the data to %lld\n", Run.limits.httpContentBuffer);
+                        DEBUG("HTTP: content buffer limit exceeded -- limiting the data to %" PRId64 "\n", Run.limits.httpContentBuffer);
                         wantBytes = Run.limits.httpContentBuffer - haveBytes;
                 }
                 _readData(socket, P, data, wantBytes, &haveBytes, context);
@@ -185,7 +189,7 @@ static void _processBodyContentLength(Socket_T socket, Port_T P, char **data, in
         } else if (*contentLength == 0) {
                 THROW(ProtocolException, "HTTP error: No content returned from server");
         } else if (*contentLength > (int)Run.limits.httpContentBuffer) {
-                DEBUG("HTTP: content buffer limit exceeded -- limiting the data to %lld\n", Run.limits.httpContentBuffer);
+                DEBUG("HTTP: content buffer limit exceeded -- limiting the data to %" PRId64 "\n", Run.limits.httpContentBuffer);
                 *contentLength = Run.limits.httpContentBuffer;
         }
         _readData(socket, P, data, *contentLength, &haveBytes, context);
