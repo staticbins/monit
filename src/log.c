@@ -179,13 +179,13 @@ static void _log(int priority, const char *s, va_list ap) {
 }
 
 
-static void _backtrace(void) {
+static void _backtrace(bool force) {
 #ifdef HAVE_BACKTRACE
         int i, frames;
         void *callstack[128];
         char **strs;
 
-        if (Run.debug >= 2) {
+        if (force || Run.debug >= 2) {
                 frames = backtrace(callstack, 128);
                 strs = backtrace_symbols(callstack, frames);
                 Log_debug("-------------------------------------------------------------------------------\n");
@@ -240,7 +240,7 @@ void Log_emergency(const char *s, ...) {
         va_start(ap, s);
         _log(LOG_EMERG, s, ap);
         va_end(ap);
-        _backtrace();
+        _backtrace(false);
 }
 
 
@@ -255,7 +255,7 @@ void Log_vemergency(const char *s, va_list ap) {
         va_copy(ap_copy, ap);
         _log(LOG_EMERG, s, ap);
         va_end(ap_copy);
-        _backtrace();
+        _backtrace(false);
 }
 
 
@@ -269,7 +269,7 @@ void Log_alert(const char *s, ...) {
         va_start(ap, s);
         _log(LOG_ALERT, s, ap);
         va_end(ap);
-        _backtrace();
+        _backtrace(false);
 }
 
 
@@ -284,7 +284,7 @@ void Log_valert(const char *s, va_list ap) {
         va_copy(ap_copy, ap);
         _log(LOG_ALERT, s, ap);
         va_end(ap_copy);
-        _backtrace();
+        _backtrace(false);
 }
 
 
@@ -298,7 +298,7 @@ void Log_critical(const char *s, ...) {
         va_start(ap, s);
         _log(LOG_CRIT, s, ap);
         va_end(ap);
-        _backtrace();
+        _backtrace(false);
 }
 
 
@@ -313,7 +313,7 @@ void Log_vcritical(const char *s, va_list ap) {
         va_copy(ap_copy, ap);
         _log(LOG_CRIT, s, ap);
         va_end(ap_copy);
-        _backtrace();
+        _backtrace(false);
 }
 
 
@@ -327,8 +327,10 @@ void Log_abort_handler(const char *s, va_list ap) {
         va_copy(ap_copy, ap);
         _log(LOG_CRIT, s, ap);
         va_end(ap_copy);
-        if (Run.debug)
+        _backtrace(true); // Always log backtrace on abort (asserts, etc.)
+        if (Run.debug) {
                 abort();
+        }
         exit(1);
 }
 
@@ -343,7 +345,7 @@ void Log_error(const char *s, ...) {
         va_start(ap, s);
         _log(LOG_ERR, s, ap);
         va_end(ap);
-        _backtrace();
+        _backtrace(false);
 }
 
 
@@ -358,7 +360,7 @@ void Log_verror(const char *s, va_list ap) {
         va_copy(ap_copy, ap);
         _log(LOG_ERR, s, ap);
         va_end(ap_copy);
-        _backtrace();
+        _backtrace(false);
 }
 
 
