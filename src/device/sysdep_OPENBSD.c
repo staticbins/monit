@@ -219,7 +219,7 @@ static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
 
 static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct statfs *mnt)) {
         int countfs = getfsstat(NULL, 0, MNT_NOWAIT);
-        if (countfs != -1) {
+        if (countfs > 0) {
                 struct statfs *mnt = CALLOC(countfs, sizeof(struct statfs));
                 if ((countfs = getfsstat(mnt, countfs * sizeof(struct statfs), MNT_NOWAIT)) != -1) {
                         for (int i = 0; i < countfs; i++) {
