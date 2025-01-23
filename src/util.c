@@ -334,7 +334,7 @@ static int PAMquery(int num_msg, const struct pam_message **msg, struct pam_resp
         struct pam_response *response;
 
         /* Sanity checking */
-        if (! msg || ! resp || ! user )
+        if (! msg || ! resp || ! user || ! num_msg)
                 return PAM_CONV_ERR;
 
         response = CALLOC(sizeof(struct pam_response), num_msg);
