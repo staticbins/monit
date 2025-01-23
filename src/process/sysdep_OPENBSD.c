@@ -156,12 +156,16 @@ int init_processtree_sysdep(ProcessTree_T **reference, ProcessEngine_Flags pflag
                 return 0;
         }
 
+        // Get the size of the process table
         if (sysctl(mib_proc, 6, NULL, &size, NULL, 0) == -1) {
                 Log_error("system statistic error -- kern.proc #1 failed\n");
                 return 0;
         }
 
-        size *= 2; // Add reserve for new processes which were created between calls of sysctl
+        // Add reserve for new processes which were created between calls of sysctl
+        size *= 2;
+
+        // Get the process table
         pinfo = CALLOC(1, size);
         mib_proc[5] = (int)(size / sizeof(struct kinfo_proc));
         if (sysctl(mib_proc, 6, pinfo, &size, NULL, 0) == -1) {
