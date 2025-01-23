@@ -453,7 +453,8 @@ void Process_terminate(Process_T P) {
 
 void Process_kill(Process_T P) {
         assert(P);
-        kill(P->pid, SIGKILL);
+        if (kill(P->pid, SIGKILL) != 0)
+                ERROR("Process_kill: failed to kill pid %d -- %s\n", P->pid, System_lastError());
 }
 
 
