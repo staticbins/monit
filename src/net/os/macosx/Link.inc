@@ -37,6 +37,8 @@ static bool _update(T L, const char *interface) {
         int mib[6] = {CTL_NET, PF_ROUTE, 0, 0, NET_RT_IFLIST2, 0};
         if (sysctl(mib, 6, NULL, &len, NULL, 0) < 0)
                 THROW(AssertException, "Cannot get link statistics -- %s", System_getError(errno));
+        if (len == 0)
+                THROW(AssertException, "Cannot get link statistics -- no interfaces found");
         struct if_msghdr2 *buf = CALLOC(1, len);
         if (sysctl(mib, 6, buf, &len, NULL, 0) < 0) {
                 FREE(buf);
