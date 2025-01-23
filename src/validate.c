@@ -1916,12 +1916,13 @@ State_Type check_program(Service_T s) {
                                 rv = State_Failed;
                                 Log_error("'%s' program timed out after %s. Killing program with pid %ld\n", s->name, Fmt_time2str(execution_time, (char[11]){}), (long)Process_getPid(P));
                                 if (Process_kill(P)) {
-                                        Process_waitFor(P); // Wait for child to exit to get correct exit value
-                                        // Fall-through with P and evaluate exit value below.
+                                        Process_waitFor(P);
                                 } else {
-                                        DEBUG("'%s' program timed out, but kill attempt failed\n", s->name);
-                                        return State_Failed;
+                                        Log_error("'%s' kill attempt of timed out pid %ld failed -- skip results evaluation\n", s->name, (long)Process_getPid(P));
+                                        Process_free(&s->program->P);
+                                        return State_Init;
                                 }
+                                // Fall-through with P and evaluate exit value below.
                         } else {
                                 // Defer test of exit value until program exit or timeout
                                 DEBUG("'%s' status check deferred - waiting on program to exit\n", s->name);
