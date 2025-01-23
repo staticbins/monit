@@ -27,7 +27,7 @@ Fixed: Monit may hang on exit, if a program executed by "check program" was pend
 
 Fixed: MacOS: When "check network" is used, but no network interfaces are found, monit terminates with "AssertException: count > 0  raised in Mem_calloc"
 
-Fixed: FreeBSD + OpenBSD: Detect presence of backtrace() function during compilation (used in monit -vv mode to print backtrace)
+Fixed: FreeBSD + OpenBSD + NetBSD: Detect presence of backtrace() function during compilation (used in monit -vv mode to print backtrace)
 
 New: When monit aborts (e.g. due to assert), print a backtrace.
 
