@@ -127,6 +127,8 @@ static void handle_children(__attribute__ ((unused)) int sig) {
                                 P->status = WTERMSIG(status);
                         else if (WIFSTOPPED(status))
                                 P->status = WSTOPSIG(status);
+                } else {
+                        DEBUG("Caught SIGCHLD for pid %ld, but didn't find corresponding Process object\n", (long)pid);
                 }
         }
 }
