@@ -676,18 +676,6 @@ Process_T Command_execute(T C) {
                         exec_error = errno;
                         _exit(errno);
                 }
-                // Unblock any signals in the child and reset signal handlers
-                sigset_t mask;
-                sigemptyset(&mask);
-                pthread_sigmask(SIG_SETMASK, &mask, NULL);
-                signal(SIGINT, SIG_DFL);
-                signal(SIGQUIT, SIG_DFL);
-                signal(SIGABRT, SIG_DFL);
-                signal(SIGTERM, SIG_DFL);
-                signal(SIGPIPE, SIG_DFL);
-                signal(SIGCHLD, SIG_DFL);
-                signal(SIGUSR1, SIG_DFL);
-                signal(SIGHUP, SIG_IGN);  // Ensure future opens won't allocate controlling TTYs
                 // Execute the program
                 execve(_args(C)[0], _args(C), _env(C));
                 exec_error = errno;
