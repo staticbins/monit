@@ -227,19 +227,6 @@ void spawn(Service_T S, command_t C, Event_T E) {
                 }
 
                 if (pid == 0) {
-                        /*
-                         * Reset all signals, so the spawned process is *not* created
-                         * with any inherited SIG_BLOCKs
-                         */
-                        sigemptyset(&mask);
-                        pthread_sigmask(SIG_SETMASK, &mask, NULL);
-                        signal(SIGINT, SIG_DFL);
-                        signal(SIGHUP, SIG_DFL);
-                        signal(SIGCHLD, SIG_DFL);
-                        signal(SIGTERM, SIG_DFL);
-                        signal(SIGUSR1, SIG_DFL);
-                        signal(SIGPIPE, SIG_DFL);
-
                         (void) execv(C->arg[0], C->arg);
                         _exit(errno);
                 }
