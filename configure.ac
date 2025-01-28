@@ -379,15 +379,15 @@ AC_FUNC_ERROR_AT_LINE
 AC_FUNC_FORK
 AC_FUNC_STAT
 AC_FUNC_STRFTIME
-AC_CHECK_FUNC(statfs)
-AC_CHECK_FUNC(statvfs)
-AC_CHECK_FUNC(setlocale)
-AC_CHECK_FUNC(getaddrinfo)
-AC_CHECK_FUNC(syslog)
-AC_CHECK_FUNC(vsyslog)
-AC_CHECK_FUNC(backtrace)
-AC_CHECK_FUNC(getloadavg)
-AC_CHECK_FUNC(getopt_long)
+AC_CHECK_FUNCS(statfs)
+AC_CHECK_FUNCS(statvfs)
+AC_CHECK_FUNCS(setlocale)
+AC_CHECK_FUNCS(getaddrinfo)
+AC_CHECK_FUNCS(syslog)
+AC_CHECK_FUNCS(vsyslog)
+AC_CHECK_FUNCS(backtrace)
+AC_CHECK_FUNCS(getloadavg)
+AC_CHECK_FUNCS(getopt_long)
 
 
 # ------------------------------------------------------------------------
