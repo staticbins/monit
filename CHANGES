@@ -2,7 +2,7 @@
 
            This file summarizes changes made since 5.0
 
-Version 5.35.0
+Version 5.34.5
 
 Fixed: Monit may hang on exit, if a program executed by "check program" was pending while monit tried to quit (regression from Monit 5.34.1).
 
