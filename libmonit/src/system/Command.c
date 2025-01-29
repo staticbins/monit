@@ -114,22 +114,24 @@ static void _childSignal(int how) {
 }
 
 
+static inline void _setstatus(Process_T P, int status) {
+        if (WIFEXITED(status))
+                P->status = WEXITSTATUS(status);
+        else if (WIFSIGNALED(status))
+                P->status = WTERMSIG(status);
+        else if (WIFSTOPPED(status))
+                P->status = WSTOPSIG(status);
+}
+
+
 // Signal handler for children exit
 static void handle_children(__attribute__ ((unused)) int sig) {
         pid_t pid;
         int status;
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
                 Process_T P = Array_get(_hashTable, pid);
-                if (P) {
-                        if (WIFEXITED(status))
-                                P->status = WEXITSTATUS(status);
-                        else if (WIFSIGNALED(status))
-                                P->status = WTERMSIG(status);
-                        else if (WIFSTOPPED(status))
-                                P->status = WSTOPSIG(status);
-                } else {
-                        DEBUG("Caught SIGCHLD for pid %ld, but didn't find corresponding Process object\n", (long)pid);
-                }
+                if (P)
+                        _setstatus(P, status);
         }
 }
 
@@ -405,14 +407,36 @@ pid_t Process_getPid(Process_T P) {
 
 int Process_waitFor(Process_T P) {
         assert(P);
-        while (P->status < 0)
-                Time_usleep(100);
+        if (P->status < 0) {
+                int r;
+                int status;
+                do {
+                        // Wait blocking
+                        r = waitpid(P->pid, &status, 0);
+                } while (r == -1 && errno == EINTR);
+                if (r == P->pid) {
+                        // Process stopped or terminated
+                        _setstatus(P, status);
+                }
+        }
         return P->status;
 }
 
 
 int Process_exitStatus(Process_T P) {
         assert(P);
+        if (P->status < 0) {
+                int r;
+                int status;
+                do {
+                        // Wait non-blocking
+                        r = waitpid(P->pid, &status, WNOHANG);
+                } while (r < 0 && errno == EINTR);
+                if (r > 0) {
+                        // Process stopped or terminated
+                        _setstatus(P, status);
+                }
+        }
         return P->status;
 }
 
@@ -676,6 +700,20 @@ Process_T Command_execute(T C) {
                         exec_error = errno;
                         _exit(errno);
                 }
+
+                // Unblock any signals in the child and reset signal handlers
+                sigset_t mask;
+                sigemptyset(&mask);
+                pthread_sigmask(SIG_SETMASK, &mask, NULL);
+                signal(SIGINT, SIG_DFL);
+                signal(SIGQUIT, SIG_DFL);
+                signal(SIGABRT, SIG_DFL);
+                signal(SIGTERM, SIG_DFL);
+                signal(SIGPIPE, SIG_DFL);
+                signal(SIGCHLD, SIG_DFL);
+                signal(SIGUSR1, SIG_DFL);
+                signal(SIGHUP, SIG_IGN);  // Ensure future opens won't allocate controlling TTYs
+
                 // Execute the program
                 execve(_args(C)[0], _args(C), _env(C));
                 exec_error = errno;
