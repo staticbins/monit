@@ -115,6 +115,9 @@ static void _childSignal(int how) {
 
 
 static inline void _setstatus(Process_T P, int status) {
+        // Remove the Process object from the array (the PID is available to the system again and another process may get the same PID)
+        Array_remove(_hashTable, P->pid);
+
         if (WIFEXITED(status))
                 P->status = WEXITSTATUS(status);
         else if (WIFSIGNALED(status))
@@ -369,10 +372,6 @@ void Process_free(Process_T *P) {
         _closeParentPipes(*P);
         _closeStreams(*P);
 
-        _childSignal(SIG_BLOCK);
-        Array_remove(_hashTable, (*P)->pid);
-        _childSignal(SIG_UNBLOCK);
-
         FREE(*P);
 }
 
@@ -416,7 +415,9 @@ int Process_waitFor(Process_T P) {
                 } while (r == -1 && errno == EINTR);
                 if (r == P->pid) {
                         // Process stopped or terminated
+                        _childSignal(SIG_BLOCK);
                         _setstatus(P, status);
+                        _childSignal(SIG_UNBLOCK);
                 }
         }
         return P->status;
@@ -434,7 +435,9 @@ int Process_exitStatus(Process_T P) {
                 } while (r < 0 && errno == EINTR);
                 if (r > 0) {
                         // Process stopped or terminated
+                        _childSignal(SIG_BLOCK);
                         _setstatus(P, status);
+                        _childSignal(SIG_UNBLOCK);
                 }
         }
         return P->status;
@@ -726,7 +729,9 @@ Process_T Command_execute(T C) {
                 Process_free(&P);
         } else {
                 // Add Process to the hash table indexed by PID. The table is used by the async event handler to find the Process object and update the status
-                Array_put(_hashTable, P->pid, P);
+                Process_T previous = Array_put(_hashTable, P->pid, P);
+                if (previous)
+                        ERROR("Command: process with duplicate PID %d found in internal array\n", P->pid);
         }
 
         // Critical section end: Unblock SIGCHLD (the async signal handler can now find the process in the _hashTable)
