@@ -115,9 +115,6 @@ static void _childSignal(int how) {
 
 
 static inline void _setstatus(Process_T P, int status) {
-        // Remove the Process object from the array (the PID is available to the system again and another process may get the same PID)
-        Array_remove(_hashTable, P->pid);
-
         if (WIFEXITED(status))
                 P->status = WEXITSTATUS(status);
         else if (WIFSIGNALED(status))
@@ -132,7 +129,7 @@ static void handle_children(__attribute__ ((unused)) int sig) {
         pid_t pid;
         int status;
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-                Process_T P = Array_get(_hashTable, pid);
+                Process_T P = Array_remove(_hashTable, pid);
                 if (P)
                         _setstatus(P, status);
         }
