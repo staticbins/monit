@@ -124,27 +124,16 @@ static inline void _setstatus(Process_T P, int status) {
 }
 
 
-static void _reapProcess(Process_T P, pid_t pid, bool block) {
-        int r;
+// Signal handler for children exit. OS blocks SIGCHLD during this call
+static void _handleChildren(__attribute__ ((unused)) int sig) {
+        pid_t pid;
         int status;
-        do {
-                r = waitpid(pid, &status, block ? 0 : WNOHANG);
-        } while (r == -1 && errno == EINTR);
-        
-        if (r > 0) {
-                Process_T found = Array_remove(_hashTable, r);
-                if (found) {
-                        if (P && P != found)
-                                ERROR("Process with pid %d found in hash table doesn't match expected Process", r);
+        // Loop until no more children to reap
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+                Process_T found = Array_remove(_hashTable, pid);
+                if (found)
                         _setstatus(found, status);
-                }
         }
-}
-
-
-// Signal handler for children exit
-static void handle_children(__attribute__ ((unused)) int sig) {
-        _reapProcess(NULL, -1, false);
 }
 
 
@@ -152,7 +141,7 @@ static void __attribute__ ((constructor)) _constructor(void) {
         _hashTable = Array_new(20);
 
         struct sigaction act = {
-                .sa_handler = handle_children,
+                .sa_handler = _handleChildren,
                 .sa_flags = SA_RESTART
         };
         // Set up mask for blocking SIGCHLD during handler execution
@@ -420,7 +409,19 @@ int Process_waitFor(Process_T P) {
         assert(P);
         if (P->status < 0) {
                 _childSignal(SIG_BLOCK);
-                _reapProcess(P, P->pid, true);
+                int status, r;
+                do {
+                        r = waitpid(P->pid, &status, 0);
+                } while (r == -1 && errno == EINTR);
+                
+                if (r > 0) {
+                        Process_T found = Array_remove(_hashTable, r);
+                        if (found) {
+                                if (P != found)
+                                        ERROR("Process with pid %d found in hash table doesn't match expected Process", r);
+                                _setstatus(found, status);
+                        }
+                }
                 _childSignal(SIG_UNBLOCK);
         }
         return P->status;
