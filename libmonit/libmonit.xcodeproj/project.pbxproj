@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		520568AA249019A00091011E /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
 		520568B024901A100091011E /* InputStreamTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F7D13A5212700FC4089 /* InputStreamTest.c */; };
+		520CA04B2D56520E00D851CD /* Array.c in Sources */ = {isa = PBXBuildFile; fileRef = 520CA04A2D56520E00D851CD /* Array.c */; };
+		520CA04C2D56520E00D851CD /* Array.h in Headers */ = {isa = PBXBuildFile; fileRef = 520CA0492D56520E00D851CD /* Array.h */; };
 		521ECE3921D85CFE00F8045E /* Fmt.h in Headers */ = {isa = PBXBuildFile; fileRef = 521ECE3721D85CFE00F8045E /* Fmt.h */; };
 		521ECE3A21D85CFE00F8045E /* Fmt.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3821D85CFE00F8045E /* Fmt.c */; };
 		521ECE3C21D85EC100F8045E /* FmtTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3B21D85EC100F8045E /* FmtTest.c */; };
@@ -130,6 +132,8 @@
 
 /* Begin PBXFileReference section */
 		5205CE261A59FEA500DB6380 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		520CA0492D56520E00D851CD /* Array.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Array.h; sourceTree = "<group>"; };
+		520CA04A2D56520E00D851CD /* Array.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Array.c; sourceTree = "<group>"; };
 		521ECE3721D85CFE00F8045E /* Fmt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fmt.h; sourceTree = "<group>"; };
 		521ECE3821D85CFE00F8045E /* Fmt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Fmt.c; sourceTree = "<group>"; };
 		521ECE3B21D85EC100F8045E /* FmtTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FmtTest.c; sourceTree = "<group>"; };
@@ -399,6 +403,8 @@
 		52D7967413A6CE560014CED2 /* util */ = {
 			isa = PBXGroup;
 			children = (
+				520CA0492D56520E00D851CD /* Array.h */,
+				520CA04A2D56520E00D851CD /* Array.c */,
 				52D7967613A6CE560014CED2 /* List.c */,
 				52D7967713A6CE560014CED2 /* List.h */,
 				52D7967813A6CE560014CED2 /* Str.c */,
@@ -427,6 +433,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				520CA04C2D56520E00D851CD /* Array.h in Headers */,
 				521ECE3921D85CFE00F8045E /* Fmt.h in Headers */,
 				52E737DC1EE71099007BF939 /* ProtocolException.h in Headers */,
 			);
@@ -611,6 +618,7 @@
 				521ECE3A21D85CFE00F8045E /* Fmt.c in Sources */,
 				52D7968B13A6CE560014CED2 /* File.c in Sources */,
 				52D7968D13A6CE560014CED2 /* InputStream.c in Sources */,
+				520CA04B2D56520E00D851CD /* Array.c in Sources */,
 				52D7968F13A6CE560014CED2 /* OutputStream.c in Sources */,
 				52D7969113A6CE560014CED2 /* Command.c in Sources */,
 				521ECE3C21D85EC100F8045E /* FmtTest.c in Sources */,
