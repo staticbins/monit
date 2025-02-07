@@ -64,8 +64,10 @@ struct T {
 
 T Array_new(int hint) {
         assert(hint >=0);
-        static int primes[] = { 509, 509, 1021, 2053, 4093,
-                8191, 16381, 32771, 65521, INT_MAX };
+        static int primes[] = {
+                127, 127, 251, 509, 1021, 2053, 4093,
+                8191, 16381, 32771, 65521, INT_MAX
+        };
         int i;
         for (i = 1; primes[i] < hint; i++) ;
         T S = CALLOC(1, sizeof (*S) + primes[i - 1] * sizeof (S->buckets[0]));
