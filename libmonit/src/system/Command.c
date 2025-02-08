@@ -372,7 +372,6 @@ void Process_free(Process_T *P) {
         }
         _closeParentPipes(*P);
         _closeStreams(*P);
-
         FREE(*P);
 }
 
@@ -418,7 +417,7 @@ int Process_waitFor(Process_T P) {
                         Process_T found = Array_remove(_hashTable, r);
                         if (found) {
                                 if (P != found)
-                                        ERROR("Process with pid %d found in hash table doesn't match expected Process", r);
+                                        ERROR("Process with pid %d found in Array doesn't match expected Process", r);
                                 _setstatus(found, status);
                         }
                 }
@@ -430,7 +429,7 @@ int Process_waitFor(Process_T P) {
 
 int Process_exitStatus(Process_T P) {
         assert(P);
-        return P->status; // Trust handle_children to set status
+        return P->status; // Trust SIGCHLD handler to set status
 }
 
 
