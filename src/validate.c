@@ -243,6 +243,16 @@ static State_Type _checkProcessPpid(Service_T s) {
 }
 
 
+static State_Type _checkLoadAverage(Resource_T r, double loadavg, const char *name, char report[STRLEN]) {
+        if (Util_evalDoubleQExpression(r->operator, loadavg, r->limit)) {
+                snprintf(report, STRLEN, "%s of %.1f matches resource limit [%s %s %.1f]", name, loadavg, name, OperatorShort_Names[r->operator], r->limit);
+                return State_Failed;
+        }
+        snprintf(report, STRLEN, "%s check succeeded [current %s = %.1f]", name, name, loadavg);
+        return State_Succeeded;
+}
+
+
 /**
  * Check process resources
  */
@@ -438,22 +448,36 @@ static State_Type _checkProcessResources(Service_T s, Resource_T r) {
                         }
                         break;
 
+                case Resource_LoadAverage1m:
+                        rv = _checkLoadAverage(r, System_Info.loadavg[0], "loadavg (1min)", report);
+                        break;
+
+                case Resource_LoadAverage5m:
+                        rv = _checkLoadAverage(r, System_Info.loadavg[1], "loadavg (5min)", report);
+                        break;
+
+                case Resource_LoadAverage15m:
+                        rv = _checkLoadAverage(r, System_Info.loadavg[2], "loadavg (15min)", report);
+                        break;
+
+                case Resource_LoadAveragePerCore1m:
+                        rv = _checkLoadAverage(r, System_Info.loadavg[0] / (double)System_Info.cpu.count, "loadavg per core (1min)", report);
+                        break;
+
+                case Resource_LoadAveragePerCore5m:
+                        rv = _checkLoadAverage(r, System_Info.loadavg[1] / (double)System_Info.cpu.count, "loadavg per core (5min)", report);
+                        break;
+
+                case Resource_LoadAveragePerCore15m:
+                        rv = _checkLoadAverage(r, System_Info.loadavg[2] / (double)System_Info.cpu.count, "loadavg per core (15min)", report);
+                        break;
+
                 default:
                         Log_error("'%s' error -- unknown resource ID: [%d]\n", s->name, r->resource_id);
                         return State_Failed;
         }
         Event_post(s, Event_Resource, rv, r->action, "%s", report);
         return rv;
-}
-
-
-static State_Type _checkLoadAverage(Resource_T r, double loadavg, const char *name, char report[STRLEN]) {
-        if (Util_evalDoubleQExpression(r->operator, loadavg, r->limit)) {
-                snprintf(report, STRLEN, "%s of %.1f matches resource limit [%s %s %.1f]", name, loadavg, name, OperatorShort_Names[r->operator], r->limit);
-                return State_Failed;
-        }
-        snprintf(report, STRLEN, "%s check succeeded [current %s = %.1f]", name, name, loadavg);
-        return State_Succeeded;
 }
 
 

@@ -12,6 +12,9 @@ Fixed: Monit HTTP interface didn't parse the password file (regression from moni
 
 Fixed: MacOS: When "check network" is used, but no network interfaces are found, monit terminates with "AssertException: nbytes > 0  raised in Mem_calloc"
 
+Fixed: The loadavg test in the process check context didn't work. Error like this was logged by monit each time the test was executed:
+         'myservice' error -- unknown resource ID: [5]
+
 Fixed: MacOS + DragonflyBSD + FreeBSD + NetBSD + OpenBSD: If there are no mounted filesystems and a "check filesystem" is used, monit would terminate with
        "AssertException: count > 0 raised in Mem_calloc"
 
