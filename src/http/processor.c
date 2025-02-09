@@ -830,7 +830,7 @@ static bool basic_authenticate(HttpRequest req) {
                 Log_debug("HttpRequest: access denied -- client [%s]: invalid Authorization header\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
-        if (STR_UNDEF(uname)) {
+        if (! *uname) {
                 Log_debug("HttpRequest: access denied -- client [%s]: empty username\n", NVLSTR(Socket_getRemoteHost(req->S)));
                 return false;
         }
