@@ -299,33 +299,31 @@ static void _handleAction(Event_T E, Action_T A) {
         E->flag = Handler_Succeeded;
 
         if (A->id != Action_Ignored) {
-                /* Alert and mmonit event notification are common actions */
+                if (A->id == Action_Exec) {
+                        if (E->state_changed || (E->state && A->repeat && E->count % A->repeat == 0)) {
+                                Log_info("'%s' exec: '%s'\n", E->source->name, Util_commandDescription(A->exec, (char[STRLEN]){}));
+                                spawn(E->source, A->exec, E);
+                        }
+                } else if (A->id != Action_Alert && E->id != Event_Instance) {
+                        // For Instance events we don't want actions like stop to be executed to prevent the disabling of system service monitoring
+                        if (E->source->actionratelist && (A->id == Action_Start || A->id == Action_Restart)) {
+                                E->source->nstart++;
+                                State_dirty();
+                        }
+                        if (E->source->mode != Monitor_Passive || (A->id != Action_Start && A->id != Action_Stop && A->id != Action_Restart))
+                                control_service(E->source->name, A->id);
+                }
+
+                // Alert and mmonit event notification are common actions
                 E->flag |= MMonit_send(E);
                 E->flag |= handle_alert(E);
-                /* In the case that some subhandler failed, enqueue the event for partial reprocessing */
+
+                // Retry the event for failed handlers
                 if (E->flag != Handler_Succeeded) {
                         if (Run.eventlist_dir)
                                 _queueAdd(E);
                         else
                                 Log_error("Aborting event\n");
-                }
-                /* Action event is handled already. For Instance events we don't want actions like stop to be executed to prevent the disabling of system service monitoring */
-                if (A->id == Action_Alert || E->id == Event_Instance) {
-                        return;
-                } else if (A->id == Action_Exec) {
-                        if (E->state_changed || (E->state && A->repeat && E->count % A->repeat == 0)) {
-                                Log_info("'%s' exec: '%s'\n", E->source->name, Util_commandDescription(A->exec, (char[STRLEN]){}));
-                                spawn(E->source, A->exec, E);
-                                return;
-                        }
-                } else {
-                        if (E->source->actionratelist && (A->id == Action_Start || A->id == Action_Restart)) {
-                                E->source->nstart++;
-                                State_dirty();
-                        }
-                        if (E->source->mode == Monitor_Passive && (A->id == Action_Start || A->id == Action_Stop  || A->id == Action_Restart))
-                                return;
-                        control_service(E->source->name, A->id);
                 }
         }
 }
