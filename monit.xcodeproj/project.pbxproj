@@ -1190,7 +1190,6 @@
 					/usr/local/lib,
 					"$(SDKROOT)/usr/lib/system",
 					/opt/local/libexec/openssl3/lib,
-					/opt/local/libexec/openssl11/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MARKETING_VERSION = 5.33.0;
@@ -1237,7 +1236,6 @@
 					/usr/local/lib,
 					"$(SDKROOT)/usr/lib/system",
 					/opt/local/libexec/openssl3/lib,
-					/opt/local/libexec/openssl11/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MARKETING_VERSION = 5.33.0;
