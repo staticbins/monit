@@ -16,6 +16,7 @@
 		521ECE3C21D85EC100F8045E /* FmtTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 521ECE3B21D85EC100F8045E /* FmtTest.c */; };
 		522FF2FA192E702D00C62A13 /* TimeTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8613A5212700FC4089 /* TimeTest.c */; };
 		523FFE7C19AFE7B30018595D /* StrTest.c in Sources */ = {isa = PBXBuildFile; fileRef = 52936F8313A5212700FC4089 /* StrTest.c */; };
+		5256BCA22D5EA75B005FC07A /* Random.c in Sources */ = {isa = PBXBuildFile; fileRef = 93F6F8E32BF765A600BAFEC1 /* Random.c */; };
 		52A31C841A653235009D3D83 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
 		52A31C851A65323A009D3D83 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
 		52A31C861A653254009D3D83 /* libmonit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52A31C821A6531D8009D3D83 /* libmonit.a */; };
@@ -619,6 +620,7 @@
 				52D7968B13A6CE560014CED2 /* File.c in Sources */,
 				52D7968D13A6CE560014CED2 /* InputStream.c in Sources */,
 				520CA04B2D56520E00D851CD /* Array.c in Sources */,
+				5256BCA22D5EA75B005FC07A /* Random.c in Sources */,
 				52D7968F13A6CE560014CED2 /* OutputStream.c in Sources */,
 				52D7969113A6CE560014CED2 /* Command.c in Sources */,
 				521ECE3C21D85EC100F8045E /* FmtTest.c in Sources */,
