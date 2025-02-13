@@ -148,7 +148,7 @@ static void __attribute__ ((constructor)) _constructor(void) {
         sigaddset(&act.sa_mask, SIGCHLD);
         
         if (sigaction(SIGCHLD, &act, NULL)) {
-                ERROR("Command SIGCHLD handler failed: %s", System_lastError());
+                ERROR("Command: SIGCHLD handler failed: %s", System_lastError());
         }
 }
 
@@ -392,13 +392,13 @@ static int Process_createCtrlPipe(Process_T P) {
         // Not all POSIX systems have pipe2(), like macOS,
         if (pipe(P->ctrl_pipe) < 0) {
                 status = -errno;
-                DEBUG("Command: ctrl pipe(2) failed -- %s\n", System_lastError());
+                DEBUG("Process_createCtrlPipe: ctrl pipe(2) failed -- %s\n", System_lastError());
                 return status;
         }
         for (int i = 0; i < 2; i++) {
                 if (fcntl(P->ctrl_pipe[i], F_SETFD, FD_CLOEXEC) < 0) {
                         status = -errno;
-                        DEBUG("Command: ctrl fcntl(2) FD_CLOEXEC failed -- %s\n", System_lastError());
+                        DEBUG("Process_createCtrlPipe: ctrl fcntl(2) FD_CLOEXEC failed -- %s\n", System_lastError());
                         _closePipe(P->ctrl_pipe);
                         return status;
                 }
@@ -414,7 +414,7 @@ static int Process_createPipes(Process_T P) {
                 return status;
         if (pipe(P->stdin_pipe) < 0 || pipe(P->stdout_pipe) < 0 || pipe(P->stderr_pipe) < 0) {
                 status = -errno;
-                DEBUG("Command: pipe(2) failed -- %s\n", System_lastError());
+                DEBUG("Process_createPipes: pipe(2) failed -- %s\n", System_lastError());
                 Process_closePipes(P);
                 return status;
         }
@@ -527,7 +527,7 @@ int Process_waitFor(Process_T P) {
                         Process_T found = Array_remove(processTable, r);
                         if (found) {
                                 if (P != found)
-                                        ERROR("Process with pid %d found in Array doesn't match expected Process", r);
+                                        ERROR("Process_waitFor: Process with pid %d found in Array doesn't match expected Process", r);
                                 _setstatus(found, status);
                         }
                 }
