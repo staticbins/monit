@@ -1080,8 +1080,7 @@ certmd5         : CERTMD5 STRING { // Backward compatibility
                 ;
 
 setmailservers  : SET MAILSERVER mailserverlist nettimeout hostname {
-                        if (($<number>4) > SMTP_TIMEOUT)
-                                Run.mailserver_timeout = $<number>4;
+                        Run.mailserver_timeout = $<number>4;
                         Run.mail_hostname = $<string>5;
                   }
                 ;
