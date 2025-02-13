@@ -381,5 +381,4 @@ bool Time_backoff(bool predicate(void *args), void *args);
 
 //@}
 
-#undef T
 #endif
