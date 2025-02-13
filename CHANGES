@@ -8,6 +8,12 @@ Fixed: Monit may hang on exit, if a program executed by "check program" was pend
 
 Fixed: Issue #1115: Service checks may sporadicaly hang if the PID is recycled by the system quickly, e.g. due to PID randomization (regression from Monit 5.34.1).
 
+Fixed: Issue #1120: Change the order of the "exec" and implicit "alert" actions. Previously, the implicit alert action was triggered before the "exec" action, which could result
+       in an timeout if the network was unavailable, causing an unnecessary delay. The "exec" action now has higher priority, ensuring that if the purpose of the "exec" action
+       is to restore network connectivity, it has a chance to succeed before the alert is attempted.
+
+Fixed: Issue #1121: The "set mailserver" timeout option allowed to only increase the network timeout. Values lower then 30 seconds were ignored.
+
 Fixed: Monit HTTP interface didn't parse the password file (regression from monit 5.34.4). Thanks to Francisco Javier Felix Belmonte.
 
 Fixed: MacOS: When "check network" is used, but no network interfaces are found, monit terminates with "AssertException: nbytes > 0  raised in Mem_calloc"

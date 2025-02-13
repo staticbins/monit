@@ -1346,7 +1346,7 @@ PASSWORD options.
 You can set SSL/TLS L<options|"SSL OPTIONS"> for the connection and
 also check a SSL certificate checksum.
 
-The default connection timeout is 5 seconds. You can rise this
+The default connection timeout is 30 seconds. You can change this
 limit using the TIMEOUT option.
 
 Example (setting two mail servers for failover):
