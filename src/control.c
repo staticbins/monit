@@ -76,7 +76,7 @@
 typedef enum {
         Process_Stopped = 0,
         Process_Started
-} __attribute__((__packed__)) Process_Status;
+} Process_Status;
 
 
 #define RETRY_INTERVAL 100000 // 100ms
@@ -101,7 +101,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
         TRY
         {
                 // May throw exception if the program doesn't exist (was removed while Monit was up)
-                C = Command_new(c->arg[0], NULL);
+                C = Command_new(c->arg[0]);
         }
         ELSE
         {
@@ -145,8 +145,8 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
                         int n, total = 0;
                         char buf[STRLEN];
                         do {
-                                if ((n = _getOutput(Process_getErrorStream(P), buf, sizeof(buf))) <= 0)
-                                        n = _getOutput(Process_getInputStream(P), buf, sizeof(buf));
+                                if ((n = _getOutput(Process_errorStream(P), buf, sizeof(buf))) <= 0)
+                                        n = _getOutput(Process_inputStream(P), buf, sizeof(buf));
                                 if (n > 0) {
                                         buf[n] = 0;
                                         DEBUG("%s", buf);
