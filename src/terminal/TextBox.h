@@ -39,7 +39,7 @@
 typedef enum {
         TextBoxAlign_Left = 0,
         TextBoxAlign_Right
-} __attribute__((__packed__)) TextBoxAlign_T;
+} TextBoxAlign_T;
 
 
 typedef struct TexBoxColumn_T {

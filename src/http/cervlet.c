@@ -116,7 +116,7 @@
 typedef enum {
         TXT = 0,
         HTML
-} __attribute__((__packed__)) Output_Type;
+} Output_Type;
 
 
 typedef struct ServiceMap_T {

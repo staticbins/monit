@@ -99,7 +99,7 @@
 typedef enum {
         Connection_Client = 0,
         Connection_Server
-} __attribute__((__packed__)) Connection_Type;
+} Connection_Type;
 
 
 // One TCP frame data size

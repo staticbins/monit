@@ -33,7 +33,7 @@ typedef enum {
         SSL_Disabled = 0,
         SSL_Enabled,
         SSL_StartTLS
-} __attribute__((__packed__)) Ssl_Flags;
+} Ssl_Flags;
 
 
 typedef enum {
@@ -44,7 +44,7 @@ typedef enum {
         SSL_TLSV11  = 0x8,
         SSL_TLSV12  = 0x10,
         SSL_TLSV13  = 0x20
-} __attribute__((__packed__)) Ssl_Version;
+} Ssl_Version;
 
 
 typedef struct SslOptions_T {
