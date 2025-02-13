@@ -10,7 +10,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -40,9 +40,18 @@
  * Process_getInputStream(), and Process_getErrorStream(). Your program can
  * then use these streams to feed input to and get output from the sub-process.
  *
- * The sub-process continues executing until it stops or until either
- * Process_free() is called or it is terminated with either Process_terminate()
- * or Process_kill().
+ * If the sub-process is a daemon process, you might want to call
+ * Process_detach() to close down stdio streams to the sub-process after you
+ * have verified that the sub-process is up and running by first calling
+ * Process_isRunning(). If the process is _not_ running, then reading from
+ * Process_getInputStream() or from Process_getErrorStream() can be useful to
+ * debug the reason why it is not running. Daemon processes usually have an
+ * initialization phase where it will print any errors during startup to stdout
+ * or stderr before exiting.
+ *
+ * The sub-process continues executing until it stops or until it is terminated
+ * with either Process_terminate() or Process_kill(). Unless Process_detach()
+ * has been called, calling Process_free() will also terminate the sub-process.
  *
  * <h4>Environment</h4>
  * The Process inherits the environment from the calling process. Clients can
@@ -50,9 +59,11 @@
  * <em>before</em> calling Command_execute(). Environment variables set this way
  * will be added to the sub-process at execution time.
  *
+ * This class is reentrant but not thread-safe
+ *
  * @see Command.h
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://tildeslash.com
+ * @see https://mmonit.com
  * @file
  */
 
@@ -64,8 +75,9 @@ typedef struct T *T;
 /**
  * Destroy a Process object and free allocated resources. Clients
  * should call this method when they are done with the Process object.
- * This method will kill the sub-process represented by this Process
- * object if it is still running and close down stdio to the sub-process.
+ * Unless Process_detach() has been called, this method will kill the
+ * sub-process represented by this Process object if it is still running
+ * and close down stdio to the sub-process.
  * @param P a Process object reference
  */
 void Process_free(T *P);
@@ -75,35 +87,20 @@ void Process_free(T *P);
 //@{
 
 /**
- * Returns the user id of the sub-process
+ * Returns true if we have detached from the sub-process. I.e. if
+ * Process_detach() has been called.
  * @param P A Process object
- * @return The user id of the sub-process
+ * @return True if Process_detach() has been called, otherwise false
  */
-uid_t Process_getUid(T P);
-
-
-/**
- * Returns the group id of the sub-process
- * @param P A Process object
- * @return The group id of the sub-process
- */
-gid_t Process_getGid(T P);
-
-
-/**
- * Returns the working directory of the Process
- * @param P A Process object
- * @return The Process working directory
- */
-const char *Process_getDir(T P);
+bool Process_isdetached(T P);
 
 
 /**
  * Returns the Process's identification number
  * @param P A Process object
- * @return The process identification number of the sub-process
+ * @return The process identification number
  */
-pid_t Process_getPid(T P);
+pid_t Process_pid(T P);
 
 
 /**
@@ -145,7 +142,7 @@ bool Process_isRunning(T P);
  * @param P A Process object
  * @return The output stream connected to the normal input of the sub-process.
  */
-OutputStream_T Process_getOutputStream(T P);
+OutputStream_T Process_outputStream(T P);
 
 
 /**
@@ -155,7 +152,7 @@ OutputStream_T Process_getOutputStream(T P);
  * @param P A Process object
  * @return The input stream connected to the normal output of the sub-process.
  */
-InputStream_T Process_getInputStream(T P);
+InputStream_T Process_inputStream(T P);
 
 
 /**
@@ -165,26 +162,39 @@ InputStream_T Process_getInputStream(T P);
  * @param P A Process object
  * @return The input stream connected to the error output of the sub-process.
  */
-InputStream_T Process_getErrorStream(T P);
-
+InputStream_T Process_errorStream(T P);
 
 //@}
 
-
 /**
- * Destroy the sub-process. The sub-process is destroyed by sending
- * it a termination signal (SIGTERM)
+ * Close stdio streams to the sub-process represented by this Process_T
+ * object. Call this method if the sub-process is a daemon process and
+ * there is no more need to communicate or read output from the sub-process.
+ * Calling this method will also ensure that the sub-process will continue
+ * running even when this Process object is released with Process_free()
  * @param P A Process object
  */
-void Process_terminate(T P);
+void Process_detach(T P);
+
+
+/**
+ * Terminate the sub-process. The sub-process is terminated by sending
+ * it a termination signal (SIGTERM). Note that SIGTERM can be ignored
+ * or blocked by a process
+ * @param P A Process object
+ * @return True if signaling the sub-process succeed, otherwise false
+ * and errno is set to indicate the error
+ */
+bool Process_terminate(T P);
 
 
 /**
  * Kill the sub-process. The sub-process is destroyed by sending
  * it a termination signal (SIGKILL). While SIGTERM may be blocked
- * by a process, SIGKILL can not be blocked and will kill the process
+ * by a process, SIGKILL cannot be blocked and will kill the process
  * @param P A Process object
- * @return true if the process was killed, otherwise false.
+ * @return True if signaling the sub-process succeed, otherwise false
+ * and errno is set to indicate the error
  */
 bool Process_kill(T P);
 
