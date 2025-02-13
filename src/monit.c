@@ -580,8 +580,14 @@ static void do_default(void) {
                         Log_info("Starting Monit %s daemon\n", VERSION);
                 }
 
-                if (! (Run.flags & Run_Foreground))
-                        daemonize();
+                if (! (Run.flags & Run_Foreground)) {
+                        if (getpid() == 1) {
+                                Log_warning("Monit is running as process 1 (init) and cannot daemonize\n"
+                                          "Please start monit with the -I option to avoid seeing this warning\n");
+                        } else {
+                                daemonize();
+                        }
+                }
 
                 if (! file_createPidFile(Run.files.pid)) {
                         Log_error("Monit daemon died\n");
