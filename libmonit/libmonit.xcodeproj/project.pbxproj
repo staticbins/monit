@@ -386,8 +386,8 @@
 				52D7966913A6CE560014CED2 /* Net.h */,
 				52D7966B13A6CE560014CED2 /* System.c */,
 				52D7966C13A6CE560014CED2 /* System.h */,
-				52D7966D13A6CE560014CED2 /* Time.c */,
 				52D7966E13A6CE560014CED2 /* Time.h */,
+				52D7966D13A6CE560014CED2 /* Time.c */,
 			);
 			path = system;
 			sourceTree = "<group>";

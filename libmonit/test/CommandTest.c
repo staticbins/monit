@@ -321,7 +321,7 @@ skip:
                 char *script = "tmp=\"/tmp/$$.tst\";touch $tmp;permissions="
 #ifdef LINUX
                 "$(stat -c '%a' $tmp);"
-#elif defined(__APPLE__)
+#elif DARWIN
                 "$(stat -f '%A' $tmp);"
 #else  /* BSD systems */
                 "$(stat -f '%Lp' $tmp);"

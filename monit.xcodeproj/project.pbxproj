@@ -220,7 +220,6 @@
 		522A1D2A2458487200773F8A /* Statistics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Statistics.h; sourceTree = "<group>"; };
 		5256BC9F2D5EA32D005FC07A /* ProcessTree.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProcessTree.h; sourceTree = "<group>"; };
 		5256BCA02D5EA32D005FC07A /* ProcessTree.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ProcessTree.c; sourceTree = "<group>"; };
-		5256BCA32D5EAA17005FC07A /* int64_t.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = int64_t.c; sourceTree = "<group>"; };
 		526614DC2A9663CC009B6D86 /* SystemInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemInfo.h; sourceTree = "<group>"; };
 		526614DD2A9663CC009B6D86 /* SystemInfo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SystemInfo.c; sourceTree = "<group>"; };
 		526E98B02464657E0058BAD8 /* ax_check_compile_flag.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_check_compile_flag.m4; sourceTree = "<group>"; };
@@ -246,6 +245,7 @@
 		52AE77CE14037E6A00D2861D /* md5_crypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = md5_crypt.h; sourceTree = "<group>"; };
 		52B1B3CF24301535004F9C5B /* ax_info.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_info.m4; sourceTree = "<group>"; };
 		52B1B3D0243016FC004F9C5B /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		52B31FB32D5F42DE003BFD88 /* spawn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = spawn.h; sourceTree = "<group>"; };
 		52BB060423B49C00008E61F1 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../../../../../opt/local/lib/libcrypto.a; sourceTree = "<group>"; };
 		52BB060523B49C5F008E61F1 /* libssl.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.1.1.dylib; path = ../../../../../opt/local/lib/libssl.1.1.dylib; sourceTree = "<group>"; };
 		52BB060923B49C7E008E61F1 /* libcrypto.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.1.dylib; path = ../../../../../opt/local/lib/libcrypto.1.1.dylib; sourceTree = "<group>"; };
@@ -495,7 +495,6 @@
 				52A1312013A788B900583257 /* libs */,
 				528EA77313A74E05003DA4BE /* Products */,
 				9397E3071D897CCA008CAD1F /* Frameworks */,
-				5256BCA32D5EAA17005FC07A /* int64_t.c */,
 			);
 			sourceTree = "<group>";
 		};
@@ -668,6 +667,7 @@
 				52AE77CA14037DA300D2861D /* sha1.c */,
 				52AE77CB14037DA300D2861D /* sha1.h */,
 				52F6E7A313A74F220023F87A /* signal.c */,
+				52B31FB32D5F42DE003BFD88 /* spawn.h */,
 				52F6E7A613A74F220023F87A /* spawn.c */,
 				52F6E7AA13A74F220023F87A /* state.c */,
 				52F6E7AB13A74F220023F87A /* state.h */,
