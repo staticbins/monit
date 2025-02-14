@@ -497,8 +497,6 @@ void Process_detach(Process_T P) {
         assert(P);
         if (!P->isdetached) {
                 P->isdetached = true;
-                // Remove Process from status management
-                Array_remove(processTable, P->pid);
                 Process_closeStreams(P);
                 Process_closePipes(P);
         }
