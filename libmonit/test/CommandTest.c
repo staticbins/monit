@@ -295,15 +295,14 @@ int main(void) {
                         printf("\tCannot run test: not running as root\n");
                         goto skip;
                 }
-#ifdef DARWIN
-                char *uname = "www";
-#else
-                char *uname = "www-data";
-#endif
-                struct passwd *pwd = getpwnam(uname);
-                assert(pwd);
-                char *script = Str_cat("if test $(id -u) -eq %d -a $(id -g) -eq %d; then exit 0; fi; exit 1;", pwd->pw_uid, pwd->pw_gid);
+
+                struct passwd *pwd = getpwnam("daemon");
+                assert(pwd && "daemon user not found");
+
+                char *script = Str_cat("if test $(id -u) -eq %d -a $(id -g) -eq %d; then exit 0; fi; exit 1;",
+                                     pwd->pw_uid, pwd->pw_gid);
                 Command_T c = Command_new("/bin/sh", "-c", script);
+                Command_setDir(c, "/tmp");
                 Command_setUid(c, pwd->pw_uid);
                 Command_setGid(c, pwd->pw_gid);
                 Process_T p = Command_execute(c);
@@ -313,7 +312,7 @@ int main(void) {
                 Command_free(&c);
                 FREE(script);
         }
-skip:
+        skip:
         printf("=> Test15: OK\n\n");
 
         printf("=> Test16: set umask\n");
