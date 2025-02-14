@@ -321,8 +321,10 @@ skip:
                 char *script = "tmp=\"/tmp/$$.tst\";touch $tmp;permissions="
 #ifdef LINUX
                 "$(stat -c '%a' $tmp);"
-#else
+#elif defined(__APPLE__)
                 "$(stat -f '%A' $tmp);"
+#else  /* BSD systems */
+                "$(stat -f '%Lp' $tmp);"
 #endif
                 "rm -f $tmp; if test $permissions -eq 642; then exit 0; fi; exit 1;";
                 Command_T c = Command_new("/bin/sh", "-c", script);
