@@ -278,7 +278,12 @@ static const char *_optionsChecksum(const char *checksum) {
 
 
 static Hash_Type _optionsChecksumType(Hash_Type checksumType) {
-        return checksumType ? checksumType : Run.ssl.checksumType ? Run.ssl.checksumType : Hash_Unknown;
+        if (checksumType)
+                return checksumType;
+        else if (Run.ssl.checksumType)
+                return Run.ssl.checksumType;
+        else
+                return Hash_Unknown;
 }
 
 

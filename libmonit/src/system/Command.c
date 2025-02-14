@@ -166,7 +166,7 @@ static void __attribute__ ((destructor)) _destructor(void) {
 // Search the env list and return the pointer to the name (in the list)
 // if found, otherwise NULL.
 static inline char *_findEnv(T C, const char *name, size_t len) {
-        assert(len >= 0);
+        assert(len > 0);
         for (_list_t p = C->env->head; p; p = p->next) {
                 if ((strncmp(p->e, name, len) == 0))
                         if (((char*)p->e)[len] == '=') // Ensure that name is not just a sub-string
