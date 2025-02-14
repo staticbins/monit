@@ -36,15 +36,15 @@
  * The sub-process represented by this Process does not have its own terminal
  * or console. All its standard I/O (i.e. stdin, stdout, stderr) operations
  * will be redirected to the parent process where they can be accessed using
- * the streams obtained using the methods Process_getOutputStream(),
- * Process_getInputStream(), and Process_getErrorStream(). Your program can
+ * the streams obtained using the methods Process_outputStream(),
+ * Process_inputStream(), and Process_errorStream(). Your program can
  * then use these streams to feed input to and get output from the sub-process.
  *
  * If the sub-process is a daemon process, you might want to call
  * Process_detach() to close down stdio streams to the sub-process after you
  * have verified that the sub-process is up and running by first calling
  * Process_isRunning(). If the process is _not_ running, then reading from
- * Process_getInputStream() or from Process_getErrorStream() can be useful to
+ * Process_inputStream() or from Process_errorStream() can be useful to
  * debug the reason why it is not running. Daemon processes usually have an
  * initialization phase where it will print any errors during startup to stdout
  * or stderr before exiting.
