@@ -62,6 +62,7 @@
 #include "event.h"
 #include "state.h"
 #include "MMonit.h"
+#include "spawn.h"
 
 // libmonit
 #include "io/File.h"
@@ -302,7 +303,17 @@ static void _handleAction(Event_T E, Action_T A) {
                 if (A->id == Action_Exec) {
                         if (E->state_changed || (E->state && A->repeat && E->count % A->repeat == 0)) {
                                 Log_info("'%s' exec: '%s'\n", E->source->name, Util_commandDescription(A->exec, (char[STRLEN]){}));
-                                spawn(E->source, A->exec, E);
+                                char spawn_error[STRLEN] = {"?"};
+                                if (spawn(&(struct spawn_args_t){
+                                        .S = E->source,
+                                        .cmd = A->exec,
+                                        .E = E,
+                                        .err = spawn_error,
+                                        .errlen = STRLEN
+                                }) < 0) {
+                                        Log_error("'%s' exec failed -- '%s'\n", E->source->name, spawn_error);
+                                        return;
+                                }
                         }
                 } else if (A->id != Action_Alert && E->id != Event_Instance) {
                         // For Instance events we don't want actions like stop to be executed to prevent the disabling of system service monitoring
