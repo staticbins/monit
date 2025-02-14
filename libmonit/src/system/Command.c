@@ -477,6 +477,7 @@ static Process_T Process_new(void) {
 
 void Process_free(Process_T *P) {
         assert(P && *P);
+        Array_remove(processTable, (*P)->pid);
         if (!(*P)->isdetached) {
                 if (Process_isRunning(*P)) {
                         Process_kill(*P);
