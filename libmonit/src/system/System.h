@@ -92,20 +92,4 @@ void System_debug(const char *d, ...) __attribute__((format (printf, 1, 2)));
 int System_descriptors(int guard);
 
 
-/**
- * Initialize the buf of size nbytes with random data.
- * @param buf The target buffer
- * @param nbtyes The target buffer size in bytes
- * @return true on success, otherwise false
- */
-bool System_random(void *buf, size_t nbytes);
-
-
-/**
- * Get random number
- * @return random number
- */
-unsigned long long System_randomNumber(void);
-
-
 #endif
