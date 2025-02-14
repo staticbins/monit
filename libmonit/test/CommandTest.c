@@ -318,7 +318,7 @@ int main(void) {
         printf("=> Test16: set umask\n");
         {
                 char *script = "tmp=\"/tmp/$$.tst\";touch $tmp;permissions="
-#ifdef LINUX
+#if defined(LINUX) || defined(SOLARIS)
                 "$(stat -c '%a' $tmp);"
 #elif DARWIN
                 "$(stat -f '%A' $tmp);"
