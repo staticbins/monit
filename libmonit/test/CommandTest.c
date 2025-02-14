@@ -295,8 +295,10 @@ int main(void) {
                         printf("\tCannot run test: not running as root\n");
                         goto skip;
                 }
-#if defined (DARWIN) | defined (OPENBSD)
+#if defined(DARWIN) | defined(OPENBSD) | defined(FREEBSD)
                 char *uname = "www";
+#elif defined(NETBSD)
+                char *uname = "_httpd";
 #else
                 char *uname = "www-data";
 #endif
