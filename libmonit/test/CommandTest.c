@@ -295,7 +295,7 @@ int main(void) {
                         printf("\tCannot run test: not running as root\n");
                         goto skip;
                 }
-#ifdef DARWIN
+#if defined (DARWIN) | defined (OPENBSD)
                 char *uname = "www";
 #else
                 char *uname = "www-data";
