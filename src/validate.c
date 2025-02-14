@@ -1582,8 +1582,7 @@ int validate(void) {
         int errors = 0;
         /* Check the services */
         for (Service_T s = Service_List; s && ! interrupt(); s = s->next) {
-                // FIXME: The Service_Program must collect the exit value from last run, even if the program start should be skipped in this cycle => let check program always run the test (to be refactored with new scheduler) WARNING: do not(!) call the _checkSkip for Service_Program here
-                if (! _doScheduledAction(s) && s->monitor && (s->type == Service_Program || ! _checkSkip(s))) {
+                if (! _doScheduledAction(s) && s->monitor && ! _checkSkip(s)) {
                         _checkTimeout(s); // Can disable monitoring => need to check s->monitor again
                         if (s->monitor) {
                                 State_Type state = s->check(s);
@@ -1591,8 +1590,8 @@ int validate(void) {
                                         s->monitor = Monitor_Yes;
                                 if (state == State_Failed)
                                         errors++;
-                                if (s->type != Service_Program)
-                                        gettimeofday(&s->collected, NULL);
+
+                                gettimeofday(&s->collected, NULL);
                         }
                 }
         }
@@ -2012,8 +2011,7 @@ State_Type check_program(Service_T s) {
         } else {
                 rv = State_Init;
         }
-        //FIXME: the current off-by-one-cycle based design requires that the check program will collect the exit value next cycle even if program startup should be skipped in the given cycle => must test skip here (new scheduler will obsolete this deferred skip checking)
-        if (s->monitor != Monitor_Not && ! _checkSkip(s)) { // The status evaluation may disable service monitoring
+        if (s->monitor != Monitor_Not) { // The status evaluation may disable service monitoring
                 // Start program
                 StringBuffer_clear(s->program->inprogressOutput);
                 s->program->P = Command_execute(s->program->C);
@@ -2024,8 +2022,6 @@ State_Type check_program(Service_T s) {
                         Event_post(s, Event_Status, State_Succeeded, s->action_EXEC, "program started");
                         s->program->started = now;
                 }
-                // We canot set the data collection timestmap in validate(), as the program check calls the _checkSkip() here
-                gettimeofday(&s->collected, NULL);
         }
         return rv;
 }
@@ -2066,7 +2062,7 @@ State_Type check_remote_host(Service_T s) {
                                         // Check response time
                                         if (icmp->responsetime.limit > -1.) {
                                                 if (Util_evalDoubleQExpression(icmp->responsetime.operator, icmp->responsetime.current, icmp->responsetime.limit)) {
-                                                        Event_post(s, Event_Speed, State_Succeeded, icmp->action, "response time %s succeeded [time %s %s]", Fmt_time2str(icmp->responsetime.current, (char[11]){}), OperatorShort_Names[icmp->responsetime.operator], Fmt_time2str(icmp->responsetime.limit, (char[11]){})); //FIXME
+                                                        Event_post(s, Event_Speed, State_Succeeded, icmp->action, "response time %s succeeded [time %s %s]", Fmt_time2str(icmp->responsetime.current, (char[11]){}), OperatorShort_Names[icmp->responsetime.operator], Fmt_time2str(icmp->responsetime.limit, (char[11]){}));
                                                 } else {
                                                         rv = State_Failed;
                                                         Event_post(s, Event_Speed, State_Failed, icmp->action, "response time %s doesn't match limit [time %s %s]", Fmt_time2str(icmp->responsetime.current, (char[11]){}), OperatorShort_Names[icmp->responsetime.operator], Fmt_time2str(icmp->responsetime.limit, (char[11]){}));
