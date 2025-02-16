@@ -57,7 +57,7 @@ static void onTerminate(Process_T P) {
         // NetBSD: If we call the Process_terminate() immediately, the child process sometimes misses the signal (despite kill() in Process_terminate returned no error) and
         //         exits normally, after the child finished execution. When we wait a bit before sending signal to the child, everything works properly. It seems that the child
         //         is maybe not ready to run yet when we send the signal and NetBSD somehow loses it. Observed only on *NetBSD*
-        Time_usleep(100000LL); // Sleep for 100 ms (100,000 µs)
+        Time_usleep(500000LL); // Sleep for 500 ms (500,000 µs)
 #endif
         assert(Process_terminate(P));
         printf("\tProcess exited with status: %d\n", Process_waitFor(P));
@@ -74,7 +74,7 @@ static void onKill(Process_T P) {
         // NetBSD: If we call the Process_kill() immediately, the child process sometimes misses the signal (despite kill() in Process_kill returned no error) and
         //         exits normally, after the child finished execution. When we wait a bit before sending signal to the child, everything works properly. It seems that the child
         //         is maybe not ready to run yet when we send the signal and NetBSD somehow loses it. Observed only on *NetBSD*
-        Time_usleep(100000LL); // Sleep for 100 ms (100,000 µs)
+        Time_usleep(500000LL); // Sleep for 500 ms (500,000 µs)
 #endif
         assert(Process_kill(P));
         printf("\tProcess exited with status: %d\n", Process_waitFor(P));
