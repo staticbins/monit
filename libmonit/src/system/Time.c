@@ -137,7 +137,7 @@ time_t timegm(struct tm *tm)
 #define TM_GMTOFF tm_wday
 #endif
 
-#define _i2a(i) (x[0] = ((i) / 10) + '0', x[1] = ((i) % 10) + '0')
+#define _i2a(i, x) ((x)[0] = ((i) / 10) + '0', (x)[1] = ((i) % 10) + '0')
 #define _isValidDate ((tm.tm_mday < 32 && tm.tm_mday >= 1) && (tm.tm_mon < 12 && tm.tm_mon >= 0))
 #define _isValidTime ((tm.tm_hour < 24 && tm.tm_hour >= 0) && (tm.tm_min < 60 && tm.tm_min >= 0) && (tm.tm_sec < 61 && tm.tm_sec >= 0))
 
@@ -146,8 +146,8 @@ time_t timegm(struct tm *tm)
                 if (v < f || v > t) \
                         THROW(AssertException, "#v is outside the range (%d..%d)", f, t); \
         } while (0)
-static const char days[] = "SunMonTueWedThuFriSat";
-static const char months[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
+static const char _days[] = "SunMonTueWedThuFriSat";
+static const char _months[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
 
 
 /* --------------------------------------------------------------- Private */
@@ -1396,65 +1396,43 @@ int Time_year(time_t time) {
 
 char *Time_localStr(time_t time, char result[static 26]) {
         if (result) {
-                char x[2];
                 struct tm ts;
+                /* This implementation needs to be fast and is around 50%
+                   faster than strftime */
                 localtime_r((const time_t *)&time, &ts);
                 memcpy(result, "aaa, xx aaa xxxx xx:xx:xx\0", 26);
-                /*              0    5  8   1214 17 20 2326 */
-                memcpy(result, days + 3 * ts.tm_wday, 3);
-                _i2a(ts.tm_mday);
-                result[5] = x[0];
-                result[6] = x[1];
-                memcpy(result + 8, months + 3 * ts.tm_mon, 3);
-                _i2a((ts.tm_year + 1900) / 100);
-                result[12] = x[0];
-                result[13] = x[1];
-                _i2a((ts.tm_year + 1900) % 100);
-                result[14] = x[0];
-                result[15] = x[1];
-                _i2a(ts.tm_hour);
-                result[17] = x[0];
-                result[18] = x[1];
-                _i2a(ts.tm_min);
-                result[20] = x[0];
-                result[21] = x[1];
-                _i2a(ts.tm_sec);
-                result[23] = x[0];
-                result[24] = x[1];
+                /*              0    5  8   1214 17 20 23 25 */
+                memcpy(result, _days + (3 * ts.tm_wday), 3);
+                _i2a(ts.tm_mday, &result[5]);
+                memcpy(result + 8, _months + (3 * ts.tm_mon), 3);
+                _i2a((ts.tm_year+1900) / 100, &result[12]);
+                _i2a((ts.tm_year+1900) % 100, &result[14]);
+                _i2a(ts.tm_hour, &result[17]);
+                _i2a(ts.tm_min, &result[20]);
+                _i2a(ts.tm_sec, &result[23]);
         }
-	return result;
+        return result;
 }
 
 
 char *Time_str(time_t time, char result[static 30]) {
         if (result) {
-                char x[2];
                 struct tm ts;
+                /* This implementation needs to be fast and is around 50%
+                 faster than strftime */
                 gmtime_r(&time, &ts);
                 memcpy(result, "aaa, xx aaa xxxx xx:xx:xx GMT\0", 30);
                 /*              0    5  8   1214 17 20 23    29 */
-                memcpy(result, days + 3 * ts.tm_wday, 3);
-                _i2a(ts.tm_mday);
-                result[5] = x[0];
-                result[6] = x[1];
-                memcpy(result + 8, months + 3 * ts.tm_mon, 3);
-                _i2a((ts.tm_year + 1900) / 100);
-                result[12] = x[0];
-                result[13] = x[1];
-                _i2a((ts.tm_year + 1900) % 100);
-                result[14] = x[0];
-                result[15] = x[1];
-                _i2a(ts.tm_hour);
-                result[17] = x[0];
-                result[18] = x[1];
-                _i2a(ts.tm_min);
-                result[20] = x[0];
-                result[21] = x[1];
-                _i2a(ts.tm_sec);
-                result[23] = x[0];
-                result[24] = x[1];
+                memcpy(result, _days + (3 * ts.tm_wday), 3);
+                _i2a(ts.tm_mday, &result[5]);
+                memcpy(result + 8, _months + (3 * ts.tm_mon), 3);
+                _i2a((ts.tm_year+1900) / 100, &result[12]);
+                _i2a((ts.tm_year+1900) % 100, &result[14]);
+                _i2a(ts.tm_hour, &result[17]);
+                _i2a(ts.tm_min, &result[20]);
+                _i2a(ts.tm_sec, &result[23]);
         }
-	return result;
+        return result;
 }
 
 

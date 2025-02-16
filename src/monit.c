@@ -342,14 +342,6 @@ static void do_init(void) {
 static void do_reinit(bool full) {
         Log_info("Reinitializing Monit -- control file '%s'\n", Run.files.control);
 
-        /* Wait non-blocking for any children that has exited. Since we
-         reinitialize any information about children we have setup to wait
-         for will be lost. This may create zombie processes until Monit
-         itself exit. However, Monit will wait on all children that has exited
-         before it itself exit. TODO: Later refactored versions will use a
-         globale process table which a sigchld handler can check */
-        waitforchildren();
-
         if (Run.mmonits && isHeartbeatRunning) {
                 Sem_signal(Heartbeat_Cond);
                 Thread_join(Heartbeat_Thread);
