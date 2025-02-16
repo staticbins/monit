@@ -526,7 +526,7 @@ int Process_waitFor(Process_T P) {
         if (P->status < 0) {
                 int r, status;
                 do
-                        r = waitpid(P->pid, &status, WEXITED); // Wait blocking
+                        r = waitpid(P->pid, &status, 0); // Wait blocking
                 while (r == -1 && errno == EINTR);
                 if (r > 0) {
                         Process_T found = Array_remove(processTable, r);
