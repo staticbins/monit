@@ -79,7 +79,7 @@ struct T {
 
 struct Process_T {
         pid_t pid;
-        int status;
+        volatile int status;
         bool isdetached;
         int ctrl_pipe[2];
         int stdin_pipe[2];
@@ -477,7 +477,11 @@ static Process_T Process_new(void) {
 
 void Process_free(Process_T *P) {
         assert(P && *P);
+
+        _childSignal(SIG_BLOCK);
         Array_remove(processTable, (*P)->pid);
+        _childSignal(SIG_UNBLOCK);
+
         if (!(*P)->isdetached) {
                 if (Process_isRunning(*P)) {
                         Process_kill(*P);
@@ -518,22 +522,22 @@ pid_t Process_pid(Process_T P) {
 
 int Process_waitFor(Process_T P) {
         assert(P);
+        _childSignal(SIG_BLOCK);
         if (P->status < 0) {
-                _childSignal(SIG_BLOCK);
                 int r, status;
                 do
                         r = waitpid(P->pid, &status, 0); // Wait blocking
                 while (r == -1 && errno == EINTR);
                 if (r > 0) {
                         Process_T found = Array_remove(processTable, r);
-                        if (found) {
-                                if (P != found)
-                                        ERROR("Process_waitFor: Process with pid %d found in Array doesn't match expected Process", r);
-                                _setstatus(found, status);
+                        // Set status (we've got P reference as argument, set status even if the Process is detached from the processTable Array)
+                        _setstatus(P, status);
+                        if (found && P != found) {
+                                ERROR("Process_waitFor: Process with pid %d found in Array doesn't match expected Process", r);
                         }
                 }
-                _childSignal(SIG_UNBLOCK);
         }
+        _childSignal(SIG_UNBLOCK);
         return P->status;
 }
 
