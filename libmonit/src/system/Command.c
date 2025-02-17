@@ -79,7 +79,7 @@ struct T {
 
 struct Process_T {
         pid_t pid;
-        volatile int status;
+        int status;
         bool isdetached;
         int ctrl_pipe[2];
         int stdin_pipe[2];
@@ -123,15 +123,18 @@ static void _childSignal(int how) {
         pthread_sigmask(how, &mask, NULL);
 }
 
+
 // Signal handler for children exit. OS blocks SIGCHLD during this call
 static void _handleChildren(__attribute__ ((unused)) int sig) {
+        DEBUG("SIGCHLD handler called");
         pid_t pid;
         int status;
-        // Loop until no more children to reap
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+                DEBUG("Reaped child process %d", pid);
                 Process_T found = Array_remove(processTable, pid);
-                if (found)
+                if (found) {
                         _setstatus(found, status);
+                }
         }
 }
 
@@ -141,7 +144,7 @@ static void __attribute__ ((constructor)) _constructor(void) {
 
         struct sigaction act = {
                 .sa_handler = _handleChildren,
-                .sa_flags = SA_RESTART
+                .sa_flags = SA_RESTART | SA_NODEFER
         };
         // Set up mask for blocking SIGCHLD during handler execution
         sigemptyset(&act.sa_mask);
@@ -149,6 +152,8 @@ static void __attribute__ ((constructor)) _constructor(void) {
         
         if (sigaction(SIGCHLD, &act, NULL)) {
                 ERROR("Command: SIGCHLD handler failed: %s", System_lastError());
+        } else {
+                DEBUG("Command: SIGCHLD handler installed successfully");
         }
 }
 
@@ -528,12 +533,13 @@ int Process_waitFor(Process_T P) {
                 do
                         r = waitpid(P->pid, &status, 0); // Wait blocking
                 while (r == -1 && errno == EINTR);
-                if (r > 0) {
-                        Process_T found = Array_remove(processTable, r);
-                        // Set status (we've got P reference as argument, set status even if the Process is detached from the processTable Array)
+                if (r == P->pid) {
                         _setstatus(P, status);
-                        if (found && P != found) {
-                                ERROR("Process_waitFor: Process with pid %d found in Array doesn't match expected Process", r);
+                        Process_T found = Array_remove(processTable, r);
+                        if (found) {
+                                if (P != found) {
+                                        ERROR("Process_waitFor: Process with pid %d found in Array doesn't match expected Process", r);
+                                }
                         }
                 }
         }
