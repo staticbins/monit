@@ -135,7 +135,6 @@ ServiceGroup_T Service_Group_List;/**< The service group list (created in p.y) *
 SystemInfo_T System_Info;                              /**< System information */
 
 AtomicThread_T Heartbeat_Thread;
-static volatile bool isHeartbeatRunning = false;
 
 const char *Action_Names[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
 const char *Mode_Names[] = {"active", "passive"};
