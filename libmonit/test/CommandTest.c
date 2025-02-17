@@ -113,6 +113,25 @@ static void onDetach(Process_T P) {
         assert(File_delete("/tmp/ondetach"));
 }
 
+static void onChild(Process_T P) {
+        assert(P);
+        printf("\tStarted process (pid=%d)\n", Process_pid(P));
+        // Verify process is running
+        assert(Process_isRunning(P));
+        printf("\tProcess is running\n");
+        // Wait longer than sleep duration for SIGCHLD delivery
+        printf("\tWaiting for SIGCHLD delivery...\n");
+        Time_usleep(2000000); // 2 seconds
+        // Status should have been set by SIGCHLD handler
+        assert(!Process_isRunning(P));
+        printf("\tProcess is no longer running\n");
+        // Check exit status is set by SIGCHLD handler
+        int status = Process_exitStatus(P);
+        printf("\tProcess exit status: %d\n", status);
+        assert(status == 0);
+        Process_free(&P);
+        assert(! P);
+}
 
 int main(void) {
 
@@ -347,6 +366,14 @@ int main(void) {
                 Command_free(&c);
         }
         printf("=> Test16: OK\n\n");
+
+        printf("=> Test17: SIGCHLD handling\n");
+        {
+                Command_T c = Command_new("/bin/sh", "-c", "sleep 1; exit 0");
+                onChild(Command_execute(c));
+                Command_free(&c);
+        }
+        printf("=> Test17: OK\n\n");
 
         printf("============> Command Tests: OK\n\n");
 
