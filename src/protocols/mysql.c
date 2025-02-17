@@ -70,7 +70,7 @@
 #define COM_PING  0xe
 
 
-// Capability flags (see http://dev.mysql.com/doc/internals/en/capability-flags.html#packet-Protocol::CapabilityFlags)
+// Capability flags (see https//dev.mysql.com/doc/internals/en/capability-flags.html#packet-Protocol::CapabilityFlags)
 #define CLIENT_LONG_PASSWORD                  0x00000001
 #define CLIENT_FOUND_ROWS                     0x00000002
 #define CLIENT_LONG_FLAG                      0x00000004
@@ -100,7 +100,7 @@
 #define CLIENT_REMEMBER_OPTIONS               0x80000000
 
 
-// Status flags (see http://dev.mysql.com/doc/internals/en/status-flags.html#packet-Protocol::StatusFlags)
+// Status flags (see https//dev.mysql.com/doc/internals/en/status-flags.html#packet-Protocol::StatusFlags)
 #define SERVER_STATUS_IN_TRANS                0x0001
 #define SERVER_STATUS_AUTOCOMMIT              0x0002
 #define SERVER_MORE_RESULTS_EXISTS            0x0008
@@ -320,7 +320,7 @@ static void _setPadding(mysql_request_t *request, int count) {
 /* ----------------------------------------------------- Response handlers */
 
 
-// OK packet (see http://dev.mysql.com/doc/internals/en/packet-OK_Packet.html)
+// OK packet (see https//dev.mysql.com/doc/internals/en/packet-OK_Packet.html)
 static void _responseOk(mysql_t *mysql) {
         mysql->state = MySQL_Ok;
 }
@@ -358,7 +358,7 @@ static void _responseAuthMoreData(mysql_t *mysql) {
 }
 
 
-// Get the password (see http://dev.mysql.com/doc/internals/en/secure-password-authentication.html):
+// Get the password (see https//dev.mysql.com/doc/internals/en/secure-password-authentication.html):
 static unsigned char *_getNativePassword(unsigned char result[static SHA1_DIGEST_SIZE], const char *password, const char *salt) {
         sha1_context_t ctx;
         // SHA1(password)
@@ -448,7 +448,7 @@ static void _responseAuthSwitch(mysql_t *mysql) {
 }
 
 
-// ERR packet (see http://dev.mysql.com/doc/internals/en/packet-ERR_Packet.html)
+// ERR packet (see https//dev.mysql.com/doc/internals/en/packet-ERR_Packet.html)
 static void _responseError(mysql_t *mysql) {
         mysql->state = MySQL_Error;
         mysql->response.data.error.code = _getUInt2(&mysql->response);
@@ -459,7 +459,7 @@ static void _responseError(mysql_t *mysql) {
 }
 
 
-// Initial greeting packet (see http://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::Handshake)
+// Initial greeting packet (see https//dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::Handshake)
 static void _greeting(mysql_t *mysql) {
         mysql->state = MySQL_Greeting;
         // Protocol is 10 for MySQL 5.x
@@ -553,7 +553,7 @@ static void _sendRequest(mysql_t *mysql, mysql_state_t targetState) {
 }
 
 
-// Hadshake response packet (see http://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::HandshakeResponse)
+// Hadshake response packet (see https//dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::HandshakeResponse)
 static void _sendHandshake(mysql_t *mysql) {
         if (mysql->state != MySQL_Greeting && mysql->state != MySQL_Ssl && mysql->state != MySQL_AuthSwitch)
                 THROW(ProtocolException, "Unexpected communication state %d before handshake", mysql->state);
@@ -610,7 +610,7 @@ static void _sendRSAKeyRequest(mysql_t *mysql) {
 }
 
 
-// COM_QUIT packet (see http://dev.mysql.com/doc/internals/en/com-quit.html)
+// COM_QUIT packet (see https//dev.mysql.com/doc/internals/en/com-quit.html)
 static void _sendQuit(mysql_t *mysql) {
         if (mysql->state != MySQL_Ok)
                 THROW(ProtocolException, "Unexpected communication state %d before Quit", mysql->state);
@@ -687,7 +687,7 @@ static void _checkRSAKey(mysql_t *mysql) {
 //      _requestQuery(&mysql, "show global status");
 //
 
-// COM_QUERY packet (see http://dev.mysql.com/doc/internals/en/com-query.html)
+// COM_QUERY packet (see https//dev.mysql.com/doc/internals/en/com-query.html)
 static void _requestQuery(mysql_t *mysql, const unsigned char *query) {
         assert(mysql->state == MySQL_Ok);
         _initRequest(mysql);
@@ -704,7 +704,7 @@ static void _requestQuery(mysql_t *mysql, const unsigned char *query) {
 /**
  * Simple MySQL test. Connect to MySQL and read Server Handshake Packet. If we can read the packet and it is not an error packet we assume the server is up and working.
  *
- *  @see http://dev.mysql.com/doc/internals/en/client-server-protocol.html
+ *  @see https//dev.mysql.com/doc/internals/en/client-server-protocol.html
  */
 void check_mysql(Socket_T S) {
         assert(S);
