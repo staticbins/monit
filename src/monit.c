@@ -134,9 +134,7 @@ Service_T Service_List_Conf;    /**< The service list in conf file (c. in p.y) *
 ServiceGroup_T Service_Group_List;/**< The service group list (created in p.y) */
 SystemInfo_T System_Info;                              /**< System information */
 
-Thread_T Heartbeat_Thread;
-Sem_T    Heartbeat_Cond;
-Mutex_T  Heartbeat_Mutex;
+AtomicThread_T Heartbeat_Thread;
 static volatile bool isHeartbeatRunning = false;
 
 const char *Action_Names[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
@@ -275,11 +273,8 @@ static void do_init(void) {
          */
         Mutex_init(Run.mutex);
 
-        /*
-         * Initialize heartbeat mutex and condition
-         */
-        Mutex_init(Heartbeat_Mutex);
-        Sem_init(Heartbeat_Cond);
+        // Initialize the Heartbeat Thread variable
+        AtomicThread_init(&Heartbeat_Thread);
 
         /*
          * Get the position of the control file
@@ -342,10 +337,9 @@ static void do_init(void) {
 static void do_reinit(bool full) {
         Log_info("Reinitializing Monit -- control file '%s'\n", Run.files.control);
 
-        if (Run.mmonits && isHeartbeatRunning) {
-                Sem_signal(Heartbeat_Cond);
-                Thread_join(Heartbeat_Thread);
-                isHeartbeatRunning = false;
+        if (AtomicThread_isActive(&Heartbeat_Thread)) {
+                Sem_signal(Heartbeat_Thread.sem);
+                Thread_join(Heartbeat_Thread.value);
         }
 
         Run.flags &= ~Run_DoReload;
@@ -402,8 +396,7 @@ static void do_reinit(bool full) {
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit reloaded");
 
                 if (Run.mmonits) {
-                        Thread_create(Heartbeat_Thread, do_heartbeat, NULL);
-                        isHeartbeatRunning = true;
+                        AtomicThread_create(&Heartbeat_Thread, do_heartbeat, NULL);
                 }
         }
 }
@@ -527,14 +520,15 @@ static void do_exit(bool saveState) {
         set_signal_block(true);
         Run.flags |= Run_Stopped;
         if ((Run.flags & Run_Daemon) && ! (Run.flags & Run_Once)) {
-                if (can_http())
+                if (can_http()) {
                         monit_http(Httpd_Stop);
-
-                if (Run.mmonits && isHeartbeatRunning) {
-                        Sem_signal(Heartbeat_Cond);
-                        Thread_join(Heartbeat_Thread);
-                        isHeartbeatRunning = false;
                 }
+
+                if (AtomicThread_isActive(&Heartbeat_Thread)) {
+                        Sem_signal(Heartbeat_Thread.sem);
+                        Thread_join(Heartbeat_Thread.value);
+                }
+                AtomicThread_destroy(&Heartbeat_Thread);
 
                 Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
 
@@ -618,8 +612,7 @@ reload:
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_START, "Monit %s started", VERSION);
 
                 if (Run.mmonits) {
-                        Thread_create(Heartbeat_Thread, do_heartbeat, NULL);
-                        isHeartbeatRunning = true;
+                        AtomicThread_create(&Heartbeat_Thread, do_heartbeat, NULL);
                 }
 
                 while (true) {
@@ -946,12 +939,12 @@ static void version(void) {
 static void *do_heartbeat(__attribute__ ((unused)) void *args) {
         set_signal_block(false);
         Log_info("M/Monit heartbeat started\n");
-        LOCK(Heartbeat_Mutex)
+        LOCK(Heartbeat_Thread.mutex)
         {
                 while (! interrupt()) {
                         MMonit_send(NULL);
                         struct timespec wait = {.tv_sec = Time_now() + Run.polltime};
-                        Sem_timeWait(Heartbeat_Cond, Heartbeat_Mutex, wait);
+                        Sem_timeWait(Heartbeat_Thread.sem, Heartbeat_Thread.mutex, wait);
                 }
         }
         END_LOCK;
