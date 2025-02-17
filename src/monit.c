@@ -121,7 +121,6 @@ static void version(void);                      /* Print version information */
 static void handle_reload(int);         /* Signalhandler for a daemon reload */
 static void handle_stop(int);        /* Signalhandler for monit finalization */
 static void handle_wakeup(int);    /* Signalhandler for a daemon wakeup call */
-static void waitforchildren(void); /* Wait for any child process not running */
 
 
 /* ------------------------------------------------------------------ Global */
@@ -321,11 +320,6 @@ static void do_init(void) {
                 Util_printRunList();
                 Util_printServiceList();
         }
-
-        /*
-         * Reap any stray child processes we may have created
-         */
-        atexit(waitforchildren);
 }
 
 
@@ -970,11 +964,4 @@ static void handle_stop(__attribute__ ((unused)) int sig) {
 // Signal handler for a daemon wakeup call
 static void handle_wakeup(__attribute__ ((unused)) int sig) {
         Run.flags |= Run_DoWakeup;
-}
-
-
-/* A simple non-blocking reaper to ensure that we wait-for and reap all/any stray child processes
- we may have created and not waited on, so we do not create any zombie processes at exit */
-static void waitforchildren(void) {
-        while (waitpid(-1, NULL, WNOHANG) > 0) ;
 }
