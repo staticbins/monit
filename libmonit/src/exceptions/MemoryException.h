@@ -34,8 +34,8 @@
  * the underlying allocator failed.
  * @see Exception.h
  *
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://www.tildeslash.com/
+ * @see https://mmonit.com/
  * @file
  */
 extern Exception_T MemoryException;

@@ -50,7 +50,7 @@
 /* ----------------------------------------------------------- Definitions */
 
 
-// Message type (see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718021)
+// Message type (see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718021)
 typedef enum {
         MQTT_Type_ConnectRequest = 1,
         MQTT_Type_ConnectResponse,
@@ -69,7 +69,7 @@ typedef enum {
 } MQTT_Type;
 
 
-// Connect request flags (see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718030) - we use just subset for CONNECT and DISCONNECT
+// Connect request flags (see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718030) - we use just subset for CONNECT and DISCONNECT
 typedef enum {
         MQTT_ConnectRequest_None         = 0x00,
         MQTT_ConnectRequest_CleanSession = 0x02,
@@ -78,7 +78,7 @@ typedef enum {
 } MQTT_ConnectRequest_Flags;
 
 
-// Connect response flags (see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718035)
+// Connect response flags (see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718035)
 typedef enum {
         MQTT_ConnectResponse_Accepted = 0,
         MQTT_ConnectResponse_Refused_Protocol,
@@ -300,7 +300,7 @@ static void _disconnect(mqtt_t *mqtt) {
 /**
  * MQTT test. Connect and disconnect.
  *
- *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
+ *  @see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
  */
 void check_mqtt(Socket_T socket) {
         assert(socket);

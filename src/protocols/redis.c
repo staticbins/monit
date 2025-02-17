@@ -41,7 +41,7 @@
  *     2. expect a PONG response
  *     3. send a QUIT command
  *
- * @see http://redis.io/topics/protocol
+ * @see https://redis.io/docs/latest/develop/reference/protocol-spec/
  *
  * @file
  */

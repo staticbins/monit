@@ -39,10 +39,10 @@
 
 /**
  * Implementation of the Terminal table interface using UTF-8 box:
- * http://www.unicode.org/charts/PDF/U2500.pdf
+ * https://www.unicode.org/charts/PDF/U2500.pdf
  *
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://www.tildeslash.com/
+ * @see https://mmonit.com/
  * @file
  */
 

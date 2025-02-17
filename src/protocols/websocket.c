@@ -38,7 +38,7 @@
 /**
  *  A WebSocket test.
  *
- *  http://tools.ietf.org/html/rfc6455
+ *  https://datatracker.ietf.org/doc/html/rfc6455
  *
  *  Establish websocket connection, send ping and close.
  *
@@ -106,7 +106,7 @@ void check_websocket(Socket_T socket) {
                          P->parameters.websocket.request ? P->parameters.websocket.request : "/",
                          P->parameters.websocket.host ? P->parameters.websocket.host : Util_getHTTPHostHeader(socket, buf, sizeof(buf)),
                          P->parameters.websocket.version,
-                         P->parameters.websocket.origin ? P->parameters.websocket.origin : "http://www.mmonit.com") < 0)
+                         P->parameters.websocket.origin ? P->parameters.websocket.origin : "https://mmonit.com") < 0)
         {
                 THROW(IOException, "WEBSOCKET: error sending data -- %s", STRERROR);
         }

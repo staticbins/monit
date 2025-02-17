@@ -8,7 +8,7 @@
 PORTNAME=		monit
 PORTVERSION=		4.9
 CATEGORIES=		sysutils
-MASTER_SITES=		http://www.tildeslash.com/monit/dist/
+MASTER_SITES=		https://mmonit.com/monit/dist/
 
 MAINTAINER=		martinp@tildeslash.com
 COMMENT=		Unix system management and monitoring

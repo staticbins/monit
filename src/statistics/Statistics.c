@@ -31,8 +31,8 @@
 /**
  * Statistics
  *
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://www.tildeslash.com/
+ * @see https://mmonit.com/
  * @file
  */
 

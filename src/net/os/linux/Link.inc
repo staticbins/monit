@@ -26,8 +26,8 @@
 /**
  * Implementation of the Network Statistics for Linux.
  *
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://www.tildeslash.com/
+ * @see https://mmonit.com/
  *
  * Reference: https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-net
  *

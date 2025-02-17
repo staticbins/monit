@@ -37,8 +37,8 @@
  * Implementation of the List interface. A freelist is used to retain
  * deleted nodes for reuse.
  *
- * @author http://www.tildeslash.com/
- * @see http://www.mmonit.com/
+ * @author https://www.tildeslash.com/
+ * @see https://mmonit.com/
  * @file
  */
 
