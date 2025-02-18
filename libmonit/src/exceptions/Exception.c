@@ -95,7 +95,7 @@ void Exception_throw(const T *e, const char *func, const char *file, int line, c
                         va_end(ap);
                 }
                 pop_exception_stack;
-                longjmp(p->env, Exception_thrown);
+                siglongjmp(p->env, Exception_thrown);
         } else if (cause) {
                 char message[EXCEPTION_MESSAGE_LENGTH + 1] = "?";
                 va_start(ap, cause);

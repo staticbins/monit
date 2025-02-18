@@ -164,7 +164,7 @@ AC_CHECK_HEADERS([ctype.h \
                   netinet/in.h \
                   poll.h \
                   pthread.h \
-                  setjmp.h \
+                  sigsetjmp.h \
                   signal.h \
                   stdarg.h \
                   stdio.h \
@@ -224,8 +224,8 @@ AC_CHECK_TYPES([uchar_t])
 # Functions 
 # ------------------------------------------------------------------------
 
-# Require a working setjmp
-AC_CHECK_DECLS([setjmp], [], [AC_MSG_FAILURE([setjmp is required])], [[#include <setjmp.h>]])
+# Require a working sigsetjmp
+AC_CHECK_DECLS([sigsetjmp], [], [AC_MSG_FAILURE([sigsetjmp is required])], [[#include <setjmp.h>]])
 
 # Require that we have vsnprintf that conforms to c99. I.e. does bounds check
 AC_CHECK_FUNC([vsnprintf], [], [AC_MSG_FAILURE([vsnprintf is required])])
