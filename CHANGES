@@ -26,6 +26,8 @@ Fixed: MacOS + DragonflyBSD + FreeBSD + NetBSD + OpenBSD: If there are no mounte
 
 Fixed: FreeBSD + OpenBSD + NetBSD: Detect presence of backtrace() function during compilation (used in monit -vv mode to print backtrace)
 
+Fixed: MacOS: Monit may stop handling signals (SIGCHLD for children, SIGTERM to exit, SIGHUP for reload, SIGUSR1 for wakeup)
+
 New: When monit aborts (e.g. due to assert), print a backtrace.
 
 
