@@ -126,11 +126,9 @@ static void _childSignal(int how) {
 
 // Signal handler for children exit. OS blocks SIGCHLD during this call
 static void _handleChildren(__attribute__ ((unused)) int sig) {
-        DEBUG("SIGCHLD handler called");
         pid_t pid;
         int status;
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-                DEBUG("Reaped child process %d", pid);
                 Process_T found = Array_remove(processTable, pid);
                 if (found) {
                         _setstatus(found, status);
@@ -536,10 +534,8 @@ int Process_waitFor(Process_T P) {
                 if (r == P->pid) {
                         _setstatus(P, status);
                         Process_T found = Array_remove(processTable, r);
-                        if (found) {
-                                if (P != found) {
-                                        ERROR("Process_waitFor: Process with pid %d found in Array doesn't match expected Process", r);
-                                }
+                        if (found && (P != found)) {
+                                ERROR("Process_waitFor: Process with pid %d found in Array doesn't match expected Process", r);
                         }
                 }
         }
