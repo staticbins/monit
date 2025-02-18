@@ -312,7 +312,6 @@ static void _handleAction(Event_T E, Action_T A) {
                                         .errlen = STRLEN
                                 }) < 0) {
                                         Log_error("'%s' exec failed -- '%s'\n", E->source->name, spawn_error);
-                                        return;
                                 }
                         }
                 } else if (A->id != Action_Alert && E->id != Event_Instance) {
