@@ -133,7 +133,7 @@ AC_CHECK_HEADERS([ \
 	pthread.h \
 	pwd.h \
 	regex.h \
-	setjmp.h \
+	sigsetjmp.h \
 	signal.h \
 	stdarg.h \
         stddef.h \
