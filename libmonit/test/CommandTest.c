@@ -133,18 +133,10 @@ static void onChild(Process_T P) {
         assert(! P);
 }
 
-static void _debug(const char* msg, va_list ap) {
-        va_list ap_copy;
-        va_copy(ap_copy, ap);
-        vprintf(msg, ap_copy);
-        va_end(ap_copy);
-}
 
 int main(void) {
 
         Bootstrap(); // Need to initialize library
-        Bootstrap_setErrorHandler(_debug);
-        Bootstrap_setDebugHandler(_debug);
 
         printf("============> Start Command Tests\n\n");
 
