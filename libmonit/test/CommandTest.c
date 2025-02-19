@@ -133,9 +133,18 @@ static void onChild(Process_T P) {
         assert(! P);
 }
 
+static void _debug(const char* msg, va_list ap) {
+        va_list ap_copy;
+        va_copy(ap_copy, ap);
+        vprintf(msg, ap_copy);
+        va_end(ap_copy);
+}
+
 int main(void) {
 
         Bootstrap(); // Need to initialize library
+        Bootstrap_setErrorHandler(_debug);
+        Bootstrap_setDebugHandler(_debug);
 
         printf("============> Start Command Tests\n\n");
 
@@ -375,6 +384,49 @@ int main(void) {
         }
         printf("=> Test17: OK\n\n");
 
+        printf("=> Test18: sequential process handling\n");
+        {
+                // Start both processes first
+                Command_T c1 = Command_new("/bin/sh", "-c", "echo hello from process1");
+                Command_T c2 = Command_new("/bin/sh", "-c", "echo hello from process2");
+                Process_T p1 = Command_execute(c1);
+                Process_T p2 = Command_execute(c2);
+                assert(p1 && p2);
+                
+                char buf1[STRLEN] = {};
+                char buf2[STRLEN] = {};
+                
+                // Handle first process completely
+                InputStream_T err1 = Process_errorStream(p1);
+                if (!InputStream_readLine(err1, buf1, sizeof(buf1) - 1)) {
+                        InputStream_T in1 = Process_inputStream(p1);
+                        InputStream_readLine(in1, buf1, sizeof(buf1) - 1);
+                }
+
+                // Free and recreate p1 before handling p2
+                Process_free(&p1);
+                p1 = Command_execute(c1);
+                assert(p1);
+
+                // Now handle second process
+                InputStream_T err2 = Process_errorStream(p2);
+                if (!InputStream_readLine(err2, buf2, sizeof(buf2) - 1)) {
+                        InputStream_T in2 = Process_inputStream(p2);
+                        InputStream_readLine(in2, buf2, sizeof(buf2) - 1);
+                }
+
+                // Verify content
+                assert(Str_isEqual(buf1, "hello from process1\n"));
+                assert(Str_isEqual(buf2, "hello from process2\n"));
+                
+                // Cleanup
+                Process_free(&p1);
+                Process_free(&p2);
+                Command_free(&c1);
+                Command_free(&c2);
+        }
+        printf("=> Test18: OK\n\n");
+        
         printf("============> Command Tests: OK\n\n");
 
 }
