@@ -79,7 +79,7 @@ typedef enum {
 } Process_Status;
 
 
-#define RETRY_INTERVAL 100000 // 100ms
+#define RETRY_INTERVAL 100000LL // 100ms
 
 
 /* ----------------------------------------------------------------- Private */
@@ -168,7 +168,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
 
 
 static Process_Status _waitProcessStart(Service_T s, long long *timeout) {
-        long wait = RETRY_INTERVAL;
+        long long wait = RETRY_INTERVAL;
         do {
                 Time_usleep(wait);
                 pid_t pid = ProcessTree_findProcess(s);
@@ -204,7 +204,7 @@ static State_Type _check(Service_T s) {
         rv = s->check(s);
         if (s->type == Service_Program && s->program->P) {
                 // check program executes the program and needs to be called again to collect the exit value and evaluate the status
-                long long timeout = s->program->timeout * USEC_PER_MSEC;
+                long long timeout = s->program->timeout * USEC_PER_SEC;
                 do {
                         Time_usleep(RETRY_INTERVAL);
                         timeout -= RETRY_INTERVAL;
