@@ -14,6 +14,8 @@ Fixed: Issue #1120: Change the order of the "exec" and implicit "alert" actions.
 
 Fixed: Issue #1121: The "set mailserver" timeout option allowed to only increase the network timeout. Values lower then 30 seconds were ignored.
 
+Fixed: Issue #1122: Monit hangs with high CPU usage if the "set daemon <seconds>" is set to >= 2148 seconds.
+
 Fixed: Monit HTTP interface didn't parse the password file (regression from monit 5.34.4). Thanks to Francisco Javier Felix Belmonte.
 
 Fixed: MacOS: When "check network" is used, but no network interfaces are found, monit terminates with "AssertException: nbytes > 0  raised in Mem_calloc"

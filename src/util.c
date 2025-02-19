@@ -652,7 +652,7 @@ void Util_printRunList(void) {
         printf(" %-18s =   execTimeout:       %s\n", " ", Fmt_time2str(Run.limits.execTimeout, (char[11]){}));
         printf(" %-18s = }\n", " ");
         printf(" %-18s = %s\n", "On reboot", onReboot_Names[Run.onreboot]);
-        printf(" %-18s = %d seconds with start delay %d seconds\n", "Poll time", Run.polltime, Run.startdelay);
+        printf(" %-18s = %lld seconds with start delay %d seconds\n", "Poll time", Run.polltime, Run.startdelay);
 
         if (Run.eventlist_dir) {
                 char slots[STRLEN];

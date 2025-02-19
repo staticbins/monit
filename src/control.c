@@ -156,7 +156,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
                                         total += n;
                                 }
                         } while (n > 0 && Run.debug && total < 2048); // Limit the debug output (if the program will have endless output, such as 'yes' utility, we have to stop at some point to not spin here forever)
-                        // TOOD: Add Process_detach() here so we don't kill the main process like start program. Also users don't have to add '&' to start program anymore
+                        //FIXME: Add Process_detach() here so we don't kill the main process like start program. Also users don't have to add '&' to start program anymore
                         Process_free(&P); // Will kill the program if still running
                 } else {
                         snprintf(msg, msglen, "Program %s failed: %s", c->arg[0], System_lastError());
