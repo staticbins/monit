@@ -80,7 +80,7 @@ typedef enum {
 
 
 #define RETRY_INTERVAL 100000LL // 100ms
-
+// TODO: Consider using Time_backoff instead for retry for simplification and clamped timeout
 
 /* ----------------------------------------------------------------- Private */
 
