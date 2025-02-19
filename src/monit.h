@@ -1348,7 +1348,7 @@ struct Run_T {
         MD_T id;                                              /**< Unique monit id */
         Limits_T limits;                                       /**< Default limits */
         struct SslOptions_T ssl;                          /**< Default SSL options */
-        int  polltime;        /**< In daemon mode, the sleeptime (sec) between run */
+        long long polltime;   /**< In daemon mode, the sleeptime (sec) between run */
         int  startdelay;  /**< the sleeptime [s] on first start after machine boot */
         int  facility;              /** The facility to use when running openlog() */
         int  eventlist_slots;          /**< The event queue size - number of slots */
