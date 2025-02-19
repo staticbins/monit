@@ -1623,9 +1623,9 @@ static inline long long _usleep(long long microseconds, bool complete) {
                 if (! complete) {
                         if (errno == EINTR)
                                 return rem.tv_sec * 1000000LL + rem.tv_nsec / 1000LL;
-                        else if (errno == EINVAL)
-                                return -1;
                 }
+                if (errno == EINVAL)
+                        return -1;
                 req = rem;
         }
         return 0;
@@ -1637,8 +1637,8 @@ long long Time_usleep(long long microseconds) {
 }
 
 
-void Time_usleepComplete(long long microseconds) {
-        _usleep(microseconds, true);
+bool Time_usleepComplete(long long microseconds) {
+        return _usleep(microseconds, true) == 0;
 }
 
 
