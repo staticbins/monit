@@ -133,8 +133,6 @@ Service_T Service_List_Conf;    /**< The service list in conf file (c. in p.y) *
 ServiceGroup_T Service_Group_List;/**< The service group list (created in p.y) */
 SystemInfo_T System_Info;                              /**< System information */
 
-AtomicThread_T Heartbeat_Thread;
-
 const char *Action_Names[] = {"ignore", "alert", "restart", "stop", "exec", "unmonitor", "start", "monitor", ""};
 const char *Mode_Names[] = {"active", "passive"};
 const char *onReboot_Names[] = {"start", "nostart", "laststate"};
@@ -148,6 +146,9 @@ const char *Socket_Names[] = {"unix", "IP", "IPv4", "IPv6"};
 const char *Timestamp_Names[] = {"modify/change time", "access time", "change time", "modify time"};
 const char *Httpmethod_Names[] = {"", "HEAD", "GET"};
 
+/* -------------------------------------------------------------- File Private */
+
+static AtomicThread_T Heartbeat_Thread;
 
 /* ------------------------------------------------------------------ Public */
 
@@ -159,6 +160,7 @@ int main(int argc, char **argv) {
         Bootstrap(); // Bootstrap libmonit
         Bootstrap_setAbortHandler(Log_abort_handler);  // Abort Monit on exceptions thrown by libmonit
         Bootstrap_setErrorHandler(Log_verror);
+        Bootstrap_setDebugHandler(Log_vdebug);
         setlocale(LC_ALL, "C");
         Prog = File_basename(argv[0]);
 #ifdef HAVE_OPENSSL
