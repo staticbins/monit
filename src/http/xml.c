@@ -109,7 +109,7 @@ static void document_head(StringBuffer_T B, int V, const char *myip) {
                                     VERSION);
         StringBuffer_append(B,
                             "<uptime>%lld</uptime>"
-                            "<poll>%d</poll>"
+                            "<poll>%lld</poll>"
                             "<startdelay>%d</startdelay>"
                             "<localhostname>%s</localhostname>"
                             "<controlfile>%s</controlfile>",

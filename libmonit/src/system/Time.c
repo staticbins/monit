@@ -1620,8 +1620,8 @@ static inline long long _usleep(long long microseconds, bool complete) {
         req.tv_sec = microseconds / 1000000LL;
         req.tv_nsec = (microseconds % 1000000LL) * 1000LL;
         while (nanosleep(&req, &rem) == -1) {
-                if (! complete)
-                        if (errno == EINTR) {
+                if (! complete) {
+                        if (errno == EINTR)
                                 return rem.tv_sec * 1000000LL + rem.tv_nsec / 1000LL;
                         else if (errno == EINVAL)
                                 return -1;
