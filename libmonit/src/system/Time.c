@@ -1615,6 +1615,16 @@ yy68:
 }
 
 
+bool Time_backoff(bool predicate(void *args), void *args) {
+        for (int i = 0, steps = 10; i < steps; i++) {
+                if (predicate(args))
+                        return true;
+                _backoff(i);
+        }
+        return false;
+}
+
+
 static inline long long _usleep(long long microseconds, bool complete) {
         struct timespec req, rem;
         req.tv_sec = microseconds / 1000000LL;
@@ -1642,12 +1652,28 @@ bool Time_usleepComplete(long long microseconds) {
 }
 
 
-bool Time_backoff(bool predicate(void *args), void *args) {
-        for (int i = 0, steps = 10; i < steps; i++) {
-                if (predicate(args))
-                        return true;
-                _backoff(i);
+static inline long _sleep(long seconds, bool complete) {
+        struct timespec req, rem;
+        req.tv_sec = seconds;
+        req.tv_nsec = 0;
+        while (nanosleep(&req, &rem) == -1) {
+                if (!complete) {
+                        if (errno == EINTR)
+                                return rem.tv_sec;
+                }
+                if (errno == EINVAL)
+                        return -1;
+                req = rem;
         }
-        return false;
+        return 0;
 }
 
+
+long Time_sleep(long seconds) {
+        return _sleep(seconds, false);
+}
+
+
+bool Time_sleepComplete(long seconds) {
+        return _sleep(seconds, true) == 0;
+}

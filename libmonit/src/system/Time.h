@@ -368,6 +368,30 @@ bool Time_usleepComplete(long long microseconds);
 
 
 /**
+ * Suspends the calling process or thread for the specified
+ * duration in seconds. If sleep is interrupted by a signal,
+ * the function aborts sleep and returns the number of remaining
+ * seconds.
+ * @param seconds The duration of the sleep in seconds
+ * @return 0 if sleep was completed, -1 if seconds is invalid,
+ *         or remaining seconds if interrupted by a signal
+ */
+long Time_sleep(long seconds);
+
+
+/**
+ * Suspends the calling process or thread for the specified
+ * duration in seconds. Unlike Time_sleep, this function is
+ * resilient to interruptions by signals. If a signal interrupts
+ * sleep, the function will continue to sleep for the remainder
+ * of the specified duration after handling of the signal.
+ * @param seconds The duration of the sleep in seconds
+ * @return true if sleep was completed, false if seconds is invalid
+ */
+bool Time_sleepComplete(long seconds);
+
+
+/**
  * Executes a predicate function with exponential backoff, retrying
  * up to 10 times with increasing wait intervals. Initially, minimal
  * wait times are applied for quick retries, with subsequent wait times
