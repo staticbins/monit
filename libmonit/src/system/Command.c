@@ -150,8 +150,6 @@ static void __attribute__ ((constructor)) _constructor(void) {
         
         if (sigaction(SIGCHLD, &act, NULL)) {
                 ERROR("Command: SIGCHLD handler failed: %s", System_lastError());
-        } else {
-                DEBUG("Command: SIGCHLD handler installed successfully");
         }
 }
 
@@ -360,31 +358,37 @@ struct _usergroups *_getUserGroups(T C, struct _usergroups *ug) {
 }
 
 
-// Close both ends of the given pipe if not already closed
-static void _closePipe(int pipe[static 2]) {
-    for (int i = 0; i < 2; i++) {
-        if (pipe[i] >= 0) {
-            close(pipe[i]);
-            pipe[i] = -1;
-        }
-    }
-}
-
-
 // MARK: - Process_T Private methods
 
 
 static void Process_closeCtrlPipe(Process_T P) {
-        _closePipe(P->ctrl_pipe);
+        // Close ctrl pipe ends if not already closed
+        if (P->ctrl_pipe[1] >= 0) {
+                close(P->ctrl_pipe[1]);
+                P->ctrl_pipe[1] = -1;
+        }
+        if (P->ctrl_pipe[0] >= 0) {
+                close(P->ctrl_pipe[0]);
+                P->ctrl_pipe[0] = -1;
+        }
 }
 
 
-// Close pipes in process, except ctrl_pipe which are used during
+// Close parent pipes in process, except ctrl_pipe which are used during
 // child setup before calling exec
 static void Process_closePipes(Process_T P) {
-        _closePipe(P->stdin_pipe);
-        _closePipe(P->stdout_pipe);
-        _closePipe(P->stderr_pipe);
+        if (P->stdin_pipe[1] >= 0) {
+                close(P->stdin_pipe[1]);  // Close write end
+                P->stdin_pipe[1] = -1;
+        }
+        if (P->stdout_pipe[0] >= 0) {
+                close(P->stdout_pipe[0]); // Close read end
+                P->stdout_pipe[0] = -1;
+        }
+        if (P->stderr_pipe[0] >= 0) {
+                close(P->stderr_pipe[0]); // Close read end
+                P->stderr_pipe[0] = -1;
+        }
 }
 
 
@@ -402,7 +406,6 @@ static int Process_createCtrlPipe(Process_T P) {
                 if (fcntl(P->ctrl_pipe[i], F_SETFD, FD_CLOEXEC) < 0) {
                         status = -errno;
                         DEBUG("Process_createCtrlPipe: ctrl fcntl(2) FD_CLOEXEC failed -- %s\n", System_lastError());
-                        _closePipe(P->ctrl_pipe);
                         return status;
                 }
         }
@@ -449,9 +452,18 @@ static bool Process_setupChildPipes(Process_T P) {
 
 // Setup stdio pipes in parent process for communication with the subprocess
 static void Process_setupParentPipes(Process_T P) {
-        close(P->stdin_pipe[0]);  // close read end
-        close(P->stdout_pipe[1]); // close write end
-        close(P->stderr_pipe[1]); // close write end
+        if (P->stdin_pipe[0] >= 0) {
+                close(P->stdin_pipe[0]);  // close read end
+                P->stdin_pipe[0] = -1;
+        }
+        if (P->stdout_pipe[1] >= 0) {
+                close(P->stdout_pipe[1]); // close write end
+                P->stdout_pipe[1] = -1;
+        }
+        if (P->stderr_pipe[1] >= 0) {
+                close(P->stderr_pipe[1]); // close write end
+                P->stderr_pipe[1] = -1;
+        }
         Net_setNonBlocking(P->stdin_pipe[1]);
         Net_setNonBlocking(P->stdout_pipe[0]);
         Net_setNonBlocking(P->stderr_pipe[0]);
@@ -471,6 +483,10 @@ static Process_T Process_new(void) {
         NEW(P);
         P->pid = -1;
         P->status = -1;
+        P->ctrl_pipe[0] = P->ctrl_pipe[1] = -1;
+        P->stdin_pipe[0] = P->stdin_pipe[1] = -1;
+        P->stdout_pipe[0] = P->stdout_pipe[1] = -1;
+        P->stderr_pipe[0] = P->stderr_pipe[1] = -1;
         return P;
 }
 
@@ -801,9 +817,11 @@ fail:
 // If the child process succeeded in calling execve, status is 0
 static void Process_ctrl(Process_T P, int *status) {
         close(P->ctrl_pipe[1]);
+        P->ctrl_pipe[1] = -1;
         if (read(P->ctrl_pipe[0], status, sizeof *status) != sizeof *status)
                 *status = 0;
-        else waitpid(P->pid, &(int){0}, 0);
+        close(P->ctrl_pipe[0]);
+        P->ctrl_pipe[0] = -1;
 }
 
 
