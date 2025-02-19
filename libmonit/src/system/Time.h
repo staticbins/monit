@@ -347,9 +347,10 @@ int Time_incron(const char *cron, time_t time);
  * duration in microseconds. If sleep is interrupted by a signal,
  * the function aborts sleep and returns the number of remaining
  * microseconds.
- * @param microseconds The duration of the sleep in microseconds.
- * @return 0 if sleep was completed, number of remaining microseconds
- * if sleep was interrupted by a signal.
+ * @param microseconds The duration of the sleep in microseconds
+ * @return 0 if sleep was completed, -1 if microseconds is invalid
+ *         (negative or would overflow timespec on 32-bit systems),
+ *         or remaining microseconds if interrupted by a signal
  */
 long long Time_usleep(long long microseconds);
 
@@ -360,9 +361,10 @@ long long Time_usleep(long long microseconds);
  * resilient to interruptions by signals. If a signal interrupts
  * sleep, the function will continue to sleep for the remainder
  * of the specified duration after handling of the signal.
- * @param microseconds The duration of the sleep in microseconds.
+ * @param microseconds The duration of the sleep in microseconds
+ * @return true if sleep was completed, false if microseconds is invalid
  */
-void Time_usleepComplete(long long microseconds);
+bool Time_usleepComplete(long long microseconds);
 
 
 /**
