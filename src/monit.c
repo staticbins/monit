@@ -587,7 +587,7 @@ reload:
                                 Log_info("Monit will delay for %d seconds on first start after reboot ...\n", Run.startdelay);
 
                                 // Sleep, unless there is a pending action or monit was stopped/reloaded (sleep can be interrupted by signal)
-                                for (long long remaining = Run.startdelay * USEC_PER_SEC; remaining; remaining = Time_usleep(remaining)) {
+                                for (long remaining = Run.startdelay; remaining; remaining = Time_sleep(remaining)) {
                                         if (Run.flags & Run_Stopped) {
                                                 do_exit(false);
                                         } else if (Run.flags & Run_DoReload) {
@@ -614,9 +614,10 @@ reload:
                         validate();
 
                         // Sleep, unless there is a pending action or monit was stopped/reloaded (sleep can be interrupted by signal)
-                        for (long long remaining = Run.polltime * USEC_PER_SEC; remaining > 0; remaining = Time_usleep(remaining))
+                        for (long remaining = Run.polltime; remaining > 0; remaining = Time_sleep(remaining)) {
                                 if ((Run.flags & Run_ActionPending) || interrupt())
                                         break;
+                        }
 
                         if (Run.flags & Run_DoWakeup) {
                                 Run.flags &= ~Run_DoWakeup;
