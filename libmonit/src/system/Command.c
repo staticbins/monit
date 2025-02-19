@@ -820,8 +820,7 @@ static void Process_ctrl(Process_T P, int *status) {
         P->ctrl_pipe[1] = -1;
         if (read(P->ctrl_pipe[0], status, sizeof *status) != sizeof *status)
                 *status = 0;
-        close(P->ctrl_pipe[0]);
-        P->ctrl_pipe[0] = -1;
+        else waitpid(P->pid, &(int){0}, 0);
 }
 
 
