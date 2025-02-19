@@ -3600,7 +3600,7 @@ static void postparse(void) {
         }
 
         /* Check that we do not start monit in daemon mode without having a poll time */
-        if (! Run.polltime && ((Run.flags & Run_Daemon) || (Run.flags & Run_Foreground))) {
+        if (Run.polltime <= 0 && ((Run.flags & Run_Daemon) || (Run.flags & Run_Foreground))) {
                 Log_error("Poll time is invalid or not defined. Please define poll time in the control file\nas a number (> 0)  or use the -d option when starting monit\n");
                 cfg_errflag++;
         }

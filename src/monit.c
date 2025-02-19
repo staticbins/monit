@@ -612,7 +612,7 @@ reload:
                         validate();
 
                         // Sleep, unless there is a pending action or monit was stopped/reloaded (sleep can be interrupted by signal)
-                        for (long long remaining = Run.polltime * USEC_PER_SEC; remaining; remaining = Time_usleep(remaining))
+                        for (long long remaining = Run.polltime * USEC_PER_SEC; remaining > 0; remaining = Time_usleep(remaining))
                                 if ((Run.flags & Run_ActionPending) || interrupt())
                                         break;
 
