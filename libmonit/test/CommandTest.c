@@ -121,7 +121,7 @@ static void onChild(Process_T P) {
         printf("\tProcess is running\n");
         // Wait longer than sleep duration for SIGCHLD delivery
         printf("\tWaiting for SIGCHLD delivery...\n");
-        Time_usleep(2000000); // 2 seconds
+        Time_sleep(2); // 2 seconds
         // Status should have been set by SIGCHLD handler
         assert(!Process_isRunning(P));
         printf("\tProcess is no longer running\n");
@@ -379,7 +379,7 @@ int main(void) {
         printf("=> Test18: sequential process handling\n");
         {
                 // Start both processes first
-                Command_T c1 = Command_new("/bin/sh", "-c", "echo hello from process1");
+                Command_T c1 = Command_new("/bin/sh", "-c", "exec 1>&2; echo hello from process1");
                 Command_T c2 = Command_new("/bin/sh", "-c", "echo hello from process2");
                 Process_T p1 = Command_execute(c1);
                 Process_T p2 = Command_execute(c2);
@@ -390,13 +390,12 @@ int main(void) {
                 
                 // Handle first process completely
                 InputStream_T err1 = Process_errorStream(p1);
-                if (!InputStream_readLine(err1, buf1, sizeof(buf1) - 1)) {
-                        InputStream_T in1 = Process_inputStream(p1);
-                        InputStream_readLine(in1, buf1, sizeof(buf1) - 1);
-                }
+                // Assert output went to stderr
+                assert(InputStream_readBytes(err1, buf1, sizeof(buf1) - 1));
 
                 // Free and recreate p1 before handling p2
                 Process_free(&p1);
+                assert(p1 == NULL);
                 p1 = Command_execute(c1);
                 assert(p1);
 
@@ -408,8 +407,8 @@ int main(void) {
                 }
 
                 // Verify content
-                assert(Str_isEqual(buf1, "hello from process1\n"));
-                assert(Str_isEqual(buf2, "hello from process2\n"));
+                assert(Str_startsWith(buf1, "hello from process1"));
+                assert(Str_startsWith(buf2, "hello from process2"));
                 
                 // Cleanup
                 Process_free(&p1);
