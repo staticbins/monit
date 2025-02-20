@@ -587,7 +587,7 @@ reload:
                                 Log_info("Monit will delay for %d seconds on first start after reboot ...\n", Run.startdelay);
 
                                 // Sleep, unless there is a pending action or monit was stopped/reloaded (sleep can be interrupted by signal)
-                                for (long remaining = Run.startdelay; remaining; remaining = Time_sleep(remaining)) {
+                                for (long remaining = Run.startdelay; remaining > 0; remaining = Time_sleep(remaining)) {
                                         if (Run.flags & Run_Stopped) {
                                                 do_exit(false);
                                         } else if (Run.flags & Run_DoReload) {
