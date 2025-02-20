@@ -391,7 +391,7 @@ int main(void) {
                 // Handle first process completely
                 InputStream_T err1 = Process_errorStream(p1);
                 // Assert output went to stderr
-                assert(InputStream_readBytes(err1, buf1, sizeof(buf1) - 1));
+                assert(InputStream_readBytes(err1, buf1, sizeof(buf1) - 1) > 0);
 
                 // Free and recreate p1 before handling p2
                 Process_free(&p1);
