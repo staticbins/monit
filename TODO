@@ -1,0 +1,3 @@
+1. Use Command.c from master branch which handle pipes correct and also SIGCHLD
+2. Remove top-lists etc from Process_Table and align handling of processes with Command
+3. Fix Event_Type to handle more than 64 types - use a bit-array
