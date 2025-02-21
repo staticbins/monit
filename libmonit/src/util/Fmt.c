@@ -37,56 +37,115 @@
 static double epsilon = 1e-5;
 
 static bool _isInt(double x) {
-    return fabs(x - round(x)) < epsilon;
+        return fabs(x - round(x)) < epsilon;
 }
+
+// Maximum number of time units (ms -> year)
+#define FMT_TIME_UNITS 6
+
+// Maximum value that can be represented (-99.569 y)
+#define FMT_TIME_MAX 3.14e+12
+
+static const struct time_unit {
+        double base;
+        const char* suffix;
+} time_units[FMT_TIME_UNITS] = {
+        {1000, "ms"},
+        {60,   "s"},
+        {60,   "m"},
+        {24,   "h"},
+        {365,  "d"},
+        {100,  "y"} // current max ~99.569 years
+};
+
+// Maximum number of bytes units (B -> ZB)
+#define FMT_BYTES_UNITS 8
+
+// Maximum value that can be represented (ZB - 1)
+#define FMT_BYTES_MAX 1e+24
+
+static const struct byte_unit {
+        const char* suffix;
+        const double factor;  // For validation
+} byte_units[FMT_BYTES_UNITS] = {
+        {"B",  1},
+        {"kB", 1e3},
+        {"MB", 1e6},
+        {"GB", 1e9},
+        {"TB", 1e12},
+        {"PB", 1e15},
+        {"EB", 1e18},
+        {"ZB", 1e21}
+};
 
 
 /* -------------------------------------------------------- Public Methods */
 
 
-char *Fmt_bytes2str(double bytes, char s[static 10]) {
-    assert(s);
-    static const char *kNotation[] = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", NULL};
-    *s = 0;
-    const char *sign = (bytes < 0) ? "-" : "";
-    bytes = fabs(bytes);
-    assert(bytes < 1e+24);
-    for (int i = 0; kNotation[i]; i++) {
-        if (bytes >= 1024) {
-            bytes /= 1024;
-        } else {
-            snprintf(s, 10, _isInt(bytes) ? "%s%.0lf %s" : "%s%.1lf %s", sign, bytes, kNotation[i]);
-            break;
+char* Fmt_bytes2str(double bytes, char s[static FMT_BYTES_BUFSIZE]) {
+        assert(s);
+        *s = 0;
+        if (isnan(bytes)) {
+                snprintf(s, FMT_BYTES_BUFSIZE, "NaN");
+                return s;
         }
-    }
-    return s;
+        if (isinf(bytes)) {
+                snprintf(s, FMT_BYTES_BUFSIZE, bytes > 0 ? "Inf" : "-Inf");
+                return s;
+        }
+        const char* sign = (bytes < 0) ? "-" : "";
+        bytes = fabs(bytes);
+        assert(bytes < FMT_BYTES_MAX);
+        if (fabs(bytes) < epsilon) {
+                snprintf(s, FMT_BYTES_BUFSIZE, "0 B");
+                return s;
+        }
+        // Find and set appropriate unit
+        size_t unit;
+        for (unit = 0; unit < FMT_BYTES_UNITS; unit++) {
+                if (bytes >= 1024) {
+                        bytes /= 1024;
+                } else {
+                        break;
+                }
+        }
+        snprintf(s, FMT_BYTES_BUFSIZE,
+                 _isInt(bytes) ? "%s%.0lf %s" : "%s%.1lf %s",
+                 sign, bytes, byte_units[unit].suffix);
+        return s;
 }
 
 
-char *Fmt_time2str(double milli, char s[static 11]) {
-    assert(s);
-    struct conversion {
-        double base;
-        const char *suffix;
-    } conversion[] = {
-        {1000, "ms"}, // millisecond
-        {60,   "s"},  // second
-        {60,   "m"},  // minute
-        {24,   "h"},  // hour
-        {365,  "d"},  // day
-        {999,  "y"}   // year
-    };
-    *s = 0;
-    const char *sign = (milli < 0) ? "-" : "";
-    milli = fabs(milli);
-    assert(milli < 3.14e+12); // -99.569 y
-    for (size_t i = 0; i < (sizeof(conversion) / sizeof(conversion[0])); i++) {
-        if (milli >= conversion[i].base) {
-            milli /= conversion[i].base;
-        } else {
-            snprintf(s, 11, _isInt(milli) ? "%s%.0lf %s" : "%s%.3lf %s", sign, milli, conversion[i].suffix);
-            break;
+char* Fmt_time2str(double milli, char s[static FMT_TIME_BUFSIZE]) {
+        assert(s);
+        *s = 0;
+        // Handle special cases
+        if (isnan(milli)) {
+                snprintf(s, FMT_TIME_BUFSIZE, "NaN");
+                return s;
         }
-    }
-    return s;
+        if (isinf(milli)) {
+                snprintf(s, FMT_TIME_BUFSIZE, milli > 0 ? "Inf" : "-Inf");
+                return s;
+        }
+        const char* sign = (milli < 0) ? "-" : "";
+        milli = fabs(milli);
+        assert(milli < FMT_TIME_MAX);
+        if (fabs(milli) < epsilon) {
+                snprintf(s, FMT_TIME_BUFSIZE, "0 ms");
+                return s;
+        }
+        // Find and set appropriate unit
+        size_t unit;
+        for (unit = 0; unit < FMT_TIME_UNITS; unit++) {
+                if (milli >= time_units[unit].base) {
+                        milli /= time_units[unit].base;
+                } else {
+                        break;
+                }
+        }
+        snprintf(s, FMT_TIME_BUFSIZE,
+                 _isInt(milli) ? "%s%.0lf %s" : "%s%.3lf %s",
+                 sign, milli, time_units[unit].suffix);
+        return s;
 }
