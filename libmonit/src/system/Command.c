@@ -863,6 +863,7 @@ Process_T Command_execute(T C) {
         }
         if ((P->pid = fork()) < 0) {
                 status = errno;
+                ERROR("Command: fork failed -- %s\n", System_getError(status));
         } else if (P->pid == 0) {
                 Process_exec(P, C);
         } else {
