@@ -182,6 +182,13 @@
 			remoteGlobalIDString = 52CCD8942B51C26A004DB685;
 			remoteInfo = FileTest;
 		};
+		52DD54E42D68F85500736EEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 5243E2CC2CDBDE2A006F1E33;
+			remoteInfo = FmtTest;
+		};
 		52DDC12913C59D46003AA75C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 52A1310B13A7882A00583257 /* libmonit.xcodeproj */;
@@ -282,6 +289,7 @@
 		52D25EDF17C0E8680039D3E4 /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		52D25EE017C0E8680039D3E4 /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
 		52D25EE217C0E8680039D3E4 /* monitrc */ = {isa = PBXFileReference; lastKnownFileType = text; path = monitrc; sourceTree = "<group>"; };
+		52DD54D92D68F85500736EEF /* TODO */ = {isa = PBXFileReference; lastKnownFileType = text; path = TODO; sourceTree = "<group>"; };
 		52DE1EB127FF3B3C00C4269C /* libcrypto.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.1.dylib; path = ../../../../../opt/local/libexec/openssl11/lib/libcrypto.1.1.dylib; sourceTree = "<group>"; };
 		52DE1EB227FF3B3C00C4269C /* libssl.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.1.1.dylib; path = ../../../../../opt/local/libexec/openssl11/lib/libssl.1.1.dylib; sourceTree = "<group>"; };
 		52DE1EB527FF3B5500C4269C /* libcrypto.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.1.dylib; path = ../../../../../opt/local/libexec/openssl11/lib/libcrypto.1.1.dylib; sourceTree = "<group>"; };
@@ -509,6 +517,7 @@
 		528EA76713A74E05003DA4BE = {
 			isa = PBXGroup;
 			children = (
+				52DD54D92D68F85500736EEF /* TODO */,
 				52B1B3D0243016FC004F9C5B /* .gitignore */,
 				52A1310B13A7882A00583257 /* libmonit.xcodeproj */,
 				52D25EDC17C0E8680039D3E4 /* bootstrap */,
@@ -634,6 +643,7 @@
 				52CCD8A52B521967004DB685 /* SystemTest */,
 				52CCD8A72B521967004DB685 /* FileTest */,
 				52BCA6842BAB54F700317498 /* RandomTest */,
+				52DD54E52D68F85500736EEF /* FmtTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -992,6 +1002,13 @@
 			fileType = "compiled.mach-o.executable";
 			path = FileTest;
 			remoteRef = 52CCD8A62B521967004DB685 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		52DD54E52D68F85500736EEF /* FmtTest */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = FmtTest;
+			remoteRef = 52DD54E42D68F85500736EEF /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		52DDC12A13C59D46003AA75C /* libmonit.a */ = {
