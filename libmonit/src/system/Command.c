@@ -773,11 +773,7 @@ static void Process_exec(Process_T P, T C) {
                 goto fail;
         if (!Process_setupChildPipes(P))
                 goto fail;
-        int descriptors = open("/dev/null", O_RDWR);
-        if (descriptors < 4)
-                descriptors = System_descriptors(256);
-        else
-                descriptors += 1;
+        int descriptors = System_descriptors(256);
         for (int i = 3; i < descriptors; i++) {
                 if (i != P->ctrl_pipe[1])
                         close(i);
@@ -846,6 +842,14 @@ static void Process_ctrl(Process_T P, int *status) {
    in daemon processes where changing to a specific directory is often required.
  - Inability to Change umask: posix_spawn lacks support for changing the file
    mode creation mask (umask) in the child process.
+ - Limited flexibility during child setup: On Linux, posix_spawn typically uses
+   clone(2) internally, while other systems might use vfork(2), both of which
+   restrict what can be safely done during the child setup phase. Operations
+   that might allocate memory, such as looking up user/group information
+   (getpwuid, getgrouplist) or determining system limits, become problematic
+   or impossible. With fork/exec we maintain full control over the child setup
+   phase, allowing us to perform all necessary operations safely before calling
+   exec.
 
  Traditional fork/exec offers a bit more control and flexibility. With modern OSs
  supporting Copy-On-Write (COW), the issue of unnecessary memory address space
@@ -874,7 +878,8 @@ fail:
                 DEBUG("Command: failed -- %s\n", System_getError(status));
                 Process_free(&P);
         } else {
-                // Add Process to the hash table indexed by PID. The table is used by the SIGCHLD handler to find the Process object and update its status
+                // Add Process to the hash table indexed by PID. The table is used by the SIGCHLD
+                // handler to find the Process object and update its status
                 Process_T previous = Array_put(processTable, P->pid, P);
                 if (previous)
                         ERROR("Command: process with duplicate PID %d found in internal array\n", P->pid);
