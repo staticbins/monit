@@ -293,8 +293,10 @@ static void do_init(void) {
          * Start the Parser and create the service list. This will also set
          * any Runtime constants defined in the controlfile.
          */
-        if (! parse(Run.files.control))
+        if (! parse(Run.files.control)) {
+                Log_error("%s exiting due to parsing errors in the configuration file.\n", Prog);
                 exit(1);
+        }
 
         /*
          * Initialize the log system
@@ -352,7 +354,7 @@ static void do_reinit(bool full) {
         gc();
 
         if (! parse(Run.files.control)) {
-                Log_error("%s stopped -- error parsing configuration file\n", Prog);
+                Log_error("%s exiting due to parsing errors in the configuration file.\n", Prog);
                 exit(1);
         }
 

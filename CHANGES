@@ -30,6 +30,8 @@ Fixed: FreeBSD + OpenBSD + NetBSD: Detect presence of backtrace() function durin
 
 Fixed: MacOS: Monit may stop handling signals (SIGCHLD for children, SIGTERM to exit, SIGHUP for reload, SIGUSR1 for wakeup)
 
+Fixed: If Monit detects syntax errors in the configuration file, log an error message prior to exiting the program.
+
 New: When monit aborts (e.g. due to assert), print a backtrace.
 
 
