@@ -203,6 +203,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		52033DF52D7090EE00E09FDA /* .editorconfig */ = {isa = PBXFileReference; lastKnownFileType = text; path = .editorconfig; sourceTree = "<group>"; };
 		5205879018CF7235006296CB /* distinfo */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = distinfo; sourceTree = "<group>"; };
 		5205879218CF7235006296CB /* monit.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = monit.sh; sourceTree = "<group>"; };
 		5205879318CF7235006296CB /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
@@ -478,6 +479,7 @@
 		528EA76713A74E05003DA4BE = {
 			isa = PBXGroup;
 			children = (
+				52033DF52D7090EE00E09FDA /* .editorconfig */,
 				52B1B3D0243016FC004F9C5B /* .gitignore */,
 				52A1310B13A7882A00583257 /* libmonit.xcodeproj */,
 				52D25EDC17C0E8680039D3E4 /* bootstrap */,
