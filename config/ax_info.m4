@@ -47,10 +47,7 @@ AC_DEFUN([AX_INFO_TITLE],
 
 AC_DEFUN([AX_INFO_ENABLED],
 [
-    fmt="x x"
-    if [[ $(uname -s) = "Darwin" ]]; then
-        fmt=""
-    fi
+    fmt=""
     if $($2); then
         printf "|  %-45.45s %-21.21s  |\n" "$1" "$(tput setaf 2 ${fmt})ENABLED$(tput sgr0)"
     else
@@ -60,10 +57,7 @@ AC_DEFUN([AX_INFO_ENABLED],
 
 AC_DEFUN([AX_INFO_VAR],
 [
-    fmt="x x"
-    if [[ $(uname -s) = "Darwin" ]]; then
-        fmt=""
-    fi
+    fmt=""
     printf "|  %-45.45s %-21.21s  |\n" "$1" "$(tput setaf 3 ${fmt})$2$(tput sgr0)"
 ])
 
