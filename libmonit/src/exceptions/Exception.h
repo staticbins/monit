@@ -181,8 +181,8 @@ typedef struct T {
 #define EXCEPTION_MESSAGE_LENGTH 511
 typedef struct Exception_Frame Exception_Frame;
 struct Exception_Frame {
-	int line;
-	jmp_buf env;
+int line;
+        sigjmp_buf env;
         const char *func;
 	const char *file;
 	const T *exception;
