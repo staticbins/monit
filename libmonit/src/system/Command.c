@@ -548,10 +548,18 @@ int Process_waitFor(Process_T P) {
                         r = waitpid(P->pid, &status, 0); // Wait blocking
                 while (r == -1 && errno == EINTR);
                 if (r == P->pid) {
+                        // Successfully waited for the process, update status
                         _setstatus(P, status);
+                        
+                        // Try to remove from array but don't fail if not found
+                        // (might have been removed by SIGCHLD handler)
                         Process_T found = Array_remove(processTable, r);
-                        if (found && (P != found)) {
+                        if (found && P != found) {
                                 ERROR("Process_waitFor: Process with pid %d found in Array doesn't match expected Process", r);
+                                // Copy status to the found object too
+                                _setstatus(found, status);
+                        } else if (!found) {
+                                DEBUG("Process_waitFor: Process with pid %d not found in Array", r);
                         }
                 }
         }
