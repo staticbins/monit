@@ -545,21 +545,17 @@ int Process_waitFor(Process_T P) {
         assert(P);
         _childSignal(SIG_BLOCK);
         if (P->status < 0) {
-                // First check if P is still in the array
                 Process_T current = Array_get(processTable, P->pid);
                 if (current == P) {
-                        // P is still in the array, safe to wait
                         int r, status;
                         do
-                                r = waitpid(P->pid, &status, 0); // Wait blocking
+                                r = waitpid(P->pid, &status, 0);
                         while (r == -1 && errno == EINTR);
                         
                         if (r == P->pid) {
-                                Process_T found = Array_get(processTable, r);
                                 _setstatus(P, status);
-                                // Guard that P is unchanged in the array
-                                if (found == P) {
-                                        Array_remove(processTable, r);
+                                if (Array_get(processTable, P->pid) == P) {
+                                        Array_remove(processTable, P->pid);
                                 }
                         }
                 } else if (current) {
