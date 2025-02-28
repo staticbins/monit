@@ -498,7 +498,9 @@ void Process_free(Process_T *P) {
         assert(P && *P);
 
         _childSignal(SIG_BLOCK);
-        Array_remove(processTable, (*P)->pid);
+        if (Array_get(processTable , (*P)->pid) == (*P)) {
+                Array_remove(processTable, (*P)->pid);
+        }
         _childSignal(SIG_UNBLOCK);
 
         if (!(*P)->isdetached) {
