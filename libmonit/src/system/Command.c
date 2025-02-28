@@ -551,7 +551,7 @@ int Process_waitFor(Process_T P) {
                         _setstatus(P, status);
                         Process_T found = Array_remove(processTable, r);
                         if (found && (P != found)) {
-                                ERROR("Process_waitFor: Process with pid %d found in Array doesn't match expected Process", r);
+                                ERROR("Process_waitFor: Process with pid %d found in Array doesn't match expected Process\n", r);
                         }
                 }
         }
