@@ -139,7 +139,7 @@ static void _handleChildren(__attribute__ ((unused)) int sig) {
 
 static void __attribute__ ((constructor)) _constructor(void) {
         processTable = Array_new(20);
-
+        
         struct sigaction act = {
                 .sa_handler = _handleChildren,
                 .sa_flags = SA_RESTART | SA_NODEFER
@@ -156,7 +156,7 @@ static void __attribute__ ((constructor)) _constructor(void) {
 
 static void __attribute__ ((destructor)) _destructor(void) {
         _childSignal(SIG_BLOCK);
-
+        
         // No need to free the table entries - Process members are freed explicitly, just drop the table
         Array_free(&processTable);
 }
@@ -237,31 +237,31 @@ static inline char **_env(T C) {
 #ifdef AIX
 static int getgrouplist(const char *name, int basegid, int *groups, int *ngroups) {
         int rv = -1;
-
+        
         // Open the user database
         if (setuserdb(S_READ) != 0) {
                 DEBUG("Cannot open user database -- %s\n", System_getError(errno));
                 goto fail4;
         }
-
+        
         // Get administrative domain for the user so we can lookup the group membership in the correct database (files, LDAP, etc).
         char *registry;
         if (getuserattr((char *)name, S_REGISTRY, &registry, SEC_CHAR) == 0 && setauthdb(registry, NULL) != 0) {
                 DEBUG("Administrative domain switch to %s for user %s failed -- %s\n", registry, name, System_getError(errno));
                 goto fail3;
         }
-
+        
         // Get the list of groups for the named user
         char *groupList = getgrset(name);
         if (! groupList) {
                 DEBUG("Cannot get groups for user %s\n", name);
                 goto fail2;
         }
-
+        
         // Add the base GID
         int count = 1;
         groups[0] = basegid;
-
+        
         // Parse the comma separated list of groups
         char *lastGroup = NULL;
         for (char *currentGroup = strtok_r(groupList, ",", &lastGroup); currentGroup; currentGroup = strtok_r(NULL, ",", &lastGroup)) {
@@ -275,24 +275,24 @@ static int getgrouplist(const char *name, int basegid, int *groups, int *ngroups
                         groups[count++] = gid;
                 }
         }
-
+        
         // Success
         rv = 0;
         *ngroups = count;
-
+        
 error1:
         FREE(groupList);
-
+        
 error2:
         // Restore the administrative domain
         setauthdb(NULL, NULL);
-
+        
 error3:
         // Close the user database
         if (enduserdb() != 0) {
                 DEBUG("Cannot close user database -- %s\n", System_getError(errno));
         }
-
+        
 error4:
         return rv;
 }
@@ -323,19 +323,19 @@ static void _unblock(struct _block *block) {
 // Reset all signals to default, except for SIGHUP and SIGPIPE which
 // are set to SIG_IGN
 static void _resetSignals(void) {
-    sigset_t mask;
-    sigemptyset(&mask);
-    pthread_sigmask(SIG_SETMASK, &mask, 0);
-    struct sigaction sa_default = {.sa_handler = SIG_DFL};
-    struct sigaction sa_ignore = {.sa_handler = SIG_IGN};
-    for (int i = 1; i < NSIG; ++i) {
-        if (i == SIGKILL || i == SIGSTOP)
-            continue;
-        if (i == SIGHUP || i == SIGPIPE)
-                sigaction(i, &sa_ignore, NULL);
-        else
-                sigaction(i, &sa_default, NULL);
-    }
+        sigset_t mask;
+        sigemptyset(&mask);
+        pthread_sigmask(SIG_SETMASK, &mask, 0);
+        struct sigaction sa_default = {.sa_handler = SIG_DFL};
+        struct sigaction sa_ignore = {.sa_handler = SIG_IGN};
+        for (int i = 1; i < NSIG; ++i) {
+                if (i == SIGKILL || i == SIGSTOP)
+                        continue;
+                if (i == SIGHUP || i == SIGPIPE)
+                        sigaction(i, &sa_ignore, NULL);
+                else
+                        sigaction(i, &sa_default, NULL);
+        }
 }
 
 
@@ -496,17 +496,17 @@ static Process_T Process_new(void) {
 
 void Process_free(Process_T *P) {
         assert(P && *P);
-
+        
         _childSignal(SIG_BLOCK);
         if (Array_get(processTable , (*P)->pid) == (*P)) {
                 Array_remove(processTable, (*P)->pid);
         }
         _childSignal(SIG_UNBLOCK);
-
+        
         if (!(*P)->isdetached) {
                 if (Process_isRunning(*P)) {
                         Process_kill(*P);
-                        Process_waitFor(*P);
+                        // Trust SIGCHLD handler to wait for P's process
                 }
                 Process_detach(*P);
         }
@@ -545,24 +545,29 @@ int Process_waitFor(Process_T P) {
         assert(P);
         _childSignal(SIG_BLOCK);
         if (P->status < 0) {
-                int r, status;
-                do
-                        r = waitpid(P->pid, &status, 0); // Wait blocking
-                while (r == -1 && errno == EINTR);
-                if (r == P->pid) {
-                        // Successfully waited for the process, update status
-                        _setstatus(P, status);
+                // First check if P is still in the array
+                Process_T current = Array_get(processTable, P->pid);
+                if (current == P) {
+                        // P is still in the array, safe to wait
+                        int r, status;
+                        do
+                                r = waitpid(P->pid, &status, 0); // Wait blocking
+                        while (r == -1 && errno == EINTR);
                         
-                        // Try to remove from array but don't fail if not found
-                        // (might have been removed by SIGCHLD handler)
-                        Process_T found = Array_remove(processTable, r);
-                        if (found && P != found) {
-                                ERROR("Process_waitFor: Process with pid %d found in Array doesn't match expected Process", r);
-                                // Copy status to the found object too
-                                _setstatus(found, status);
-                        } else if (!found) {
-                                DEBUG("Process_waitFor: Process with pid %d not found in Array", r);
+                        if (r == P->pid) {
+                                Process_T found = Array_get(processTable, r);
+                                _setstatus(P, status);
+                                // Guard that P is unchanged in the array
+                                if (found == P) {
+                                        Array_remove(processTable, r);
+                                }
                         }
+                } else if (current) {
+                        // Another Process with same PID is in the array - don't touch it
+                        DEBUG("Process_waitFor: Different Process with pid %d found in Array", P->pid);
+                } else {
+                        // P is not in the array - could have been handled by SIGCHLD already
+                        DEBUG("Process_waitFor: Process with pid %d not found in Array", P->pid);
                 }
         }
         _childSignal(SIG_UNBLOCK);
@@ -832,35 +837,35 @@ static void Process_ctrl(Process_T P, int *status) {
 
 /*
  The Execute function.
-
+ 
  We do not use posix_spawn(2) because it's not well suited for creating
  long-running daemon processes. Although posix_spawn is more efficient, its
  limitations makes it problematic for our use. Specifically:
-
+ 
  - The POSIX standard does not support calling setsid(2) in the child
-   process, which is important to have the child detach from the controlling
-   terminal. Some implementations do support setsid() unofficially via the
-   flag POSIX_SPAWN_SETSID, but this is not standardized.
+ process, which is important to have the child detach from the controlling
+ terminal. Some implementations do support setsid() unofficially via the
+ flag POSIX_SPAWN_SETSID, but this is not standardized.
  - posix_spawn does not inherently handle the transition of privileges
-   associated with setuid/setgid programs.
+ associated with setuid/setgid programs.
  - Closing "all" descriptors in the child before calling exec is not directly
-   supported. While there is limited support for closing specific descriptors,
-   there is no straightforward way to unconditionally close all potentially
-   open descriptors.
+ supported. While there is limited support for closing specific descriptors,
+ there is no straightforward way to unconditionally close all potentially
+ open descriptors.
  - There is no support for changing the working directory (chdir) in the child
-   process before exec is called. This limitation can be significant, especially
-   in daemon processes where changing to a specific directory is often required.
+ process before exec is called. This limitation can be significant, especially
+ in daemon processes where changing to a specific directory is often required.
  - Inability to Change umask: posix_spawn lacks support for changing the file
-   mode creation mask (umask) in the child process.
+ mode creation mask (umask) in the child process.
  - Limited flexibility during child setup: On Linux, posix_spawn typically uses
-   clone(2) internally, while other systems might use vfork(2), both of which
-   restrict what can be safely done during the child setup phase. Operations
-   that might allocate memory, such as looking up user/group information
-   (getpwuid, getgrouplist) or determining system limits, become problematic
-   or impossible. With fork/exec we maintain full control over the child setup
-   phase, allowing us to perform all necessary operations safely before calling
-   exec.
-
+ clone(2) internally, while other systems might use vfork(2), both of which
+ restrict what can be safely done during the child setup phase. Operations
+ that might allocate memory, such as looking up user/group information
+ (getpwuid, getgrouplist) or determining system limits, become problematic
+ or impossible. With fork/exec we maintain full control over the child setup
+ phase, allowing us to perform all necessary operations safely before calling
+ exec.
+ 
  Traditional fork/exec offers a bit more control and flexibility. With modern OSs
  supporting Copy-On-Write (COW), the issue of unnecessary memory address space
  duplication in the child before calling exec becomes less significant, albeit
