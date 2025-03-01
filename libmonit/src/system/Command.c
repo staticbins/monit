@@ -139,7 +139,7 @@ static void _handleChildren(__attribute__ ((unused)) int sig) {
 
 static void __attribute__ ((constructor)) _constructor(void) {
         processTable = Array_new(20);
-        
+
         struct sigaction act = {
                 .sa_handler = _handleChildren,
                 .sa_flags = SA_RESTART | SA_NODEFER
@@ -147,7 +147,7 @@ static void __attribute__ ((constructor)) _constructor(void) {
         // Set up mask for blocking SIGCHLD during handler execution
         sigemptyset(&act.sa_mask);
         sigaddset(&act.sa_mask, SIGCHLD);
-        
+
         if (sigaction(SIGCHLD, &act, NULL)) {
                 ERROR("Command: SIGCHLD handler failed: %s", System_lastError());
         }
@@ -156,7 +156,7 @@ static void __attribute__ ((constructor)) _constructor(void) {
 
 static void __attribute__ ((destructor)) _destructor(void) {
         _childSignal(SIG_BLOCK);
-        
+
         // No need to free the table entries - Process members are freed explicitly, just drop the table
         Array_free(&processTable);
 }
@@ -237,31 +237,31 @@ static inline char **_env(T C) {
 #ifdef AIX
 static int getgrouplist(const char *name, int basegid, int *groups, int *ngroups) {
         int rv = -1;
-        
+
         // Open the user database
         if (setuserdb(S_READ) != 0) {
                 DEBUG("Cannot open user database -- %s\n", System_getError(errno));
                 goto fail4;
         }
-        
+
         // Get administrative domain for the user so we can lookup the group membership in the correct database (files, LDAP, etc).
         char *registry;
         if (getuserattr((char *)name, S_REGISTRY, &registry, SEC_CHAR) == 0 && setauthdb(registry, NULL) != 0) {
                 DEBUG("Administrative domain switch to %s for user %s failed -- %s\n", registry, name, System_getError(errno));
                 goto fail3;
         }
-        
+
         // Get the list of groups for the named user
         char *groupList = getgrset(name);
         if (! groupList) {
                 DEBUG("Cannot get groups for user %s\n", name);
                 goto fail2;
         }
-        
+
         // Add the base GID
         int count = 1;
         groups[0] = basegid;
-        
+
         // Parse the comma separated list of groups
         char *lastGroup = NULL;
         for (char *currentGroup = strtok_r(groupList, ",", &lastGroup); currentGroup; currentGroup = strtok_r(NULL, ",", &lastGroup)) {
@@ -275,24 +275,24 @@ static int getgrouplist(const char *name, int basegid, int *groups, int *ngroups
                         groups[count++] = gid;
                 }
         }
-        
+
         // Success
         rv = 0;
         *ngroups = count;
-        
+
 error1:
         FREE(groupList);
-        
+
 error2:
         // Restore the administrative domain
         setauthdb(NULL, NULL);
-        
+
 error3:
         // Close the user database
         if (enduserdb() != 0) {
                 DEBUG("Cannot close user database -- %s\n", System_getError(errno));
         }
-        
+
 error4:
         return rv;
 }
@@ -496,13 +496,13 @@ static Process_T Process_new(void) {
 
 void Process_free(Process_T *P) {
         assert(P && *P);
-        
+
         _childSignal(SIG_BLOCK);
         if (Array_get(processTable , (*P)->pid) == (*P)) {
                 Array_remove(processTable, (*P)->pid);
         }
         _childSignal(SIG_UNBLOCK);
-        
+
         if (!(*P)->isdetached) {
                 if (Process_isRunning(*P)) {
                         Process_kill(*P);
@@ -551,7 +551,7 @@ int Process_waitFor(Process_T P) {
                         do
                                 r = waitpid(P->pid, &status, 0);
                         while (r == -1 && errno == EINTR);
-                        
+
                         if (r == P->pid) {
                                 _setstatus(P, status);
                                 if (Array_get(processTable, P->pid) == P) {
@@ -833,11 +833,11 @@ static void Process_ctrl(Process_T P, int *status) {
 
 /*
  The Execute function.
- 
+
  We do not use posix_spawn(2) because it's not well suited for creating
  long-running daemon processes. Although posix_spawn is more efficient, its
  limitations makes it problematic for our use. Specifically:
- 
+
  - The POSIX standard does not support calling setsid(2) in the child
  process, which is important to have the child detach from the controlling
  terminal. Some implementations do support setsid() unofficially via the
@@ -861,7 +861,7 @@ static void Process_ctrl(Process_T P, int *status) {
  or impossible. With fork/exec we maintain full control over the child setup
  phase, allowing us to perform all necessary operations safely before calling
  exec.
- 
+
  Traditional fork/exec offers a bit more control and flexibility. With modern OSs
  supporting Copy-On-Write (COW), the issue of unnecessary memory address space
  duplication in the child before calling exec becomes less significant, albeit
