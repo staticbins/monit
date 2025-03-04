@@ -335,6 +335,7 @@ static void _handleAction(Event_T E, Action_T A) {
                         }
                         if (E->source->mode == Monitor_Passive && (A->id == Action_Start || A->id == Action_Stop  || A->id == Action_Restart))
                                 return;
+                        // Warning: the control_service() on stop/unmonitor may free the list of events linked to this service, including this event => do not use event after this call:
                         control_service(E->source->name, A->id);
                 }
         }
