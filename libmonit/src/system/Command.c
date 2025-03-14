@@ -280,20 +280,20 @@ static int getgrouplist(const char *name, int basegid, int *groups, int *ngroups
         rv = 0;
         *ngroups = count;
 
-error1:
+fail1:
         FREE(groupList);
 
-error2:
+fail2:
         // Restore the administrative domain
         setauthdb(NULL, NULL);
 
-error3:
+fail3:
         // Close the user database
         if (enduserdb() != 0) {
                 DEBUG("Cannot close user database -- %s\n", System_getError(errno));
         }
 
-error4:
+fail4:
         return rv;
 }
 #else
