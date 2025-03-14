@@ -10,7 +10,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
  * permission to link the code of portions of this program with the
@@ -34,21 +34,24 @@
 /**
  * Implementation of the Thread.h interface
  *
- * @author https://tildeslash.com
- * @see https://mmonit.com
+ * @author http://www.tildeslash.com/
+ * @see http://www.mmonit.com/
  * @file
  */
 
 
 /* ----------------------------------------------------------- Definitions */
 
+
 static pthread_attr_t myDetachStateAttribute;
 static pthread_once_t once_control = PTHREAD_ONCE_INIT;
+
 
 /* --------------------------------------------------------------- Private */
 
 /* Called at program termination for cleanup */
 static void _fini(void) { pthread_attr_destroy(&myDetachStateAttribute); }
+
 
 /* Setup common thread attribute */
 static void _once(void) {
@@ -63,21 +66,16 @@ static void _once(void) {
         atexit(_fini);
 }
 
-// Automatically set active state to false on thread exit
-static void *_atomicWrapper(void *arg) {
-        AtomicThread_T *thread = (AtomicThread_T *)arg;
-        atomic_store(&thread->active, true);
-        thread->threadFunc(thread->threadArgs);
-        atomic_store(&thread->active, false);
-        return NULL;
-}
 
 /* ----------------------------------------------------- Protected Methods */
 
-// Called from Bootstrap()
+
+/* Called from Bootstrap() */
 void Thread_init(void) { pthread_once(&once_control, _once); }
 
+
 /* ---------------------------------------------------------------- Public */
+
 
 void Thread_createDetached(Thread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
         assert(thread);
@@ -87,39 +85,4 @@ void Thread_createDetached(Thread_T *thread, void *(*threadFunc)(void *threadArg
                 THROW(AssertException, "pthread_create -- %s", System_getError(status));
 }
 
-void AtomicThread_init(AtomicThread_T *thread) {
-        assert(thread);
-        Sem_init(thread->sem);
-        Mutex_init(thread->mutex);
-        atomic_store(&thread->active, false);
-}
 
-void AtomicThread_create(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
-        assert(thread);
-        assert(threadFunc);
-        assert(atomic_load(&thread->active) == false);
-        thread->threadFunc = threadFunc;
-        thread->threadArgs = threadArgs;
-        Thread_create(thread->value, _atomicWrapper, thread);
-}
-
-void AtomicThread_createDetached(AtomicThread_T *thread, void *(*threadFunc)(void *threadArgs), void *threadArgs) {
-        assert(thread);
-        assert(threadFunc);
-        assert(atomic_load(&thread->active) == false);
-        thread->threadFunc = threadFunc;
-        thread->threadArgs = threadArgs;
-        Thread_createDetached(&thread->value, _atomicWrapper, thread);
-}
-
-bool AtomicThread_isActive(AtomicThread_T *thread) {
-        assert(thread);
-        return atomic_load(&thread->active);
-}
-
-void AtomicThread_destroy(AtomicThread_T *thread) {
-        assert(thread);
-        Sem_destroy(thread->sem);
-        Mutex_destroy(thread->mutex);
-        atomic_store(&thread->active, false);
-}
