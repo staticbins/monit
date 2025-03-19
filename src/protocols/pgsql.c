@@ -76,7 +76,7 @@ typedef enum {
         PostgreSQLPacket_Terminate        = 'X',
         PostgreSQLPacket_PasswordMessage  = 'p', //Note: also used for GSSResponse, SASLInitialResponse, SASLResponse
         PostgreSQLPacket_PortalSuspended  = 's'
-} PostgreSQLPacket;
+} __attribute__((__packed__)) PostgreSQLPacket;
 
 
 typedef enum {
@@ -98,7 +98,7 @@ typedef enum {
         PostgreSQLError_File              = 'F',
         PostgreSQLError_Line              = 'L',
         PostgreSQLError_Routine           = 'R'
-} PostgreSQLError;
+} __attribute__((__packed__)) PostgreSQLError;
 
 
 typedef enum {
@@ -145,7 +145,7 @@ typedef struct postgresql_terminatemessage_t {
 typedef struct postgresql_response_header_t {
         PostgreSQLPacket type;
         uint32_t length;
-} *postgresql_response_header_t;
+} __attribute__((__packed__)) *postgresql_response_header_t;
 
 
 typedef struct postgresql_error_t {
