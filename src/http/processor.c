@@ -602,7 +602,7 @@ static HttpResponse create_HttpResponse(Socket_T S) {
  * Create HTTP headers for the given request
  */
 static bool create_headers(HttpRequest req) {
-        int contentLength = 0;
+        unsigned contentLength = 0;
         char line[REQ_STRLEN] = {};
         while (Socket_readLine(req->S, line, sizeof(line)) && ! (Str_isEqual(line, "\r\n") || Str_isEqual(line, "\n"))) {
                 contentLength += strlen(line);

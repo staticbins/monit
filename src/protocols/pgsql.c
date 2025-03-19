@@ -59,7 +59,7 @@ typedef enum {
         PostgreSQL_AuthenticationOk,
         PostgreSQL_AuthenticationNeeded,
         PostgreSQL_AuthenticationNeededUnknownType
-} PostgreSQLState;
+} __attribute__((__packed__)) PostgreSQLState;
 
 
 typedef enum {
@@ -122,7 +122,7 @@ typedef struct postgresql_startupmessage_t {
         uint32_t protocol_major : 16;
         uint32_t protocol_minor : 16;
         char parameters[1024];
-} *postgresql_startupmessage_t;
+} __attribute__((__packed__)) *postgresql_startupmessage_t;
 
 
 // See PasswordMessage at https://www.postgresql.org/docs/current/protocol-message-formats.html
@@ -130,14 +130,14 @@ typedef struct postgresql_passwordmessage_t {
         PostgreSQLPacket type;
         uint32_t length;
         char data[1024];
-} *postgresql_passwordmessage_t;
+} __attribute__((__packed__)) *postgresql_passwordmessage_t;
 
 
 // See Terminate at https://www.postgresql.org/docs/current/protocol-message-formats.html
 typedef struct postgresql_terminatemessage_t {
         PostgreSQLPacket type;
         uint32_t length;
-} *postgresql_terminatemessage_t;
+} __attribute__((__packed__)) *postgresql_terminatemessage_t;
 
 
 // https://www.postgresql.org/docs/current/protocol-message-formats.html: generic part which is common to all valid responses
@@ -151,12 +151,12 @@ typedef struct postgresql_response_header_t {
 typedef struct postgresql_error_t {
         PostgreSQLError type;
         char value[256];
-} *postgresql_error_t;
+} __attribute__((__packed__)) *postgresql_error_t;
 
 
 typedef struct postgresql_response_authentication_header_t {
         uint32_t length;
-} *postgresql_response_authentication_header_t;
+} __attribute__((__packed__)) *postgresql_response_authentication_header_t;
 
 
 typedef struct postgresql_response_authentication_t {
@@ -169,7 +169,7 @@ typedef struct postgresql_response_authentication_t {
                         char data[64];
                 } generic;
         } data;
-} *postgresql_response_authentication_t;
+} __attribute__((__packed__)) *postgresql_response_authentication_t;
 
 
 typedef struct postgresql_response_t {
@@ -178,7 +178,7 @@ typedef struct postgresql_response_t {
                 char                                        buffer[1024];
                 struct postgresql_response_authentication_t authentication;
         } data;
-} *postgresql_response_t;
+} __attribute__((__packed__)) *postgresql_response_t;
 
 
 typedef struct postgresql_t {
