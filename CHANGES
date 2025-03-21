@@ -30,7 +30,7 @@ Fixed: If Monit detects syntax errors in the configuration file, log an error me
 
 New: When monit aborts (e.g. due to assert), print a backtrace.
 
-New: To prevent out-of-office replies from being sent to the monit's sender address by Exchange, Outlook, Office365, and Gmail, added the following headers to email alerts.
+New: Add the following headers to email alerts, to prevent out-of-office autoresponders in Exchange, Outlook, Office365, Gmail:
        "X-Auto-Response-Suppress: All"
        "Precedence: Bulk"
 
