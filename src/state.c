@@ -114,7 +114,7 @@ typedef enum {
 /* Extended format version 4 */
 typedef struct mystate4 {
         char               name[STRLEN];
-        int32_t            type;
+        uint32_t           type;
         int32_t            monitor;
         int32_t            nstart;
         int32_t            ncycle;
@@ -160,7 +160,7 @@ typedef struct mystate4 {
 /* Extended format version 3 */
 typedef struct mystate3 {
         char               name[STRLEN];
-        int32_t            type;
+        uint32_t           type;
         int32_t            monitor;
         int32_t            nstart;
         int32_t            ncycle;
@@ -204,7 +204,7 @@ typedef struct mystate3 State2_T;
 /* Extended format version 1 */
 typedef struct mystate1 {
         char               name[STRLEN];
-        int32_t            type;
+        uint32_t           type;
         int32_t            monitor;
         int32_t            nstart;
         int32_t            ncycle;
@@ -330,7 +330,7 @@ static void _restoreV4(void) {
         State4_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && ((int)service->type == state.type)) {
+                if (service && service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         switch (service->type) {
@@ -377,7 +377,7 @@ static void _restoreV3(void) {
         State3_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && ((int)service->type == state.type)) {
+                if (service && service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         switch (service->type) {
@@ -419,7 +419,7 @@ static void _restoreV2(void) {
         State2_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && ((int)service->type == state.type)) {
+                if (service && service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         switch (service->type) {
@@ -461,7 +461,7 @@ static void _restoreV1(void) {
         State1_T state;
         while (read(file, &state, sizeof(state)) == sizeof(state)) {
                 Service_T service = Util_getService(state.name);
-                if (service && ((int)service->type == state.type)) {
+                if (service && service->type == state.type) {
                         _updateStart(service, state.nstart, state.ncycle);
                         _updateMonitor(service, state.monitor);
                         if (service->type == Service_File)

@@ -66,7 +66,7 @@ typedef enum {
         MQTT_Type_PingRequest,
         MQTT_Type_PingResponse,
         MQTT_Type_Disconnect
-} MQTT_Type;
+} __attribute__((__packed__)) MQTT_Type;
 
 
 // Connect request flags (see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718030) - we use just subset for CONNECT and DISCONNECT
@@ -75,7 +75,7 @@ typedef enum {
         MQTT_ConnectRequest_CleanSession = 0x02,
         MQTT_ConnectRequest_Password     = 0x40,
         MQTT_ConnectRequest_Username     = 0x80
-} MQTT_ConnectRequest_Flags;
+} __attribute__((__packed__)) MQTT_ConnectRequest_Flags;
 
 
 // Connect response flags (see https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718035)
@@ -86,7 +86,7 @@ typedef enum {
         MQTT_ConnectResponse_Refused_ServiceUnavailable,
         MQTT_ConnectResponse_Refused_Credentials,
         MQTT_ConnectResponse_Refused_NotAuthorized
-} MQTT_ConnectResponse_Codes;
+} __attribute__((__packed__)) MQTT_ConnectResponse_Codes;
 
 
 /* -------------------------------------------------------------- Messages */
@@ -137,7 +137,7 @@ typedef enum {
         MQTT_Init = 0,
         MQTT_ConnectSent,
         MQTT_Connected
-} mqtt_state_t;
+} __attribute__((__packed__)) mqtt_state_t;
 
 
 typedef struct mqtt_t {

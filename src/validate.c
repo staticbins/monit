@@ -1184,11 +1184,11 @@ next:
                                 /* No content: shouldn't happen - empty line will contain at least '\n' */
                                 goto final2;
                         } else if (line[length - 1] != '\n') {
-                                if (length < (size_t)(Run.limits.fileContentBuffer - 1)) {
+                                if (length < Run.limits.fileContentBuffer - 1) {
                                         /* Incomplete line: we gonna read it next time again, allowing the writer to complete the write */
                                         DEBUG("'%s' content match: incomplete line read - no new line at end. (retrying next cycle)\n", s->name);
                                         goto final2;
-                                } else if (length >= ((size_t)Run.limits.fileContentBuffer - 1)) {
+                                } else if (length >= Run.limits.fileContentBuffer - 1) {
                                         /* Our read buffer is full: ignore the content past the Run.limits.fileContentBuffer */
                                         int _rv;
                                         do {
@@ -1218,9 +1218,9 @@ next:
                                         /* Save the line for Event_post */
                                         if (! ml->log)
                                                 ml->log = StringBuffer_create((int)Run.limits.fileContentBuffer);
-                                        if (StringBuffer_length(ml->log) < Run.limits.fileContentBuffer) {
+                                        if ((size_t)StringBuffer_length(ml->log) < Run.limits.fileContentBuffer) {
                                                 StringBuffer_append(ml->log, "%s\n", line);
-                                                if (StringBuffer_length(ml->log) >= Run.limits.fileContentBuffer)
+                                                if ((size_t)StringBuffer_length(ml->log) >= Run.limits.fileContentBuffer)
                                                         StringBuffer_append(ml->log, "...\n");
                                         }
                                 } else {

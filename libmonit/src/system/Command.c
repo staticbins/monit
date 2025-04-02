@@ -858,9 +858,7 @@ static void Process_ctrl(Process_T P, int *status) {
  restrict what can be safely done during the child setup phase. Operations
  that might allocate memory, such as looking up user/group information
  (getpwuid, getgrouplist) or determining system limits, become problematic
- or impossible. With fork/exec we maintain full control over the child setup
- phase, allowing us to perform all necessary operations safely before calling
- exec.
+ or impossible.
 
  Traditional fork/exec offers a bit more control and flexibility. With modern OSs
  supporting Copy-On-Write (COW), the issue of unnecessary memory address space

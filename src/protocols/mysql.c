@@ -184,13 +184,13 @@ typedef enum {
         MySQL_AuthSwitch,
         MySQL_Ok,
         MySQL_Error
-} mysql_state_t;
+} __attribute__((__packed__)) mysql_state_t;
 
 
 typedef enum {
         Auth_Native = 0,
         Auth_CachingSha2
-} mysql_authentication_t;
+} __attribute__((__packed__)) mysql_authentication_t;
 
 
 typedef struct mysql_t {

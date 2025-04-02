@@ -171,7 +171,13 @@ int main(void) {
                                 exit(1);
                         }
                         CATCH (AssertException)
+                        {
                                 printf("ok\n");
+                        }
+                        FINALLY
+                        {
+                                Command_free(&c);
+                        }
                         END_TRY;
                 }
         }
