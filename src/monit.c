@@ -698,7 +698,7 @@ static void do_options(int argc, char **argv, List_T arguments) {
                                 case 'd':
                                 {
                                         Run.flags |= Run_Daemon;
-                                        if (sscanf(optarg, "%lld", &Run.polltime) != 1 || Run.polltime < 1) {
+                                        if (sscanf(optarg, "%d", &Run.polltime) != 1 || Run.polltime < 1) {
                                                 Log_error("Option -%c requires a natural number\n", opt);
                                                 exit(1);
                                         }

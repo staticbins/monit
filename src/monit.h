@@ -443,15 +443,15 @@ typedef char MD_T[MD_SIZE];
 /** Defines monit limits object */
 typedef struct Limits_T {
         size_t  fileContentBuffer;   /**< Maximum tested file content length [B] */
-        int64_t programOutput;            /**< Program output truncate limit [B] */
-        int64_t sendExpectBuffer;   /**< Maximum send/expect response length [B] */
-        int64_t httpContentBuffer;   /**< Maximum tested HTTP content length [B] */
+        int programOutput;                /**< Program output truncate limit [B] */
+        int sendExpectBuffer;       /**< Maximum send/expect response length [B] */
+        int httpContentBuffer;       /**< Maximum tested HTTP content length [B] */
         int networkTimeout;                    /**< Default network timeout [ms] */
-        int64_t programTimeout;                /**< Default program timeout [ms] */
-        int64_t stopTimeout;                      /**< Default stop timeout [ms] */
-        int64_t startTimeout;                    /**< Default start timeout [ms] */
-        int64_t restartTimeout;                /**< Default restart timeout [ms] */
-        int64_t execTimeout;          /**< Default test action exec timeout [ms] */
+        int programTimeout;                    /**< Default program timeout [ms] */
+        int stopTimeout;                          /**< Default stop timeout [ms] */
+        int startTimeout;                        /**< Default start timeout [ms] */
+        int restartTimeout;                    /**< Default restart timeout [ms] */
+        int execTimeout;              /**< Default test action exec timeout [ms] */
 } Limits_T;
 
 
@@ -1348,7 +1348,7 @@ struct Run_T {
         MD_T id;                                              /**< Unique monit id */
         Limits_T limits;                                       /**< Default limits */
         struct SslOptions_T ssl;                          /**< Default SSL options */
-        long long polltime;   /**< In daemon mode, the sleeptime (sec) between run */
+        int polltime;         /**< In daemon mode, the sleeptime (sec) between run */
         int  startdelay;  /**< the sleeptime [s] on first start after machine boot */
         int  facility;              /** The facility to use when running openlog() */
         int  eventlist_slots;          /**< The event queue size - number of slots */

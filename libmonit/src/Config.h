@@ -67,8 +67,10 @@
 /**
  * The standard debug routine
  */
+#ifdef DEBUG
+#undef DEBUG
+#endif
 #define DEBUG   System_debug
-
 
 /* ------------------------------------------------------------ Exceptions */
 
