@@ -446,7 +446,7 @@ typedef struct Limits_T {
         int64_t programOutput;            /**< Program output truncate limit [B] */
         int64_t sendExpectBuffer;   /**< Maximum send/expect response length [B] */
         int64_t httpContentBuffer;   /**< Maximum tested HTTP content length [B] */
-        int64_t networkTimeout;                /**< Default network timeout [ms] */
+        int networkTimeout;                    /**< Default network timeout [ms] */
         int64_t programTimeout;                /**< Default program timeout [ms] */
         int64_t stopTimeout;                      /**< Default stop timeout [ms] */
         int64_t startTimeout;                    /**< Default start timeout [ms] */
