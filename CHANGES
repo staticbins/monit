@@ -32,11 +32,11 @@ Fixed: If Monit detects syntax errors in the configuration file, log an error me
 
 Fixed: Allow to stop Monit if it is in the middle of secure connection with read/write retries.
 
-New: When monit aborts (e.g. due to assert), print a backtrace.
-
 New: Add the following headers to email alerts, to prevent out-of-office autoresponders in Exchange, Outlook, Office365, Gmail:
        "X-Auto-Response-Suppress: All"
        "Precedence: Bulk"
+
+New: When monit aborts (e.g. due to assert), print a backtrace.
 
 
 Version 5.34.4
