@@ -27,7 +27,12 @@
 
 
 %{
-
+/* Turn off unreachable code warnings for the entire generated lexer */
+#if defined(__clang__) || defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
+#endif
+        
 /*
  * DESCRIPTION
  *
@@ -1204,3 +1209,7 @@ static URL_T create_URL(char *proto) {
         return url;
 }
 
+// Turn back on unreachable code warnings
+#if defined(__clang__) || defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif

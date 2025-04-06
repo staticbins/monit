@@ -219,6 +219,7 @@
 		520587A218CF7235006296CB /* rc.monit */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = rc.monit; sourceTree = "<group>"; };
 		522A1D292458487200773F8A /* Statistics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Statistics.c; sourceTree = "<group>"; };
 		522A1D2A2458487200773F8A /* Statistics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Statistics.h; sourceTree = "<group>"; };
+		522F48E52D9D9C8700F6B829 /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		5256BC9F2D5EA32D005FC07A /* ProcessTree.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProcessTree.h; sourceTree = "<group>"; };
 		5256BCA02D5EA32D005FC07A /* ProcessTree.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ProcessTree.c; sourceTree = "<group>"; };
 		526614DC2A9663CC009B6D86 /* SystemInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemInfo.h; sourceTree = "<group>"; };
@@ -253,7 +254,6 @@
 		52D25EDC17C0E8680039D3E4 /* bootstrap */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = bootstrap; sourceTree = "<group>"; };
 		52D25EDD17C0E8680039D3E4 /* CHANGES */ = {isa = PBXFileReference; lastKnownFileType = text; path = CHANGES; sourceTree = "<group>"; };
 		52D25EDE17C0E8680039D3E4 /* configure.ac */ = {isa = PBXFileReference; lastKnownFileType = text; path = configure.ac; sourceTree = "<group>"; };
-		52D25EDF17C0E8680039D3E4 /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		52D25EE017C0E8680039D3E4 /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
 		52D25EE217C0E8680039D3E4 /* monitrc */ = {isa = PBXFileReference; lastKnownFileType = text; path = monitrc; sourceTree = "<group>"; };
 		52DE1EB127FF3B3C00C4269C /* libcrypto.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.1.dylib; path = ../../../../../opt/local/libexec/openssl11/lib/libcrypto.1.1.dylib; sourceTree = "<group>"; };
@@ -484,8 +484,8 @@
 				52A1310B13A7882A00583257 /* libmonit.xcodeproj */,
 				52D25EDC17C0E8680039D3E4 /* bootstrap */,
 				52D25EDD17C0E8680039D3E4 /* CHANGES */,
+				522F48E52D9D9C8700F6B829 /* COPYING */,
 				52D25EDE17C0E8680039D3E4 /* configure.ac */,
-				52D25EDF17C0E8680039D3E4 /* COPYING */,
 				528F7DB318BCABC9004BF9B5 /* CONTRIBUTORS */,
 				52D25EE017C0E8680039D3E4 /* Makefile.am */,
 				52D25EE217C0E8680039D3E4 /* monitrc */,

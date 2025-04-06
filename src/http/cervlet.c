@@ -1065,7 +1065,7 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
         _displayTableRow(res, false, NULL, "Limit for service restart timeout", "%s", Fmt_time2str(Run.limits.restartTimeout, (char[11]){}));
         _displayTableRow(res, false, NULL, "Limit for test action exec timeout","%s", Fmt_time2str(Run.limits.execTimeout, (char[11]){}));
         _displayTableRow(res, false, NULL, "On reboot",                         "%s", onReboot_Names[Run.onreboot]);
-        _displayTableRow(res, false, NULL, "Poll time",                         "%lld seconds with start delay %d seconds", Run.polltime, Run.startdelay);
+        _displayTableRow(res, false, NULL, "Poll time",                         "%d seconds with start delay %d seconds", Run.polltime, Run.startdelay);
         if (Run.httpd.flags & Httpd_Net) {
                 _displayTableRow(res, true,  NULL, "httpd bind address", "%s", Run.httpd.socket.net.address ? Run.httpd.socket.net.address : "Any/All");
                 _displayTableRow(res, false, NULL, "httpd portnumber",   "%d", Run.httpd.socket.net.port);

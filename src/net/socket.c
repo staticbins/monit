@@ -588,6 +588,8 @@ static void _testIp(Port_T p) {
                                 {
                                         S = _createIpSocket(p->hostname, r->ai_addr, r->ai_addrlen, p->outgoing.addrlen ? (struct sockaddr *)&(p->outgoing.addr) : NULL, p->outgoing.addrlen, r->ai_family, r->ai_socktype, r->ai_protocol, p->timeout);
                                         S->Port = p;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
                                         TRY
                                         {
                                                 if (p->target.net.ssl.options.flags == SSL_Enabled) {
@@ -605,6 +607,7 @@ static void _testIp(Port_T p) {
 #endif
                                         }
                                         END_TRY;
+#pragma GCC diagnostic pop
                                         is_available = Connection_Ok;
 
                                 }
