@@ -693,11 +693,10 @@ void Ssl_close(T C) {
                 ERR_clear_error();
                 int rv = SSL_shutdown(C->handler);
                 if (rv == 0) {
-                        // close notify sent
-                        retry = _retry(C->socket, &timeout, Net_canRead);
-                        continue;
+                        // uni-directional shutdown: we sent "close notify" but didn't received peer's "close notify" yet (we're not going to wait for it)
+                        break;
                 } else if (rv == 1) {
-                        // shutdown finished
+                        // bi-directional shutdown finished
                         break;
                 } else if (rv < 0) {
                         switch (SSL_get_error(C->handler, rv)) {
@@ -712,7 +711,7 @@ void Ssl_close(T C) {
                                         break;
                         }
                 }
-        } while (retry);
+        } while (retry && ! (Run.flags & Run_Stopped));
         Net_shutdown(C->socket, SHUT_RDWR);
         Net_close(C->socket);
 }
@@ -750,7 +749,7 @@ void Ssl_connect(T C, int socket, int timeout, const char *name) {
                 } else {
                         break;
                 }
-        } while (retry);
+        } while (retry && ! (Run.flags & Run_Stopped));
 }
 
 
@@ -790,7 +789,7 @@ int Ssl_write(T C, const void *b, int size, int timeout) {
                                         Log_error("SSL: write error -- %s\n", SSLERROR);
                                         return -1;
                         }
-                } while (retry);
+                } while (retry && ! (Run.flags & Run_Stopped));
         }
         return n;
 }
@@ -832,7 +831,7 @@ int Ssl_read(T C, void *b, int size, int timeout) {
                                         Log_error("SSL: read error -- %s\n", SSLERROR);
                                         return -1;
                         }
-                } while (retry);
+                } while (retry && ! (Run.flags & Run_Stopped));
         }
         return n;
 }
@@ -1097,7 +1096,7 @@ bool SslServer_accept(T C, int socket, int timeout) {
                 } else {
                         break;
                 }
-        } while (retry);
+        } while (retry && ! (Run.flags & Run_Stopped));
         return true;
 }
 

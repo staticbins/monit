@@ -28,6 +28,10 @@ Fixed: MacOS: Monit may stop handling signals (SIGCHLD for children, SIGTERM to 
 
 Fixed: If Monit detects syntax errors in the configuration file, log an error message prior to exiting the program.
 
+Fixed: Monit with LibreSSL: The secure connection shutdown may hog the CPU for up to connection timeout (5s by default).
+
+Fixed: Allow to stop Monit if it is in the middle of secure connection with read/write retries.
+
 New: When monit aborts (e.g. due to assert), print a backtrace.
 
 New: Add the following headers to email alerts, to prevent out-of-office autoresponders in Exchange, Outlook, Office365, Gmail:
