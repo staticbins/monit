@@ -12,6 +12,8 @@ Fixed: Issue #1121: The "set mailserver" timeout option allowed to only increase
 
 Fixed: Issue #1122: Monit hangs with high CPU usage if the "set daemon <seconds>" is set to >= 2148 seconds.
 
+Fixed: Issue #1126: Monit with LibreSSL: The secure connection shutdown may hog the CPU for up to connection timeout (5s by default).
+
 Fixed: Monit HTTP interface didn't parse the password file (regression from monit 5.34.4). Thanks to Francisco Javier Felix Belmonte.
 
 Fixed: MacOS: When "check network" is used, but no network interfaces are found, monit terminates with "AssertException: nbytes > 0  raised in Mem_calloc"
@@ -27,8 +29,6 @@ Fixed: FreeBSD + OpenBSD + NetBSD: Detect presence of backtrace() function durin
 Fixed: MacOS: Monit may stop handling signals (SIGCHLD for children, SIGTERM to exit, SIGHUP for reload, SIGUSR1 for wakeup)
 
 Fixed: If Monit detects syntax errors in the configuration file, log an error message prior to exiting the program.
-
-Fixed: Monit with LibreSSL: The secure connection shutdown may hog the CPU for up to connection timeout (5s by default).
 
 Fixed: Allow to stop Monit if it is in the middle of secure connection with read/write retries.
 
