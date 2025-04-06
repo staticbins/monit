@@ -237,7 +237,7 @@ static void _filesystemFlagsToString(Info_T inf, unsigned long long flags) {
 
 static bool _setDevice(Info_T inf, const char *path, bool (*compare)(const char *path, struct statvfs *mnt)) {
         int countfs = getvfsstat(NULL, 0, MNT_NOWAIT);
-        if (countfs != -1) {
+        if (countfs > 0) {
                 struct statvfs *mnt = CALLOC(countfs, sizeof(struct statvfs));
                 if ((countfs = getvfsstat(mnt, countfs * sizeof(struct statvfs), MNT_NOWAIT)) != -1) {
                         for (int i = 0; i < countfs; i++) {

@@ -39,6 +39,7 @@
 #endif
 
 #include "Str.h"
+#include "io/File.h"
 #include "system/System.h"
 
 

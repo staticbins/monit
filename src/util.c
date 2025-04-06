@@ -238,9 +238,9 @@ static const char *is_str_defined(const char *s) {
  */
 static char _x2c(char *hex) {
         register char digit;
-        digit = ((hex[0] >= 'A') ? ((hex[0] & 0xdf) - 'A')+10 : (hex[0] - '0'));
+        digit = ((hex[0] >= 'A') ? ((hex[0] & 0xDF) - 'A') + 10 : (hex[0] - '0'));
         digit *= 16;
-        digit += (hex[1] >= 'A' ? ((hex[1] & 0xdf) - 'A')+10 : (hex[1] - '0'));
+        digit += (hex[1] >= 'A' ? ((hex[1] & 0xDF) - 'A') + 10 : (hex[1] - '0'));
         return(digit);
 }
 
@@ -334,7 +334,7 @@ static int PAMquery(int num_msg, const struct pam_message **msg, struct pam_resp
         struct pam_response *response;
 
         /* Sanity checking */
-        if (! msg || ! resp || ! user )
+        if (! msg || ! resp || ! user || ! num_msg)
                 return PAM_CONV_ERR;
 
         response = CALLOC(sizeof(struct pam_response), num_msg);
@@ -489,67 +489,87 @@ size_t Util_countWords(const char *s, const char *word) {
 }
 
 
-void Util_handleEscapes(char *buf) {
-        int editpos;
-        int insertpos;
-
+char *Util_handleEscapes(char *buf) {
         assert(buf);
+
+        size_t editpos;
+        size_t insertpos;
+        size_t buf_len = strlen(buf);
 
         for (editpos = insertpos = 0; *(buf + editpos) != '\0'; editpos++, insertpos++) {
                 if (*(buf + editpos) == '\\' ) {
                         switch (*(buf + editpos + 1)) {
                                 case 'n':
+                                        // "\n": unescape as real '\n' control character
                                         *(buf + insertpos) = '\n';
                                         editpos++;
                                         break;
 
                                 case 't':
+                                        // "\t": unescape as real '\t' control character
                                         *(buf + insertpos) = '\t';
                                         editpos++;
                                         break;
 
                                 case 'r':
+                                        // "\r": unescape as real '\r' control character
                                         *(buf + insertpos) = '\r';
                                         editpos++;
                                         break;
 
                                 case ' ':
+                                        // "\ ": unescape as space character ' '
                                         *(buf + insertpos) = ' ';
                                         editpos++;
                                         break;
 
+                                case '\\':
+                                        // "\\": unescape as single '\' character
+                                        *(buf + insertpos) = '\\';
+                                        editpos++;
+                                        break;
+
                                 case '0':
-                                        if (*(buf + editpos+2) == 'x') {
+                                        // "\0" beginning, lookup the next character
+                                        if (editpos + 4 >= buf_len) {
+                                                // We expect "\0xYY" sequence - if the string is short, terminate it and return NULL
+                                                *(buf + insertpos) = '\0';
+                                                return NULL;
+                                        }
+                                        if (*(buf + editpos + 2) == 'x') {
+                                                // "\0x" beginning, lookup next two characters
                                                 if ((*(buf + editpos + 3) == '0' && *(buf + editpos + 4) == '0')) {
-                                                        /* Don't swap \0x00 with 0 to avoid truncating the string.
-                                                         Currently the only place where we support sending of 0 bytes
-                                                         is in check_generic(). The \0x00 -> 0 byte swap is performed
-                                                         there and in-place.
-                                                         */
-                                                        *(buf + insertpos) = *(buf+editpos);
+                                                        // "\0x00"
+
+                                                        // Don't swap \0x00 with 0 to avoid truncating the string.
+                                                        // Currently the only place where we support sending of 0 bytes
+                                                        // is in check_generic(). The \0x00 -> 0 byte swap is performed
+                                                        // there and in-place.
+                                                        *(buf + insertpos) = *(buf + editpos);
                                                 } else {
+                                                        // "\0x??" (where "??" are two generic characters): unescape the "\0x??" hex code into real character code
                                                         *(buf + insertpos) = _x2c(&buf[editpos + 3]);
                                                         editpos += 4;
                                                 }
                                         }
                                         break;
 
-                                case '\\':
-                                        *(buf + insertpos) = '\\';
-                                        editpos++;
-                                        break;
-
                                 default:
+                                        // the '\' is followed by non-escape sequence character or NUL, no need to unescape, copy the initial '\' as is
                                         *(buf + insertpos) = *(buf + editpos);
 
                         }
 
                 } else {
+                        // other character, no need to unescape, copy as is
                         *(buf + insertpos) = *(buf + editpos);
                 }
 
         }
+        // Terminate the string
         *(buf + insertpos) = '\0';
+
+        return buf;
 }
 
 
@@ -1452,7 +1472,7 @@ bool Util_isurlsafe(const char *url) {
 
 char *Util_urlEncode(const char *string, bool isParameterValue) {
         char *escaped = NULL;
-        if (string) {
+        if (STR_DEF(string)) {
                 char *p;
                 int i, n;
                 const unsigned char *unsafe = isParameterValue ? urlunsafeparameter : urlunsafe;

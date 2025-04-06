@@ -17,7 +17,58 @@ New: Monit Poll cycles has been replaced with Monit Check interval
 
 New: Validate Once has been removed. When Monit now start, it runs
      as a server, continously.
-     
+
+
+Version 5.34.5
+
+Fixed: Monit may hang on exit, if a program executed by "check program" was pending while monit tried to quit (regression from Monit 5.34.1).
+
+Fixed: Issue #1115: Service checks may sporadicaly hang (regression from Monit 5.34.1).
+
+Fixed: Monit HTTP interface didn't parse the password file (regression from monit 5.34.4). Thanks to Francisco Javier Felix Belmonte.
+
+Fixed: MacOS: When "check network" is used, but no network interfaces are found, monit terminates with "AssertException: nbytes > 0  raised in Mem_calloc"
+
+Fixed: MacOS + DragonflyBSD + FreeBSD + NetBSD + OpenBSD: If there are no mounted filesystems and a "check filesystem" is used, monit would terminate with
+       "AssertException: count > 0 raised in Mem_calloc"
+
+Fixed: FreeBSD + OpenBSD + NetBSD: Detect presence of backtrace() function during compilation (used in monit -vv mode to print backtrace)
+
+New: When monit aborts (e.g. due to assert), print a backtrace.
+
+
+Version 5.34.4
+
+Fixed: If the Monit configuration file contains a string with unbalanced escape sequences, Monit may crash upon startup.
+
+Fixed: If the password in the "set mmonit" URL contains only binary characters, syntax check passed (-t), but Monit aborts after start and reports following error:
+        AssertException: n >= 0
+         raised in Str_ndup at src/util/Str.c:315
+        Aborted
+
+Fixed: If the "every <cron>" statement contained a syntax error, syntax check passed (-t), but Monit aborts after start and reports following error:
+        AssertException: n < 5 && n >= 0
+         raised in Time_incron at src/system/Time.c:1566
+        Aborted
+
+Fixed: If the timeout option value was set to 0, the syntax check was successful (-t), but Monit aborts after starting and reports the following error:
+        AssertException: timeout > 0
+         raised in Socket_create at src/net/socket.c:319
+        Aborted
+
+Fixed: The "set syslog" statement's "facility" option did not permit the specification of the "log_user". Thanks to Lutz Mader for report.
+
+Fixed: Double interpretation of format strings during RETHROW
+
+
+Version 5.34.3
+
+Fixed: If the ping statement did not explicitly specify an outgoing address but a previous ping statement did, the same address was shared by both statements.
+
+Fixed: Monit may crash upon stopping if the ping statement is used in conjunction with the address option.
+
+Fixed: If a directory is set in the 'allow' option of the 'set httpd' statement, instead of file or string, Monit hangs on start.
+
 
 Version 5.34.2
 

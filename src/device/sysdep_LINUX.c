@@ -492,6 +492,7 @@ static bool _getDevice(Info_T inf, const char *path, bool (*compare)(const char 
                 _statistics.fd = open(MOUNTS, O_RDONLY);
         }
         if (_statistics.fd != -1) {
+                int rv;
                 struct pollfd mountNotify = {.fd = _statistics.fd, .events = POLLPRI, .revents = 0};
                 do {
                         rv = poll(&mountNotify, 1, 0);

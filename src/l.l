@@ -832,7 +832,9 @@ group[ \t]+       {
 
   [:][^@ ]+[@]    {
                       yytext++;
-                      yylval.url->password = Str_ndup(yytext, strlen(yytext)-1);
+                      size_t length = strlen(yytext);
+                      if (length > 0)
+                                yylval.url->password = Str_ndup(yytext, length - 1);
                   }
 
   ([a-zA-Z0-9\-]+)([.]([a-zA-Z0-9\-]+))* {
@@ -1089,7 +1091,8 @@ static void steplinenobycr(char *string) {
 static char *handle_quoted_string(char *string) {
         char *buf = Str_dup(string);
         Str_unquote(buf);
-        Util_handleEscapes(buf);
+        if (! Util_handleEscapes(buf))
+                yyerror("unbalanced escape sequence");
         return buf;
 }
 

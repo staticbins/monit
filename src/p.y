@@ -136,6 +136,7 @@
 #include "p.h"
 
 // libmonit
+#include "system/Time.h"
 #include "io/File.h"
 #include "util/Str.h"
 #include "thread/Thread.h"
@@ -707,52 +708,100 @@ limitlist       : /* EMPTY */
                 ;
 
 limit           : SENDEXPECTBUFFER ':' NUMBER unit {
-                        Run.limits.sendExpectBuffer = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The sendExpectBuffer value must be > 0");
+                        else
+                                Run.limits.sendExpectBuffer = $3 * $<number64>4;
                   }
                 | FILECONTENTBUFFER ':' NUMBER unit {
-                        Run.limits.fileContentBuffer = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The fileContentBuffer value must be > 0");
+                        else
+                                Run.limits.fileContentBuffer = $3 * $<number64>4;
                   }
                 | HTTPCONTENTBUFFER ':' NUMBER unit {
-                        Run.limits.httpContentBuffer = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The httpContentBuffer value must be > 0");
+                        else
+                                Run.limits.httpContentBuffer = $3 * $<number64>4;
                   }
                 | PROGRAMOUTPUT ':' NUMBER unit {
-                        Run.limits.programOutput = $3 * $<number64>4;
+                        if ($3 <= 0)
+                                yyerror2("The programOutput value must be > 0");
+                        else
+                                Run.limits.programOutput = $3 * $<number64>4;
                   }
                 | NETWORKTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.networkTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The networkTimeout value must be > 0");
+                        else
+                                Run.limits.networkTimeout = $3;
                   }
                 | NETWORKTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.networkTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The networkTimeout value must be > 0");
+                        else
+                                Run.limits.networkTimeout = $3 * 1000;
                   }
                 | PROGRAMTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.programTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The programTimeout value must be > 0");
+                        else
+                                Run.limits.programTimeout = $3;
                   }
                 | PROGRAMTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.programTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The programTimeout value must be > 0");
+                        else
+                                Run.limits.programTimeout = $3 * 1000;
                   }
                 | STOPTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.stopTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The stopTimeout value must be > 0");
+                        else
+                                Run.limits.stopTimeout = $3;
                   }
                 | STOPTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.stopTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The stopTimeout value must be > 0");
+                        else
+                                Run.limits.stopTimeout = $3 * 1000;
                   }
                 | STARTTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.startTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The startTimeout value must be > 0");
+                        else
+                                Run.limits.startTimeout = $3;
                   }
                 | STARTTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.startTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The startTimeout value must be > 0");
+                        else
+                                Run.limits.startTimeout = $3 * 1000;
                   }
                 | RESTARTTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.restartTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The restartTimeout value must be > 0");
+                        else
+                                Run.limits.restartTimeout = $3;
                   }
                 | RESTARTTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.restartTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The restartTimeout value must be > 0");
+                        else
+                                Run.limits.restartTimeout = $3 * 1000;
                   }
                 | EXECTIMEOUT ':' NUMBER MILLISECOND {
-                        Run.limits.execTimeout = $3;
+                        if ($3 <= 0)
+                                yyerror2("The execTimeout value must be > 0");
+                        else
+                                Run.limits.execTimeout = $3;
                   }
                 | EXECTIMEOUT ':' NUMBER SECOND {
-                        Run.limits.execTimeout = $3 * 1000;
+                        if ($3 <= 0)
+                                yyerror2("The execTimeout value must be > 0");
+                        else
+                                Run.limits.execTimeout = $3 * 1000;
                   }
                 ;
 
@@ -840,7 +889,10 @@ mmonitoptlist : /* EMPTY */
                 ;
 
 mmonitopt       : TIMEOUT NUMBER SECOND {
-                        mmonitset.timeout = $<number>2 * 1000; // net timeout is in milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                mmonitset.timeout = $<number>2 * 1000; // net timeout is in milliseconds internally
                   }
                 | ssl
                 | sslchecksum
@@ -2168,7 +2220,10 @@ icmpsize        : SIZE NUMBER {
                 ;
 
 icmptimeout     : TIMEOUT NUMBER SECOND {
-                        icmpset.timeout = $<number>2 * 1000; // timeout is in milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                icmpset.timeout = $<number>2 * 1000; // timeout is in milliseconds internally
                     }
                   ;
 
@@ -2181,7 +2236,10 @@ stoptimeout     : /* EMPTY */ {
                         $<number>$ = Run.limits.stopTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                        $<number>$ = $2 * 1000; // milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
@@ -2189,7 +2247,10 @@ starttimeout    : /* EMPTY */ {
                         $<number>$ = Run.limits.startTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                        $<number>$ = $2 * 1000; // milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
@@ -2197,7 +2258,10 @@ restarttimeout  : /* EMPTY */ {
                         $<number>$ = Run.limits.restartTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                        $<number>$ = $2 * 1000; // milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
@@ -2205,7 +2269,10 @@ programtimeout  : /* EMPTY */ {
                         $<number>$ = Run.limits.programTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                        $<number>$ = $2 * 1000; // milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                $<number>$ = $2 * 1000; // milliseconds internally
                   }
                 ;
 
@@ -2213,12 +2280,18 @@ nettimeout      : /* EMPTY */ {
                         $<number>$ = Run.limits.networkTimeout;
                   }
                 | TIMEOUT NUMBER SECOND {
-                        $<number>$ = $2 * 1000; // net timeout is in milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                $<number>$ = $2 * 1000; // net timeout is in milliseconds internally
                   }
                 ;
 
 connectiontimeout : TIMEOUT NUMBER SECOND {
-                        portset.timeout = $<number>2 * 1000; // timeout is in milliseconds internally
+                        if ($<number>2 <= 0)
+                                yyerror2("The timeout value must be > 0");
+                        else
+                                portset.timeout = $<number>2 * 1000; // timeout is in milliseconds internally
                     }
                   ;
 
@@ -2330,11 +2403,15 @@ every           : EVERY NUMBER CYCLE {
                  }
                 | EVERY TIMESPEC {
                         _sanityCheckEveryStatement(current);
+                        if (Time_incron($2, Time_now()) < 0)
+                                yyerror2("Invalid cron specification");
                         current->every.type = Every_Cron;
                         current->every.spec.cron = $2;
                  }
                 | NOTEVERY TIMESPEC {
                         _sanityCheckEveryStatement(current);
+                        if (Time_incron($2, Time_now()) < 0)
+                                yyerror2("Invalid cron specification");
                         current->every.type = Every_NotInCron;
                         current->every.spec.cron = $2;
                  }
@@ -4376,9 +4453,9 @@ static void addmatch(Match_T ms, int actionnumber, int linenumber) {
                 char errbuf[STRLEN];
                 regerror(reg_return, ms->regex_comp, errbuf, STRLEN);
                 if (m->match_path != NULL)
-                        yyerror2("Regex parsing error: %s on line %i of", errbuf, linenumber);
+                        yyerror("Regex '%s' parsing error: %s on line %i of", ms->match_string, errbuf, linenumber);
                 else
-                        yyerror2("Regex parsing error: %s", errbuf);
+                        yyerror("Regex '%s' parsing error: %s", ms->match_string, errbuf);
         }
         appendmatch(m->ignore ? &current->matchignorelist : &current->matchlist, m);
 }
@@ -4921,13 +4998,24 @@ static void addhtpasswdentry(char *filename, char *username, Digest_Type dtype) 
         char buf[STRLEN];
         FILE *handle = NULL;
         int credentials_added = 0;
+        char realpath[PATH_MAX] = {};
 
         assert(filename);
 
-        handle = fopen(filename, "r");
+        // Check that the htpasswd is a real file and not e.g. a directory
+        if (filename[0] != SEPARATOR_CHAR) {
+                if (! File_realPath(filename, realpath)) {
+                        yyerror2("Error getting path for the htpasswd file '%s' -- %s\n", filename, System_lastError());
+                        return;
+                }
+        }
+        if (! File_isFile(filename)) {
+                yyerror2("The htpasswd file '%s' is not a file", filename);
+                return;
+        }
 
-        if (handle == NULL) {
-                if (username != NULL)
+        if (! (handle = fopen(filename, "r"))) {
+                if (username)
                         yyerror2("Cannot read htpasswd (%s) for user %s", filename, username);
                 else
                         yyerror2("Cannot read htpasswd (%s)", filename);
@@ -5088,6 +5176,8 @@ static void setsyslog(char *facility) {
                         Run.facility = LOG_LOCAL7;
                 else if (IS(facility, "log_daemon"))
                         Run.facility = LOG_DAEMON;
+                else if (IS(facility, "log_user"))
+                        Run.facility = LOG_USER;
                 else
                         yyerror2("Invalid syslog facility");
         } else {
@@ -5352,12 +5442,11 @@ static void reset_filesystemset(void) {
  * Reset the ICMP set to default values
  */
 static void reset_icmpset(void) {
+        memset(&icmpset, 0, sizeof(struct Icmp_T));
         icmpset.type = ICMP_ECHO;
         icmpset.size = ICMP_SIZE;
         icmpset.count = ICMP_ATTEMPT_COUNT;
         icmpset.timeout = Run.limits.networkTimeout;
-        icmpset.check_invers = false;
-        icmpset.action = NULL;
 }
 
 
