@@ -1179,7 +1179,7 @@ next:
                                 }
                                 goto final2;
                         }
-                        long long length = strlen(line);
+                        size_t length = strlen(line);
                         if (length == 0) {
                                 /* No content: shouldn't happen - empty line will contain at least '\n' */
                                 goto final2;
@@ -1218,9 +1218,9 @@ next:
                                         /* Save the line for Event_post */
                                         if (! ml->log)
                                                 ml->log = StringBuffer_create((int)Run.limits.fileContentBuffer);
-                                        if (StringBuffer_length(ml->log) < Run.limits.fileContentBuffer) {
+                                        if ((size_t)StringBuffer_length(ml->log) < Run.limits.fileContentBuffer) {
                                                 StringBuffer_append(ml->log, "%s\n", line);
-                                                if (StringBuffer_length(ml->log) >= Run.limits.fileContentBuffer)
+                                                if ((size_t)StringBuffer_length(ml->log) >= Run.limits.fileContentBuffer)
                                                         StringBuffer_append(ml->log, "...\n");
                                         }
                                 } else {
