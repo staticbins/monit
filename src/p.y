@@ -3735,7 +3735,7 @@ static Service_T createservice(Service_Type type, char *name, char *value, State
                 NEW(current->program);
                 current->program->args = command;
                 command = NULL;
-                current->program->timeout = Run.limits.programTimeout;
+                current->program->timeout = Run.limits.programTimeout/1000; // make sec out of ms
         }
 
         /* Set default values */
