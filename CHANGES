@@ -6,6 +6,14 @@ Version 5.35.0
 
 Fixed: Monit may hang on exit, if a program executed by "check program" was pending while monit tried to quit (regression from Monit 5.34.1).
 
+Fixed: Issue #484: The pidfile based process check may not work properly on platforms that assign PID to threads (LWPs), such as Linux and AIX. When the process with
+       the given PID stopped, but the same PID was assigned to the LWP, Monit reported the process as running (which is wrong) and logged the following error:
+           "failed to get service data"
+       The service status displayed the process as OK but showed no process statictics.
+
+Fixed: When the pidfile was updated (e.g. process restarted), Monit was still monitoring the previous PID. If the PID was reassigned to different process or thread (LWP),
+       Monit wasn't able to detect that the process is not running.
+
 Fixed: Issue #1115: Service checks may sporadicaly hang if the PID is recycled by the system quickly, e.g. due to PID randomization (regression from Monit 5.34.1).
 
 Fixed: Issue #1121: The "set mailserver" timeout option allowed to only increase the network timeout. Values lower then 30 seconds were ignored.
