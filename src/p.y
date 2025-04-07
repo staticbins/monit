@@ -702,7 +702,7 @@ limit           : SENDEXPECTBUFFER ':' NUMBER unit {
                         if ($3 <= 0)
                                 yyerror2("The sendExpectBuffer value must be > 0");
                         else
-                                Run.limits.sendExpectBuffer = $3 * $<number>4;
+                                Run.limits.sendExpectBuffer = $3 * $<number64>4;
                   }
                 | FILECONTENTBUFFER ':' NUMBER unit {
                         if ($3 <= 0)
@@ -714,13 +714,13 @@ limit           : SENDEXPECTBUFFER ':' NUMBER unit {
                         if ($3 <= 0)
                                 yyerror2("The httpContentBuffer value must be > 0");
                         else
-                                Run.limits.httpContentBuffer = $3 * $<number>4;
+                                Run.limits.httpContentBuffer = $3 * $<number64>4;
                   }
                 | PROGRAMOUTPUT ':' NUMBER unit {
                         if ($3 <= 0)
                                 yyerror2("The programOutput value must be > 0");
                         else
-                                Run.limits.programOutput = $3 * $<number>4;
+                                Run.limits.programOutput = $3 * $<number64>4;
                   }
                 | NETWORKTIMEOUT ':' NUMBER MILLISECOND {
                         if ($3 <= 0)
