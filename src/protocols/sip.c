@@ -80,7 +80,7 @@ void check_sip(Socket_T socket) {
         int port = Socket_getLocalPort(socket);
         const char *proto = Socket_isSecure(socket) ? "sips" : "sip";
 
-        const char *transport = "";
+        const char *transport = NULL;
         const char *rport = "";
         switch (Socket_getType(socket)) {
                 case Socket_Udp:
@@ -92,7 +92,7 @@ void check_sip(Socket_T socket) {
                         break;
                 default:
                         THROW(IOException, "Unsupported socket type, only TCP and UDP are supported");
-                        break;
+                        return;
         }
 
         char buf[STRLEN];
