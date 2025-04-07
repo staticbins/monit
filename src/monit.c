@@ -535,6 +535,23 @@ static void do_exit(bool saveState) {
         if (saveState) {
                 State_save();
         }
+        // Special handling when running as PID 1 (init)
+        if (getpid() == 1) {
+                Log_info("Monit running as PID 1, performing init shutdown responsibilities");
+                // First, stop all managed services gracefully
+                for (Service_T s = Service_List; s; s = s->next) {
+                        control_service(s->name, Action_Stop);
+                }
+                // Then, send SIGTERM to all remaining processes (except self)
+                // TODO:
+                ProcessTree_init(ProcessEngine_None);
+                
+                // Wait for processes to terminate (with timeout)
+
+                // If any processes remain, send SIGKILL as last resort
+
+
+        }
         gc();
 #ifdef HAVE_OPENSSL
         Ssl_stop();
