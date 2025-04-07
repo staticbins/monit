@@ -534,7 +534,8 @@ static void _shutdown_visitor(ProcessTree_T *p, void *context) {
         }
 }
 
-static void perform_init_shutdown(void) {
+
+static void _perform_init_shutdown(void) {
     Log_info("Monit running as PID 1, performing init shutdown responsibilities");
     
     // First, stop all managed services gracefully
@@ -571,7 +572,7 @@ static void do_exit(bool saveState) {
         }
         // Special handling when running as PID 1 (init)
         if (_is_init()) {
-                perform_init_shutdown();
+                _perform_init_shutdown();
         }
         gc();
 #ifdef HAVE_OPENSSL
