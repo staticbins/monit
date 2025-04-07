@@ -442,7 +442,7 @@ typedef char MD_T[MD_SIZE];
 
 /** Defines monit limits object */
 typedef struct Limits_T {
-        size_t  fileContentBuffer;   /**< Maximum tested file content length [B] */
+        size_t fileContentBuffer;    /**< Maximum tested file content length [B] */
         int programOutput;                /**< Program output truncate limit [B] */
         int sendExpectBuffer;       /**< Maximum send/expect response length [B] */
         int httpContentBuffer;       /**< Maximum tested HTTP content length [B] */

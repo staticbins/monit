@@ -699,28 +699,44 @@ limitlist       : /* EMPTY */
                 ;
 
 limit           : SENDEXPECTBUFFER ':' NUMBER unit {
-                        if ($3 <= 0)
+                        if ($3 <= 0) {
                                 yyerror2("The sendExpectBuffer value must be > 0");
-                        else
-                                Run.limits.sendExpectBuffer = $3 * $<number>4;
+                        } else {
+                                long long value = $3 * $<number64>4;
+                                if (value > INT_MAX)
+                                        yyerror2("The sendExpectBuffer value must be <= %d", INT_MAX);
+                                else
+                                        Run.limits.sendExpectBuffer = $3 * $<number>4;
+                        }
                   }
                 | FILECONTENTBUFFER ':' NUMBER unit {
-                        if ($3 <= 0)
+                        if ($3 <= 0) {
                                 yyerror2("The fileContentBuffer value must be > 0");
-                        else
+                        } else {
                                 Run.limits.fileContentBuffer = $3 * $<number64>4;
+                        }
                   }
                 | HTTPCONTENTBUFFER ':' NUMBER unit {
-                        if ($3 <= 0)
+                        if ($3 <= 0) {
                                 yyerror2("The httpContentBuffer value must be > 0");
-                        else
-                                Run.limits.httpContentBuffer = $3 * $<number>4;
+                        } else {
+                                long long value = $3 * $<number64>4;
+                                if (value > INT_MAX)
+                                        yyerror2("The httpContentBuffer value must be <= %d", INT_MAX);
+                                else
+                                        Run.limits.httpContentBuffer = $3 * $<number>4;
+                        }
                   }
                 | PROGRAMOUTPUT ':' NUMBER unit {
-                        if ($3 <= 0)
+                        if ($3 <= 0) {
                                 yyerror2("The programOutput value must be > 0");
-                        else
-                                Run.limits.programOutput = $3 * $<number>4;
+                        } else {
+                                long long value = $3 * $<number64>4;
+                                if (value > INT_MAX)
+                                        yyerror2("The programOutput value must be <= %d", INT_MAX);
+                                else
+                                        Run.limits.programOutput = $3 * $<number>4;
+                        }
                   }
                 | NETWORKTIMEOUT ':' NUMBER MILLISECOND {
                         if ($3 <= 0)
