@@ -91,7 +91,7 @@ static int _getOutput(InputStream_T in, char *buf, int buflen) {
 }
 
 
-static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long long *timeout) {
+static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long long *usec_timeout) {
         assert(S);
         assert(c);
         assert(msg);
@@ -109,7 +109,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
         }
         END_TRY;
         if (C) {
-                long long _timeoutMilli = *timeout / 1000.;
+                long long _timeoutMilli = *usec_timeout / 1000.;
                 for (int i = 1; i < c->length; i++)
                         Command_appendArgument(C, c->arg[i]);
                 if (c->has_uid)
@@ -138,9 +138,9 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
                 if (P) {
                         do {
                                 Time_usleep(RETRY_INTERVAL);
-                                *timeout -= RETRY_INTERVAL;
-                        } while ((status = Process_exitStatus(P)) < 0 && *timeout > 0 && ! (Run.flags & Run_Stopped));
-                        if (*timeout <= 0)
+                                *usec_timeout -= RETRY_INTERVAL;
+                        } while ((status = Process_exitStatus(P)) < 0 && *usec_timeout > 0 && ! (Run.flags & Run_Stopped));
+                        if (*usec_timeout <= 0)
                                 snprintf(msg, msglen, "Program '%s' timed out after %s", Util_commandDescription(c, (char[STRLEN]){}), Fmt_time2str(_timeoutMilli, (char[11]){}));
                         int n, total = 0;
                         char buf[STRLEN];
@@ -152,7 +152,7 @@ static int _commandExecute(Service_T S, command_t c, char *msg, int msglen, long
                                         DEBUG("%s", buf);
                                         // Report the first message (override existing plain timeout message if some program output is available)
                                         if (! total)
-                                                snprintf(msg, msglen, "'%s': %s%s", Util_commandDescription(c, (char[STRLEN]){}), *timeout <= 0 ? "Program timed out -- " : "", buf);
+                                                snprintf(msg, msglen, "'%s': %s%s", Util_commandDescription(c, (char[STRLEN]){}), *usec_timeout <= 0 ? "Program timed out -- " : "", buf);
                                         total += n;
                                 }
                         } while (n > 0 && Run.debug && total < 2048); // Limit the debug output (if the program will have endless output, such as 'yes' utility, we have to stop at some point to not spin here forever)
@@ -244,7 +244,7 @@ static bool _doStart(Service_T s) {
                         if (s->type != Service_Process || ! ProcessTree_findProcess(s)) {
                                 Log_info("'%s' start: '%s'\n", s->name, Util_commandDescription(s->start, (char[STRLEN]){}));
                                 char msg[1024];
-                                long long timeout = s->start->timeout * USEC_PER_MSEC;
+                                long long timeout = s->start->timeout * USEC_PER_SEC;
                                 int status = _commandExecute(s, s->start, msg, sizeof(msg), &timeout);
                                 if (status < 0 || (s->type == Service_Process && _waitProcessStart(s, &timeout) != Process_Started)) {
                                         Event_post(s, Event_Exec, State_Failed, s->action_EXEC, "failed to start (exit status %d) -- %s", status, *msg ? msg : "no output");
@@ -294,7 +294,7 @@ static bool _doStop(Service_T s, bool unmonitor) {
                 if (s->monitor != Monitor_Not) {
                         int exitStatus;
                         char msg[1024];
-                        long long timeout = s->stop->timeout * USEC_PER_MSEC;
+                        long long timeout = s->stop->timeout * USEC_PER_SEC;
                         if (s->type == Service_Process) {
                                 int pid = ProcessTree_findProcess(s);
                                 if (pid) {
@@ -332,7 +332,7 @@ static bool _doRestart(Service_T s) {
                 Log_info("'%s' restart: '%s'\n", s->name, Util_commandDescription(s->restart, (char[STRLEN]){}));
                 Util_resetInfo(s);
                 char msg[1024];
-                long long timeout = s->restart->timeout * USEC_PER_MSEC;
+                long long timeout = s->restart->timeout * USEC_PER_SEC;
                 int status = _commandExecute(s, s->restart, msg, sizeof(msg), &timeout);
                 if (status < 0 || (s->type == Service_Process && _waitProcessStart(s, &timeout) != Process_Started)) {
                         rv = false;

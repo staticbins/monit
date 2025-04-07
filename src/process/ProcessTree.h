@@ -131,5 +131,19 @@ pid_t ProcessTree_findProcess(Service_T s);
 void ProcessTree_testMatch(char *pattern);
 
 
+/**
+ * Visit every node in the ProcessTree and call the 'visitor' function on
+ * each node. This function first reinitializes the ProcessTree to ensure
+ * the data is up-to-date before visiting nodes.
+ *
+ * @param visitor Callback function called for each Process node in
+ *                the ProcessTree
+ * @param ap      Application-specific pointer passed to the 'visitor'
+ *                function on each call. Use NULL if not needed
+ * @note          The ProcessTree is reinitialized when this function is called,
+ *                ensuring current system state is reflected
+ */
+void ProcessTree_visit(void visitor(ProcessTree_T *p, void *ap), void *ap);
+
 #endif
 
