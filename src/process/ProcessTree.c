@@ -348,17 +348,32 @@ time_t ProcessTree_getProcessUptime(pid_t pid) {
 }
 
 
+static pid_t _isProcessRunning(pid_t pid) {
+        pid_t pidLeader = getpgid(pid);
+        if (pidLeader > -1) {
+                // The PID may belong to LWP task on some platforms (e.g. Linux, AIX). We need to check that the PID belongs to the process group leader
+                // to make sure it is the real process PID
+                return (pid == pidLeader) ? pidLeader : 0;
+        } else if (errno == EPERM) {
+                // The process is running, but we don't have permissions (at this point we're not able to differentiate LWP from normal process though)
+                return pid;
+        }
+        return 0;
+}
+
+
 pid_t ProcessTree_findProcess(Service_T s) {
         assert(s);
-        // Test the cached PID first
-        if (s->inf.process->pid > 0) {
-                errno = 0;
-                if (getpgid(s->inf.process->pid) > -1 || errno == EPERM)
-                        return s->inf.process->pid;
-        }
-        // If the cached PID is not running, scan for the process again
         if (s->matchlist) {
-                // Update the process tree including command line
+                // PROCMATCH check
+
+                // Test the cached PID first
+                if (s->inf.process->pid > 0) {
+                        pid_t pid = _isProcessRunning(s->inf.process->pid);
+                        if (pid)
+                                return pid;
+                }
+                // If the cached PID is not running, scan for the process again. Update the process tree including command line.
                 ProcessTree_init(ProcessEngine_CollectCommandLine);
                 if (Run.flags & Run_ProcessEngineEnabled) {
                         int pid = _match(s->matchlist->regex_comp);
@@ -370,10 +385,14 @@ pid_t ProcessTree_findProcess(Service_T s) {
                         return ! (s->error & Event_NonExist);
                 }
         } else {
+                // PIDFILE check
+
+                // Re-read PID from the file
                 pid_t pid = Util_getPid(s->path);
+
                 if (pid > 0) {
-                        errno = 0;
-                        if (getpgid(pid) > -1 || errno == EPERM)
+                        pid = _isProcessRunning(pid);
+                        if (pid)
                                 return pid;
                         DEBUG("'%s' process test failed [pid=%d] -- %s\n", s->name, pid, STRERROR);
                 }
