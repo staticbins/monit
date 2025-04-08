@@ -1363,7 +1363,7 @@ static State_Type _checkFilesystemResources(Service_T s, FileSystem_T td) {
                                 }
                         } else {
                                 char buf1[10];
-				long long bytesFreeTotal = s->inf.filesystem->f_blocksfreetotal * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
+                                long long bytesFreeTotal = s->inf.filesystem->f_blocksfreetotal * (s->inf.filesystem->f_bsize > 0 ? s->inf.filesystem->f_bsize : 1);
                                 Fmt_bytes2str(bytesFreeTotal, buf1);
                                 if (Util_evalQExpression(td->operator, bytesFreeTotal, td->limit_absolute)) {
                                         char buf2[10];
@@ -1517,11 +1517,13 @@ static bool _checkSkip(Service_T s) {
                 s->every.spec.cycle.counter = 0;
         } else if (s->every.type == Every_Cron && ! _incron(s, now)) {
                 s->monitor |= Monitor_Waiting;
-                DEBUG("'%s' test skipped as current time (%lld) does not match every's cron spec \"%s\"\n", s->name, (long long)now, s->every.spec.cron);
+                if ((now - s->every.last_run) > 59)
+                        DEBUG("'%s' test skipped as current time (%s) does not match every's cron spec \"%s\"\n", s->name, Time_localStr(now, (char[26]){}), s->every.spec.cron);
                 return true;
         } else if (s->every.type == Every_NotInCron && Time_incron(s->every.spec.cron, now) == 1) {
                 s->monitor |= Monitor_Waiting;
-                DEBUG("'%s' test skipped as current time (%lld) matches every's cron spec \"not %s\"\n", s->name, (long long)now, s->every.spec.cron);
+                if ((now - s->every.last_run) > 59)
+                        DEBUG("'%s' test skipped as current time (%s) matches every's cron spec \"not %s\"\n", s->name, Time_localStr(now, (char[26]){}), s->every.spec.cron);
                 return true;
         }
         s->monitor &= ~Monitor_Waiting;

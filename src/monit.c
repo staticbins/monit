@@ -519,6 +519,41 @@ static void do_action(List_T arguments) {
 /**
  * Finalize monit
  */
+
+static bool _is_init(void) {
+        return getpid() == 1;
+}
+
+
+static bool _has_terminated(void *pid) {
+        pid_t p = *(int*)pid;
+        return kill(p, 0) != 0 && errno == ESRCH;
+}
+
+
+static void _shutdown_visitor(ProcessTree_T *p, void *context) {
+        if (p->pid > 1) {  // Skip init
+                kill(p->pid, SIGTERM);
+                if (!Time_backoff(_has_terminated, &p->pid)) {
+                        kill(p->pid, SIGKILL);
+                }
+        }
+}
+
+
+static void _perform_init_shutdown(void) {
+    Log_info("Monit running as PID 1, performing init shutdown responsibilities");
+    
+    // First, stop all managed services gracefully
+    for (Service_T s = Service_List; s; s = s->next) {
+        control_service(s->name, Action_Stop);
+    }
+    
+    // Visit all remaining processes and shut them down (except self)
+    ProcessTree_visit(_shutdown_visitor, NULL);
+}
+
+
 static void do_exit(bool saveState) {
         set_signal_block(true);
         Run.flags |= Run_Stopped;
@@ -539,6 +574,10 @@ static void do_exit(bool saveState) {
         }
         if (saveState) {
                 State_save();
+        }
+        // Special handling when running as PID 1 (init)
+        if (_is_init()) {
+                _perform_init_shutdown();
         }
         gc();
 #ifdef HAVE_OPENSSL
@@ -569,7 +608,7 @@ static void do_default(void) {
                 }
 
                 if (! (Run.flags & Run_Foreground)) {
-                        if (getpid() == 1) {
+                        if (_is_init()) {
                                 Log_warning("Monit is running as process 1 (init) and cannot daemonize\n"
                                           "Please start monit with the -I option to avoid seeing this warning\n");
                         } else {

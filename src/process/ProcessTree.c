@@ -462,3 +462,11 @@ void ProcessTree_testMatch(char *pattern) {
         regfree(regex_comp);
         FREE(regex_comp);
 }
+
+
+void ProcessTree_visit(void visitor(ProcessTree_T *p, void *ap), void *ap) {
+        ProcessTree_init(ProcessEngine_None);
+        for (int i = 0; i < ptreesize; i++) {
+                visitor(&ptree[i], ap);
+        }
+}

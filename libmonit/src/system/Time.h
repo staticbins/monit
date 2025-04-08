@@ -246,7 +246,26 @@ char *Time_str(time_t time, char result[static 30]);
 
 
 /**
- * Returns <code>time</code> as a date string. The <code>format</code>
+ * Returns <code>time</code> as a date string in local time zine. The <code>format</code>
+ * parameter determines the format of the string. The format specifiers
+ * are the same as those used by <code>strftime(3)</code>. For instance to
+ * specify a RFC822 time string on the format "Wed, 05 Feb 2003 01:16:44
+ * +0100" the following format string is used:
+ * <code>"%a, %d %b %Y %H:%M:%S %z"</code>
+ * @param result The buffer to write the date string too
+ * @param size Size of the result buffer
+ * @param format A <code>strftime</code> format string
+ * @param time Number of seconds since the Epoch
+ * (00:00:00 UTC, January 1, 1970)
+ * @return A pointer to the result buffer
+ * @exception AssertException If <code>format</code> or <code>result</code>
+ * is NULL
+ */
+char *Time_localFmt(char *result, int size, const char *format, time_t time);
+
+
+/**
+ * Returns <code>time</code> as a date string in UTC. The <code>format</code>
  * parameter determines the format of the string. The format specifiers
  * are the same as those used by <code>strftime(3)</code>. For instance to
  * specify a RFC822 time string on the format "Wed, 05 Feb 2003 01:16:44
