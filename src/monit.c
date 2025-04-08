@@ -572,8 +572,6 @@ static void do_exit(bool saveState) {
                 }
                 AtomicThread_destroy(&Heartbeat_Thread);
 
-                Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
-
                 /* send the monit stop notification */
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_STOP, "Monit %s stopped", VERSION);
         }
@@ -584,6 +582,7 @@ static void do_exit(bool saveState) {
         if (_is_init()) {
                 _perform_init_shutdown();
         }
+        Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
         gc();
 #ifdef HAVE_OPENSSL
         Ssl_stop();
