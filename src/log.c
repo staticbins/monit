@@ -169,7 +169,7 @@ static void _log(int priority, const char *s, va_list ap) {
                                 vsyslog(priority, s, ap_copy);
                                 va_end(ap_copy);
                         } else if (_LOG) {
-                                fprintf(_LOG, "[%s] %-8s : ", Time_fmt((char[STRLEN]){}, STRLEN, TIMEFORMAT, Time_now()), _priorityDescription(priority));
+                                fprintf(_LOG, "[%s] %-8s : ", Time_localFmt((char[STRLEN]){}, STRLEN, TIMEFORMAT, Time_now()), _priorityDescription(priority));
                                 va_copy(ap_copy, ap);
                                 vfprintf(_LOG, s, ap_copy);
                                 va_end(ap_copy);
