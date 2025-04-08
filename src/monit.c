@@ -546,7 +546,7 @@ static void _shutdown_visitor(ProcessTree_T *p, __attribute__((unused)) void *co
 
 
 static void _perform_init_shutdown(void) {
-    Log_info("Monit running as PID 1, performing init shutdown responsibilities");
+    Log_info("Monit running as PID 1, performing init shutdown responsibilities\n");
     
     // First, stop all managed services gracefully
     for (Service_T s = Service_List; s; s = s->next) {
