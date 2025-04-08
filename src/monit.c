@@ -518,18 +518,28 @@ static bool _is_init(void) {
         return getpid() == 1;
 }
 
-
-static bool _has_terminated(void *pid) {
-        pid_t p = *(int*)pid;
-        return kill(p, 0) != 0 && errno == ESRCH;
+/// Returns true if process 'pid' has terminated within the 10 seconds
+/// grace period otherwise false
+static bool _wait_for_termination(pid_t pid) {
+        long long elapsed = 0LL;
+        long long grace_period = 10 * USEC_PER_SEC; // 10 Seconds
+        long long check_interval = 100 * USEC_PER_MSEC; // 100 milliseconds
+        while (elapsed < grace_period) {
+                if (kill(pid, 0) != 0)
+                        return true;
+                Time_usleep(check_interval);
+                elapsed += check_interval;
+        }
+        return false;
 }
 
 
-static void _shutdown_visitor(ProcessTree_T *p, void *context) {
-        if (p->pid > 1) {  // Skip init
+static void _shutdown_visitor(ProcessTree_T *p, __attribute__((unused)) void *context) {
+        if (p->pid > 1) {  // Skip init (ourself)
                 kill(p->pid, SIGTERM);
-                if (!Time_backoff(_has_terminated, &p->pid)) {
-                        kill(p->pid, SIGKILL);
+                if (!_wait_for_termination(p->pid)) {
+                    // Process didn't terminate within grace period
+                    kill(p->pid, SIGKILL);
                 }
         }
 }
