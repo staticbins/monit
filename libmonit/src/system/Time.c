@@ -1436,6 +1436,17 @@ char *Time_str(time_t time, char result[static 30]) {
 }
 
 
+char *Time_localFmt(char *result, int size, const char *format, time_t time) {
+        struct tm tm;
+        assert(result);
+        assert(format);
+        localtime_r((const time_t *)&time, &tm);
+        if (strftime(result, size, format, &tm) == 0)
+                *result = 0;
+        return result;
+}
+
+
 char *Time_fmt(char *result, int size, const char *format, time_t time) {
         struct tm tm;
         assert(result);
