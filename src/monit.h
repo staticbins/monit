@@ -118,9 +118,9 @@
 #define STRERROR            strerror(errno)
 #define STRLEN             256
 #ifndef USEC_PER_SEC
-#define USEC_PER_SEC       1000000L
+#define USEC_PER_SEC       1000000LL
 #endif
-#define USEC_PER_MSEC      1000L
+#define USEC_PER_MSEC      1000LL
 
 #define ARGMAX             64
 #define MYPIDDIR           PIDDIR
