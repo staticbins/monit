@@ -1519,7 +1519,7 @@ static void do_home_program(HttpResponse res) {
                                         StringBuffer_append(res->outputbuffer, "no output");
                                 }
                                 StringBuffer_append(res->outputbuffer, "</td>");
-                                StringBuffer_append(res->outputbuffer, "<td class='right'>%s</td>", Time_fmt((char[32]){}, 32, "%d %b %Y %H:%M:%S", s->program->started));
+                                StringBuffer_append(res->outputbuffer, "<td class='right'>%s</td>", Time_localFmt((char[32]){}, 32, "%d %b %Y %H:%M:%S", s->program->started));
                                 StringBuffer_append(res->outputbuffer, "<td class='right'>%d</td>", s->program->exitStatus);
                         } else {
                                 StringBuffer_append(res->outputbuffer, "<td class='right'>-</td>");
