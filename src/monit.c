@@ -552,7 +552,7 @@ static void _shutdown_visitor(ProcessTree_T *p, __attribute__((unused)) void *co
 
 
 static void _perform_init_shutdown(void) {
-    Log_info("Monit running as PID 1, performing init shutdown responsibilities");
+    Log_info("Monit running as PID 1, performing init shutdown responsibilities\n");
     
     // First, stop all managed services gracefully
     for (Service_T s = Service_List; s; s = s->next) {
@@ -577,8 +577,6 @@ static void do_exit(bool saveState) {
                         isHeartbeatRunning = false;
                 }
 
-                Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
-
                 /* send the monit stop notification */
                 Event_post(Run.system, Event_Instance, State_Changed, Run.system->action_MONIT_STOP, "Monit %s stopped", VERSION);
         }
@@ -589,6 +587,7 @@ static void do_exit(bool saveState) {
         if (_is_init()) {
                 _perform_init_shutdown();
         }
+        Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
         gc();
 #ifdef HAVE_OPENSSL
         Ssl_stop();
