@@ -875,10 +875,26 @@ bool available_statistics(SystemInfo_T *si) {
 
 
 bool Sysdep_processIsRunning(pid_t pid) {
-        struct stat sb;
         char path[PATH_MAX];
 
+        // Read PID's thread group (TGID)
         snprintf(path, sizeof(path), "/proc/%d/status", pid);
-        return stat(path, &sb) == 0 ? true : false;
+        FILE *fp = fopen(path, "r");
+        if (! fp) {
+                // Process doesn't exist
+                return false;
+        }
+
+        char line[STRLEN];
+        pid_t tgid = -1;
+        while (fgets(line, sizeof(line), fp)) {
+                if (sscanf(line, "Tgid:\t%d", &tgid) == 1) {
+                        break;
+                }
+        }
+        fclose(fp);
+
+        // Only the main process thread has TGID == PID
+        return (tgid == pid);
 }
 
