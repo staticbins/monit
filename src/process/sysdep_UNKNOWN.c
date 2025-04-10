@@ -96,3 +96,8 @@ bool available_statistics(SystemInfo_T *si) {
         return false;
 }
 
+
+bool Sysdep_processIsRunning(pid_t pid) {
+        return false;
+}
+

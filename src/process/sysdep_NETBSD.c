@@ -301,3 +301,8 @@ bool available_statistics(SystemInfo_T *si) {
         return true;
 }
 
+
+bool Sysdep_processIsRunning(pid_t pid) {
+        return true;
+}
+

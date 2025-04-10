@@ -873,3 +873,12 @@ bool available_statistics(SystemInfo_T *si) {
         return true;
 }
 
+
+bool Sysdep_processIsRunning(pid_t pid) {
+        struct stat sb;
+        char path[PATH_MAX];
+
+        snprintf(path, sizeof(path), "/proc/%d/status", pid);
+        return stat(path, &sb) == 0 ? true : false;
+}
+
