@@ -873,3 +873,28 @@ bool available_statistics(SystemInfo_T *si) {
         return true;
 }
 
+
+pid_t Sysdep_getMainThread(pid_t pid) {
+        char path[PATH_MAX];
+
+        // Read PID's thread group (TGID)
+        snprintf(path, sizeof(path), "/proc/%d/status", pid);
+        FILE *fp = fopen(path, "r");
+        if (! fp) {
+                // Process doesn't exist
+                return 0;
+        }
+
+        char line[STRLEN];
+        pid_t tgid = -1;
+        while (fgets(line, sizeof(line), fp)) {
+                if (sscanf(line, "Tgid:\t%d", &tgid) == 1) {
+                        break;
+                }
+        }
+        fclose(fp);
+
+        // Return the thread group leader (main thread's PID)
+        return tgid;
+}
+

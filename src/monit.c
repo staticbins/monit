@@ -587,7 +587,9 @@ static void do_exit(bool saveState) {
         if (_is_init()) {
                 _perform_init_shutdown();
         }
-        Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
+        if ((Run.flags & Run_Daemon) && ! (Run.flags & Run_Once)) {
+                Log_info("Monit daemon with pid [%d] stopped\n", (int)getpid());
+        }
         gc();
 #ifdef HAVE_OPENSSL
         Ssl_stop();

@@ -33,5 +33,6 @@ bool used_system_cpu_sysdep(SystemInfo_T *);
 bool used_system_filedescriptors_sysdep(SystemInfo_T *);
 bool available_statistics(SystemInfo_T *);
 int init_processtree_sysdep(ProcessTree_T **, ProcessEngine_Flags);
+pid_t Sysdep_getMainThread(pid_t pid);
 
 #endif

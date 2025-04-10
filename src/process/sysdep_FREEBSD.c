@@ -349,3 +349,8 @@ bool available_statistics(SystemInfo_T *si) {
         return true;
 }
 
+
+pid_t Sysdep_getMainThread(pid_t pid) {
+        return pid;
+}
+

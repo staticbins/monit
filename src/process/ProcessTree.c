@@ -349,14 +349,14 @@ time_t ProcessTree_getProcessUptime(pid_t pid) {
 
 
 static pid_t _isProcessRunning(Service_T s, pid_t pid) {
-        pid_t pidLeader = getpgid(pid);
-        if (pidLeader > -1) {
-                // The PID may belong to LWP task on some platforms (e.g. Linux). We need to check that the PID belongs to the process group leader to make sure it is the real
-                // process PID
-                if (pid == pidLeader)
-                        return pidLeader;
+        pid_t groupLeaderPid = getpgid(pid);
+        if (groupLeaderPid > -1) {
+                // The PID may belong to LWP task on some platforms (e.g. Linux). We need to check that the PID belongs to the main thread to make sure it is the real process PID
+                pid_t mainPid = Sysdep_getMainThread(pid);
+                if (mainPid == pid)
+                        return pid;
                 else
-                        DEBUG("'%s' The PID %d was found, but it's not the process group leader. The PID of the original process was likely reused for the LWP belonging to another process with PID %d\n", s->name, pid, pidLeader);
+                        DEBUG("'%s' The PID %d was found, but it's not main process thread. The PID of the original process was likely reused for the LWP belonging to another process with PID %d\n", s->name, pid, mainPid);
         } else if (errno == EPERM) {
                 // The process is running, but we don't have permissions (at this point we're not able to differentiate LWP from normal process though)
                 return pid;
