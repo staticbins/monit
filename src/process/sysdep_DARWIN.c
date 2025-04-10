@@ -366,7 +366,7 @@ bool available_statistics(SystemInfo_T *si) {
 }
 
 
-bool Sysdep_processIsRunning(pid_t pid) {
-        return true;
+pid_t Sysdep_getMainThread(pid_t pid) {
+        return pid;
 }
 

@@ -874,7 +874,7 @@ bool available_statistics(SystemInfo_T *si) {
 }
 
 
-bool Sysdep_processIsRunning(pid_t pid) {
+pid_t Sysdep_getMainThread(pid_t pid) {
         char path[PATH_MAX];
 
         // Read PID's thread group (TGID)
@@ -882,7 +882,7 @@ bool Sysdep_processIsRunning(pid_t pid) {
         FILE *fp = fopen(path, "r");
         if (! fp) {
                 // Process doesn't exist
-                return false;
+                return 0;
         }
 
         char line[STRLEN];
@@ -894,7 +894,7 @@ bool Sysdep_processIsRunning(pid_t pid) {
         }
         fclose(fp);
 
-        // Only the main process thread has TGID == PID
-        return (tgid == pid);
+        // Return the thread group leader (main thread's PID)
+        return tgid;
 }
 
