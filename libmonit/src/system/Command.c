@@ -128,12 +128,16 @@ static void _childSignal(int how) {
 static void _handleChildren(__attribute__ ((unused)) int sig) {
         pid_t pid;
         int status;
+        int save_errno = errno; // Save errno on signal handler entry, before calling waitpid()
+
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
                 Process_T found = Array_remove(processTable, pid);
                 if (found) {
                         _setstatus(found, status);
                 }
         }
+
+        errno = save_errno; // Restore errno before signal handler return
 }
 
 

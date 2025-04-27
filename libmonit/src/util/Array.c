@@ -50,7 +50,9 @@
 struct T {
         int size;
         int length;
+        int freelist_length;
         unsigned int timestamp;
+        struct binding *freelist;
         struct binding {
                 int key;
                 void *value;
@@ -83,13 +85,18 @@ T Array_new(int hint) {
 
 void Array_free(T *S) {
         assert(S && *S);
+        struct binding *p, *q;
         if ((*S)->length > 0) {
-                struct binding *p, *q;
-                for (int i = 0; i < (*S)->size; i++)
+                for (int i = 0; i < (*S)->size; i++) {
                         for (p = (*S)->buckets[i]; p; p = q) {
                                 q = p->link;
                                 FREE(p);
                         }
+                }
+        }
+        for (p = (*S)->freelist; p; p = q) {
+                q = p->link;
+                FREE(p);
         }
         FREE(*S);
 }
@@ -104,7 +111,13 @@ void *Array_put(T S, int key, void *value) {
                 if (p->key == key)
                         break;
         if (p == NULL) {
-                NEW(p);
+                if (S->freelist) {
+                        p = S->freelist;
+                        S->freelist = p->link;
+                        S->freelist_length--;
+                } else {
+                        NEW(p);
+                }
                 p->key = key;
                 p->link = S->buckets[i];
                 S->buckets[i] = p;
@@ -137,7 +150,12 @@ void *Array_remove(T S, int key) {
                         struct binding *p = *pp;
                         void *value = p->value;
                         *pp = p->link;
-                        FREE(p);
+
+                        // Retain binding for reuse
+                        p->link = S->freelist;
+                        S->freelist = p;
+                        S->freelist_length++;
+
                         S->length--;
                         S->timestamp++;
                         return value;
