@@ -50,7 +50,6 @@
 struct T {
         int size;
         int length;
-        int freelist_length;
         unsigned int timestamp;
         struct binding *freelist;
         struct binding {
@@ -114,7 +113,6 @@ void *Array_put(T S, int key, void *value) {
                 if (S->freelist) {
                         p = S->freelist;
                         S->freelist = p->link;
-                        S->freelist_length--;
                 } else {
                         NEW(p);
                 }
@@ -154,7 +152,6 @@ void *Array_remove(T S, int key) {
                         // Retain binding for reuse
                         p->link = S->freelist;
                         S->freelist = p;
-                        S->freelist_length++;
 
                         S->length--;
                         S->timestamp++;
