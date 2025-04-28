@@ -4,7 +4,7 @@
 
 Version 5.35.1
 
-Fixed: Monit may crash when "check program" is used.
+Fixed: Issue #1127: Monit may crash when "check program" is used.
 
 
 
