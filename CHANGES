@@ -1,11 +1,15 @@
-                     CHANGES version 5.35.1
+                     CHANGES version 5.35.2
 
            This file summarizes changes made since 5.0
+
+Version 5.35.2
+
+Fixed: Monit may skip the sleep altogether and perform checks in a tight loop when many "check program" tests are used in conjunction with the short poll cycle.
+
 
 Version 5.35.1
 
 Fixed: Issue #1127: Monit may crash when "check program" is used.
-
 
 
 Version 5.35.0

@@ -67,6 +67,9 @@ fi
 %{_mandir}/man1/%{name}.1.gz
 
 %changelog
+* Wed May 07 2025 Monit team <support@mmonit.com>
+- Upgraded to monit-5.35.2
+
 * Mon Apr 28 2025 Monit team <support@mmonit.com>
 - Upgraded to monit-5.35.1
 
