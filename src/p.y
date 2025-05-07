@@ -648,8 +648,12 @@ setalert        : SET alertmail formatlist reminder {
 
 setdaemon       : SET DAEMON NUMBER startdelay {
                         if (! (Run.flags & Run_Daemon) || ihp.daemon) {
+                                int one_year = 31556952;
                                 ihp.daemon     = true;
                                 Run.flags      |= Run_Daemon;
+                                if (($3 <= 0) || ($3 > one_year)) {
+                                        yyerror2("Invalid Poll time seconds.");
+                                }
                                 Run.polltime   = $3;
                                 Run.startdelay = $<number>4;
                         }
