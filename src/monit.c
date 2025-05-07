@@ -666,7 +666,12 @@ reload:
                         validate();
 
                         // Sleep, unless there is a pending action or monit was stopped/reloaded (sleep can be interrupted by signal)
-                        for (long remaining = Run.polltime; remaining > 0; remaining = Time_sleep(remaining)) {
+                        // Using Time_usleep instead of Time_sleep to handle signal interruptions properly.
+                        // Time_sleep only returns whole seconds remaining after interruption, discarding
+                        // fractional seconds. This can cause premature loop exit with frequent signals,
+                        // effectively preventing proper sleep timing. Time_usleep preserves microsecond
+                        // precision, ensuring correct remaining time calculation when interrupted.
+                        for (long long remaining = Run.polltime * USEC_PER_SEC; remaining > 0; remaining = Time_usleep(remaining)) {
                                 if ((Run.flags & Run_ActionPending) || interrupt())
                                         break;
                         }
