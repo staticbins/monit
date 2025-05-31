@@ -1107,7 +1107,7 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                                     "</td>",
                                     res->token);
 
-                if ((Run.flags & Run_Log) && ! (Run.flags & Run_UseSyslog)) {
+                if ((Run.flags & Run_Log) && ! ((Run.flags & Run_UseSyslog) || Run.isInit)) {
                         StringBuffer_append(res->outputbuffer,
                                             "<td>"
                                             "<form method=POST action='_viewlog'>View Monit logfile? "

@@ -1337,6 +1337,7 @@ struct Run_T {
         volatile Run_Flags flags;
         Handler_Type handler_flag;                    /**< The handlers state flag */
         Onreboot_Type onreboot;
+        bool isInit;                 /**< True if Monit is running as init (PID 1) */
         struct {
                 char *control;            /**< The file to read configuration from */
                 char *log;                     /**< The file to write logdata into */

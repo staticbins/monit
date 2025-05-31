@@ -273,7 +273,9 @@ static void do_init(void) {
          */
         Mutex_init(Run.mutex);
 
-        // Initialize the Heartbeat Thread variable
+        /*
+         * Initialize the Heartbeat Thread variable
+         */
         AtomicThread_init(&Heartbeat_Thread);
 
         /*
@@ -324,6 +326,11 @@ static void do_init(void) {
                 Util_printRunList();
                 Util_printServiceList();
         }
+        
+        /*
+         * Set if Monit is running as init (PID 1)
+         */
+        Run.isInit = (getpid() == 1);
 }
 
 
@@ -514,10 +521,6 @@ static void do_action(List_T arguments) {
  * Finalize monit
  */
 
-static bool _is_init(void) {
-        return getpid() == 1;
-}
-
 /// Returns true if process 'pid' has terminated within the 10 seconds
 /// grace period otherwise false
 static bool _wait_for_termination(pid_t pid) {
@@ -579,7 +582,7 @@ static void do_exit(bool saveState) {
                 State_save();
         }
         // Special handling when running as PID 1 (init)
-        if (_is_init()) {
+        if (Run.isInit) {
                 _perform_init_shutdown();
         }
         if ((Run.flags & Run_Daemon) && ! (Run.flags & Run_Once)) {
@@ -614,7 +617,7 @@ static void do_default(void) {
                 }
 
                 if (! (Run.flags & Run_Foreground)) {
-                        if (_is_init()) {
+                        if (Run.isInit) {
                                 Log_warning("Monit is running as process 1 (init) and cannot daemonize\n"
                                           "Please start monit with the -I option to avoid seeing this warning\n");
                         } else {
