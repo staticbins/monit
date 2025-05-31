@@ -86,6 +86,7 @@
 #include <openssl/x509_vfy.h>
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
+#include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
@@ -974,6 +975,8 @@ SslServer_T SslServer_new(int socket, SslOptions_T options) {
 #ifdef SSL_CTRL_SET_ECDH_AUTO
         SSL_CTX_set_options(S->ctx, SSL_OP_SINGLE_ECDH_USE);
         SSL_CTX_set_ecdh_auto(S->ctx, 1);
+#elif defined HAVE_SSL_CTX_SET1_GROUPS_LIST
+        SSL_CTX_set1_groups_list(S->ctx, "P-256");
 #elif defined HAVE_EC_KEY
         SSL_CTX_set_options(S->ctx, SSL_OP_SINGLE_ECDH_USE);
         EC_KEY *key = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);

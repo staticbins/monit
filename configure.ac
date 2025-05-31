@@ -993,6 +993,16 @@ if test $with_sslstatic -eq 1 || test $with_ssl -eq 1; then
         AC_CHECK_DECL([SSL_OP_NO_TLSv1_2], [AC_DEFINE([HAVE_TLSV1_2], 1, [Define to 1 if you have openssl with TLSv1.2])], [], [[#include <openssl/ssl.h>]])
         AC_CHECK_DECL([SSL_OP_NO_TLSv1_3], [AC_DEFINE([HAVE_TLSV1_3], 1, [Define to 1 if you have openssl with TLSv1.3])], [], [[#include <openssl/ssl.h>]])
 
+        AC_MSG_CHECKING([for SSL_CTX_set1_groups_list support])
+        AC_LINK_IFELSE(
+                [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [SSL_CTX_set1_groups_list(0, 0)])],
+                [sslctxset1groupslist=yes],
+                [sslctxset1groupslist=no])
+        AC_MSG_RESULT($sslctxset1groupslist)
+        if test "$sslctxset1groupslist" = "yes" ; then
+                AC_DEFINE([HAVE_SSL_CTX_SET1_GROUPS_LIST], 1, [Define to 1 if you have openssl with SSL_CTX_set1_groups_list])
+        fi
+
         AC_MSG_CHECKING([for EC_KEY support])
         AC_LINK_IFELSE(
                 [AC_LANG_PROGRAM([#include <openssl/ssl.h>], [EC_KEY_new_by_curve_name(0)])],

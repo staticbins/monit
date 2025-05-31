@@ -387,25 +387,34 @@ static unsigned char *_getNativePassword(unsigned char result[static SHA1_DIGEST
 // Get the password (see https://dev.mysql.com/doc/internals/en/sha256.html and https://dev.mysql.com/doc/dev/mysql-server/8.0.11/page_caching_sha2_authentication_exchanges.html):
 static unsigned char *_getCachingSha2Password(unsigned char result[static SHA256_DIGEST_LENGTH], const char *password, const char *salt) {
 #ifdef HAVE_OPENSSL
-        // SHA256(password)
         uint8_t stage1[SHA256_DIGEST_LENGTH];
+        uint8_t stage2[SHA256_DIGEST_LENGTH];
+        uint8_t stage3[SHA256_DIGEST_LENGTH];
+
+        // SHA256(password)
         SHA256((const unsigned char *)password, strlen(password), stage1);
 
         // SHA256(SHA256(password))
-        uint8_t stage2[SHA256_DIGEST_LENGTH];
         SHA256(stage1, SHA256_DIGEST_LENGTH, stage2);
 
         // SHA256(SHA256(SHA256(password)), Nonce)
-        uint8_t stage3[SHA256_DIGEST_LENGTH];
-        SHA256_CTX ctx;
-        SHA256_Init(&ctx);
-        SHA256_Update(&ctx, stage2, SHA256_DIGEST_LENGTH);
-        SHA256_Update(&ctx, salt, strlen(salt));
-        SHA256_Final(stage3, &ctx);
+        EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+        if (mdctx != NULL) {
+                if (EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL) &&
+                    EVP_DigestUpdate(mdctx, stage2, SHA256_DIGEST_LENGTH) &&
+                    EVP_DigestUpdate(mdctx, salt, strlen(salt)) &&
+                    EVP_DigestFinal_ex(mdctx, stage3, NULL))
+                {
+                        EVP_MD_CTX_free(mdctx);
+                        // XOR(SHA256(password), SHA256(SHA256(SHA256(password)), Nonce))
+                        for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+                                result[i] = stage1[i] ^ stage3[i];
+                } else {
+                        EVP_MD_CTX_free(mdctx);
+                        THROW(ProtocolException, "MYSQL: failed to get caching_sha2_password hash");
+                }
+        }
 
-        // XOR(SHA256(password), SHA256(SHA256(SHA256(password)), Nonce))
-        for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
-                result[i] = stage1[i] ^ stage3[i];
 #else
         THROW(ProtocolException, "MYSQL: caching_sha2_password authentication requires monit to be compiled with SSL library");
 #endif
