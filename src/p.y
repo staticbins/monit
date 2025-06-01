@@ -66,6 +66,10 @@
 #include <sys/types.h>
 #endif
 
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
@@ -822,11 +826,25 @@ setfips         : SET FIPS {
                 ;
 
 setlog          : SET LOGFILE PATH   {
+                        struct stat sb;
                         if (! Run.files.log || ihp.logfile) {
                                 ihp.logfile = true;
                                 setlogfile($3);
-                                Run.flags &= ~Run_UseSyslog;
                                 Run.flags |= Run_Log;
+                                if (stat(Run.files.log, &sb) == -1) {
+                                        if (errno == ENOENT) {
+                                                // Regular file doesn't exist yet, will be created by Monit later => reset the syslog flag
+                                                Run.flags &= ~Run_UseSyslog;
+                                        } else {
+                                                yywarning2("Can't get the log file information -- %s", STRERROR);
+                                        }
+                                } else if (sb.st_mode & S_IFREG) {
+                                        // Regular file, exists already => reset the syslog flag
+                                        Run.flags &= ~Run_UseSyslog;
+                                } else {
+                                        // The log file is not regular file (e.g. device) => set syslog flag to disable the "View Logfile" functionality in the HTTP API
+                                        Run.flags |= Run_UseSyslog;
+                                }
                         } else {
                                 FREE($3);
                         }
@@ -835,7 +853,8 @@ setlog          : SET LOGFILE PATH   {
                         setsyslog(NULL);
                   }
                 | SET LOGFILE SYSLOG FACILITY STRING {
-                        setsyslog($5); FREE($5);
+                        setsyslog($5);
+                        FREE($5);
                   }
                 ;
 

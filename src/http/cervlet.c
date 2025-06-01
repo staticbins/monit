@@ -1107,7 +1107,7 @@ static void do_runtime(HttpRequest req, HttpResponse res) {
                                     "</td>",
                                     res->token);
 
-                if ((Run.flags & Run_Log) && ! ((Run.flags & Run_UseSyslog) || Run.isInit)) {
+                if ((Run.flags & Run_Log) && ! (Run.flags & Run_UseSyslog)) {
                         StringBuffer_append(res->outputbuffer,
                                             "<td>"
                                             "<form method=POST action='_viewlog'>View Monit logfile? "
@@ -1131,7 +1131,7 @@ static void do_viewlog(HttpRequest req, HttpResponse res) {
         }
 
         do_head(res, "_viewlog", "View log", 100);
-        if ((Run.flags & Run_Log) && ! ((Run.flags & Run_UseSyslog) || Run.isInit)) {
+        if ((Run.flags & Run_Log) && ! (Run.flags & Run_UseSyslog)) {
                 FILE *f = fopen(Run.files.log, "r");
                 if (f) {
                         size_t n;

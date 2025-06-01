@@ -4,7 +4,9 @@
 
 Version 5.35.3
 
-Fixed: Issue #1129: If Monit is running as init process (PID=1), disable the "View Monit logfile" functionality.
+Fixed: Issue #1129: When Monit log was set to a device, such as "set logfile /dev/stdout" (e.g. inside the
+       Docker container), Monit hangs when the "View Monit logfile" is used in the Monit HTTP interface.
+       Thanks to Lutz Mader for report and fix.
 
 
 Version 5.35.2
