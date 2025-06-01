@@ -1129,8 +1129,9 @@ static void do_viewlog(HttpRequest req, HttpResponse res) {
                 send_error(req, res, SC_FORBIDDEN, "You do not have sufficient privileges to access this page");
                 return;
         }
+
         do_head(res, "_viewlog", "View log", 100);
-        if ((Run.flags & Run_Log) && ! (Run.flags & Run_UseSyslog)) {
+        if ((Run.flags & Run_Log) && ! ((Run.flags & Run_UseSyslog) || Run.isInit)) {
                 FILE *f = fopen(Run.files.log, "r");
                 if (f) {
                         size_t n;
@@ -1150,7 +1151,9 @@ static void do_viewlog(HttpRequest req, HttpResponse res) {
         } else {
                 StringBuffer_append(res->outputbuffer,
                                     "<b>Cannot view logfile:</b><br>");
-                if (! (Run.flags & Run_Log))
+                if (Run.isInit)
+                        StringBuffer_append(res->outputbuffer, "Monit is running is init, the view logfile functionality is not available");
+                else if (! (Run.flags & Run_Log))
                         StringBuffer_append(res->outputbuffer, "Monit was started without logging");
                 else
                         StringBuffer_append(res->outputbuffer, "Monit uses syslog");
