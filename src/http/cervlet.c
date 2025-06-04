@@ -396,7 +396,7 @@ __attribute__((format (printf, 7, 8))) static void _formatStatus(const char *nam
                                         StringBuffer_append(res->outputbuffer, "\n                               ");
                                         column = 0;
                                         continue;
-                                } else if (column <= 200) {
+                                } else if (column <= Run.limits.programOutput) {
                                         StringBuffer_append(res->outputbuffer, "%c", _value[i]);
                                         column++;
                                 }
