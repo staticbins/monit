@@ -1996,13 +1996,13 @@ State_Type check_program(Service_T s) {
 
                 // Check if the program output content changed
                 for (OutputChange_T oc = s->outputchangelist; oc; oc = oc->next) {
-                        if (!oc->previous) {
+                        if (! oc->previous) {
                                 oc->previous = Str_dup(lastOutput);
                         } else if (strcmp(oc->previous, lastOutput) == 0) {
-                                Event_post(s, Event_Content, oc->check_invers ? State_Failed : State_Succeeded, oc->action,
+                                Event_post(s, Event_Content, oc->check_invers ? State_Changed : State_ChangedNot, oc->action,
                                            "content remained the same:\n<<<<<<< Begin\n%s\n>>>>>>> End", lastOutput);
                         } else {
-                                Event_post(s, Event_Content, oc->check_invers ? State_Succeeded : State_Failed, oc->action,
+                                Event_post(s, Event_Content, oc->check_invers ? State_ChangedNot : State_Changed, oc->action,
                                            "content changed:\n<<<<<<< Begin previous\n%s\n======= End previous - Begin current\n%s\n>>>>>>> End current", oc->previous, lastOutput);
                                 FREE(oc->previous);
                                 oc->previous = Str_dup(lastOutput);
