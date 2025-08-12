@@ -83,7 +83,6 @@ static const struct byte_unit {
 
 
 char* Fmt_bytes2str(double bytes, char s[static FMT_BYTES_BUFSIZE]) {
-        assert(s);
         *s = 0;
         if (isnan(bytes)) {
                 snprintf(s, FMT_BYTES_BUFSIZE, "NaN");
@@ -117,7 +116,6 @@ char* Fmt_bytes2str(double bytes, char s[static FMT_BYTES_BUFSIZE]) {
 
 
 char* Fmt_time2str(double milli, char s[static FMT_TIME_BUFSIZE]) {
-        assert(s);
         *s = 0;
         // Handle special cases
         if (isnan(milli)) {
