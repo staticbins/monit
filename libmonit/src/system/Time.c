@@ -1395,43 +1395,39 @@ int Time_year(time_t time) {
 
 
 char *Time_localStr(time_t time, char result[static 26]) {
-        if (result) {
-                struct tm ts;
-                /* This implementation needs to be fast and is around 50%
-                   faster than strftime */
-                localtime_r((const time_t *)&time, &ts);
-                memcpy(result, "aaa, xx aaa xxxx xx:xx:xx\0", 26);
-                /*              0    5  8   1214 17 20 23 25 */
-                memcpy(result, _days + (3 * ts.tm_wday), 3);
-                _i2a(ts.tm_mday, &result[5]);
-                memcpy(result + 8, _months + (3 * ts.tm_mon), 3);
-                _i2a((ts.tm_year+1900) / 100, &result[12]);
-                _i2a((ts.tm_year+1900) % 100, &result[14]);
-                _i2a(ts.tm_hour, &result[17]);
-                _i2a(ts.tm_min, &result[20]);
-                _i2a(ts.tm_sec, &result[23]);
-        }
+        struct tm ts;
+        /* This implementation needs to be fast and is around 50%
+           faster than strftime */
+        localtime_r((const time_t *)&time, &ts);
+        memcpy(result, "aaa, xx aaa xxxx xx:xx:xx\0", 26);
+        /*              0    5  8   1214 17 20 23 25 */
+        memcpy(result, _days + (3 * ts.tm_wday), 3);
+        _i2a(ts.tm_mday, &result[5]);
+        memcpy(result + 8, _months + (3 * ts.tm_mon), 3);
+        _i2a((ts.tm_year+1900) / 100, &result[12]);
+        _i2a((ts.tm_year+1900) % 100, &result[14]);
+        _i2a(ts.tm_hour, &result[17]);
+        _i2a(ts.tm_min, &result[20]);
+        _i2a(ts.tm_sec, &result[23]);
         return result;
 }
 
 
 char *Time_str(time_t time, char result[static 30]) {
-        if (result) {
-                struct tm ts;
-                /* This implementation needs to be fast and is around 50%
-                 faster than strftime */
-                gmtime_r(&time, &ts);
-                memcpy(result, "aaa, xx aaa xxxx xx:xx:xx GMT\0", 30);
-                /*              0    5  8   1214 17 20 23    29 */
-                memcpy(result, _days + (3 * ts.tm_wday), 3);
-                _i2a(ts.tm_mday, &result[5]);
-                memcpy(result + 8, _months + (3 * ts.tm_mon), 3);
-                _i2a((ts.tm_year+1900) / 100, &result[12]);
-                _i2a((ts.tm_year+1900) % 100, &result[14]);
-                _i2a(ts.tm_hour, &result[17]);
-                _i2a(ts.tm_min, &result[20]);
-                _i2a(ts.tm_sec, &result[23]);
-        }
+        struct tm ts;
+        /* This implementation needs to be fast and is around 50%
+         faster than strftime */
+        gmtime_r(&time, &ts);
+        memcpy(result, "aaa, xx aaa xxxx xx:xx:xx GMT\0", 30);
+        /*              0    5  8   1214 17 20 23    29 */
+        memcpy(result, _days + (3 * ts.tm_wday), 3);
+        _i2a(ts.tm_mday, &result[5]);
+        memcpy(result + 8, _months + (3 * ts.tm_mon), 3);
+        _i2a((ts.tm_year+1900) / 100, &result[12]);
+        _i2a((ts.tm_year+1900) % 100, &result[14]);
+        _i2a(ts.tm_hour, &result[17]);
+        _i2a(ts.tm_min, &result[20]);
+        _i2a(ts.tm_sec, &result[23]);
         return result;
 }
 
@@ -1460,22 +1456,20 @@ char *Time_fmt(char *result, int size, const char *format, time_t time) {
 
 char *Time_uptime(long sec, char result[static 24]) {
         // Write max 24 bytes to result
-        if (result) {
-                int n = 0;
-                long r = 0;
-                result[0] = 0;
-                if (sec > 0) {
-                        if ((r = sec/86400) > 0) {
-                                n = snprintf(result, 24, "%lldd", (long long)r);
-                                sec -= r * 86400;
-                        }
-                        if ((r = sec/3600) > 0) {
-                                n += snprintf(result + n, (24 - n), "%s%lldh", n ? ", " : "", (long long)r);
-                                sec -= r * 3600;
-                        }
-                        r = sec/60;
-                        snprintf(result + n, (24 - n), "%s%lldm", n ? ", " : "", (long long)r);
+        int n = 0;
+        long r = 0;
+        result[0] = 0;
+        if (sec > 0) {
+                if ((r = sec/86400) > 0) {
+                        n = snprintf(result, 24, "%lldd", (long long)r);
+                        sec -= r * 86400;
                 }
+                if ((r = sec/3600) > 0) {
+                        n += snprintf(result + n, (24 - n), "%s%lldh", n ? ", " : "", (long long)r);
+                        sec -= r * 3600;
+                }
+                r = sec/60;
+                snprintf(result + n, (24 - n), "%s%lldm", n ? ", " : "", (long long)r);
         }
         return result;
 }
