@@ -712,15 +712,15 @@ static void _sendEncryptedPassword(mysql_t *mysql) {
         }
 
         // Get output buffer size
-        size_t outlen;
-        if (EVP_PKEY_encrypt(ctx, NULL, &outlen, saltedPassword, passwordLength) <= 0) {
+        size_t encryptedPasswordLength;
+        if (EVP_PKEY_encrypt(ctx, NULL, &encryptedPasswordLength, saltedPassword, passwordLength) <= 0) {
                 EVP_PKEY_CTX_free(ctx);
                 EVP_PKEY_free(pkey);
                 THROW(ProtocolException, "Cannot get the output buffer size -- %s", ERR_error_string(ERR_get_error(), NULL));
         }
 
         // Allocate buffer
-        unsigned char *encryptedPassword = CALLOC(1, outlen);
+        unsigned char *encryptedPassword = CALLOC(1, encryptedPasswordLength);
         if (! encryptedPassword) {
                 EVP_PKEY_CTX_free(ctx);
                 EVP_PKEY_free(pkey);
@@ -728,7 +728,7 @@ static void _sendEncryptedPassword(mysql_t *mysql) {
         }
 
         // Encrypt the password
-        if (EVP_PKEY_encrypt(ctx, encryptedPassword, &outlen, saltedPassword, passwordLength) <= 0) {
+        if (EVP_PKEY_encrypt(ctx, encryptedPassword, &encryptedPasswordLength, saltedPassword, passwordLength) <= 0) {
                 free(encryptedPassword);
                 EVP_PKEY_CTX_free(ctx);
                 EVP_PKEY_free(pkey);
@@ -743,7 +743,7 @@ static void _sendEncryptedPassword(mysql_t *mysql) {
         DEBUG("MySQL password encrypted successfully\n");
 
         // Send the encrypted password
-        _sendPassword(mysql, encryptedPassword, (int)outlen);
+        _sendPassword(mysql, encryptedPassword, (int)encryptedPasswordLength);
 
         // Free the allocated buffer
         free(encryptedPassword);
