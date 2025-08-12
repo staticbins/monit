@@ -644,8 +644,11 @@ static void _sendPassword(mysql_t *mysql, const unsigned char *password, int pas
 // Send the RSA encrypted password (https://dev.mysql.com/doc/internals/en/not-so-fast-path.html)
 static void _sendEncryptedPassword(mysql_t *mysql) {
 #ifdef HAVE_OPENSSL
-        // Parse the server RSA public key
+
         BIO *bio = BIO_new_mem_buf((void *)mysql->publicKey, -1);
+
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+        // Parse the server RSA public key
         RSA *rsa = PEM_read_bio_RSA_PUBKEY(bio, NULL, NULL, NULL);
         BIO_free(bio);
         if (! rsa)
@@ -657,15 +660,94 @@ static void _sendEncryptedPassword(mysql_t *mysql) {
         for (size_t i = 0; i < passwordLength; i++)
                 saltedPassword[i] = mysql->port->parameters.mysql.password[i] ^ mysql->salt[i % saltLength];
         // RSA encrypt the salted password
-        unsigned char encryptedPassword[RSA_size(rsa)];
+        unsigned char *encryptedPassword = CALLOC(1, RSA_size(rsa));
+        if (! encryptedPassword) {
+                RSA_free(rsa);;
+                THROW(ProtocolException, "Cannot allocate memory for encrypted password");
+        }
         int encryptedPasswordLength = RSA_public_encrypt((int)passwordLength, saltedPassword, encryptedPassword, rsa, RSA_PKCS1_OAEP_PADDING);
         RSA_free(rsa);
         if (encryptedPasswordLength < 0) {
                 THROW(ProtocolException, "RSA public encrypt failed -- %s", ERR_error_string(ERR_get_error(), NULL));
         }
+#else
+       // Parse the server RSA public key using EVP API
+        EVP_PKEY *pkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
+        BIO_free(bio);
+        if (! pkey)
+                THROW(ProtocolException, "RSA public key load failed -- %s", ERR_error_string(ERR_get_error(), NULL));
+
+        // Verify it's an RSA key
+        if (EVP_PKEY_base_id(pkey) != EVP_PKEY_RSA) {
+                EVP_PKEY_free(pkey);
+                THROW(ProtocolException, "Key is not an RSA public key");
+        }
+
+        // XOR the password with the salt
+        unsigned char saltedPassword[STRLEN];
+        size_t saltLength = strlen(mysql->salt);
+        size_t passwordLength = strlen(mysql->port->parameters.mysql.password) + 1; // Include the terminating NUL
+        for (size_t i = 0; i < passwordLength; i++)
+                saltedPassword[i] = mysql->port->parameters.mysql.password[i] ^ mysql->salt[i % saltLength];
+
+        // Create encryption context
+        EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, NULL);
+        if (! ctx) {
+                EVP_PKEY_free(pkey);
+                THROW(ProtocolException, "Cannot create encryption context -- %s", ERR_error_string(ERR_get_error(), NULL));
+        }
+
+        // Initialize encryption
+        if (EVP_PKEY_encrypt_init(ctx) <= 0) {
+                EVP_PKEY_CTX_free(ctx);
+                EVP_PKEY_free(pkey);
+                THROW(ProtocolException, "Cannot initialize the encryption -- %s", ERR_error_string(ERR_get_error(), NULL));
+        }
+
+        // Set padding to OAEP (equivalent to RSA_PKCS1_OAEP_PADDING)
+        if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0) {
+                EVP_PKEY_CTX_free(ctx);
+                EVP_PKEY_free(pkey);
+                THROW(ProtocolException, "Cannot set the RSA padding mode -- %s", ERR_error_string(ERR_get_error(), NULL));
+        }
+
+        // Get output buffer size
+        size_t outlen;
+        if (EVP_PKEY_encrypt(ctx, NULL, &outlen, saltedPassword, passwordLength) <= 0) {
+                EVP_PKEY_CTX_free(ctx);
+                EVP_PKEY_free(pkey);
+                THROW(ProtocolException, "Cannot get the output buffer size -- %s", ERR_error_string(ERR_get_error(), NULL));
+        }
+
+        // Allocate buffer
+        unsigned char *encryptedPassword = CALLOC(1, outlen);
+        if (! encryptedPassword) {
+                EVP_PKEY_CTX_free(ctx);
+                EVP_PKEY_free(pkey);
+                THROW(ProtocolException, "Cannot allocate memory for encrypted password");
+        }
+
+        // Encrypt the password
+        if (EVP_PKEY_encrypt(ctx, encryptedPassword, &outlen, saltedPassword, passwordLength) <= 0) {
+                free(encryptedPassword);
+                EVP_PKEY_CTX_free(ctx);
+                EVP_PKEY_free(pkey);
+                THROW(ProtocolException, "Password encryption failed -- %s", ERR_error_string(ERR_get_error(), NULL));
+        }
+
+        // Clean up
+        EVP_PKEY_CTX_free(ctx);
+        EVP_PKEY_free(pkey);
+#endif
+
         DEBUG("MySQL password encrypted successfully\n");
+
         // Send the encrypted password
-        _sendPassword(mysql, encryptedPassword, encryptedPasswordLength);
+        _sendPassword(mysql, encryptedPassword, (int)outlen);
+
+        // Free the allocated buffer
+        free(encryptedPassword);
+
 #else
         THROW(ProtocolException, "MYSQL: _sendEncryptedPassword  requires monit to be compiled with SSL library");
 #endif
