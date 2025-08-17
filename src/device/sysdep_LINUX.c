@@ -331,7 +331,7 @@ static bool _getSysfsBlockDiskActivity(void *_inf) {
                 unsigned long long writeOperations = 0ULL, writeSectors = 0ULL, writeTime = 0ULL;
                 if (fscanf(f, "%llu %*u %llu %llu %llu %*u %llu %llu", &readOperations, &readSectors, &readTime, &writeOperations, &writeSectors, &writeTime) != 6) {
                         fclose(f);
-                        Log_error("filesystem statistic error: cannot parse %s -- %s\n", path, STRERROR);
+                        Log_error("filesystem statistic error: cannot parse %s for %s filesystem -- %s\n", path, inf->filesystem->object.mountpoint, STRERROR);
                         return false;
                 }
                 Statistics_update(&(inf->filesystem->time.read), now, readTime);
@@ -343,7 +343,7 @@ static bool _getSysfsBlockDiskActivity(void *_inf) {
                 fclose(f);
                 return true;
         }
-        Log_error("filesystem statistic error: cannot read %s -- %s\n", path, STRERROR);
+        Log_error("filesystem statistic error: cannot read %s for %s filesystem -- %s\n", path, inf->filesystem->object.mountpoint STRERROR);
         return false;
 }
 
