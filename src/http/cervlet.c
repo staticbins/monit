@@ -1138,7 +1138,9 @@ static void do_viewlog(HttpRequest req, HttpResponse res) {
                         size_t total = 0;
                         char buf[512];
                         StringBuffer_append(res->outputbuffer, "<br><p><form><textarea cols=120 rows=30 readonly>");
-                        while (total < VIEWLOG_LIMIT && (n = fread(buf, sizeof(char), sizeof(buf) - 1, f)) > 0) {
+                        while (total < VIEWLOG_LIMIT && ! feof(f) && (n = fread(buf, sizeof(char), sizeof(buf) - 1, f)) > 0) {
+                                if (ferror(f))
+                                        break;
                                 total += n;
                                 buf[n] = 0;
                                 escapeHTML(res->outputbuffer, buf);
