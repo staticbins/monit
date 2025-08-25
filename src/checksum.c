@@ -159,18 +159,12 @@ bool Checksum_getStreamDigests(FILE *stream, void *sha1_resblock, void *md5_resb
                 /* Read block. Take care for partial reads */
                 while (1) {
                         n = fread(buffer + sum, 1, HASHBLOCKSIZE - sum, stream);
+                        if (ferror(stream))
+                                return false;
                         sum += n;
-                        if (sum == HASHBLOCKSIZE)
+                        if (sum >= HASHBLOCKSIZE)
                                 break;
-                        if (n == 0) {
-                                /* Check for the error flag IFF N == 0, so that we don't exit the loop after a partial read due to e.g., EAGAIN or EWOULDBLOCK */
-                                if (ferror(stream))
-                                        return false;
-                                goto process_partial_block;
-                        }
-
-                        /* We've read at least one byte, so ignore errors. But always check for EOF, since feof may be true even though N > 0. Otherwise, we could end up calling fread after EOF */
-                        if (feof(stream))
+                        if (n == 0 || feof(stream))
                                 goto process_partial_block;
                 }
 
