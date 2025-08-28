@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '30 3 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: extractions/setup-just@v3
+      - uses: actions/checkout@v4
+
+      - name: Checkout
+        run: just checkout
+
+      - name: Initialize Environment Variables
+        run: just env
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Setup Environment
+        if: env.RELEASED != 'true'
+        run: |
+          sudo apt-get install -y podman
+          just setup
+
+      - name: Install Dependencies
+        if: env.RELEASED != 'true'
+        run: just install
+
+
+      - name: Compile
+        if: env.RELEASED != 'true'
+        run: just compile
+
+      - name: Package
+        if: env.RELEASED != 'true'
+        run: just package
+
+      - name: Publish release
+        if: env.RELEASED != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{env.RELEASE_NAME}}
+          files: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/*.msi
+            dist/*.exe
+            dist/*sha256sum.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
