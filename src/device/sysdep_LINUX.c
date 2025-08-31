@@ -343,7 +343,7 @@ static bool _getSysfsBlockDiskActivity(void *_inf) {
                 fclose(f);
                 return true;
         }
-        Log_error("filesystem statistic error: cannot read %s for %s filesystem -- %s\n", path, inf->filesystem->object.mountpoint STRERROR);
+        Log_error("filesystem statistic error: cannot read %s for %s filesystem -- %s\n", path, inf->filesystem->object.mountpoint, STRERROR);
         return false;
 }
 
