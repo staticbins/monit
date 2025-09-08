@@ -8,10 +8,14 @@ Fixed: Issue #1129: When Monit log was set to a device, such as "set logfile /de
        Docker container), Monit hangs when the "View Monit logfile" is used in the Monit HTTP interface.
        Thanks to Lutz Mader for report and fix.
 
+Fixed: The MongoDB protocol test did support only MongodDB < 5.1. The protocol test was updated to support
+     the newer mongodb ping style.
+
 New: The "check program" output in the "monit status" CLI was limited to 200 characters. The limitation is removed
      and monit will display up to "set limits { programOutput: <size> }" characters now.
 
 Changed: The "check program" output change test now sets the level to warning (yellow), instead of error (red).
+
 
 
 Version 5.35.2
